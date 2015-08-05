@@ -1,0 +1,48 @@
+.TH relup 4 "sasl  1.9" "Ericsson Utvecklings AB" "FILES"
+.SH NAME
+relup \- Release upgrade file
+.SH DESCRIPTION
+.LP
+The \fIrelease upgrade file\fR describes how a system is upgraded in runtime\&. 
+.LP
+This file is used by \fIsystools\fR to generate start scripts and release upgrade files\&. 
+.LP
+The tedious work of writing the \fIrelup\fR file has been automated and in most cases this file can be automatically generated from the \fI\&.rel\fR file and \fI\&.appup\fR files for the applications in the release\&. 
+
+.SH FILE SYNTAX
+.LP
+A release upgrade file is called \fIrelup\fR\&. In the target system, this file must be located in the \fIOTP_ROOT/erts-EVsn/Vsn\fR directory\&. 
+.LP
+The \fIrelup\fR file contains one single Erlang term, which contains instructions on how to upgrade from old versions to this version, and how to downgrade from this version to older versions\&. The file has the following syntax: 
+
+.nf
+    {Vsn, [{FromVsn, Descr, RuScript}], [{ToVsn, Descr, RuScript}]}\&.
+.fi
+.RS 2
+.TP 2
+*
+\fIVsn = string()\fR is the version of the release\&. 
+.TP 2
+*
+\fIFromVsn = string()\fR is a version of a release that we can upgrade from\&. If the current version of the system matches this version, the corresponding upgrade instructions in \fIRuScript\fR is used to install the release in the system\&. 
+.TP 2
+*
+\fIToVsn = string()\fR is a version of a release that we can downgrade to\&. If this release (\fIVsn\fR) is the current release, and we are about to downgrade to \fIToVsn\fR, the corresponding upgrade instructions in \fIRuScript\fR is used to install the old release in the system\&. 
+.TP 2
+*
+\fIDescr\fR is a user defined parameter which is not processed by any release handling functions\&. It can be used to describe the release to an operator\&. Eventually, it will be returned by \fIrelease_handler:install_release/1\fR and \fIrelease_handler:check_install_release/1\fR\&. 
+.TP 2
+*
+\fIRuScript\fR is a release upgrade script\&. Refer to the section Release Handling Instructions in the SASL User\&'s Guide for a description of this script\&. 
+.RE
+.LP
+There is one tuple \fI{FromVsn, Descr, RuScript}\fR for each old system version which can be upgraded to this version, and one tuple \fI{ToVsn, Descr, RuScript}\fR for each old version that this version can be downgraded to\&. 
+.LP
+When upgrading from \fIFromVsn\fR with \fIrelease_handler:install_release/1\fR, there does not have to be an exact match of versions\&. \fIFromVsn\fR can be a sub-string of the current version of the system\&. For example, if the current version is \fI"2\&.1\&.1"\fR, we can upgrade from \fIFromVsn\fR \fI"2\&.1"\fR or \fI"2\&.1\&.1"\fR, but not from \fI"2\&.0"\fR or \fI"2\&.1\&.1\&.2"\fR\&. However, if this scheme is used, the same release upgrade script is used to go from both \fI"2\&.1"\fR and \fI"2\&.1\&.1"\fR\&. Therefore, \fI"2\&.1\&.1"\fR must be compatible with \fI"2\&.1"\fR\&. If you do not want to use this feature, you must make sure that the current version and the new version match before you call \fIinstall_release/1\fR\&. 
+.SH SEE ALSO
+.LP
+app(4), appup(4), rel(4), systools(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

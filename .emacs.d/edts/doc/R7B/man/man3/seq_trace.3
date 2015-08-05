@@ -1,0 +1,419 @@
+.TH seq_trace 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+seq_trace \- Sequential Tracing of Messages\&.
+.SH DESCRIPTION
+.LP
+Sequential tracing makes it possible to trace all messages resulting from one initial message\&. Sequential tracing is completely independent of the ordinary tracing in Erlang, which is controlled by the \fIerlang:trace/3\fR BIF\&. See the chapter "What is Sequential Trace" below for more information about what sequential tracing is and how it can be used\&. 
+.LP
+\fIseq_trace\fR provides functions which control all aspects of sequential tracing\&. There are functions for activation, deactivation, inspection and for collection of the trace output\&. 
+.SS Note:
+.LP
+The implementation of sequential tracing is in beta status\&. This means that the programming interface still might undergo minor adjustments (possibly incompatible) based on feedback from users\&. 
+
+
+.SH EXPORTS
+.LP
+.B
+set_token(Component, ComponentValue) -> {Component, PreviousValue}
+.br
+.RS
+.TP
+Types
+Component = label | serial | Flag
+.br
+Flag = send | \&'receive\&' | print | timestamp 
+.br
+ComponentValue = FlagValue | LabelValue | SerialValue
+.br
+FlagValue = bool() (for Flag)
+.br
+LabelValue = integer() (for label)
+.br
+SerialValue = {Previous, Current}
+.br
+Previous = Current = integer()
+.br
+.RE
+.RS
+.LP
+Sets the individual \fIComponent\fR of the trace token to \fIComponentValue\fR\&. Returns the previous value of the trace token \fIComponent\fR\&. The valid \fIComponent, ComponentValue\fR combinations are: 
+.RS 2
+.TP 4
+.B
+\fIlabel, integer()\fR:
+The \fIlabel\fR component is an integer which identifies all events belonging to the same sequential trace\&. If several sequential traces can be active simultaneously \fIlabel\fR is used to identify the separate traces\&. Default is 0\&. 
+.TP 4
+.B
+\fIsend, bool()\fR:
+A trace token flag (\fItrue | false\fR) which enables/disables tracing on message sending\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fI\&'receive\&', bool()\fR:
+A trace token flag (\fItrue | false\fR) which enables/disables tracing on message reception\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIprint, bool()\fR:
+A trace token flag (\fItrue | false\fR) which enables/disables tracing on explicit calls to \fIseq_trace:print/1\fR\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fItimestamp, bool()\fR:
+A trace token flag (\fItrue | false\fR) which enables/disables a \fItimestamp\fR to be generated for each traced event\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIserial, SerialValue\fR:
+\fISerialValue\fR = \fI{Previous, Current}\fR\&. The \fIserial\fR component contains counters which enables the traced messages to be sorted, should never be set explicitly by the user as these counters are updated automatically\&. Default is \fI{0, 0}\fR\&. 
+.RE
+.RE
+.LP
+.B
+set_token(Token) -> PreviousToken
+.br
+.RS
+.TP
+Types
+Token = PreviousToken = term() | []
+.br
+.RE
+.RS
+.LP
+Sets the trace token for the current process to \fIToken\fR\&. If \fIToken = []\fR then tracing is disabled, otherwise \fIToken\fR should be an Erlang term returned from \fIget_token/0\fR or \fIset_token/1\fR\&. \fIset_token/1\fR can be used to temporarily exclude message passing from the trace by setting the trace token to empty like this: 
+
+.nf
+OldToken = seq_trace:set_token([]), % set to empty and save 
+                                    % old value
+% do something that should not be part of the trace
+io:format("Exclude the signalling caused by this~n"),
+seq_trace:set_token(OldToken), % activate the trace token again
+\&.\&.\&.
+.fi
+.LP
+Returns the previous value of the trace token\&. 
+.RE
+.LP
+.B
+get_token(Component) -> {Component, ComponentValue}
+.br
+.RS
+.TP
+Types
+Component = label | serial | Flag
+.br
+ComponentValue = FlagValue | LabelValue | SerialValue
+.br
+Flag = send | \&'receive\&' | print | timestamp 
+.br
+FlagValue = bool() (for Flag)
+.br
+LabelValue = integer() (for label)
+.br
+SerialValue = {Previous, Current} (for serial)
+.br
+Previous = Current = integer()
+.br
+.RE
+.RS
+.LP
+Returns the value of the trace token component\fIComponent\fR\&. 
+.RE
+.LP
+.B
+get_token() -> TraceToken
+.br
+.RS
+.TP
+Types
+TraceToken = term() | []
+.br
+.RE
+.RS
+.LP
+Returns the value of the trace token for the current process\&. If \fI[]\fR is returned it means that tracing is not active\&. Any other value returned is the value of an active trace token\&. The value returned can be used as input to the \fIset_token/1\fR function\&. 
+.RE
+.LP
+.B
+print(TraceInfo) -> void
+.br
+.RS
+.TP
+Types
+TraceInfo = term()
+.br
+.RE
+.RS
+.LP
+Puts the Erlang term \fITraceInfo\fR into the sequential trace output if the process currently is executing within a sequential trace and the \fIprint\fR flag of the trace token is set\&. 
+.RE
+.LP
+.B
+reset_trace() -> void
+.br
+.RS
+.LP
+Sets the trace token to empty for all processes in the node\&. The process internal counters used to create the serial of the trace token is set to 0\&. The trace token is set to empty for all messages in message queues\&. Together this will effectively stop all ongoing sequential tracing in the Erlang node\&. 
+.RE
+.LP
+.B
+set_system_tracer(ProcessOrPortId) -> PreviousId
+.br
+.RS
+.TP
+Types
+Pid = PreviousId = pid() | port() | false
+.br
+.RE
+.RS
+.LP
+Sets the system tracer\&. The system tracer can be either a pid or port denoted by \fIProcessOrPortId\fR\&. Returns the previous value (which can be \fIfalse\fR if no system tracer is active)\&. The function will generate \fI{\&'EXIT\&', {badarg, Info}}\fR if \fIPid\fR is not the pid of an existing local process\&. 
+.RE
+.LP
+.B
+get_system_tracer() -> pid() | port() | false
+.br
+.RS
+.LP
+Returns the pid or port identifier of the current system tracer or \fIfalse\fR if no system tracer is activated\&. 
+.RE
+.SH Trace Messages Sent To the System Tracer
+.LP
+The format of the messages are:
+
+.nf
+{seq_trace, Label, SeqTraceInfo, TimeStamp}
+.fi
+.LP
+or
+
+.nf
+{seq_trace, Label, SeqTraceInfo}
+.fi
+.LP
+depending on whether the \fItimestamp\fR flag of the trace token is set to \fItrue\fR or \fIfalse\fR\&. Where :
+.br
+
+
+.nf
+Label = integer()
+TimeStamp = {Seconds, Milliseconds, Microseconds}  
+Seconds = Milliseconds = Microseconds = integer()
+.fi
+.LP
+The \fISeqTraceInfo\fR can have the following formats: 
+.RS 2
+.TP 4
+.B
+\fI{send, Serial, From, To, Message}\fR:
+Used when a process \fIFrom\fR with its trace token flag \fIprint\fR set to \fItrue\fR has sent a message\&. 
+.TP 4
+.B
+\fI{\&'receive\&', Serial, From, To, Message}\fR:
+Used when a process \fITo\fR receives a message with a trace token that has the \fI\&'receive\&'\fR flag set to \fItrue\fR\&. 
+.TP 4
+.B
+\fI{print, Serial, From, _, Info}\fR:
+Used when a process \fIFrom\fR has called \fIseq_trace:print(Label, Info)\fR and has a trace token with \fIprint\fR set to \fItrue\fR and \fIlabel\fR set to \fILabel\fR\&. 
+.RE
+
+.nf
+Serial = {PreviousSerial, ThisSerial}
+PreviousSerial = ThisSerial = integer()
+From = To = pid()
+.fi
+.LP
+\fISerial\fR is a tuple consisting of two integers where the first \fIPreviousSerial\fR denotes the serial counter passed in the last received message which carried a trace token\&. If the process is the first one in a new sequential trace the \fIPreviousSerial\fR is set to the value of the process internal "trace clock"\&. The second integer \fIThisSerial\fR is the serial counter that a process sets on outgoing messages and it is based on the process internal "trace clock" which is incremented by one before it is attached to the trace token in the message\&. 
+.SH What is Sequential Tracing
+.LP
+Sequential tracing is a way to trace a sequence of messages sent between different local or distributed processes where the sequence is initiated by one single message\&. In short it works like this: 
+.LP
+Each process has a \fItrace token\fR which can be empty or not empty\&. When not empty the trace token can be seen as the tuple \fI{Label, Flags, Serial, From}\fR\&. The trace token is passed invisibly with each message\&. 
+.LP
+In order to start a sequential trace the user must explicitly set the trace token in the process that will send the first message in a sequence\&. 
+.LP
+The trace token of a process is automatically set to empty each time the process enters a receive statement but will be set to a value again if the received message carries a nonempty trace token\&. 
+.LP
+On each Erlang node a process can be set as the \fIsystem tracer\fR\&. This process will receive trace messages each time a message with a trace token is sent or received (if the trace token flag \fIsend\fR or \fI\&'receive\&'\fR is set)\&. The system tracer can then print each trace event, write it to a file or whatever suitable\&. 
+.SS Note:
+.LP
+The system tracer will only receive those trace events that occur locally within the Erlang node\&. To get the whole picture of a sequential trace that involves processes on several Erlang nodes, the output from the system tracer on each involved node must be merged (off line)\&. 
+
+.LP
+In the following sections Sequential Tracing and its most fundamental concepts are described\&. 
+.SH Trace Token
+.LP
+Each process has a current trace token\&. Initially the token is empty\&. When the process sends a message to another process, a copy of the current token will be sent "invisibly" along with the message\&. The current token of a process is set in two ways, either 
+.RS 2
+.TP 4
+1.
+explicitly by the process itself, through a call to \fIseq_trace:set_token\fR, or 
+.TP 4
+2.
+when a message is received\&. 
+.RE
+.LP
+In both cases the current token will be set\&. In particular, if the token of a message received is empty, the current token of the process is set to empty\&. 
+.LP
+A trace token contains a label, and a set of flags\&. Both the label and the flags are set in 1 and 2 above\&. 
+.SH Serial
+.LP
+The trace token contains a component which we call the \fISerial\fR which consists of two integers \fIPrevious\fR and \fICurrent\fR\&. The purpose of \fISerial\fR is uniquely identify each traced event within a trace sequence and to order the messages chronologically and in the different branches if any\&. 
+.LP
+The algorithm for updating \fISerial\fR can be described as follows: 
+.LP
+Let each process have two counters \fIprev_cnt\fR and \fIcurr_cnt\fR which both are set to 0 when a process is created\&. The counters are updated at the following occasions: 
+.RS 2
+.TP 2
+*
+\fIWhen the process is about to send a message and the trace token is not empty\&.\fR 
+.RS 2
+.LP
+Let the Serial of the trace token be \fItprev\fR and \fItcurr\fR\&. 
+.br
+ \fIcurr_cnt := curr_cnt + 1\fR
+.br
+ \fItprev := prev_cnt\fR
+.br
+ \fItcurr := curr_cnt\fR 
+.LP
+The trace token with \fItprev\fR and \fItcurr\fR is then passed along with the message\&. 
+.RE
+.TP 2
+*
+\fIWhen the process calls \fR\fIseq_trace:print(Label, Info)\fR\fI the Label matches the label part of the trace token and the trace token print flag is true\&.\fR 
+.RS 2
+.LP
+The same algorithm as for send above\&. 
+.RE
+.TP 2
+*
+\fIWhen a message is received and contains a nonempty trace token\&.\fR 
+.RS 2
+.LP
+The process trace token is set to the trace token from the message\&. 
+.LP
+Let the Serial of the trace token be \fItprev\fR and \fItcurr\fR\&. 
+.br
+ \fIif (curr_cnt < tcurr )\fR
+.br
+        \fIcurr_cnt := tcurr\fR
+.br
+ \fIprev_cnt := tprev\fR 
+.RE
+.RE
+.LP
+The \fIcurr_cnt\fR of a process is incremented each time the process is involved in a sequential trace\&. The counter can reach its limit (27 bits) if a process is very long-lived and is involved in much sequential tracing\&. If the counter overflows it will not be possible to use the Serial for ordering of the trace events\&. To prevent the counter from overflowing in the middle of a sequential trace the function \fIseq_trace:reset_trace/0\fR can be called to reset the \fIprev_cnt\fR and \fIcurr_cnt\fR of all processes in the Erlang node\&. This function will also set all trace tokens in processes and their message queues to empty and will thus stop all ongoing sequential tracing\&. 
+.SH Performance considerations
+.LP
+The performance degradation for a system which is enabled for Sequential tracing is negligible as long as no tracing is activated\&. When tracing is activated there will of course be an extra cost for each traced message but all other messages will be unaffected\&. 
+.SH Ports
+.LP
+Sequential tracing is not performed across ports\&. 
+.LP
+If the user for some reason wants to pass the trace token to a port this has to be done manually in the code of the port controlling process\&. The port controlling processes have to check the appropriate sequential trace settings (as obtained from \fIseq_trace:get_token/1\fR and include trace information in the message data sent to their respective ports\&. 
+.LP
+Similarly, for messages received from a port, a port controller has to retrieve trace specific information, and set appropriate sequential trace flags through calls to \fIseq_trace:set_token/2\fR\&. 
+.SH Distribution
+.LP
+Sequential tracing between nodes is performed transparently\&. This applies to C-nodes built with Erl_interface too\&. A C-node built with Erl_interface only maintains one trace token which means that the C-node will appear as one process from the sequential tracing point of view\&. 
+.LP
+In order to be able to perform sequential tracing between distributed Erlang nodes, the distribution protocol has been extended (in a backward compatible way)\&. An Erlang node which supports sequential tracing can communicate with an older (OTP R3B) node but messages passed within that node can of course not be traced\&. 
+.SH Example of Usage
+.LP
+The example shown here will give rough idea of how the new primitives can be used and what kind of output it will produce\&. 
+.LP
+Assume that we have an initiating process with Pid = <0\&.30\&.0> like this:
+
+.nf
+-module(seqex)\&.
+-compile(export_all)\&.
+
+loop(Port) ->
+        receive 
+        {Port,Message} ->
+                seq_trace:set_token(label,17),
+                seq_trace:set_token(\&'receive\&',true),
+                seq_trace:set_token(print,true),
+                seq_trace:print(17,"**** Trace Started ****"),
+                call_server ! {self(),the_message};
+            {ack,Ack} ->
+                ok
+        end,
+        loop(Port)\&.
+.fi
+.LP
+And a registered process \&'call_server\&' with Pid = <0\&.31\&.0> like this:
+
+.nf
+loop() ->
+        receive
+        {PortController,Message} ->
+                Ack = {received, Message},
+                seq_trace:print(17,"We are here now"),
+                PortController ! {ack,Ack}
+        end,
+        loop()\&.
+.fi
+.LP
+A possible output from the system\&'s sequential_tracer (inspired by AXE-10 and MD-110) could look like:
+
+.nf
+17:<0\&.30\&.0> Info {0,1} WITH
+"**** Trace Started ****"
+17:<0\&.31\&.0> Received {0,2} FROM <0\&.30\&.0> WITH
+{<0\&.30\&.0>,the_message}
+17:<0\&.31\&.0> Info {2,3} WITH
+"We are here now"
+17:<0\&.30\&.0> Received {2,4} FROM <0\&.31\&.0> WITH
+{ack,{received,the_message}}
+.fi
+.LP
+The implementation of a system tracer process that produces the printout above could look like this: 
+
+.nf
+tracer() ->
+    receive
+        {seq_trace,Label,TraceInfo} ->
+           print_trace(Label,TraceInfo,false);
+        {seq_trace,Label,TraceInfo,Ts} ->
+           print_trace(Label,TraceInfo,Ts);
+        Other -> ignore
+    end,
+    tracer()\&.        
+
+print_trace(Label,TraceInfo,false) ->
+      io:format("~p:",[Label]),
+      print_trace(TraceInfo);
+print_trace(Label,TraceInfo,Ts) ->
+      io:format("~p ~p:",[Label,Ts]),
+      print_trace(TraceInfo)\&.
+
+print_trace({print,Serial,From,_,Info}) ->
+      io:format("~p Info ~p WITH~n~p~n", [From,Serial,Info]);
+print_trace({\&'receive\&',Serial,From,To,Message}) ->
+      io:format("~p Received ~p FROM ~p WITH~n~p~n", 
+                [To,Serial,From,Message]);
+print_trace({send,Serial,From,To,Message}) ->
+      io:format("~p Sent ~p TO ~p WITH~n~p~n", 
+                [From,Serial,To,Message])\&.
+.fi
+.LP
+The code that creates a process that runs the tracer function above and sets that process as the system tracer could look like this: 
+
+.nf
+start() ->
+    Pid = spawn(?MODULE,tracer,[]),
+    seq_trace:set_system_tracer(Pid), % set Pid as the system tracer 
+    ok\&.
+.fi
+.LP
+With a function like \fItest/0\fR below the whole example can be started\&. 
+
+.nf
+test() ->
+    P = spawn(?MODULE, loop, [port]),
+    register(call_server, spawn(?MODULE, loop, [])),
+    start(),
+    P ! {port,message}\&.
+.fi
+.SH AUTHOR
+.nf
+kenneth@erix\&.ericsson\&.se - support@erlang.ericsson.se
+.fi

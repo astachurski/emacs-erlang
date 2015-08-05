@@ -1,0 +1,132 @@
+
+
+
+snmp_mpd(3)         ERLANG MODULE DEFINITION          snmp_mpd(3)
+
+
+
+MODULE
+     snmp_mpd - Message Processing and Dispatch module for SNMP
+
+DESCRIPTION
+     The module _s_n_m_p__m_p_d implements the version independent  Mes-
+     sage  Processing  and  Dispatch functionality in SNMP. It is
+     supposed  to  be  used  from  a  Network  Interface  process
+     (_n_e_t__i_f).
+
+
+EXPORTS
+     init_mpd(Options) -> mpd_state()
+
+          Types
+               Options = [Option]
+               Option = v1 | v2 | v3
+
+          This function can be called from the net_if process  at
+          startup.  The  options  list  defines which versions to
+          use.
+
+          It also initializes some SNMP counters.
+
+     process_packet(Packet, TDomain,  TAddress,  State)  ->  {ok,
+     Vsn, Pdu, PduMS, ACMData} | {discarded, Reason}
+
+          Types
+               Packet = binary()
+               TDomain = snmpUDPDomain
+               TAddress = {Ip, Udp}
+               Ip = {integer(), integer(), integer(), integer()}
+               Udp = integer()
+               State = mpd_state()
+               Vsn = 'version-1' | 'version-2' | 'version-3'
+               Pdu = #pdu
+               PduMs = integer()
+               ACMData = acm_data()
+
+          Processes an incoming packet.  Performs  authentication
+          and  decryption  as necessary. The return values should
+          be passed the agent.
+
+     generate_response_msg(Vsn, RePdu,  Type,  ACMData)  ->  {ok,
+     Packet} | {discarded, Reason}
+
+          Types
+               Vsn = 'version-1' | 'version-2' | 'version-3'
+               RePdu = #pdu
+               Type = atom()
+               ACMData = acm_data()
+               Packet = binary()
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   1
+
+
+
+
+
+
+snmp_mpd(3)         ERLANG MODULE DEFINITION          snmp_mpd(3)
+
+
+
+          Generates a possibly encrypted response  packet  to  be
+          sent  to the network. _T_y_p_e is the #_p_d_u._t_y_p_e of the ori-
+          ginal request.
+
+     generate_msg(Vsn, Pdu, MsgData, To)  ->  {ok,  PacketsAndAd-
+     dresses} | {discarded, Reason}
+
+          Types
+               Vsn = 'version-1' | 'version-2' | 'version-3'
+               Pdu = #pdu
+               MsgData = msg_data()
+               To = [dest_addrs()]
+               PacketsAndAddresses   =    [{TDomain,    TAddress,
+               Packet}]
+               TDomain = snmpUDPDomain
+               TAddress = {Ip, Udp}
+               Ip = {integer(), integer(), integer(), integer()}
+               Udp = integer()
+               Packet = binary()
+
+          Generates a possibly encrypted  request  packet  to  be
+          sent to the network.
+
+          _M_s_g_D_a_t_a is the message specific data used in  the  SNMP
+          message.  This  value  is  received  in  a  _s_e_n_d__p_d_u or
+          _s_e_n_d__p_d_u__r_e_q message from  the  agent.  In  SNMPv1  and
+          SNMPv2c,  this message data is the community string. In
+          SNMPv3, it is the context information. _T_o is a list  of
+          the destination addresses and their corresponding secu-
+          rity parameters. This value is also received  from  the
+          requests mentioned above.
+
+     discarded_pdu(Variable) -> void()
+
+          Types
+               Variable = atom()
+
+          Increments the variable  associated  with  a  discarded
+          pdu.  This function can be used when the net_if process
+          receives a _d_i_s_c_a_r_d_e_d__p_d_u message from the agent.
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   2
+
+
+

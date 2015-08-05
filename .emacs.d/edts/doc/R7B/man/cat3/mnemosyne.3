@@ -1,0 +1,528 @@
+
+
+
+Mnemosyne(3)        ERLANG MODULE DEFINITION         Mnemosyne(3)
+
+
+
+MODULE
+     mnemosyne - The query language support for the DBMS Mnesia
+
+DESCRIPTION
+     _Q_u_e_r_i_e_s are used  for  accessing  the  data  in  a  Database
+     Management  System. The query specifies a relation (possibly
+     complicated) to all of the selected data. This could involve
+     several  tables  as  well  as  conditions  such as '<' (less
+     than), function calls and similar.
+
+     Mnesia has two query interfaces which are used together:
+
+       * Mnemosyne, which is this module
+
+       * _q_u_e_r_y _l_i_s_t _c_o_m_p_r_e_h_e_n_s_i_o_n_s, an Erlang language  construct
+         for the queries.
+
+     The exact syntax of query list comprehensions are  described
+     in a separate section of this document.
+
+     The query list comprehensions only define the query and  the
+     syntax  of  the solutions to be returned. The actual evalua-
+     tion is determined by calling  different  functions  with  a
+     handle obtained by the list comprehension. For example:
+
+           -record(person, {name,age}).
+           Handle =
+                query
+                    [ P.name || P <- table(person) ]
+                end,
+           L = mnesia:transaction(
+                fun() ->
+                    mnemosyne:eval(Handle)
+                end)
+
+     The example above matches a list of all names in  the  table
+     "person" with the variable _L. Note the following points:
+
+       * Each database table must  have  a  corresponding  record
+         declaration.
+
+       * A _q_u_e_r_y is declared with
+
+                   query [ <pattern> || <body> ] end
+
+         where <_p_a_t_t_e_r_n>  is  an  Erlang  term  without  function
+         calls.  The  notation  _P._n_a_m_e means that _P is a variable
+         and it has an associated record with a field _n_a_m_e  which
+         we use. The <_b_o_d_y> is a sequence of conditions separated
+         by commas. In the example, we have  _P  <-  _t_a_b_l_e(_p_e_r_s_o_n)
+         which means: "_P is taken from the table _p_e_r_s_o_n".
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: mnemosyne  1.2.5                 1
+
+
+
+
+
+
+Mnemosyne(3)        ERLANG MODULE DEFINITION         Mnemosyne(3)
+
+
+
+         The whole query could  therefore  be  read  as  follows:
+         "Make  the  list  of all names of _P such that _P is taken
+         from the table _p_e_r_s_o_n".
+
+         However, the query list comprehension  does  not  return
+         the  answers  but  a  _h_a_n_d_l_e.  This handle is used as an
+         argument for different evaluation functions which do the
+         actual query processing. In the example we used the sim-
+         plest, _e_v_a_l/_1, which evaluates the query and returns all
+         the answers.
+
+       * Some parts of the query must be evaluated  in  a  Mnesia
+         transaction or by utilizing an alternative Mnesia access
+         context. These functions  are  marked  in  the  function
+         descriptions below.
+
+     After obtaining a handle from a  query  list  comprehension,
+     the query can be evaluated in three different ways:
+
+       * A simple all-answer query as in the example shown above.
+         This function is _e_v_a_l/_1.
+
+       * Getting the answers in small or large chunks. The  query
+         may be aborted when enough solutions have been obtained.
+         These are called _c_u_r_s_o_r_s. The  functions  are  _c_u_r_s_o_r/_1,
+         _c_u_r_s_o_r/_2, _n_e_x_t__a_n_s_w_e_r_s/_1, _n_e_x_t__a_n_s_w_e_r_s/_3, _a_l_l__a_n_s_w_e_r_s/_1,
+         _a_l_l__a_n_s_w_e_r_s/_3, and _d_e_l_e_t_e__c_u_r_s_o_r/_1.
+
+       * An even more sophisticated cursor version where the time
+         consuming  part  of  the  cursor creation can be done in
+         advance. The functions are _s_e_t_u_p__q_u_e_r_y/_1,  _i_n_i_t__q_u_e_r_y/_1,
+         _i_n_i_t__q_u_e_r_y/_2,       _n_e_x_t__a_n_s_w_e_r_s/_1,      _n_e_x_t__a_n_s_w_e_r_s/_3,
+         _a_l_l__a_n_s_w_e_r_s/_1, _a_l_l__a_n_s_w_e_r_s/_3, and _d_e_l_e_t_e__q_u_e_r_y/_1.
+
+     Let us reconsider the previous example, this time with  cur-
+     sors.  In the following example, we will get just five names
+     _w_i_t_h_o_u_t _e_v_a_l_u_a_t_i_n_g _a_l_l _o_f _t_h_e _a_n_s_w_e_r_s:
+
+           -record(person, {name,age}).
+           Handle =
+                query
+                    [ P.name || P <- table(person) ]
+                end,
+           L = mnesia:transaction(
+                fun() ->
+                    Cursor = mnemosyne:cursor(Handle),
+                    As = mnemosyne:next_answers(Cursor, 5, 5),
+                    mnemosyne:delete_cursor(Cursor),
+                    As
+                end)
+
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: mnemosyne  1.2.5                 2
+
+
+
+
+
+
+Mnemosyne(3)        ERLANG MODULE DEFINITION         Mnemosyne(3)
+
+
+
+     The third way of evaluating a query is by a further division
+     of  the  query  process.  The _c_u_r_s_o_r/_1 function is now split
+     into two. The reason for this is that  we  can  set  up  the
+     query  when  there  is plenty of time and initialize it when
+     answers are needed quickly. As in the previous  example,  we
+     will get just five names:
+
+           -record(person, {name,age}).
+
+           Handle =
+                query
+                    [ P.name || P <- table(person) ]
+                end,
+
+           QuerySetup = mnemosyne:setup_query(Handle),
+           L = mnesia:transaction(
+                fun() ->
+                    Cursor = mnemosyne:init_query(QuerySetup),
+                    mnemosyne:next_answers(Cursor, 5, 5)
+                end),
+
+           % Here we may call more init_query-next_answers constructions
+           % with the same Handle
+           mnemosyne:delete_query(QuerySetup)
+
+
+EXPORTS
+     all_answers(Cursor) -> Answer
+
+          Returns all remaining answers from the query identified
+          by  _C_u_r_s_o_r.  It  can  be  applied after _n_e_x_t__a_n_s_w_e_r_s to
+          obtain all answers that are left.
+
+           _N_o_t_e: This must be evaluated inside a transaction.
+
+     cursor(Handle) -> Cursor
+     cursor(Handle,Nprefetch) -> Cursor
+
+          Sets up a query for evaluation  and  starts  an  answer
+          pre-fetch.  _N_p_r_e_f_e_t_c_h  gives  the  number of answers to
+          pre-fetch and must be greater than 0. The default value
+          is  1. A pre-fetch is the first part of a query evalua-
+          tion. It is placed in a separate process which  may  on
+          some  occasions  speed  up the subsequent collection of
+          answers.
+
+           _N_o_t_e: This must be evaluated inside a transaction.
+
+     delete_cursor(Cursor)
+
+          Deletes the Cursor and associated query evaluation.
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: mnemosyne  1.2.5                 3
+
+
+
+
+
+
+Mnemosyne(3)        ERLANG MODULE DEFINITION         Mnemosyne(3)
+
+
+
+           _N_o_t_e: This must be evaluated inside a transaction.
+
+     delete_query(QuerySetup)
+
+          Deletes a query setup.
+
+     eval(Handle) -> Answers
+
+          Starts a query evaluation according to the  _H_a_n_d_l_e  and
+          collects all answers in one operation.
+
+           _N_o_t_e: This must be evaluated inside a transaction.
+
+     init_query(QuerySetup) -> Cursor
+     init_query(QuerySetup,Nprefetch) -> Cursor
+
+          Performs the last short step in starting a  query  from
+          _Q_u_e_r_y_S_e_t_u_p.  _N_p_r_e_f_e_t_c_h defines the number of answers to
+          pre-fetch as in _c_u_r_s_o_r/_2. The default value is 1.
+
+           _N_o_t_e: This must be evaluated inside a transaction.
+
+     next_answers(Cursor) -> Answers
+     next_answers(Cursor,Nmin,Nmax) -> Answers
+
+          Fetches the next  answers  from  the  query  evaluation
+          identified  by  _C_u_r_s_o_r.  At least _N_m_i_n and at most _N_m_a_x
+          answers are collected. If less than  _N_m_i_n  answers  are
+          returned; for example, 0, there are no more answers. If
+          enough  answers  are  not  available,  but   more   are
+          expected, the functions wait for them.
+
+           _N_o_t_e: This must be evaluated inside a transaction.
+
+     reoptimize(Handle) -> Handle
+
+          Re-optimizes a query. Queries are always optimized, but
+          the  optimization  takes into account the dynamic table
+          statistics like size, attribute distribution etc. If  a
+          table  has  changed  after  obtaining the _H_a_n_d_l_e from a
+          query list comprehension, the query execution plan will
+          no   longer   be   appropriate  (although  semantically
+          correct). This function will  rearrange  the  execution
+          plan according to the current statistics from the data-
+          base.
+
+     setup_query(Handle) -> QuerySetup
+
+          Creates a query setup, that  is,  performs  most  of  a
+          query evaluation without actually initiating the actual
+          evaluation.
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: mnemosyne  1.2.5                 4
+
+
+
+
+
+
+Mnemosyne(3)        ERLANG MODULE DEFINITION         Mnemosyne(3)
+
+
+
+     version() -> String
+
+          Returns the current module version.
+
+List Comprehension
+     There must be a directive in the  Erlang  file  telling  the
+     compiler how to treat queries. This directive is:
+
+     -include_lib("mnemosyne/include/mnemosyne.hrl").
+
+     A list comprehension consists of:
+
+                     query [ <pattern> || <body> ] end
+
+     The <_p_a_t_t_e_r_n>  is  a  description  of  the  terms  that  are
+     returned  by  a  query.  Details of how to obtain the actual
+     values in the <_p_a_t_t_e_r_n> is given by the <_b_o_d_y>.
+
+     The <_p_a_t_t_e_r_n> is an Erlang term without function  calls.  It
+     typically  has  one  or more variables from the <_b_o_d_y> which
+     are instantiated for each answer produced. Every element  in
+     the  returned  list  is composed by instantiating this <_p_a_t_-
+     _t_e_r_n> and then adding it to the answers.
+
+     The <_b_o_d_y> takes a sequence of _g_o_a_l_s separated by  ",".  The
+     possible goals are:
+
+       * <_l_o_g_i_c_a_l-_v_a_r_i_a_b_l_e> <- _t_a_b_l_e( <_t_a_b_l_e-_n_a_m_e>  [  ,  <_t_a_b_l_e-
+         _t_y_p_e> ] )
+
+       * <_l_o_g_i_c_a_l-_v_a_r_i_a_b_l_e> <- _r_u_l_e( <_r_u_l_e-_n_a_m_e> )
+
+       * <_l_o_g_i_c_a_l-_v_a_r_i_a_b_l_e> <- _r_u_l_e( <_m_o_d_u_l_e> : <_r_u_l_e-_n_a_m_e> )
+
+       * <_l_o_g_i_c_a_l-_v_a_r_i_a_b_l_e> <- <_e_r_l_a_n_g-_l_i_s_t-_e_x_p_r_e_s_s_i_o_n>
+
+       * <_e_x_p_r_e_s_s_i_o_n> <_r_e_l_o_p> <_e_x_p_r_e_s_s_i_o_n>
+
+       * <_e_r_l_a_n_g-_t_e_s_t-_e_x_p_r_e_s_s_i_o_n>
+
+     A <_l_o_g_i_c_a_l-_v_a_r_i_a_b_l_e> is written exactly as an  Erlang  vari-
+     able.   The   <_t_a_b_l_e-_n_a_m_e>,  <_t_a_b_l_e-_t_y_p_e>,  <_r_u_l_e-_n_a_m_e>  and
+     <_m_o_d_u_l_e> are atoms. The <_t_a_b_l_e-_n_a_m_e> and <_t_a_b_l_e-_t_y_p_e> may be
+     an Erlang variable which must be bound at runtime. The logi-
+     cal variables are local to a list comprehension and  shadows
+     any Erlang variables with the same name.
+
+     An <_e_x_p_r_e_s_s_i_o_n> is any Erlang expression which  may  include
+     function   calls   and   <_l_o_g_i_c_a_l-_v_a_r_i_a_b_l_e>.   The  variants
+     <_e_r_l_a_n_g-_l_i_s_t-_e_x_p_r_e_s_s_i_o_n> is an <_e_x_p_r_e_s_s_i_o_n> which must  pro-
+     duce  lists where all elements are records of the same type.
+     The <_l_o_g_i_c_a_l-_v_a_r_i_a_b_l_e> must have the same associated record.
+
+
+
+Ericsson UtvecklingLsasAtBchange: mnemosyne  1.2.5                 5
+
+
+
+
+
+
+Mnemosyne(3)        ERLANG MODULE DEFINITION         Mnemosyne(3)
+
+
+
+     The  <_e_r_l_a_n_g-_t_e_s_t-_e_x_p_r_e_s_s_i_o_n>  is an <_e_x_p_r_e_s_s_i_o_n> which only
+     has the values _t_r_u_e or _f_a_l_s_e.
+
+     Erlang variables are allowed in all variants of <_e_x_p_r_e_s_s_i_o_n>
+     and  in  <_p_a_t_t_e_r_n>.  They  must always be bound in the query
+     list comprehension.
+
+     _l_o_g_i_c_a_l _v_a_r_i_a_b_l_e_s is local to a query list comprehension and
+     have  an associated Erlang record. The associated record can
+     in most cases be inferred by the query compiler.  Therefore,
+     the  normal  notation for the field _f_1 in variable _X is just
+     _X._f_1. The query compiler notifies when it cannot deduce  the
+     corresponding  record.  The  explicit  form  is _X#_r._f_1 as in
+     ordinary Erlang. If the type of the record is not  deducable
+     at  Erlang  compile  time,  it  is more efficient to use the
+     explicit form as a help to the compiler. A variable  receiv-
+     ing  values  from a table will have the record with the same
+     name as the table.
+
+     Erlang variables are allowed in  <_e_x_p_r_e_s_s_i_o_n>  and  in  some
+     places  as described above. They must always be bound in the
+     query list comprehension.
+
+     Errors in the description are reported as exceptions in  the
+     Erlang standard format as follows:
+
+           {error, {Line,Module,Msg}}
+
+     The descriptive English text is returned by calling
+
+           Module:format_error(Msg)
+
+
+  Note:
+     A function used in a query  list  comprehension  must  _n_e_v_e_r
+     directly or indirectly:
+
+       1.  have side effects
+
+       2.  access the database either by a query
+            or by Mnesia functions
+
+       3.  spawn processes
+
+       4.  send or receive messages
+
+
+Rules (views)
+     A _r_u_l_e (or _v_i_e_w) is a declaration of  how  to  combine  data
+     from  sources as a kind of "subroutine". Assume that we have
+     the following query list comprehension:
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: mnemosyne  1.2.5                 6
+
+
+
+
+
+
+Mnemosyne(3)        ERLANG MODULE DEFINITION         Mnemosyne(3)
+
+
+
+           query
+               [ Employee || Employee <- table(employee),
+                             Employee.department = sales  ]
+           end
+
+     This retrieves a list of all sales employees. This could  be
+     formulated in the following rule:
+
+           sales(E, employee) :-
+                   E <- table(employee),
+                   E.salary = sales.
+
+     The _e_m_p_l_o_y_e_e declaration in the head of the rule forces  the
+     rule  argument  to associate the _e_m_p_l_o_y_e_e record. If we omit
+     the declaration, then the associated  record  would  be  the
+     rule  name, in this case _s_a_l_e_s. Note that the syntax used in
+     previous versions of Mnemosyne by using an separate  _a_r_g_t_y_p_e
+     declaration still works, but the above method is prefered.
+
+     The _s_a_l_e_s rule may now be used in a  query  list  comprehen-
+     sion:
+
+           query
+               [ SalesPerson || SalesPerson <- rule(sales) ]
+           end
+
+     The  SalesPerson  is  an  _e_m_p_l_o_y_e_e  record  because  of  the
+     declaration  of  the  rule  above. Another example lists the
+     names of all female sales people:
+
+           query
+               [ SalesPerson.name || SalesPerson <- rule(sales),
+                                     SalesPerson.sex = female   ]
+           end
+
+     The rule must have one  argument  when  used.  Although  the
+     declaration of a rule looks similar to an ordinary function,
+     no function of that name is constructed. Hence the  name  of
+     the  rule  can  be  used for another function. All rules are
+     automatically exported so they could be  referred  in  other
+     modules  by  the  usual  notation _m_o_d_u_l_e:_n_a_m_e. After the :-,
+     there is the usual <_b_o_d_y> as in the  query  list  comprehen-
+     sion.
+
+Generated functions.
+     When compiling queries some  extra  (hidden)  functions  are
+     automatically  generated and exported. Thus, there cannot be
+     other functions with the same  name  and  arity  within  the
+     module. Three such generated functions exist. They are:
+
+       * _M_N_E_M_O_S_Y_N_E _Q_U_E_R_Y/_2
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: mnemosyne  1.2.5                 7
+
+
+
+
+
+
+Mnemosyne(3)        ERLANG MODULE DEFINITION         Mnemosyne(3)
+
+
+
+       * _M_N_E_M_O_S_Y_N_E _R_E_C_F_U_N_D_E_F/_1
+
+       * _M_N_E_M_O_S_Y_N_E _R_U_L_E/_1
+
+AUTHOR
+     Hans Nilsson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: mnemosyne  1.2.5                 8
+
+
+

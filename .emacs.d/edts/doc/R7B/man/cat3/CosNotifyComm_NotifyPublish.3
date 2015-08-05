@@ -1,0 +1,66 @@
+
+
+
+CosNotifyComm_NotifyPuEbRlLiAsNhG(3M)ODULE DCEoFsINNoItTiIfOyNComm_NotifyPublish(3)
+
+
+
+MODULE
+     CosNotifyComm_NotifyPublish -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     All objects, which inherit this interface, export  functions
+     described in this module.
+
+
+EXPORTS
+     offer_change(Object, Added, Removed) -> Reply
+
+          Types
+               Object = #objref
+               Added = Removed = EventTypeSeq
+               EventTypeSeq = [type]
+               Reply       =       ok       |       {'EXCEPTION',
+               CosNotifyComm_InvalidEventType{type}}
+               type  =  #'CosNotification_EventType'{domain_name,
+               type_name}
+               domain_name = type_name = string()
+
+          Objects supporting this interface can  be  informed  by
+          supplier  objects  about which type of events that will
+          be delivered in the future. This operation accepts  two
+          parameters  describing  new and old event types respec-
+          tively. If any of the supplied event type names is syn-
+          tactically incorrect an exception is raised.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+

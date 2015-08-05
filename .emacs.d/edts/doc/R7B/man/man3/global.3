@@ -1,0 +1,293 @@
+.TH global 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+global \- A Global Name Registration Facility
+.SH DESCRIPTION
+.LP
+This documentation describes the Global module which consists of the following functionalities: 
+.br
+\fI 1\&.\fR Registration of global names 
+.br
+\fI 2\&.\fR Global locks 
+.br
+\fI 3\&.\fR Monitoring nodes 
+.br
+\fI 4\&.\fR Maintenance of the fully connected network 
+.LP
+These services are controlled via the process \fIglobal\fR which exists on every node\&. \fIglobal\fR is started automatically when a node is started\&. 
+.LP
+The ability to globally register names is a central concept in the programming of distributed Erlang systems\&. In this module, the equivalent of the \fIregister/2\fR and \fIwhereis/1\fR BIFs are implemented, but for a network of Erlang nodes\&. A registered name is an alias for a process identity \fI Pid\fR\&. The system monitors globally registered Pids\&. If a process terminates, the name will also be globally unregistered\&. 
+.LP
+The registered names are stored in replica global name tables on every node\&. There is no central storage point\&. Thus, the translation of a name to a Pid is extremely quick because it is never a network operation\&. When any action in taken which results in a change to the global name table all tables on other nodes are automatically updated\&. 
+.LP
+Global locks have lock identities and are set on a specific resource\&. For instance, the specified resource could be a Pid of a process\&. When a global lock is set access to the locked resource is denied for all other resources other than the lock requester\&. 
+.LP
+Both the registration and lock functionalities are atomic\&. All nodes involved in these actions will have the same view of the information\&. 
+.LP
+The server also performs the critical task of continuously monitoring changes in node configuration, if a node which runs a globally registered process goes down, the name will be globally unregistered\&. The server will also maintain a fully connected network\&. For example, if node \fIN1\fR connects to node \fIN2\fR (which is already connected to \fIN3\fR), the \fIglobal\fR server on \fIN1\fR then \fIN3\fR will make sure that also \fIN1\fR and \fIN3\fR are connected\&. If this is not desired, the command line flag \fI-connect_all false\fR must be passed to \fIinit\fR at boot time\&. In this case, the name registration facility cannot be used (but the lock mechanism will still work\&.) 
+
+.SH EXPORTS
+.LP
+.B
+del_lock(Id)
+.br
+.B
+del_lock(Id, Nodes) -> void()
+.br
+.RS
+.TP
+Types
+Id = {ResourceId, LockRequesterId}
+.br
+ResourceId = term()
+.br
+LockRequesterId = term()
+.br
+Nodes = [node()]
+.br
+.RE
+.RS
+.LP
+Deletes the lock \fIId\fR synchronously\&. 
+.RE
+.LP
+.B
+notify_all_name(Name, Pid1, Pid2) -> none
+.br
+.RS
+.LP
+This function can be used as a name resolving function for \fIregister_name/3\fR and \fIre_register_name/3\fR\&. It unregisters both Pids, and sends the message \fI{global_name_conflict, Name, OtherPid}\fR to both processes\&. 
+.RE
+.LP
+.B
+random_exit_name(Name, Pid1, Pid2) -> Pid1 | Pid2
+.br
+.RS
+.LP
+This function can be used as a name resolving function for \fIregister_name/3\fR and \fIre_register_name/3\fR\&. It randomly chooses one of the Pids for registration and kills the other one\&. 
+.RE
+.LP
+.B
+random_notify_name(Name, Pid1, Pid2) -> Pid1 | Pid2
+.br
+.RS
+.LP
+This function can be used as a name resolving function for \fIregister_name/3\fR and \fIre_register_name/3\fR\&. It randomly chooses one of the Pids for registration, and sends the message \fI{global_name_conflict, Name}\fR to the other Pid\&. 
+.RE
+.LP
+.B
+register_name(Name, Pid)
+.br
+.B
+register_name(Name, Pid, Resolve) -> yes | no
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+Pid = Pid()
+.br
+Resolve = {M, F} where M:F(Name, Pid, Pid2) -> Pid | Pid2 | none
+.br
+.RE
+.RS
+.LP
+Globally notifies all nodes of a new global name in a network of Erlang nodes\&. 
+.LP
+When new nodes are added to the network, they are informed of the globally registered names that already exist\&. The network is also informed of any global names in newly connected nodes\&. If any name clashes are discovered, the \fIResolve\fR function is called\&. Its purpose is to decide which Pid is correct\&. This function blocks the global name server during its execution\&. If the function crashes, or returns anything other than one of the Pids, the name is unregistered\&. This function is called once for each name clash\&. 
+.LP
+There are three pre-defined resolve functions, \fIrandom_exit_name\fR, \fIrandom_notify_name\fR and \fInotify_all_name\fR\&. If no \fIResolve\fR function is defined, \fIrandom_exit_name\fR is used\&. This means that one of the two registered processes will be selected as correct while the other is killed\&. 
+.LP
+This function is completely synchronous\&. This means that when this function returns, the name is either registered on all nodes or none\&. 
+.LP
+The function returns \fIyes\fR if successful, \fIno\fR if it fails\&. For example, \fIno\fR is returned if an attempt is made to register a process with a name that is already in use\&. 
+.LP
+If a process with a registered name dies, or the node goes down, the name is unregistered on all nodes\&. 
+.RE
+.LP
+.B
+registered_names() -> [Name]
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+Returns a lists of all globally registered names\&. 
+.RE
+.LP
+.B
+re_register_name(Name, Pid)
+.br
+.B
+re_register_name(Name, Pid, Resolve) -> void()
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+Pid = Pid()
+.br
+Resolve = {M, F} where M:F(Name, Pid, Pid2) -> Pid | Pid2 | none
+.br
+.RE
+.RS
+.LP
+Atomically changes the registered name \fIName\fR on all nodes to refer to \fIPid\fR\&. 
+.LP
+The \fIResolve\fR function has the same behavior as in \fIregister_name\fR\&. 
+.RE
+.LP
+.B
+send(Name, Msg) -> Pid
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+Msg = term()
+.br
+Pid = Pid()
+.br
+.RE
+.RS
+.LP
+Sends the message \fIMsg\fR to the globally registered process \fIName\fR\&. If \fIName\fR is not a globally registered name, the calling function will exit with reason \fI{badarg, {Name, Msg}}\fR\&. 
+.RE
+.LP
+.B
+set_lock(Id)
+.br
+.B
+set_lock(Id, Nodes)
+.br
+.B
+set_lock(Id, Nodes, Retries) -> boolean()
+.br
+.RS
+.TP
+Types
+Id = {ResourceId, LockRequesterId}
+.br
+ResourceId = term()
+.br
+LockRequesterId = term()
+.br
+Nodes = [node()]
+.br
+Retries = int() > 0 | infinity
+.br
+.RE
+.RS
+.LP
+Sets a lock on the specified nodes (or on all nodes if none are specified) on \fIResourceId\fR for \fILockRequesterId\fR\&. If a lock already exists on \fIResourceId\fR for another requester than \fILockRequesterId\fR, and \fIRetries\fR is not equal to 0, the process sleeps for a while and will try to execute the action later\&. When \fIRetries\fR attempts have been made, \fIfalse\fR is returned, otherwise \fItrue\fR\&. If \fIRetries\fR is \fIinfinity\fR, \fItrue\fR is eventually returned (unless the lock is never released)\&. 
+.LP
+If no value for \fIRetries\fR is given, \fIinfinity\fR is used\&. 
+.LP
+This function is completely synchronous\&. 
+.LP
+If a process which holds a lock dies, or the node goes down, the locks held by the process are deleted\&. 
+.LP
+\fIglobal\fR keeps track of all processes sharing the same lock, i\&.e\&. if two processes set the same lock both processes must delete the lock\&. 
+.LP
+This function does not address the problem of a deadlock\&. A deadlock can never occur as long as processes only lock one resource at a time\&. But if some processes try to lock two or more resources, a deadlock may occur\&. It is up to the application to detect and rectify a deadlock\&. 
+.RE
+.LP
+.B
+start()
+.br
+.B
+start_link() -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.LP
+This function starts the global name server\&. Normally, the server is started automatically\&. 
+.RE
+.LP
+.B
+stop() -> void()
+.br
+.RS
+.LP
+Stops the global name server\&. 
+.RE
+.LP
+.B
+sync() -> void()
+.br
+.RS
+.LP
+Synchronizes the global name server with all nodes known to this node\&. These are the nodes which are returned from \fIerlang:nodes()\fR\&. When this function returns, the global name server will receive global information from all nodes\&. This function can be called when new nodes are added to the network\&. 
+.RE
+.LP
+.B
+trans(Id, Fun)
+.br
+.B
+trans(Id, Fun, Nodes)
+.br
+.B
+trans(Id, Fun, Nodes, Retries) -> Res | aborted
+.br
+.RS
+.TP
+Types
+Id = {ResourceId, LockRequesterId}
+.br
+ResourceId = term()
+.br
+LockRequesterId = term()
+.br
+Fun = fun() | {M, F}
+.br
+Nodes = [node()]
+.br
+Retries = int() > 0 | infinity
+.br
+Res = term()
+.br
+.RE
+.RS
+.LP
+Sets a lock on \fIId\fR (using \fIset_lock/3\fR)\&. Evaluates \fIRes = Fun()\fR if successfully locked and returns \fIRes\fR\&. Returns \fIaborted\fR if the lock attempt failed\&. If \fIRetries\fR is set to \fIinfinity\fR, the transaction will not abort\&. 
+.LP
+\fIinfinity\fR is the default setting and will be used if no value is given for \fIRetries\fR\&. 
+.RE
+.LP
+.B
+unregister_name(Name) -> void()
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+Globally removes \fIName\fR from the network of Erlang nodes\&. 
+.RE
+.LP
+.B
+whereis_name(Name) -> Pid() | undefined
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+Returns either an atom \fIundefined\fR, or a Pid which is globally associated with \fIName\fR\&. 
+.RE
+.SH AUTHORS
+.nf
+Claes Wikstrom - support@erlang.ericsson.se
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,234 @@
+.TH cosNotificationApp 3 "cosNotification  1.0.2" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+cosNotificationApp \-  The main module of the cosNotification application 
+.SH DESCRIPTION
+.LP
+To get access to the record definitions for the structures use:
+.br
+ \fI-include_lib("cosNotification/include/*\&.hrl")\&.\fR 
+.LP
+This module contains the functions for starting and stopping the application\&. 
+
+.SH EXPORTS
+.LP
+.B
+install() -> Return
+.br
+.RS
+.TP
+Types
+Return = ok | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This operation installs the cosNotification application\&. 
+.RE
+.LP
+.B
+install(Seconds) -> Return
+.br
+.RS
+.TP
+Types
+Return = ok | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This operation installs the cosNotification application using \fISeconds\fR delay between each block, currently 6, of IFR-registrations\&. This approach spreads the IFR database access over a period of time to allow other applications to run smother\&. 
+.RE
+.LP
+.B
+install_event() -> Return
+.br
+.RS
+.TP
+Types
+Return = ok | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This operation installs the necessary cosEvent interfaces\&. If cosEvent is already installed this operation may not be used\&. 
+.RE
+.LP
+.B
+install_event(Seconds) -> Return
+.br
+.RS
+.TP
+Types
+Return = ok | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This operation installs the necessary cosEvent interfaces using \fISeconds\fR delay between each block of IFR-registrations\&. If cosEvent is already installed this operation may not be used\&. 
+.RE
+.LP
+.B
+uninstall() -> Return
+.br
+.RS
+.TP
+Types
+Return = ok | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This operation uninstalls the cosNotification application\&. 
+.RE
+.LP
+.B
+uninstall(Seconds) -> Return
+.br
+.RS
+.TP
+Types
+Return = ok | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This operation uninstalls the cosNotification application using \fISeconds\fR delay between each block, currently 6, of IFR-unregistrations\&. This approach spreads the IFR database access over a period of time to allow other applications to run smother\&. 
+.RE
+.LP
+.B
+uninstall_event() -> Return
+.br
+.RS
+.TP
+Types
+Return = ok | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This operation uninstalls the inherrited cosEvent interfaces\&. If cosEvent is in use this function may not be used\&. 
+.RE
+.LP
+.B
+uninstall_event(Seconds) -> Return
+.br
+.RS
+.TP
+Types
+Return = ok | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This operation uninstalls the inherrited cosEvent interfaces, using \fISeconds\fR delay between each block of IFR-unregistrations\&. If cosEvent is in use this function may not be used\&. 
+.RE
+.LP
+.B
+start() -> Return
+.br
+.RS
+.TP
+Types
+Return = ok | {error, Reason}
+.br
+.RE
+.RS
+.LP
+This operation starts the cosNotification application\&. 
+.RE
+.LP
+.B
+stop() -> Return
+.br
+.RS
+.TP
+Types
+Return = ok | {error, Reason}
+.br
+.RE
+.RS
+.LP
+This operation stops the cosNotification application\&. 
+.RE
+.LP
+.B
+start_factory() -> ChannelFactory
+.br
+.RS
+.TP
+Types
+ChannelFactory = #objref
+.br
+.RE
+.RS
+.LP
+This operation creates a Event Channel Factory\&. The Factory is used to create a new channel\&. 
+.RE
+.LP
+.B
+start_factory(Options) -> ChannelFactory
+.br
+.RS
+.TP
+Types
+Options = [Option]
+.br
+Option = {pullInterval, Seconds} | {filterOp, Op} | {gcTime, Seconds} | {gcLimit, Percent} | {timeService, #objref}
+.br
+ChannelFactory = #objref
+.br
+.RE
+.RS
+.LP
+This operation creates a Event Channel Factory\&. The Factory is used to create a new channel\&. 
+.RE
+.LP
+.B
+stop_factory(ChannelFactory) -> Reply
+.br
+.RS
+.TP
+Types
+ChannelFactory = #objref
+.br
+Reply = ok | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This operation stop the target channel factory\&. 
+.RE
+.LP
+.B
+start_filter_factory() -> FilterFactory
+.br
+.RS
+.TP
+Types
+FilterFactory = #objref
+.br
+.RE
+.RS
+.LP
+This operation creates a Filter Factory\&. The Factory is used to create a new Filter\&'s and MappingFilter\&'s\&. 
+.RE
+.LP
+.B
+stop_filter_factory(FilterFactory) -> Reply
+.br
+.RS
+.TP
+Types
+FilterFactory = #objref
+.br
+Reply = ok | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This operation stop the target filter factory\&. 
+.RE
+.SH AUTHOR
+.nf
+support - support@erlang.ericsson.se
+.fi

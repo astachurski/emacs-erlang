@@ -1,0 +1,73 @@
+.TH lib 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+lib \- Interface Module
+.SH DESCRIPTION
+.LP
+The module \fIlib\fR provides the following useful library functions\&. 
+
+.SH EXPORTS
+.LP
+.B
+flush_receive() -> void()
+.br
+.RS
+.LP
+Flushes the message buffer of the current process\&. 
+.RE
+.LP
+.B
+error_message(Format, Args)
+.br
+.RS
+.LP
+Prints error message \fIArgs\fR in accordance with \fIFormat\fR in the normal way\&. 
+.RE
+.LP
+.B
+progname() -> atom()
+.br
+.RS
+.LP
+Returns the name of the script that starts the current Erlang session\&. 
+.RE
+.LP
+.B
+nonl(List1)
+.br
+.RS
+.LP
+Removes the last newline character, if any, in \fIList\fR\&. 
+.RE
+.LP
+.B
+send(To, Msg)
+.br
+.RS
+.LP
+This function to makes it possible to send a message through \fIapply\fR\&. 
+.RE
+.LP
+.B
+sendw(To, Msg)
+.br
+.RS
+.LP
+As \fIsend/2\fR, but waits for an answer\&. It is implemented as follows:
+
+.nf
+  sendw(To, Msg) ->
+    To ! {self(),Msg},
+    receive
+      Reply -> Reply
+    end\&.
+.fi
+.LP
+The message returned is not necessarily a reply to the message sent\&. 
+.RE
+.SH Warning
+.LP
+This module is retained for compatibility\&. It may disappear without warning in a future release\&. 
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

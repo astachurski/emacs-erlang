@@ -1,0 +1,66 @@
+
+
+
+CosTransactions_TerminEaRtLoArN(G3)MODULE DECFoIsNTIrTaInOsNactions_Terminator(3)
+
+
+
+MODULE
+     CosTransactions_Terminator -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -
+     _i_n_c_l_u_d_e__l_i_b("_c_o_s_T_r_a_n_s_a_c_t_i_o_n_s/_i_n_c_l_u_d_e/_C_o_s_T_r_a_n_s_a_c_t_i_o_n_s._h_r_l").
+
+
+EXPORTS
+     commit(Terminator, ReportHeuristics) -> Return
+
+          Types
+               Terminator = #objref
+               ReportHeuristics = boolean()
+               Return = ok | {'EXCEPTION', E}
+               E    =    #'CosTransactions_HeuristicMixed'{}    |
+               #'CosTransactions_HeuristicHazrd'{}              |
+               #'CosTransactions_TransactionRolledBack'{}
+
+          This operation initiates the two-phase commit protocol.
+          If  the transaction has not been marked '_r_o_l_l_b_a_c_k _o_n_l_y'
+          and all the participants agree to commit, the operation
+          terminates  normally. Otherwise, the TransactionRolled-
+          Back is raised. If the  parameter  _R_e_p_o_r_t_H_e_u_r_i_s_t_i_c_s  is
+          true  and inconsistent outcomes by raising an Heuristic
+          Exception.
+
+     rollback(Terminator) -> Return
+
+          Types
+               Terminator = #objref
+               Return = ok
+
+          This operation roles back the transaction.
+
+AUTHOR
+     Niclas Eklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             1
+
+
+

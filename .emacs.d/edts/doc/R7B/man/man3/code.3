@@ -1,0 +1,625 @@
+.TH code 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+code \- Erlang Code Server
+.SH DESCRIPTION
+.LP
+This module deals with the loading of compiled and interpreted code into a running Erlang runtime system\&. 
+.LP
+The code server dynamically loads modules into the system on demand, which means the first time the module is referenced\&. This functionality can be turned off using the command line flag \fI-mode embedded\fR\&. In this mode, all code is loaded during system start-up\&.
+.LP
+If started in \fIinteractive\fR mode, all directories under the $ROOT/lib directory are initially added to the search path of the code server ()\&. The $ROOT directory is the installation directory of Erlang/OTP, \fIcode:root_dir()\fR\&. Directories can be named \fIName[-Vsn]\fR and the code server, by default, chooses the greatest (>) directory among those which have the same \fIName\fR\&. The \fI-Vsn\fR suffix is optional\&.
+.LP
+If an \fIebin\fR directory exists under a chosen directory, it is added to the directory\&. The \fIName\fR of the directory (or library) can be used to find the full directory name (including the current version) through the \fIpriv_dir/1\fR and \fIlib_dir/1\fR functions\&.
+
+.SH EXPORTS
+.LP
+.B
+start() -> {ok, Pid} | {error, What}
+.br
+.B
+start(Flags) -> {ok, Pid} | {error, What}
+.br
+.RS
+.TP
+Types
+Flags = [stick | nostick | embedded | interactive]
+.br
+Pid = pid()
+.br
+What = term()
+.br
+.RE
+.RS
+.LP
+This function starts the code server\&. \fIstart/0\fR implies that the \fIstick\fR and \fIinteractive\fR flags are set\&.
+.LP
+\fIFlags\fR can also be entered as the command line flags \fI-stick\fR, \fI-nostick\fR and \fI-mode embedded | interactive\fR\&. \fI-stick\fR and \fI-mode interactive\fR are the defaults\&. The \fIstick\fR flag indicates that a module can never be re-loaded once it has been loaded from the \fIkernel\fR, \fIstdlib\fR, or \fIcompiler\fR directories\&.
+.RE
+.LP
+.B
+start_link() -> {ok, Pid} | {error, What}
+.br
+.B
+start_link(Flags) -> {ok, Pid} | {error, What}
+.br
+.RS
+.TP
+Types
+Flags = [stick | nostick | embedded | interactive]
+.br
+Pid = pid()
+.br
+What = term()
+.br
+.RE
+.RS
+.LP
+This function starts the code server and sets up a link to the calling process\&. This function should be used if the code server is supervised\&. \fIstart_link/0\fR implies that the\fIstick\fR and \fIinteractive\fR flags are set\&.
+.LP
+The \fIFlags\fR can also be given as command line flags, \fI-stick\fR, \fI-nostick\fR and \fI-mode embedded | interactive\fR where \fI-stick\fR and \fI-mode interactive\fR is the default\&. The \fIstick\fR flag indicates that a module which has been loaded from the \fIkernel\fR, \fIstdlib\fR or \fIcompiler\fR directories can never be reloaded\&.
+.RE
+.LP
+.B
+set_path(DirList) -> true | {error, What}
+.br
+.RS
+.TP
+Types
+DirList = [Dir]
+.br
+Dir = string()
+.br
+What = bad_directory | bad_path
+.br
+.RE
+.RS
+.LP
+Sets the code server search path to the list of directories \fIDirList\fR\&.
+.RE
+.LP
+.B
+get_path() -> Path
+.br
+.RS
+.TP
+Types
+Path = [Dir]
+.br
+Dir = string()
+.br
+.RE
+.RS
+.LP
+Returns the current path\&.
+.RE
+.LP
+.B
+add_path(Dir) -> true | {error, What}
+.br
+.B
+add_pathz(Dir) -> true | {error, What}
+.br
+.RS
+.TP
+Types
+Dir = string()
+.br
+What = bad_directory
+.br
+.RE
+.RS
+.LP
+Adds \fIDir\fR to the current path\&. The directory is added as the last directory in the new path\&. If \fIDir\fR already exists in the path, it is not added\&.
+.RE
+.LP
+.B
+add_patha(Dir) -> true | {error, What}
+.br
+.RS
+.TP
+Types
+Dir = string()
+.br
+What = bad_directory
+.br
+.RE
+.RS
+.LP
+This function adds \fIDir\fR to the beginning of the current path\&. If \fIDir\fR already exists, the old directory is removed from path\&.
+.RE
+.LP
+.B
+add_paths(DirList) -> ok
+.br
+.B
+add_pathsz(DirList) -> ok
+.br
+.RS
+.TP
+Types
+DirList = [Dir]
+.br
+Dir = string()
+.br
+.RE
+.RS
+.LP
+This function adds the directories in \fIDirList\fR to the end of the current path\&. If a \fIDir\fR already exists in the path, it is not added\&. This function always returns \fIok\fR, regardless of the validity of each individual \fIDir\fR\&.
+.RE
+.LP
+.B
+add_pathsa(DirList) -> ok
+.br
+.RS
+.TP
+Types
+DirList = [Dir]
+.br
+Dir = string()
+.br
+.RE
+.RS
+.LP
+Adds the directories in \fIDirList\fR to the beginning of the current path\&. If a \fIDir\fR already exists, the old directory is removed from the path\&. This function always returns \fIok\fR, regardless of the validity of each individual \fIDir\fR\&. 
+.RE
+.LP
+.B
+del_path(NameDir) -> true | false | {error, What}
+.br
+.RS
+.TP
+Types
+NameDir = Name | Dir
+.br
+Name = atom()
+.br
+Dir = string()
+.br
+What = bad_name
+.br
+.RE
+.RS
+.LP
+This function deletes an old occurrence of a directory in the current path with the name \fI\&.\&.\&./Name[-*][/ebin]\fR\&. It is also possible to give the complete directory name \fIDir\fR in order to delete it\&.
+.LP
+This function returns \fItrue\fR if the directory was deleted, and \fIfalse\fR if the directory was not found\&.
+.RE
+.LP
+.B
+replace_path(Name, Dir) -> true | {error, What}
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+Dir = string()
+.br
+What = bad_name | bad_directory | {badarg, term()}
+.br
+.RE
+.RS
+.LP
+This function replaces an old occurrence of a directory named \fI\&.\&.\&./Name[-*][/ebin]\fR, in the current path, with \fIDir\fR\&. If \fIName\fR does not exist, it adds the new directory \fIDir\fR last in path\&. The new directory must also be named \fI\&.\&.\&./Name[-*][/ebin]\fR\&. This function should be used if a new version of the directory (library) is added to a running system\&.
+.RE
+.LP
+.B
+load_file(Module) -> {module, Module} | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+What = nofile | sticky_directory | badarg | term()
+.br
+.RE
+.RS
+.LP
+This function tries to load the Erlang module \fIModule\fR, using the current path\&. It looks for the object code file which has a suffix that corresponds to the Erlang machine used, for example \fIModule\fR\&.beam\&. The loading fails if the module name found in the object code differs from the name \fIModule\fR\&. \fIload_binary/3\fR must be used to load object code with a module name that is different from the file name\&.
+.RE
+.LP
+.B
+load_abs(File) -> {module, Module} | {error, What}
+.br
+.RS
+.TP
+Types
+File = atom() | string()
+.br
+Module = atom()
+.br
+What = nofile | sticky_directory | badarg | term()
+.br
+.RE
+.RS
+.LP
+This function does the same as \fIload_file(Module)\fR, but \fIFile\fR is either an absolute file name, or a relative file name\&. The current path is not searched\&. It returns a value in the same way as \fIload_file(Module)\fR\&. Note that \fIFile\fR should not contain an extension (\fI"\&.beam"\fR); \fIload_abs/1\fR adds the correct extension itself\&.
+.RE
+.LP
+.B
+ensure_loaded(Module) -> {module, Module} | {error, What} | {interpret, Module}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+What = nofile | sticky_directory | embedded | badarg | term()
+.br
+.RE
+.RS
+.LP
+This function tries to ensure that the module \fIModule\fR is loaded\&. To work correctly, a file with the same name as \fIModule\&.Suffix\fR must exist in the current search path\&. \fISuffix\fR must correspond to the running Erlang machine, for example \fI\&.beam\fR\&. It returns a value in the same way as \fIload_file(File)\fR, or \fI{interpret, Module}\fR if \fIModule\fR is interpreted\&.
+.LP
+If the system is started with the \fI-mode embedded\fR command line flag, this function will not load a module which has not already been loaded\&. \fI{error, embedded}\fR is returned\&.
+.RE
+.LP
+.B
+delete(Module) -> true | false
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+.RE
+.RS
+.LP
+This function deletes the code in \fIModule\fR and the code in \fIModule\fR is marked as old\&. This means that no external function calls can be made to this occurrence of \fIModule\fR, but a process which executes code inside this module continues to do so\&. Returns \fItrue\fR if the operation was successful (i\&.e\&., there was a current version of the module, but no old version), otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+purge(Module) -> true | false
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+.RE
+.RS
+.LP
+This function purges the code in \fIModule\fR, that is, it removes code marked as old\&. If some processes still execute code in the old occurrence of \fIModule\fR, these processes are killed before the module is purged\&. Returns \fItrue\fR if a process has been killed, otherwise \fIfalse\fR\&.
+.RE
+.LP
+.B
+soft_purge(Module) -> true | false
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+.RE
+.RS
+.LP
+This function purges the code in \fIModule\fR, that is, it removes code marked as old, but only if no process currently runs the old code\&. It returns \fIfalse\fR if a process uses the old code, otherwise \fItrue\fR\&.
+.RE
+.LP
+.B
+is_loaded(Module) -> {file, Loaded} | false
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Loaded = AbsFileName | preloaded | interpreted
+.br
+AbsFileName = string()
+.br
+.RE
+.RS
+.LP
+This function tests if module \fIModule\fR is loaded\&. If the module is loaded, the absolute file name of the file from which the code was obtained is returned\&.
+.RE
+.LP
+.B
+all_loaded() -> [LoadMod]
+.br
+.RS
+.TP
+Types
+LoadMod = {Module, Loaded}
+.br
+Module = atom()
+.br
+Loaded = AbsFileName | preloaded | interpreted
+.br
+AbsFileName = string()
+.br
+.RE
+.RS
+.LP
+This function returns a list of tuples of the type \fI{Module, Loaded}\fR for all loaded modules\&. \fILoaded\fR is the absolute file name of the loaded module, the atom \fIpreloaded\fR if the module was pre-loaded, or the atom \fIinterpreted\fR if the module is interpreted\&.
+.RE
+.LP
+.B
+load_binary(Module, File, Binary) -> {module, Module} | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+What = sticky_directory | badarg | term()
+.br
+.RE
+.RS
+.LP
+This function can be used to load object code on remote Erlang nodes\&. It can also be used to load object code where the file name and module name differ\&. This, however, is a very unusual situation and should be used with care\&. The parameter \fIBinary\fR must contain object code for the module \fIModule\fR\&. The \fIFile\fR parameter is only used by the code server to keep a record from which file the object code in \fIModule\fR comes\&. Accordingly, \fIFile\fR is not opened and read by the code server\&. 
+.RE
+.LP
+.B
+stop() -> stopped
+.br
+.RS
+.LP
+Stops the code server\&.
+.RE
+.LP
+.B
+root_dir() -> RootDir
+.br
+.RS
+.TP
+Types
+RootDir = string()
+.br
+.RE
+.RS
+.LP
+Returns the root directory of Erlang/OTP, which is the directory where it is installed\&.
+.RE
+.LP
+.B
+lib_dir() -> LibDir
+.br
+.RS
+.TP
+Types
+LibDir = string()
+.br
+.RE
+.RS
+.LP
+Returns the library directory\&.
+.RE
+.LP
+.B
+lib_dir(Name) -> LibDir | {error, What}
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+LibDir = string()
+.br
+What = bad_name
+.br
+.RE
+.RS
+.LP
+This function returns the current \fIlib\fR directory for the \fIName\fR[-*] directory (or library)\&. The current path is searched for a directory named \fI\&.\&.\&./Name-*\fR (the \fI-*\fR suffix is optional for directories in the search path and it represents the version of the directory)\&.
+.RE
+.LP
+.B
+compiler_dir() -> CompDir
+.br
+.RS
+.TP
+Types
+CompDir = string()
+.br
+.RE
+.RS
+.LP
+This function returns the compiler directory\&.
+.RE
+.LP
+.B
+priv_dir(Name) -> PrivDir | {error, What}
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+PrivDir = string()
+.br
+What = bad_name
+.br
+.RE
+.RS
+.LP
+This function returns the current \fIpriv\fR directory for the \fIName\fR[-*] directory\&. The current path is searched for a directory named \fI\&.\&.\&./Name-*\fR (the \fI-*\fR suffix is optional for directories in the search path and it represents the version of the directory)\&. The \fI/priv\fR suffix is added to the end of the found directory\&.
+.RE
+.LP
+.B
+get_object_code(Module) -> {Module, Bin, AbsFileName} | error
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Bin = binary()
+.br
+AbsFileName = string()
+.br
+.RE
+.RS
+.LP
+This function searches the code path in the code server for the object code of the module \fIModule\fR\&. It returns \fI{Mod, Bin, Filename}\fR if successful, and \fIerror\fR if not\&. \fIBin\fR is a binary data object which contains the object code for the module\&. This can be useful if code is to be loaded on a remote node in a distributed system\&. For example, loading module \fIModule\fR on node \fIN\fR is done as follows: 
+
+.nf
+\&.\&.\&.         
+{Mod, B, F} = code:get_object_code(Mod),
+rpc:call(N,code, load_binary, [Mod, F, B]),
+\&.\&.\&.
+.fi
+.RE
+.LP
+.B
+objfile_extension() -> Ext
+.br
+.RS
+.TP
+Types
+Ext = string()
+.br
+.RE
+.RS
+.LP
+This function returns the object code file extension for the running Erlang machine, for example "\&.beam"\&.
+.RE
+.LP
+.B
+stick_dir(Dir) -> ok | {error, term()}
+.br
+.RS
+.TP
+Types
+Dir = string()
+.br
+.RE
+.RS
+.LP
+This function marks \fIDir\fR as \&'sticky\&'\&. The system issues a warning and rejects the request if a user tries to re-load a module in a sticky directory\&. Sticky directories are used to warn the user about inadvertent changes to system software\&.
+.RE
+.LP
+.B
+unstick_dir(Dir) -> ok | {error, term()}
+.br
+.RS
+.TP
+Types
+Dir = string()
+.br
+.RE
+.RS
+.LP
+This function unsticks a directory which has been marked sticky\&. Code which is located in the unstuck directory can be re-loaded into the system\&.
+.RE
+.LP
+.B
+which(Module) -> WhichFile
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+WhichFile = FileName | non_existing | preloaded | interpreted
+.br
+FileName = string()
+.br
+.RE
+.RS
+.LP
+If the module is not loaded already, this function returns the directory path to the first file name in the search path of the code server which contains the object code for \fIModule\fR \&. If the module is loaded, it returns the directory path to the file name which contains the loaded object code\&. If the module is pre-loaded or interpreted, this is returned instead\&. \fInon_existing\fRis returned if the module cannot be found\&.
+.RE
+.LP
+.B
+clash() -> ok
+.br
+.RS
+.LP
+Searches the entire code space for module names with identical names and writes a report to \fIstdout\fR\&.
+.RE
+.LP
+.B
+interpret(Module) -> {module, Module} | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+What = no_interpreter | sticky_directory | badarg
+.br
+.RE
+.RS
+.LP
+Marks \fIModule\fR as being interpreted\&. 
+.RE
+.LP
+.B
+interpret_binary(Module, File, Binary) -> {module, Module} | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+File = string()
+.br
+Binary = binary()
+.br
+What = no_interpreter | sticky_directory | badarg | term()
+.br
+.RE
+.RS
+.LP
+Loads the interpreted \fIModule\fR into the interpreter\&. The parameter \fIBinary\fR contains the abstract form (and the source code) of the module\&. The file \fIFile\fR parameter locates the used source code file\&.
+.RE
+.LP
+.B
+delete_interpret(Module) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+What = no_interpreter | badarg
+.br
+.RE
+.RS
+.LP
+Stops interpretation of \fIModule\fR\&.
+.RE
+.LP
+.B
+interpreted() -> Modules
+.br
+.RS
+.TP
+Types
+Modules = [Module]
+.br
+Module = atom()
+.br
+.RE
+.RS
+.LP
+Returns a list of all modules which are being interpreted\&.
+.RE
+.LP
+.B
+interpreted(Module) -> true | false
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fIModule\fR is being interpreted, otherwise \fIfalse\fR\&. 
+.RE
+.SH Notes
+.LP
+\fIDir\fR has the described type \fIstring()\fR in all functions\&. For backwards compatibility, \fIatom()\fR is also allowed, but \fIstring()\fR is recommended\&.
+.LP
+The described type for \fIModule\fR is \fIatom()\fR in all functions\&. For backwards compatibility, \fIstring()\fR is also allowed\&.
+.SH AUTHORS
+.nf
+Joe Armstrong - support@erlang.ericsson.se
+Magnus Froberg - support@erlang.ericsson.se
+Robert Virding - support@erlang.ericsson.se
+Claes Wikstrom - support@erlang.ericsson.se
+.fi

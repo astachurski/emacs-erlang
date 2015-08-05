@@ -1,0 +1,60 @@
+.TH CosEventChannelAdmin_ProxyPullConsumer 3 "cosEvent  1.0.1.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+CosEventChannelAdmin_ProxyPullConsumer \-  This module implements a ProxyPullConsumer interface which acts as a middleman between pull supplier and the event channel\&. 
+.SH DESCRIPTION
+.LP
+The ProxyPullConsumer interface defines the second step for connecting pull suppliers to the event channel\&. A proxy consumer is similar to a normal consumer, but includes an additional method for connecting a supplier to the proxy consumer\&. 
+.LP
+There are a number of exceptions that can be returned from functions in this interface\&. 
+.RS 2
+.TP 2
+*
+AlreadyConnected is defined as \fI-record(\&'AlreadyConnected\&', {})\&.\fR
+.TP 2
+*
+CORBA standard BAD_PARAM is defined as \fI-record(\&'BAD_PARAM\&', {\&'OE_ID\&', minor, completion_status})\&.\fR
+.RE
+.LP
+The first exception is defined in the file \fIevent_service\&.hrl\fR and the second one in the file \fIcorba\&.hrl\fR\&. 
+.LP
+Any object that possesses an object reference that supports the ProxyPullConsumer interface can perform the following operations: 
+
+.SH EXPORTS
+.LP
+.B
+connect_pull_supplier(Object, PullSupplier) -> Return
+.br
+.RS
+.TP
+Types
+Object = #objref
+.br
+PullSupplier = #objref of PullSupplier type
+.br
+Return = void
+.br
+.RE
+.RS
+.LP
+This operation connects PullSupplier object to the ProxyPullConsumer object\&. If a nil object reference is passed CORBA standard \fIBAD_PARAM\fR exception is raised\&. If the ProxyPullConsumer is already connected to a PullSupplier, then the \fIAlreadyConnected exception\fR is raised\&. 
+.RE
+.LP
+.B
+disconnect_pull_consumer(Object) -> Return
+.br
+.RS
+.TP
+Types
+Object = #objref
+.br
+Return = void
+.br
+.RE
+.RS
+.LP
+This operation disconnects proxy pull consumer from the event channel and sends a notification about the loss of the connection to the pull supplier attached to it\&. 
+.RE
+.SH AUTHOR
+.nf
+Helen Airiyan - support@erlang.ericsson.se
+.fi

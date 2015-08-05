@@ -1,0 +1,23 @@
+.TH log_server 3 "eva  2.0.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+log_server \- The main server in LOG
+.SH DESCRIPTION
+.LP
+This module implements the main server in the LOG application\&. The client API to this server is defined in the module \fIlog\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+start_link() -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.LP
+Starts the log server\&. This function can be used to include the server in a supervisor\&. Normally, functions in the supervisor \fIlog_sup\fR can be used instead\&. 
+.RE
+.SH SEE ALSO
+.LP
+eva_log_sup(3), log(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

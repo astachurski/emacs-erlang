@@ -1,0 +1,396 @@
+
+
+
+erl(1)                    USER COMMANDS                    erl(1)
+
+
+
+NAME
+     erl - The Erlang Emulator
+
+DESCRIPTION
+     The _e_r_l program starts the Erlang runtime system. The  exact
+     details (e.g. whether _e_r_l is a script or a program and which
+     other programs it calls) are system-dependent.
+
+     Windows 95/98/2000/NT users will probably want  to  use  the
+     _w_e_r_l  program  instead,  which  run  in  its own window with
+     scrollbars and supports command-line editing. The  _e_r_l  pro-
+     gram  on  Windows provides no line editing in its shell, and
+     on Windows 95 there is no way to scroll back to  text  which
+     has  scrolled  off the screen. The _e_r_l program must be used,
+     however, in pipelines or if you want  to  redirect  standard
+     input or output.
+
+
+EXPORTS
+     erl <arguments>
+
+          Starts the Erlang system.
+
+          Any argument starting with a plus sign  (+)  is  always
+          interpreted as a system flag (described below), regard-
+          less of where it occurs on the command line.
+
+          Arguments starting with a hyphen (-) are the start of a
+          flag. A flag includes all following arguments up to the
+          next argument starting with a hyphen.
+
+          Example:
+
+          erl -sname arne -myflag 1 -s mod func arg
+
+          Here -_s_n_a_m_e _a_r_n_e is a flag and so are -_m_y_f_l_a_g _1 and  -_s
+          _m_o_d  _f_u_n_c  _a_r_g.  Note that these flags are treated dif-
+          ferently. -_s_n_a_m_e _a_r_n_e is interpreted by the OTP system,
+          but  it still included in the list of flags returned by
+          _i_n_i_t:_g_e_t__a_r_g_u_m_e_n_t_s/_0. -_s _m_o_d _f_u_n_c _a_r_g is  also  treated
+          specially  and  it  is not included in the return value
+          for _i_n_i_t:_g_e_t__a_r_g_u_m_e_n_t_s/_0. Finally,  -_m_y_f_l_a_g  _1  is  not
+          interpreted  by  the  OTP  system in any way, but it is
+          included in _i_n_i_t:_g_e_t__a_r_g_u_m_e_n_t_s/_0.
+
+          Plain arguments are not interpreted in  any  way.  They
+          can be retrieved using _i_n_i_t:_g_e_t__a_r_g_s/_0. Plain arguments
+          can occur in two places: Before the first flag argument
+          on the command line, or after a -- argument.
+
+Flags
+
+
+
+
+Ericsson Utvecklings ALBast change: erts  5.0.1                   1
+
+
+
+
+
+
+erl(1)                    USER COMMANDS                    erl(1)
+
+
+
+     The following flags are supported:
+
+       --: Any arguments -- following will not be interpreted  in
+           any way. They can be retrieved by _i_n_i_t:_g_e_t__a_r_g_s/_0. The
+           exception is arguments starting with a +,  which  will
+           be interpreted as system flags (see below).
+
+       -AppName Key Value:
+           Overrides  the  _K_e_y  configuration  parameter  of  the
+           _A_p_p_N_a_m_e  application. See application(3). This type of
+           flag can also be retrieved using the _i_n_i_t module.
+
+       -boot File:
+           Specifies the name  of  the  boot  script,  _F_i_l_e.boot,
+           which  is  used  to  start  the  system.  See init(3).
+           Unless_F_i_l_e  contains  an  absolute  path,  the  system
+           searches    for   _F_i_l_e.boot   in   the   current   and
+           <_E_R_L__I_N_S_T_A_L_L__D_I_R>/_b_i_n directories.
+
+           If      this      flag      is      omitted,       the
+           <_E_R_L__I_N_S_T_A_L_L__D_I_R>/_b_i_n/_s_t_a_r_t._b_o_o_t boot script is used.
+
+       -boot_var Var Directory [Var Directory]:
+           If the boot script used contains another path variable
+           than  $ROOT,  this variable must have a value assigned
+           in order to start the system. A boot variable is  used
+           if  user  applications  have been installed in another
+           location  than  underneath  the  <_E_R_L__I_N_S_T_A_L_L__D_I_R>/_l_i_b
+           directory.  $_V_a_r  is expanded to _D_i_r_e_c_t_o_r_y in the boot
+           script.
+
+       -compile mod1 mod2 ....:
+           Makes the Erlang system compile _m_o_d_1._e_r_l _m_o_d_2._e_r_l ....
+           and  then  terminate  (with  non-zero exit code if the
+           compilation of  some  file  didn't  succeed).  Implies
+           -_n_o_i_n_p_u_t. Not recommended - use erlc(1) instead.
+
+       -config Config:
+           Reads the _C_o_n_f_i_g.config configuration file in order to
+           configure the system. See application(3).
+
+       -connect_all false:
+           If this flag is present, _g_l_o_b_a_l will  _n_o_t  maintain  a
+           fully  connected  network of distributed erlang nodes,
+           and then global name registration cannot be used.  See
+           global(3).
+
+       -cookie:
+           Obsolete flag without any effect and  common  misspel-
+           ling  for  -_s_e_t_c_o_o_k_i_e. Use -_s_e_t_c_o_o_k_i_e _C_o_o_k_i_e option if
+           want to override the default cookie.
+
+
+
+
+Ericsson Utvecklings ALBast change: erts  5.0.1                   2
+
+
+
+
+
+
+erl(1)                    USER COMMANDS                    erl(1)
+
+
+
+       -detached:
+           Starts the Erlang system detached from the system con-
+           sole.  Useful  for  running  daemons  and  backgrounds
+           processes.
+
+       -emu_args:
+           Useful for debugging. Prints out the actual  arguments
+           sent to the emulator.
+
+       -env Variable Value:
+           Sets the HOST OS environment variable _V_a_r_i_a_b_l_e to  the
+           value _V_a_l_u_e of the Erlang system. For example:
+
+           % erl -env DISPLAY gin:0
+
+           In this example, an Erlang system is started with  the
+           DISPLAY environment variable set to the value _g_i_n:_0.
+
+       -heart:
+           Starts heart beat monitoring of the Erlang system. See
+           heart(3).
+
+       -hosts Hosts:
+           Specifies the IP addresses for the hosts on  which  an
+           Erlang  boot  servers are running. This flag is manda-
+           tory if the -_l_o_a_d_e_r _i_n_e_t  flag  is  present.  On  each
+           host,  there must be one Erlang node running, on which
+           the _b_o_o_t__s_e_r_v_e_r must be started.
+
+           The IP addresses must be given in  the  standard  form
+           (four  decimal numbers separated by periods, for exam-
+           ple "150.236.20.74"). Hosts names are not  acceptable,
+           but  an  broadcast  address (preferably limited to the
+           local network) is.
+
+       -id Id:
+           Specifies the identity of the Erlang  system.  If  the
+           system  runs as a distributed node, _I_d must be identi-
+           cal to the name supplied together with the  -_s_n_a_m_e  or
+           -_n_a_m_e distribution flags.
+
+       -instr:
+           Selects  an  instrumented   Erlang   system   (virtual
+           machine)  to  run,  instead  of the ordinary one. When
+           running an instrumented system,  some  resource  usage
+           data  can  be  obtained  and analysed using the module
+           _i_n_s_t_r_u_m_e_n_t. Functionally, it behaves exactly  like  an
+           ordinary Erlang system.
+
+       -loader Loader:
+           Specifies the name of the loader used to  load  Erlang
+           modules   into  the  system.  See  erl_prim_loader(3).
+
+
+
+Ericsson Utvecklings ALBast change: erts  5.0.1                   3
+
+
+
+
+
+
+erl(1)                    USER COMMANDS                    erl(1)
+
+
+
+           _L_o_a_d_e_r can be _e_f_i_l_e (use the local  file  system),  or
+           _i_n_e_t  (load  using  the  _b_o_o_t__s_e_r_v_e_r on another Erlang
+           node). If _L_o_a_d_e_r is something else, the user  supplied
+           _L_o_a_d_e_r port program is started.
+
+           If the -_l_o_a_d_e_r flag is omitted _e_f_i_l_e is assumed.
+
+       -make:
+           Makes the  Erlang  system  invoke  _m_a_k_e:_a_l_l()  in  the
+           current   work   directory  and  then  terminate.  See
+           make(3). Implies -_n_o_i_n_p_u_t.
+
+       -man Module:
+           Displays the manual page for the Erlang module _M_o_d_u_l_e.
+           Only supported on Unix.
+
+       -mode Mode:
+           The mode flag indicates if the system will  load  code
+           automatically  at  runtime,  or  if all code is loaded
+           during  system  initialization.  _M_o_d_e  can  be  either
+           _i_n_t_e_r_a_c_t_i_v_e to allow automatic code loading, or _e_m_b_e_d_-
+           _d_e_d to load all code during start-up. See code(3).
+
+       -name Name:
+           Makes the node a distributed node. This  flag  invokes
+           all  network  servers  necessary  for a node to become
+           distributed. See net_kernel(3).
+
+           The name of the node will be _N_a_m_e@_H_o_s_t, where _H_o_s_t  is
+           the  fully  qualified  host  name of the current host.
+           This flag also ensures that _e_p_m_d runs on  the  current
+           host before Erlang is started. See epmd(1).
+
+       -noinput:
+           Ensures that the Erlang system never tries to read any
+           input. Implies -_n_o_s_h_e_l_l.
+
+       -noshell:
+           Starts an Erlang system with no  shell  at  all.  This
+           flag  makes it possible to have the Erlang system as a
+           component in a series of UNIX pipes.
+
+       -nostick:
+           Disables the sticky directory  facility  of  the  _c_o_d_e
+           _s_e_r_v_e_r. See code(3).
+
+       -oldshell:
+           Invokes the old Erlang shell from Erlang release  3.3.
+           The old shell can still be used.
+
+       -pa Directories:
+           Adds the directories _D_i_r_e_c_t_o_r_i_e_s to the  head  of  the
+
+
+
+Ericsson Utvecklings ALBast change: erts  5.0.1                   4
+
+
+
+
+
+
+erl(1)                    USER COMMANDS                    erl(1)
+
+
+
+           search    path    of    the   code   server,   as   if
+           _c_o_d_e:_a_d_d__p_a_t_h_s_a/_1 was called. See code(3).
+
+       -pz Directories:
+           Adds the directories _D_i_r_e_c_t_o_r_i_e_s to  the  end  of  the
+           search    path    of    the   code   server,   as   if
+           _c_o_d_e:_a_d_d__p_a_t_h_s_a/_1 was called. See code(3).
+
+       -s Mod [Fun [Args]]:
+           Passes the -_s flag to  the  _i_n_i_t:_b_o_o_t()  routine.  See
+           init(3).
+
+       -setcookie Cookie:
+           Sets the magic cookie of the current node  to  _C_o_o_k_i_e.
+           As  _e_r_l_a_n_g:_s_e_t__c_o_o_k_i_e(_n_o_d_e(),  _C_o_o_k_i_e)  is  used,  all
+           other nodes will also be assumed to have their cookies
+           set  to  _C_o_o_k_i_e.  In this way, several nodes can share
+           one magic cookie. Erlang magic cookies  are  explained
+           in auth(3).
+
+       -sname Name:
+           This is the same as the -_n_a_m_e flag, with the exception
+           that  the  host name portion of the node name will not
+           be fully qualified. The following command is  used  do
+           start    Erlang    at   the   host   with   the   name
+           _g_i_n._e_u_a._e_r_i_c_s_s_o_n._s_e
+
+           % erl -sname klacke
+           Eshell V4.7 (abort with ^G)
+           (klacke@gin)1>
+
+           Only the host name portion of the node  name  will  be
+           relevant.  This  is sometimes the only way to run dis-
+           tributed Erlang if the DNS (Domain Name System) is not
+           running. There can be no communication between systems
+           running with the -_s_n_a_m_e flag and  those  running  with
+           the  -_n_a_m_e  flag, as node names must be unique in dis-
+           tributed Erlang systems.
+
+       -version:
+           Makes the system print out its version number.
+
+     All these flags are processed during  the  start-up  of  the
+     Erlang  kernel  servers  and  before  any user processes are
+     started.  All  flags  are  passed  to  _i_n_i_t:_b_o_o_t(_A_r_g_s).  See
+     init(3).  All  additional flags passed to the script will be
+     passed to _i_n_i_t:_b_o_o_t/_2 as well,  and  they  can  be  accessed
+     using the _i_n_i_t module.
+
+System Flags
+     The _e_r_l script invokes  the  code  for  the  Erlang  virtual
+     machine. This program supports the following flags:
+
+
+
+Ericsson Utvecklings ALBast change: erts  5.0.1                   5
+
+
+
+
+
+
+erl(1)                    USER COMMANDS                    erl(1)
+
+
+
+       +A size:
+           Sets the pool size for device driver threads.  Default
+           is 0.
+
+       +B: De-activates the break handler for ^C and ^\ .
+
+       +h size:
+           Sets the default heap size of processes  to  the  size
+           _s_i_z_e.
+
+       +l: Displays info while loading code.
+
+       +P Number:
+           Sets the total number of processes  for  this  system.
+           The _N_u_m_b_e_r must be in the range [15,32768].
+
+       +s size:
+           Sets the default stack size for  Erlang  processes  to
+           the size _s_i_z_e.
+
+       +v: Verbose
+
+       +V: Prints the version of Erlang at start-up.
+
+     Example:
+
+     % erl -name foo +B +l
+
+     In this example, a distributed  node  is  started  with  the
+     break  handler  turned  off  and  a lot of info is displayed
+     while the code is loading.
+
+See Also
+     init(3),  erl_prim_loader(3),  erl_boot_server(3),  code(3),
+     application(3),  heart(3),  net_kernel(3), auth(3), make(3),
+     epmd(1)
+
+AUTHORS
+     Joe Armstrong - support@erlang.ericsson.se
+     Magnus Froberg - support@erlang.ericsson.se
+     Per Hedeland - support@erlang.ericsson.se
+     Sebastian Strollo - support@erlang.ericsson.se
+     Claes Wikstrom - support@erlang.ericsson.se
+     Mike Williams - support@erlang.ericsson.se
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: erts  5.0.1                   6
+
+
+

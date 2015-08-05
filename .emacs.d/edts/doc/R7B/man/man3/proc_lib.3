@@ -1,0 +1,219 @@
+.TH proc_lib 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+proc_lib \- Plug-in Replacements for spawn/3,4 and spawn_link/3,4\&.
+.SH DESCRIPTION
+.LP
+The \fIproc_lib\fR module is used to initialize some useful information when a process starts\&. The registered names, or the process identities, of the \fIparent\fR process, and the parent ancestors, are stored together with information about the function initially called in the process\&. 
+.LP
+A crash report is generated if the process terminates with a reason other than \fInormal\fR or \fIshutdown\fR\&. \fIshutdown\fR is used to terminate an abnormal process in a controlled manner\&. A crash report contains the previously stored information such as ancestors and initial function, the termination reason, and information regarding other processes which terminate as a result of this process terminating\&.
+.LP
+The crash report is sent to the \fIerror_logger\fR\&. An event handler has to be installed in the \fIerror_logger\fR event manager in order to handle these reports\&. The crash report is tagged \fIcrash_report\fR and the \fIformat/1\fR function should be called in order to format the report\&. 
+
+.SH EXPORTS
+.LP
+.B
+spawn(Module,Func,Args) -> Pid
+.br
+.B
+spawn(Node,Module,Func,Args) -> Pid
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Func = atom()
+.br
+Args = [Arg]
+.br
+Arg = term()
+.br
+Node = atom()
+.br
+Pid = pid()
+.br
+.RE
+.RS
+.LP
+Spawns a new process and initializes it as described above\&. The process is spawned using the \fIspawn\fR BIF\&. The process can be spawned on another \fINode\fR\&. 
+.RE
+.LP
+.B
+spawn_link(Module,Func,Args) -> Pid
+.br
+.B
+spawn_link(Node,Module,Func,Args) -> Pid
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Func = atom()
+.br
+Args = [Arg]
+.br
+Arg = term()
+.br
+Node = atom()
+.br
+Pid = pid()
+.br
+.RE
+.RS
+.LP
+Spawns a new process and initializes it as described above\&. The process is spawned using the \fIspawn_link\fR BIF\&. The process can be spawned on another \fINode\fR\&. 
+.RE
+.LP
+.B
+start(Module,Func,Args) -> Ret
+.br
+.B
+start(Module,Func,Args,Time) -> Ret
+.br
+.B
+start_link(Module,Func,Args) -> Ret
+.br
+.B
+start_link(Module,Func,Args,Time) -> Ret
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Func = atom()
+.br
+Args = [Arg]
+.br
+Arg = term()
+.br
+Time = integer >= 0 | infinity
+.br
+Ret = term() | {error, Reason}
+.br
+.RE
+.RS
+.LP
+Starts a new process synchronously\&. Spawns the process using \fIproc_lib:spawn/3\fR or \fIproc_lib:spawn_link/3\fR, and waits for the process to start\&. When the process has started, it \fImust\fR call \fIproc_lib:init_ack(Parent, Ret)\fR or \fIproc_lib:init_ack(Ret)\fR, where \fIParent\fR is the process that evaluates \fIstart\fR\&. At this time, \fIRet\fR is returned from \fIstart\fR\&. 
+.LP
+If the \fIstart_link\fR function is used and the process crashes before \fIproc_lib:init_ack\fR is called, \fI{error, Reason}\fR is returned if the calling process traps exits\&. 
+.LP
+If \fITime\fR is specified as an integer, this function waits for \fITime\fR milliseconds for the process to start (\fIproc_lib:init_ack\fR)\&. If it has not started within this time, \fI{error, timeout}\fR is returned, and the process is killed\&. 
+.RE
+.LP
+.B
+init_ack(Parent, Ret) -> void()
+.br
+.B
+init_ack(Ret) -> void()
+.br
+.RS
+.TP
+Types
+Parent = pid()
+.br
+Ret = term()
+.br
+.RE
+.RS
+.LP
+This function is used by a process that has been started by a \fIproc_lib:start\fR function\&. It tells \fIParent\fR that the process has initialized itself, has started, or has failed to initialize itself\&. The \fIinit_ack/1\fR function uses the parent value previously stored by the \fIproc_lib:start\fR function\&. If the \fIinit_ack\fR function is not called (e\&.g\&. if the init function crashes) and \fIproc_lib:start/3\fR is used, that function never returns and the parent hangs forever\&. This can be avoided by using a time out in the call to \fIstart\fR, or by using \fIstart_link\fR\&. 
+.LP
+The following example illustrates how this function and \fIproc_lib:start_link\fR are used\&. 
+
+.nf
+-module(my_proc)\&.
+-export([start_link/0])\&.
+start_link() ->
+    proc_lib:start_link(my_proc, init, [self()])\&.
+init(Parent) ->
+    case do_initialization() of
+        ok ->
+            proc_lib:init_ack(Parent, {ok, self()});
+        {error, Reason} ->
+            exit(Reason)
+    end,
+    loop()\&.
+loop() ->
+    receive
+        \&.\&.\&.\&.
+.fi
+.RE
+.LP
+.B
+format(CrashReport) -> string()
+.br
+.RS
+.TP
+Types
+CrashReport = void()
+.br
+.RE
+.RS
+.LP
+Formats a previously generated crash report\&. The formatted report is returned as a string\&. 
+.RE
+.LP
+.B
+initial_call(PidOrPinfo) -> {Module,Function,Args} | false
+.br
+.RS
+.TP
+Types
+PidOrPinfo = pid() | {X, Y, Z} | ProcInfo
+.br
+X = Y = Z = int()
+.br
+ProcInfo = [void()]
+.br
+Module = atom()
+.br
+Function = atom()
+.br
+Args = [term()]
+.br
+.RE
+.RS
+.LP
+Extracts the initial call of a process that was spawned using the spawn functions described above\&. \fIPidOrPinfo\fR can either be a Pid, an integer tuple (from which a pid can be created), or the process information of a process (fetched through a \fIerlang:process_info/1\fR function call)\&. 
+.RE
+.LP
+.B
+translate_initial_call(PidOrPinfo) -> {Module,Function,Arity}
+.br
+.RS
+.TP
+Types
+PidOrPinfo = pid() | {X, Y, Z} | ProcInfo
+.br
+X = Y = Z = int()
+.br
+ProcInfo = [void()]
+.br
+Module = atom()
+.br
+Function = atom()
+.br
+Arity = int()
+.br
+.RE
+.RS
+.LP
+Extracts the initial call of a process which was spawned using the spawn functions described above\&. If the initial call is to one of the system defined behaviours such as \fIgen_server\fR or \fIgen_event\fR, it is translated to more useful information\&. If a \fIgen_server\fR is spawned, the returned \fIModule\fR is the name of the callback module and \fIFunction\fR is \fIinit\fR (the function that initiates the new server)\&.
+.LP
+A \fIsupervisor\fR and a \fIsupervisor_bridge\fR are also \fIgen_server\fR processes\&. In order to return information that this process is a supervisor and the name of the call-back module, \fIModule\fR is \fIsupervisor\fR and \fIFunction\fR is the name of the supervisor callback module\&. \fIArity\fR is \fI1\fR since the \fIinit/1\fR function is called initially in the callback module\&.
+.LP
+By default, \fI{proc_lib, init_p, 5}\fR is returned if no information about the initial call can be found\&. It is assumed that the caller knows that the process has been spawned with the \fIproc_lib\fR module\&. 
+.LP
+\fIPidOrPinfo\fR can either be a Pid, an integer tuple (from which a pid can be created), or the process information of a process (fetched through a \fIerlang:process_info/1\fR function call)\&. 
+.LP
+This function is used by the c:I/0 and c:regs/0 functions in order to present process information\&. 
+.RE
+.SH See Also
+.LP
+error_logger(3) 
+.SH AUTHOR
+.nf
+Magnus Froberg - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,528 @@
+
+
+
+ssl(3)              ERLANG MODULE DEFINITION               ssl(3)
+
+
+
+MODULE
+     ssl - Interface Functions for Secure Socket Layer
+
+DESCRIPTION
+     This module  contains  interface  functions  to  the  Secure
+     Socket  Layer. New implementations will use this module, and
+     not the old _s_s_l__s_o_c_k_e_t module, which is obsolete.
+
+
+Common data types
+     The following datatypes are used in the functions below:
+
+       * _o_p_t_i_o_n_s() = [_o_p_t_i_o_n()]
+
+       * _o_p_t_i_o_n() = _s_o_c_k_e_t_o_p_t_i_o_n() | _s_s_l_o_p_t_i_o_n()
+
+       * _s_o_c_k_e_t_o_p_t_i_o_n() = _b_i_n_a_r_y | {_p_a_c_k_e_t, _s_i_z_e()}  |  {_n_o_d_e_l_a_y,
+         _b_o_o_l_e_a_n()}  | {_a_c_t_i_v_e, _b_o_o_l_e_a_n()} | {_b_a_c_k_l_o_g, _i_n_t_e_g_e_r()}
+         | {_i_p, _i_p_a_d_d_r_e_s_s()}
+
+       * _s_s_l_o_p_t_i_o_n() = {_v_e_r_i_f_y,  _c_o_d_e()}  |  {_d_e_p_t_h,  _d_e_p_t_h()}  |
+         {_c_e_r_t_f_i_l_e,  _p_a_t_h()}  |  {_k_e_y_f_i_l_e,  _p_a_t_h()}  | {_p_a_s_s_w_o_r_d,
+         _s_t_r_i_n_g()} | {_c_a_c_e_r_t_f_i_l_e, _p_a_t_h()} | {_c_i_p_h_e_r_s, _s_t_r_i_n_g()} |
+         {_c_a_c_h_e_t_i_m_e_o_u_t, _i_n_t_e_g_e_r()}
+
+       * _s_i_z_e() = _0 | _1 | _2 | _4
+
+       * _r_e_a_s_o_n() = _a_t_o_m() | {_a_t_o_m(), _s_t_r_i_n_g()}
+
+       * _b_y_t_e_s() = [_b_y_t_e()]
+
+       * _s_t_r_i_n_g() = [_b_y_t_e()]
+
+       * _b_y_t_e() = _0 | _1 | _2 | ... | _2_5_5
+
+       * _c_o_d_e() = _0 | _1 | _2
+
+       * _d_e_p_t_h() = _b_y_t_e()
+
+       * _a_d_d_r_e_s_s() = _h_o_s_t_n_a_m_e() | _i_p_s_t_r_i_n_g() | _i_p_a_d_d_r_e_s_s()
+
+       * _i_p_a_d_d_r_e_s_s() = _i_p_s_t_r_i_n_g() | _i_p_t_u_p_l_e()
+
+       * _h_o_s_t_n_a_m_e() = _s_t_r_i_n_g()
+
+       * _i_p_s_t_r_i_n_g() = _s_t_r_i_n_g()
+
+       * _i_p_t_u_p_l_e() = {_b_y_t_e(), _b_y_t_e(), _b_y_t_e(), _b_y_t_e()}
+
+       * _s_s_l_s_o_c_k_e_t()
+
+       *
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    1
+
+
+
+
+
+
+ssl(3)              ERLANG MODULE DEFINITION               ssl(3)
+
+
+
+     The socket options {_b_a_c_k_l_o_g, _i_n_t_e_g_e_r()} and {_i_p,  _i_p_a_d_d_r_e_s_s}
+     are for _l_i_s_t_e_n/_2 only.
+
+     The following socket options are set  by  default:  {_p_a_c_k_e_t,
+     _0}, {_n_o_d_e_l_a_y, _f_a_l_s_e}, {_a_c_t_i_v_e, _t_r_u_e}, {_b_a_c_k_l_o_g, _5}, and {_i_p,
+     {_0, _0, _0, _0}}.
+
+     The ssl options are for setting specific SSL  parameters  as
+     follows:
+
+       * {_v_e_r_i_f_y, _c_o_d_e()} Specifies type of verification: 0 =  do
+         not  verify peer; 1 = verify peer, verify client once, 2
+         = verify peer, verify client once, fail if no peer  cer-
+         tificate. The default value is 0.
+
+       * {_d_e_p_t_h, _d_e_p_t_h()} Specifies verification depth, i.e.  how
+         far  in a chain of certificates the verification process
+         shall proceed before the verification is considered suc-
+         cessful. The default value is 1.
+
+       * {_c_e_r_t_f_i_l_e, _p_a_t_h()} Path to a file containing a chain  of
+         PEM encoded certificates.
+
+       * {_k_e_y_f_i_l_e, _p_a_t_h()} Path to file containing user's private
+         PEM encoded key.
+
+       * {_p_a_s_s_w_o_r_d, _s_t_r_i_n_g()} String containing the user's  pass-
+         word.  Only used if the private keyfile is password pro-
+         tected.
+
+       * {_c_a_c_e_r_t_f_i_l_e, _p_a_t_h()} Path to file containing PEM encoded
+         CA certificates.
+
+       * {_c_i_p_h_e_r_s,  _s_t_r_i_n_g()}  String  of  ciphers  as  a   colon
+         separated list of ciphers.
+
+       * {_c_a_c_h_e_t_i_m_e_o_u_t,  _i_n_t_e_g_e_r()}  Session  cache  timeout   in
+         seconds.
+
+     The type _s_s_l_s_o_c_k_e_t() is opaque to the user.
+
+     The owner of a socket is the one that created it by  a  call
+     to _a_c_c_e_p_t/_1, _c_o_n_n_e_c_t/_3/_4/, or _l_i_s_t_e_n/_2.
+
+     When a socket is in active mode (the default), data from the
+     socket  is  delivered to the owner of the socket in the form
+     of messages:
+
+       * {_s_s_l, _S_o_c_k_e_t, _D_a_t_a}
+
+       * {_s_s_l__c_l_o_s_e_d, _S_o_c_k_e_t}
+
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    2
+
+
+
+
+
+
+ssl(3)              ERLANG MODULE DEFINITION               ssl(3)
+
+
+
+       * {_s_s_l__e_r_r_o_r, _S_o_c_k_e_t, _R_e_a_s_o_n}
+
+     A _T_i_m_e_o_u_t argument specifies a timeout in milliseconds.  The
+     default value for a _T_i_m_e_o_u_t argument is _i_n_f_i_n_i_t_y.
+
+     Functions listed below may return the value {_e_r_r_o_r, _c_l_o_s_e_d},
+     which  only  indicates  that  the  SSL  socket is considered
+     closed for the operation in question.  It  is  for  instance
+     possible  to  have  {_e_r_r_o_r, _c_l_o_s_e_d} returned from an call to
+     _s_e_n_d/_2, and a  subsequent  call  to  _r_e_c_v/_3  returning  {_o_k,
+     _D_a_t_a}.
+
+     Hence a return value of {_e_r_r_o_r, _c_l_o_s_e_d} must not  be  inter-
+     preted  as  if the socket was completely closed. On the con-
+     trary, in order to free all resources  occupied  by  an  SSL
+     socket,  _c_l_o_s_e/_1  must be called, or else the process owning
+     the socket has to terminate.
+
+     For each SSL socket there is an Erlang process  representing
+     the  socket.  When a socket is opened, that process links to
+     the calling client process.  Implementations  that  want  to
+     detect  abnormal  exits from the socket process by receiving
+     {'_E_X_I_T', _P_i_d, _R_e_a_s_o_n}  messages,  should  use  the  function
+     _p_i_d/_1 to retreive the process identifier from the socket, in
+     order to be able to match exit messages properly.
+
+EXPORTS
+     accept(ListenSocket) -> {ok, Socket} | {error, Reason}
+     accept(ListenSocket, Timeout) -> {ok, Socket} | {error, Rea-
+     son}
+
+          Types
+               ListenSocket = Socket = sslsocket()
+               Timeout = integer()
+
+          Accepts an incoming  connection  request  on  a  listen
+          socket.  _L_i_s_t_e_n_S_o_c_k_e_t  must  be  a socket returned from
+          _l_i_s_t_e_n/_2.
+
+          The  accepted  socket  inherits  the  options  set  for
+          _L_i_s_t_e_n_S_o_c_k_e_t in _l_i_s_t_e_n/_2.
+
+          The default value for _T_i_m_e_o_u_t is _i_n_f_i_n_i_t_y.  If  _T_i_m_e_o_u_t
+          is  specified, and no connection is accepted within the
+          given time, {_e_r_r_o_r, _t_i_m_e_o_u_t} is returned.
+
+     close(Socket) -> ok | {error, Reason}
+
+          Types
+               Socket = sslsocket()
+
+
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    3
+
+
+
+
+
+
+ssl(3)              ERLANG MODULE DEFINITION               ssl(3)
+
+
+
+          Closes a socket returned by _a_c_c_e_p_t/_1/_2, _c_o_n_n_e_c_t/_3/_4, or
+          _l_i_s_t_e_n/_2
+
+     connect(Address, Port, Options) -> {ok,  Socket}  |  {error,
+     Reason}
+     connect(Address, Port, Options, Timeout) -> {ok,  Socket}  |
+     {error, Reason}
+
+          Types
+               Address = address()
+               Port = integer()
+               Options = [connect_option()]
+               connect_option() = binary  |  {packet,  size()}  |
+               {nodelay, boolean()} | {active, boolean()} | {ver-
+               ify,  code()}  |  {depth,  depth()}  |  {certfile,
+               path()} | {keyfile, path()} | {password, string()}
+               | {cacertfile, path()}  |  {ciphers,  string()}  |
+               {cachetimeout, integer()}
+               Timeout = integer()
+               Socket = sslsocket()
+
+          Connects to _P_o_r_t at _A_d_d_r_e_s_s. If  the  optional  _T_i_m_e_o_u_t
+          argument  is  specified,  and a connection could not be
+          established within the given time, {_e_r_r_o_r, _t_i_m_e_o_u_t}  is
+          returned. The default value for _T_i_m_e_o_u_t is _i_n_f_i_n_i_t_y.
+
+     controlling_process(Socket, NewOwner) -> ok |  {error,  Rea-
+     son}
+
+          Types
+               Socket = sslsocket()
+               NewOwner = pid()
+
+          Assigns a new controlling process to _S_o_c_k_e_t. A control-
+          ling process is the owner of a socket, and receives all
+          messages from the socket.
+
+     format_error(ErrorCode) -> string()
+
+          Types
+               ErrorCode = term()
+
+          Returns a diagnostic string describing an error.
+
+     listen(Port, Options) -> {ok, ListenSocket} |  {error,  Rea-
+     son}
+
+          Types
+               Port = integer()
+               Options = [listen_option()]
+               listen_option() =  binary  |  {packet,  size()}  |
+               {active,  boolean()} | {backlog, integer()} | {ip,
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    4
+
+
+
+
+
+
+ssl(3)              ERLANG MODULE DEFINITION               ssl(3)
+
+
+
+               ipaddress()} | {verify, code()} | {depth, depth()}
+               |  {certfile, path()} | {keyfile, path()} | {pass-
+               word, string()} | {cacertfile, path()} | {ciphers,
+               string()} | {cachetimeout, integer()}
+               ListenSocket = sslsocket()
+
+          Sets up a socket to listen on port _P_o_r_t  at  the  local
+          host. If _P_o_r_t is zero, _l_i_s_t_e_n/_2 picks an available port
+          number (use _p_o_r_t/_1 to retreive it).
+
+          The listen queue size defaults to  5.  If  a  different
+          value  is  wanted, the option {_b_a_c_k_l_o_g, _S_i_z_e} should be
+          added to the list of options.
+
+          The returned _L_i_s_t_e_n_S_o_c_k_e_t can only be used in calls  to
+          _a_c_c_e_p_t/_1/_2.
+
+     peername(Socket) -> {ok, {Address, Port}} | {error, Reason}
+
+          Types
+               Socket = sslsocket()
+               Address = ipaddress()
+               Port = integer()
+
+          Returns the address and port number of the peer.
+
+     pid(Socket) -> pid()
+
+          Types
+               Socket = sslsocket()
+
+          Returns the pid of the socket process. The returned pid
+          should only be used for receiving exit messages.
+
+     port(Socket) -> {ok, Port}
+
+          Types
+               Socket = sslsocket()
+               Port = integer()
+
+          Returns the local port number of socket _S_o_c_k_e_t.
+
+     recv(Socket, Length) -> {ok, Data} | {error, Reason}
+     recv(Socket, Length, Timeout) -> {ok, Data} |  {error,  Rea-
+     son}
+
+          Types
+               Socket = sslsocket()
+               Length = integer() >= 0
+               Timeout = integer()
+               Data = bytes() | binary()
+
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    5
+
+
+
+
+
+
+ssl(3)              ERLANG MODULE DEFINITION               ssl(3)
+
+
+
+          Receives data on socket _S_o_c_k_e_t when the  socket  is  in
+          passive  mode, i.e. when the option {_a_c_t_i_v_e, _f_a_l_s_e} has
+          been specified.
+
+          A notable return value is {_e_r_r_o_r, _c_l_o_s_e_d}  which  indi-
+          cates that the socket is closed.
+
+          A positive value of the _L_e_n_g_t_h argument is  only  valid
+          when  the  socket is in raw mode (option {_p_a_c_k_e_t, _0} is
+          set, and the option _b_i_n_a_r_y is _n_o_t  set);  otherwise  it
+          should  be  set  to  0,  whence all available bytes are
+          returned.
+
+          If the optional _T_i_m_e_o_u_t parameter is specified, and  no
+          data  was  available  within  the  given  time, {_e_r_r_o_r,
+          _t_i_m_e_o_u_t} is returned. The default value for _T_i_m_e_o_u_t  is
+          _i_n_f_i_n_i_t_y.
+
+     send(Socket, Data) -> ok | {error, Reason}
+
+          Types
+               Socket = sslsocket()
+               Data = iolist() | binary()
+
+          Writes _D_a_t_a to _S_o_c_k_e_t.
+
+          A notable return value is  {_e_r_r_o_r,  _c_l_o_s_e_d}  indicating
+          that the socket is closed.
+
+     setopts(Socket, Options) -> ok | {error, Reason}
+
+          Types
+               Socket = sslsocket()
+               Options = options()
+
+          Sets  options  according  to  _O_p_t_i_o_n_s  for  the  socket
+          _S_o_c_k_e_t.
+
+          Only  the  following  option  can  be  set:   {_n_o_d_e_l_a_y,
+          _b_o_o_l_e_a_n()}.
+
+     sockname(Socket) -> {ok, {Address, Port}} | {error, Reason}
+
+          Types
+               Socket = sslsocket()
+               Address = ipaddress()
+               Port = integer()
+
+          Returns the local address and port number of the socket
+          _S_o_c_k_e_t.
+
+
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    6
+
+
+
+
+
+
+ssl(3)              ERLANG MODULE DEFINITION               ssl(3)
+
+
+
+ERRORS
+     The possible error reasons and the corresponding  diagnostic
+     strings  returned  by  _f_o_r_m_a_t__e_r_r_o_r/_1 are either the same as
+     those defined in the _i_n_e_t(_3) reference manual,  or  as  fol-
+     lows:
+
+       _c_l_o_s_e_d:
+           Connection closed for the operation in question.
+
+       _e_b_a_d_s_o_c_k_e_t:
+           Connection not found (internal error).
+
+       _e_b_a_d_s_t_a_t_e:
+           Connection not in connect state (internal error).
+
+       _e_b_r_o_k_e_r_t_y_p_e:
+           Wrong broker type (internal error).
+
+       _e_c_a_c_e_r_t_f_i_l_e:
+           Own CA certificate file is invalid.
+
+       _e_c_e_r_t_f_i_l_e:
+           Own certificate file is invalid.
+
+       _e_c_h_a_i_n_t_o_o_l_o_n_g:
+           The chain of certificates  provided  by  peer  is  too
+           long.
+
+       _e_c_i_p_h_e_r:
+           Own list of specified ciphers is invalid.
+
+       _e_k_e_y_f_i_l_e:
+           Own private key file is invalid.
+
+       _e_k_e_y_m_i_s_m_a_t_c_h:
+           Own private key does not match own certificate.
+
+       _e_n_o_i_s_s_u_e_r_c_e_r_t:
+           Cannot find certificate of issuer of certificate  pro-
+           vided by peer.
+
+       _e_n_o_s_e_r_v_e_r_c_e_r_t:
+           Attempt to do accept without having set  own  certifi-
+           cate.
+
+       _e_n_o_t_l_i_s_t_e_n_e_r:
+           Attempt to accept on a non-listening socket.
+
+       _e_n_o_p_r_o_x_y_s_o_c_k_e_t:
+           No proxy socket found (internal error).
+
+       _e_o_p_t_i_o_n_s:
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    7
+
+
+
+
+
+
+ssl(3)              ERLANG MODULE DEFINITION               ssl(3)
+
+
+
+           Invalid list of options.
+
+       _e_p_e_e_r_c_e_r_t:
+           Certificate provided by peer is in error.
+
+       _e_p_e_e_r_c_e_r_t_e_x_p_i_r_e_d:
+           Certificate provided by peer has expired.
+
+       _e_p_e_e_r_c_e_r_t_i_n_v_a_l_i_d:
+           Certificate provided by peer is invalid.
+
+       _e_s_e_l_f_s_i_g_n_e_d_c_e_r_t:
+           Certificate provided by peer is self signed.
+
+       _e_s_s_l_a_c_c_e_p_t:
+           Server SSL  handshake  procedure  between  client  and
+           server failed.
+
+       _e_s_s_l_c_o_n_n_e_c_t:
+           Client SSL  handshake  procedure  between  client  and
+           server failed.
+
+       _e_s_s_l_e_r_r_s_s_l:
+           SSL protocol failure. Typically  because  of  a  fatal
+           alert from peer.
+
+       _e_w_a_n_t_c_o_n_n_e_c_t:
+           Protocol wants to connect, which is not  supported  in
+           this version of the SSL application.
+
+       _e_x_5_0_9_l_o_o_k_u_p:
+           Protocol wants X.509 lookup, which is not supported in
+           this version of the SSL application.
+
+       {_b_a_d_c_a_l_l, _C_a_l_l}:
+           Call not recognized for current mode (active  or  pas-
+           sive) and state of socket.
+
+       {_b_a_d_c_a_s_t, _C_a_s_t}:
+           Call not recognized for current mode (active  or  pas-
+           sive) and state of socket.
+
+       {_b_a_d_i_n_f_o, _I_n_f_o}:
+           Call not recognized for current mode (active  or  pas-
+           sive) and state of socket.
+
+SEE ALSO
+     gen_tcp(3), inet(3)
+
+AUTHOR
+     Peter Hogfeldt - support@erlang.ericsson.se
+
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    8
+
+
+

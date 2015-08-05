@@ -1,0 +1,66 @@
+
+
+
+CosNotifyFilter_FilterEFRaLcAtNoGryM(O3D)ULECoDsENFoItNiIfTyIFOiNlter_FilterFactory(3)
+
+
+
+MODULE
+     CosNotifyFilter_FilterFactory -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+
+EXPORTS
+     create_filter(FilterFactory, Grammar) -> Reply
+
+          Types
+               FilterFactory = #objref
+               Grammar = string()
+               Reply      =      Filter      |      {'EXCEPTION',
+               #'CosNotifyFilter_InvalidGrammar'{}}
+               Filter = #objref
+
+          This operation creates a new Filter object,  under  the
+          condition  that  Grammar given is supported. Currently,
+          only "_E_X_T_E_N_D_E_D__T_C_L" is supported.
+
+     create_mapping_filter(FilterFactory, Grammar) -> Reply
+
+          Types
+               FilterFactory = #objref
+               Grammar = string()
+               Reply    =    MappingFilter    |     {'EXCEPTION',
+               #'CosNotifyFilter_InvalidGrammar'{}}
+               Filter = #objref
+
+          This operation  creates  a  new  MappingFilter  object,
+          under  the  condition  that Grammar given is supported.
+          Currently, only "_E_X_T_E_N_D_E_D__T_C_L" is supported.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+

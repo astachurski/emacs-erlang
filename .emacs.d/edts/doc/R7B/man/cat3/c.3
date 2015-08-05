@@ -1,0 +1,396 @@
+
+
+
+c(3)                ERLANG MODULE DEFINITION                 c(3)
+
+
+
+MODULE
+     c - Command Interface Module
+
+DESCRIPTION
+     The _c module enables users to enter the short form  of  some
+     commonly used commands. These functions are are intended for
+     interactive use in the Erlang shell.
+
+
+EXPORTS
+     bt(Pid) -> void()
+
+          Types
+               Pid = pid()
+
+          This  function  evaluates   _e_r_l_a_n_g:_p_r_o_c_e_s_s__d_i_s_p_l_a_y(_P_i_d,
+          _b_a_c_k_t_r_a_c_e).
+
+     c(File) -> CompileResult
+
+          This function is equivalent to:
+
+          _c_o_m_p_i_l_e:_f_i_l_e(_F_i_l_e, [_r_e_p_o_r_t__e_r_r_o_r_s, _r_e_p_o_r_t__w_a_r_n_i_n_g_s])
+
+     c(File, Flags) -> CompileResult
+
+          Types
+               File = atom() | string()
+               CompileResult = {ok, ModuleName} | error
+               ModuleName = atom()
+               Flags = [Flag]
+
+          This function calls the  following  function  and  then
+          purges and loads the code for the file:
+
+          _c_o_m_p_i_l_e:_f_i_l_e(_F_i_l_e,     _F_l_a_g_s     ++     [_r_e_p_o_r_t__e_r_r_o_r_s,
+          _r_e_p_o_r_t__w_a_r_n_i_n_g_s])
+
+          If the module corresponding to  _F_i_l_e  is  being  inter-
+          preted,  then  _i_n_t:_i  is called with the same arguments
+          and the module is loaded  into  the  interpreter.  Note
+          that  _i_n_t:_i  only  recognizes  a  subset of the options
+          recognized by _c_o_m_p_i_l_e:_f_i_l_e.
+
+          Extreme care should be exercised when using  this  com-
+          mand  to  change  running  code which is executing. The
+          expected result may not be obtained.
+
+          Refer to _c_o_m_p_i_l_e_r manual pages for a description of the
+          individual compiler flags.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+c(3)                ERLANG MODULE DEFINITION                 c(3)
+
+
+
+     cd(Dir) -> void()
+
+          Types
+               Dir = atom() | string()
+
+          This function changes the current working directory  to
+          _D_i_r, and then prints the new working directory.
+
+     flush() -> void()
+
+          This function flushes all messages in the shell message
+          queue.
+
+     help() -> void()
+
+          This function displays help about the shell  and  about
+          the command interface module.
+
+     i() -> void()
+
+          This function provides information  about  the  current
+          state   of   the   system.  This  call  uses  the  BIFs
+          _p_r_o_c_e_s_s_e_s() and _p_r_o_c_e_s_s__i_n_f_o/_1 to examine  the  current
+          state  of  the system. (The code is a good introduction
+          to these two BIFs).
+
+     zi() -> void()
+
+          This function works like _i(), but additionally displays
+          information  about  zombie  processes,  i.e., processes
+          which have exited, but which are still kept in the sys-
+          tem to be inspected.
+
+     ni() -> void()
+
+          This function does the same as _i(), but for  all  nodes
+          in the network.
+
+     i(X, Y, Z) -> void()
+
+          Types
+               X = Y = Z = int()
+
+          This function evaluates _p_r_o_c_e_s_s__i_n_f_o(_p_i_d(_X, _Y, _Z)).
+
+     l(Module) -> void()
+
+          Types
+               Module = atom(), | string()
+
+          This  function  evaluates  _c_o_d_e:_p_u_r_g_e(_M_o_d_u_l_e)  followed
+          by_c_o_d_e:_l_o_a_d__m_o_d_u_l_e(_M_o_d_u_l_e). It reloads the module.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+c(3)                ERLANG MODULE DEFINITION                 c(3)
+
+
+
+     lc(ListOfFiles) -> Result
+
+          Types
+               ListOfFiles = [File]
+               File = atom() | string()
+               Result = [CompileResult]
+               CompileResult = {ok, ModuleName} | error
+               ModuleName = atom()
+
+          This function compiles several files by calling _c(_F_i_l_e)
+          for each file in _L_i_s_t_O_f_F_i_l_e_s.
+
+     ls() -> void()
+
+          This function lists all files in the current directory.
+
+     ls(Dir) -> void()
+
+          Types
+               Dir = atom() | string()
+
+          This function lists all files in the directory _D_i_r.
+
+     m() -> void()
+
+          This function lists the modules which have been  loaded
+          and the files from which they have been loaded.
+
+     m(Module) -> void()
+
+          Types
+               Module = atom()
+
+          This function lists information about _M_o_d_u_l_e.
+
+     nc(File) -> void()
+
+          Types
+               File = atom() | string()
+
+          This function compiles _F_i_l_e and loads it on  all  nodes
+          in an Erlang nodes network.
+
+     nc(File, Flags) -> void()
+
+          Types
+               File = atom() | string()
+               Flags = [Flag]
+
+          This function compiles _F_i_l_e with  the  additional  com-
+          piler  flags  _F_l_a_g_s  and  loads  it  on all nodes in an
+          Erlang nodes network. Refer to the _c_o_m_p_i_l_e manual pages
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+c(3)                ERLANG MODULE DEFINITION                 c(3)
+
+
+
+          for a description of _F_l_a_g_s.
+
+     nl(Module) -> void()
+
+          Types
+               Module = atom()
+
+          This function loads _M_o_d_u_l_e on all nodes  in  an  Erlang
+          nodes network.
+
+     pid(X, Y, Z) -> pid()
+
+          Types
+               X = Y = Z = int()
+
+          This function converts the integers _X, _Y, and _Z to  the
+          Pid    <_X._Y._Z>.   It   saves   typing   and   the   use
+          of_l_i_s_t__t_o__p_i_d/_1. This function should only be used when
+          debugging.
+
+     pwd() -> void()
+
+          This function prints the current working directory.
+
+     q() -> void()
+
+          This function is shorthand for  _i_n_i_t:_s_t_o_p(),  i.e.,  it
+          causes the node to stop in a controlled fashion.
+
+     regs() -> void()
+
+          This function displays formatted information about  all
+          registered processes in the system.
+
+     nregs() -> void()
+
+          This function is the same as _r_e_g_s(), but on  all  nodes
+          in the system.
+
+     memory() -> TupleList
+
+          Types
+               TupleList = [TwoTuple]
+               TwoTuple = {atom(), int()}
+
+          A list of tuples is returned. Each tuple has  two  ele-
+          ments.  The  first element is an atom describing memory
+          type. The second element is memory  size  in  bytes.  A
+          description of each tuple follows:
+
+            _t_o_t_a_l:
+                The total amount of allocated  memory.  _t_o_t_a_l  is
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+c(3)                ERLANG MODULE DEFINITION                 c(3)
+
+
+
+                the sum of _p_r_o_c_e_s_s_e_s and _s_y_s_t_e_m.
+
+                Observe that this is not a complete list of allo-
+                cated memory; but, it is almost complete.
+
+            _p_r_o_c_e_s_s_e_s:
+                The total  amount  of  memory  allocated  by  the
+                processes.
+
+            _s_y_s_t_e_m:
+                The total amount of memory allocated by the  sys-
+                tem.   Memory   allocated  by  processes  is  not
+                included.
+
+                Observe that this  is  not  a  complete  list  of
+                memory allocated by the system; but, it is almost
+                complete.
+
+            _a_t_o_m:
+                The total amount of memory allocated for atoms.
+
+                This memory is part of the  memory  presented  as
+                _s_y_s_t_e_m memory.
+
+            _a_t_o_m__u_s_e_d:
+                The total amount  of  memory  actually  used  for
+                atoms.
+
+                This memory is part of the  memory  presented  as
+                _a_t_o_m memory.
+
+            _b_i_n_a_r_y:
+                The  total  amount  of   memory   allocated   for
+                binaries.
+
+                This memory is part of the  memory  presented  as
+                _s_y_s_t_e_m memory.
+
+            _c_o_d_e:
+                The total amount of memory allocated for code.
+
+                This memory is part of the  memory  presented  as
+                _s_y_s_t_e_m memory.
+
+            _e_t_s:
+                The total amount  of  memory  allocated  for  ets
+                tables.
+
+                This memory is part of the  memory  presented  as
+                _s_y_s_t_e_m memory.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+c(3)                ERLANG MODULE DEFINITION                 c(3)
+
+
+
+          A process executing this function may be  preempted  by
+          other  processes;  therefore,  the returned information
+          may not be a consistent snapshot of the memory  alloca-
+          tion state.
+
+          More tuples in the returned list may be  added  in  the
+          future.
+
+     memory(MemoryType) -> int()
+
+          Types
+               MemoryType = atom()
+
+          _M_e_m_o_r_y_T_y_p_e  is  one  of  the  following  atoms:  _t_o_t_a_l,
+          _p_r_o_c_e_s_s_e_s,  _s_y_s_t_e_m,  _a_t_o_m,  _a_t_o_m__u_s_e_d,  _b_i_n_a_r_y, _c_o_d_e or
+          _e_t_s. These atoms correspond to the atoms described  for
+          _m_e_m_o_r_y/_0  above.  An integer representing the memory in
+          bytes that corresponds to the argument is returned.
+
+          A process executing this function may be  preempted  by
+          other  processes;  therefore,  the returned information
+          may not be a consistent snapshot of the memory  alloca-
+          tion state.
+
+          More arguments may be added in the future.
+
+          Failure: _b_a_d_a_r_g if _M_e_m_o_r_y_T_y_p_e is not one of  the  atoms
+          listed above.
+
+AUTHORS
+     Joe Armstrong - support@erlang.ericsson.se
+     Robert Virding - support@erlang.ericsson.se
+     Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+

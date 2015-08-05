@@ -1,0 +1,282 @@
+.TH rpc 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+rpc \-  Remote Procedure Call Services 
+.SH DESCRIPTION
+.LP
+This module contains services which are similar to remote procedure calls\&. It also contains broadcast facilities and parallel evaluators\&. A remote procedure call is a method to call a function on a remote node and collect the answer\&. It is used for collecting information on a remote node, or for running a function with some specific side effects on the remote node\&. 
+
+.SH EXPORTS
+.LP
+.B
+start() 
+.br
+.RS
+.LP
+Starts the \fIrpc\fR server\&. Normally, this is not necessary because the \fIrpc\fR server is started automatically\&. 
+.RE
+.LP
+.B
+stop() 
+.br
+.RS
+.LP
+Stops the \fIrpc\fR server\&. 
+.RE
+.LP
+.B
+call(Node, Module, Function, Args) 
+.br
+.RS
+.LP
+Evaluates \fIapply(Mod, Fun, Args)\fR on the node \fINode\fR and returns a value, or \fI{badrpc, Reason}\fR if the call fails\&. 
+.RE
+.LP
+.B
+cast(Node, Module, Function, Args) 
+.br
+.RS
+.LP
+Causes the expression \fIapply(Mod, Fun, Args)\fR to be evaluated on \fINode\fR\&. No response is delivered and the process which makes the call is not suspended until the evaluation is complete, as is the case with \fIcall/4\fR\&. The function immediately returns \fItrue\fR\&. Example: 
+.LP
+
+
+.nf
+> rpc:cast(Node, erlang, halt, [])
+.fi
+.LP
+This function shuts down the node \fINode\fR\&. 
+.LP
+The following function also shuts down the node, but the call returns the tuple \fI{badrpc, noconnection}\fR
+
+.nf
+> rpc:call(Node, erlang, halt, [])
+.fi
+.RE
+.LP
+.B
+block_call(Node, Mod, Fun, Args) 
+.br
+.RS
+.LP
+The \fIcall/4\fR function causes the server at \fINode\fR to create a new process for each request\&. This means that several RPCs can be active concurrently\&. The \fIrpc\fR server is not affected if a request does not return a value\&. This function can be used if the intention of the call is to block the \fIrpc\fR server from any other incoming requests until the request has been handled\&. The function can also be used for efficiency reasons when very small fast functions are evaluated, for example BIFs that are guaranteed not to suspend\&. 
+.LP
+
+
+.nf
+> rpc:block_call(Node, erlang, whereis, [file_server]),
+.fi
+.LP
+Returns the Pid of the file server at \fINode\fR\&. 
+.LP
+
+.RE
+.LP
+.B
+server_call(Node, Name, ReplyWrapper, Msg) 
+.br
+.RS
+.LP
+This function is used when interacting with a server called \fIName\fR at node \fINode\fR\&. It is assumed that the server receives messages in the format \fI{From, Request}\fR and replies in the format \fIFrom ! {ReplyWrapper, node(), Reply}\fR\&. This function makes such a server call and ensures that the entire call is packed into an atomic transaction which either succeeds or fails\&. It never hangs, unless the server itself hangs\&. 
+.LP
+The function returns \fI{error, Reason}\fR, or the answer as produced by the server \fIName\fR\&. 
+.RE
+.LP
+.B
+abcast(Name, Mess) 
+.br
+.RS
+.LP
+Broadcasts the message \fIMess\fR asynchronously to the registered process \fIName\fR on all nodes, including the current node\&. 
+.RE
+.LP
+.B
+abcast(Nodes, Name, Mess) 
+.br
+.RS
+.LP
+The same as \fIabcast/2\fR, but only to the nodes \fINodes\fR\&. 
+.RE
+.LP
+.B
+sbcast(Name, Msg) 
+.br
+.RS
+.LP
+Broadcasts to all nodes synchronously and returns a list of the nodes which have \fIName\fR as a registered server\&. Returns \fI{Goodnodes, Badnodes}\fR\&. 
+.LP
+It is synchronous in the sense that it is known that all servers have received the message when we return from the call\&. It is not possible to know that the servers have actually processed the message\&. 
+.LP
+Any further messages sent to the servers, after this function has returned, will be received by all servers after this message \&. 
+.RE
+.LP
+.B
+sbcast(Nodes, Name, Msg) 
+.br
+.RS
+.LP
+As \fIsbcast/2\fR but only to the nodes in \fINodes\fR\&. 
+.RE
+.LP
+.B
+eval_everywhere(Mod, Fun, Args) 
+.br
+.RS
+.LP
+Evaluates the expression \fIapply(Mod, Fun, Args)\fR on all nodes\&. No answers are collected\&. 
+.RE
+.LP
+.B
+eval_everywhere(Nodes, Mod, Fun, Args) 
+.br
+.RS
+.LP
+Evaluates the expression \fIapply(Mod, Fun, Args)\fR on the nodes \fINodes\fR\&. 
+.RE
+.LP
+.B
+multicall(M, F, A) 
+.br
+.RS
+.LP
+In contrast to an RPC, a multicall is an RPC which is sent concurrently from one client to multiple servers\&. This is useful for collecting some information from a set of nodes, or for calling a function on a set of nodes to achieve some side effects\&. It is semantically the same as iteratively making a series of RPCs on all the nodes, but the multicall is faster as all the requests are sent at the same time and are collected one by one as they come back\&. 
+.LP
+The function \fImulticall/3\fR evaluates the expression \fIapply(M, F, A)\fR on all nodes and collects the answers\&. It returns \fI{Replies, Badnodes}\fR, where \fIBadnodes\fR is a list of the nodes that terminated during computation and \fIReplies\fR is a list of the return values\&. This is useful when new object code is to be loaded on all nodes in the network\&. 
+.LP
+
+
+.nf
+%% Find object code for module Mod 
+{Mod, File, Bin} = code:get_object_code(Mod), 
+
+%% and load it on all nodes including this one 
+{Replies, _} = rpc:multicall(code, load_binary, [Mod, File, Bin]),
+
+%% and then maybe check the Replies list\&.
+.fi
+.LP
+This is an example of the side effects the RPCs may produce\&. 
+.LP
+
+.RE
+.LP
+.B
+multicall(Nodes, M, F, A) 
+.br
+.RS
+.LP
+Executes the multicall only on the nodes \fINodes\fR\&. 
+.LP
+
+.RE
+.LP
+.B
+multi_server_call(Name, Msg) 
+.br
+.RS
+.LP
+The function sends \fIMsg\fR to \fIName\fR on all nodes, and collects the answers\&. It returns \fI{Replies, Badnodes}\fR, where \fIBadnodes\fR is a list of the nodes which failed during the call\&. This function assumes that if a request sent to a server called \fIName\fR, the server replies in the form \fI{Name, node(), Reply}\fR\&. Otherwise, the function will hang\&. It also assumes that the server receives messages in the form \fI{From, Msg}\fR, and then replies as \fIFrom ! {Name, node(), Reply}\fR\&. 
+.LP
+If any of the nodes or servers does not exist or crashes during the call, they appear in the \fIBadnodes\fR list\&. 
+.SS Warning:
+.LP
+If any of the nodes are of an older release of Erlang, the server cannot be monitored, and this function hangs if the server does not exist\&. 
+
+.LP
+If all nodes are of the current release of Erlang, \fIsafe_multi_server_call/2, 3\fR is now obsolete and much more inefficient than \fImulti_server_call/2, 3\fR\&. 
+.LP
+The replies are not ordered in any particular way\&. 
+.RE
+.LP
+.B
+multi_server_call(Nodes, Name, Msg) 
+.br
+.RS
+.LP
+The same as above, but \fIMsg\fR is only sent to \fINodes\fR\&. 
+.RE
+.LP
+.B
+safe_multi_server_call(Name, Msg) 
+.br
+.RS
+.LP
+The same as the \fImulti_server_call/2\fR, except that this function handles the case where the remote node exists, but no server called \fIName\fR exists there, and the remote node is of an older release of Erlang\&. This call is also slightly slower than \fImulti_server_call/2\fR since all request go via the \fIrpc\fR server at the remote sites\&. 
+.RE
+.LP
+.B
+safe_multi_server_call(Nodes, Name, Msg) 
+.br
+.RS
+.LP
+The same as above, but only on the nodes \fINodes\fR\&. 
+.RE
+.LP
+.B
+async_call(Node, Mod, Fun, Args) 
+.br
+.RS
+.LP
+\fICall streams with promises\fR is a type of \fIrpc\fR which does not suspend the caller until the result is finished\&. They return a \fIKey\fR which can be used at a later stage to collect the value\&. The key can be viewed as a promise to deliver the answer\&. The expression \fIapply(Mod, Fun, Args)\fR is evaluated for this function on \fINode\fR\&. Returns \fIKey\fR which can be used in a subsequent \fIyield/1\fR (see below)\&. 
+.RE
+.LP
+.B
+yield(Key) 
+.br
+.RS
+.LP
+Delivers the promised answer from a previous \fIasync_call\fR operation\&. If the answer is available, it is returned immediately\&. Otherwise, the caller of \fIyield/1\fR is suspended until the answer arrives from \fINode\fR\&. 
+.RE
+.LP
+.B
+nb_yield(Key, Timeout)
+.br
+.RS
+.LP
+This is a non-blocking version of \fIyield\fR\&. It returns the tuple \fI{value, V}\fR when the computation has finished, or the atom \fItimeout\fR when \fITimeout\fR elapses\&. 
+.LP
+\fITimeout\fR is either a non-negative integer or the atom \fIinfinity\fR\&. 
+.RE
+.LP
+.B
+nb_yield(Key) 
+.br
+.RS
+.LP
+Same as \fInb_yield(Key, 0)\fR\&. 
+.RE
+.LP
+.B
+parallel_eval(ListOfTuples) 
+.br
+.RS
+.LP
+Evaluates the list of size 3 tuples \fIListOfTuples\fR\&. Each tuple must be of the type \fI{Mod, Fun, Args}\fR\&. Each tuple is sent for evaluation to neighboring nodes, and the replies are collected and returned as a list of individual values\&. The return values are presented in the same order as the original list \fIListOfTuples\fR\&. 
+.RE
+.LP
+.B
+pmap({M, F}, Extraargs, List) 
+.br
+.RS
+.LP
+Takes exactly the same arguments and has the same return value as the \fIlists:map/3\fR function, except that everything is evaluated in parallel on different nodes\&. 
+.RE
+.LP
+.B
+pinfo(Pid) 
+.br
+.RS
+.LP
+Location transparent version of \fIprocess_info/1\fR\&. 
+.RE
+.LP
+.B
+pinfo(Pid, Item) 
+.br
+.RS
+.LP
+Location transparent version of \fIprocess_info/2\fR\&. 
+.RE
+.SH AUTHOR
+.nf
+ Claes Wikstrom - support@erlang.ericsson.se
+.fi

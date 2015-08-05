@@ -1,0 +1,745 @@
+.TH tk 3 "etk  0.9.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+tk \-  Tk toolkit interface 
+.SH DESCRIPTION
+.LP
+This module implements the actual interface to tk\&. 
+
+.SH EXPORTS
+.LP
+.B
+start() 
+.br
+.B
+start(Options) 
+.br
+.RS
+.LP
+Start the etk server, possible options are 
+.RS 2
+.TP 2
+*
+\fI{withdrawn, Bool}\fR
+.TP 2
+*
+\fI {name, Name} \fR
+.TP 2
+*
+\fI {display, Display}\fR
+.TP 2
+*
+\fI {driver, "etk_drv"}\fR 
+.RS 2
+.LP
+Will start the etk interface as a linked in driver for improved performance\&. 
+.RE
+.RE
+.RE
+.LP
+.B
+stop()
+.br
+.RS
+.LP
+Stops the etk server and terminates all windows\&. 
+.RE
+.LP
+.B
+wlink(Path)
+.br
+.B
+wlink(Pid, Path)
+.br
+.RS
+.LP
+Links the calling process to the widget \fIPath\fR 
+.RE
+.LP
+.B
+wunlink(Path)
+.br
+.B
+wunlink(Pid, Path)
+.br
+.RS
+.LP
+Unlinks the calling process from the widget \fIPath\fR 
+.RE
+.LP
+.B
+join(Path, Node, MasterPath)
+.br
+.RS
+.LP
+Join a distributed widget group 
+.RE
+.LP
+.B
+leave(W)
+.br
+.RS
+.LP
+Leave a distributed widget group\&. 
+.RE
+.LP
+.B
+button(Path, Options)
+.br
+.RS
+.LP
+Create a button, for all options see, button\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/button\&.n\&.html> 
+.LP
+Example: 
+
+.nf
+Self= self(),
+Quit = etk:button(Top,[{text,"quit"},{anchor,w},
+                       {command, fun() -> exit(Self, die) end}]),
+.fi
+.RE
+.LP
+.B
+canvas(Path, Options)
+.br
+.RS
+.LP
+Create a canvas, for all options see, canvas\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/canvas\&.n\&.html> 
+.LP
+Example:
+
+.nf
+Canvas = etk:canvas(Top, []),
+.fi
+.RE
+.LP
+.B
+checkbutton(Path, Options)
+.br
+.RS
+.LP
+Create a checkbutton, for all options see, checkbutton\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/checkbutton\&.n\&.html> 
+.LP
+Example:
+
+.nf
+Cb = etk:checkbutton(Top, [{text,"Bold"},{anchor,"w"}]),
+.fi
+.RE
+.LP
+.B
+entry(Path, Options)
+.br
+.RS
+.LP
+Create an entry, for all options see, entry\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/entry\&.n\&.html> 
+.LP
+Example:
+
+.nf
+E = etk:entry(Top, [{relief sunken}, {font, Font}])
+.fi
+.RE
+.LP
+.B
+frame(Path, Options)
+.br
+.RS
+.LP
+Create a frame, for all options see, frame\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/frame\&.n\&.html> 
+.LP
+Example:
+
+.nf
+Frame = etk:frame(Top, [{width,"15m"},{height,"10m"}]),
+.fi
+.RE
+.LP
+.B
+label(Path, Options)
+.br
+.RS
+.LP
+Create a label, for all options see, label\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/label\&.n\&.html> 
+.LP
+Example:
+
+.nf
+L =  etk:label(Top, [{text, "Label #3"}, {background, green}]),
+.fi
+.RE
+.LP
+.B
+listbox(Path, Options)
+.br
+.RS
+.LP
+Create a listbox, for all options see, listbox\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/listbox\&.n\&.html> 
+.LP
+Example:
+
+.nf
+ListBox = etk:listbox(Top, []),
+.fi
+.RE
+.LP
+.B
+menu(Path, Options)
+.br
+.RS
+.LP
+Create a menu, for all options see, menu\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/menu\&.n\&.html> 
+.RE
+.LP
+.B
+menubutton(Path, Options)
+.br
+.RS
+.LP
+Create a menubutton, for all options see, menubutton\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/menubutton\&.n\&.html> 
+.RE
+.LP
+.B
+message(Path, Options)
+.br
+.RS
+.LP
+Create a message widget, for all options see, message\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/message\&.n\&.html> 
+.RE
+.LP
+.B
+radiobutton(Path, Options)
+.br
+.RS
+.LP
+Create a radiobutton, for all options see, radiobutton\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/radiobutton\&.n\&.html> 
+.RE
+.LP
+.B
+scale(Path, Options)
+.br
+.RS
+.LP
+Create a scale widget, for all options see, scale\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/scale\&.n\&.html> 
+.LP
+Example:
+
+.nf
+Scale = etk:scale(Top, 
+                  [{label,"Flow"},{from,-1000},{to,1000},
+                   {command, fun(S) ->
+                               io:format("Scale = ~w~n", [S])
+                             end}]),
+.fi
+.RE
+.LP
+.B
+scrollbar(Path, Options)
+.br
+.RS
+.LP
+Create a scrollbar widget, for all options see, scrollbar\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/scrollbar\&.n\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+text(Path, Options)
+.br
+.RS
+.LP
+Create a text widget, for all options see, text\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/text\&.n\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+toplevel(Path, Options)
+.br
+.RS
+.LP
+Create a toplevel widget, for all options see, toplevel\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/toplevel\&.n\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+bell()
+.br
+.B
+bell(Window)
+.br
+.RS
+.LP
+Ring the bell 
+.RE
+.LP
+.B
+bindtags(Win)
+.br
+.B
+bindtags(Win, Options)
+.br
+.RS
+.LP
+Bind tags in window according to Options
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+destroy(Win)
+.br
+.RS
+.LP
+Destroy a window\&. 
+.RE
+.LP
+.B
+focus(Win)
+.br
+.RS
+.LP
+Set the current focus to Win\&. 
+.RE
+.LP
+.B
+lower(Win)
+.br
+.B
+lower(Win, Other)
+.br
+.RS
+.LP
+Lower window\&. 
+.RE
+.LP
+.B
+raise(Win)
+.br
+.B
+raise(Win, Other)
+.br
+.RS
+.LP
+Raise window\&. 
+.RE
+.LP
+.B
+bind(Win)
+.br
+.RS
+.LP
+Return a list of events that are bound to Win\&. 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+bind(Win, Event)
+.br
+.RS
+.LP
+Return a a Fun if a Fun is bound to the event \fIEvent\fR or \fInil\fR of nothing is bound to trigger on the event \fIEvent\fR in Win\&. 
+.RE
+.LP
+.B
+bind(Win, Event, Template, Fun)
+.br
+.RS
+.LP
+Set the function \fIFun\fR to evaluate on the event \fIEvent\fR in the window\&. See also bind\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/bind\&.n\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+unbind(Win, Event)
+.br
+.RS
+.LP
+Unbind the function the is bound to an event\&. 
+.RE
+.LP
+.B
+unbind(Win, Event)
+.br
+.RS
+.LP
+Unbind the function the is bound to an event\&. 
+.RE
+.LP
+.B
+bind_tag(Win, Tag)
+.br
+.RS
+.LP
+Return a list of the events bound to tag\&. 
+.RE
+.LP
+.B
+bind_tag(Win, Tag, Event)
+.br
+.RS
+.LP
+Return the Fun that is bound to Tag and Event, or \fInil\fR of nothing is bound\&. 
+.RE
+.LP
+.B
+bind_tag(Win, Tag, Event, Template, Fun)
+.br
+.RS
+.LP
+Bind \fIFun\fR to \fITag\fR and \fIEvent\fR See also bindtags\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/bindtags\&.n\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+unbind_tag(Win, Tag, Event)
+.br
+.RS
+.LP
+Unbind the \fIFun\fR associated with \fITag\fR and \fIEvent\fR 
+.RE
+.LP
+.B
+bind_ctag(Win, Tag)
+.br
+.RS
+.LP
+Return a list of the events bound to canvas tag\&. 
+.RE
+.LP
+.B
+bind_ctag(Win, Tag, Event)
+.br
+.RS
+.LP
+Return the Fun that is bound to canvas widget Tag and Event, or \fInil\fR of nothing is bound\&. 
+.RE
+.LP
+.B
+bind_ctag(Win, Tag, Event, Template, Fun)
+.br
+.RS
+.LP
+Bind \fIFun\fR to canvas widget \fITag\fR and \fIEvent\fR 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+unbind_ctag(Win, Tag, Event)
+.br
+.RS
+.LP
+Unbind the \fIFun\fR associated with canvas widget \fITag\fR and \fIEvent\fR 
+.RE
+.LP
+.B
+pack(Wslist)
+.br
+.B
+pack(Window, Options)
+.br
+.RS
+.LP
+Invoke the packer\&. See also pack\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/pack\&.n\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+place(Wslist)
+.br
+.B
+place(Window, Options)
+.br
+.RS
+.LP
+Invoke the placer\&. See also place\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/place\&.n\&.html> 
+.RE
+.LP
+.B
+grid(Wslist)
+.br
+.B
+grid(Window, Options)
+.br
+.RS
+.LP
+Invoke the grid geometry manager\&. See also grid\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/grid\&.n\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+tk(Opt)
+.br
+.B
+tk(Opt, Arg)
+.br
+.RS
+.LP
+Other commands, i\&.e\&. "appname" See also tk\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/tk\&.n\&.html> 
+.RE
+.LP
+.B
+wm(Opts)
+.br
+.B
+wm(Win, Opts)
+.br
+.RS
+.LP
+The wm command, See also wm\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/wm\&.n\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+update()
+.br
+.B
+update(Flag)
+.br
+.RS
+.LP
+The update command\&. 
+.RE
+.LP
+.B
+selection(Opts)
+.br
+.B
+rselection(Opts)
+.br
+.RS
+.LP
+The (raw) selection command\&. See selection\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/selection\&.n\&.html> 
+.LP
+Raw means that no type interpretation is done on the data at all, this is necessary for certain data such as "1\&.2" which otherwise is interpreted as a float\&. 
+.RE
+.LP
+.B
+clipboard(Opts)
+.br
+.RS
+.LP
+The clipboard command\&. See clipboard\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/clipboard\&.n\&.html> 
+.RE
+.LP
+.B
+grab(Opts)
+.br
+.RS
+.LP
+The grab command\&. See grab\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/grab\&.n\&.html> 
+.RE
+.LP
+.B
+option(Opts)
+.br
+.RS
+.LP
+The option command\&. See option\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/option\&.n\&.html> as well as the general options page GetOption\&.3\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkLib/GetOption\&.3\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+image(Opts)
+.br
+.RS
+.LP
+The image command\&. See image\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/image\&.n\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+winfo(Opts)
+.br
+.RS
+.LP
+Return window-related information\&. See winfo\&.n\&.html <http://dev\&.scriptics\&.com/man/tcl7\&.6/TkCmd/winfo\&.n\&.html> 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+cmd(W, Opts)
+.br
+.RS
+.LP
+The widget command\&. 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+rcmd(W, Opts)
+.br
+.RS
+.LP
+The raw widget command\&. 
+.RE
+.LP
+.B
+setvar(Var, Value)
+.br
+.RS
+.LP
+Set variable \fIVar\fR to value \fIValue\fR\&. 
+.RE
+.LP
+.B
+getvar(Var, Value)
+.br
+.RS
+.LP
+Set balue of variable \fIVar\fR\&. 
+.RE
+.LP
+.B
+parentof(W)
+.br
+.RS
+.LP
+Shortcut for \fIwinfo([parent, W])\&.\fR 
+.RE
+.LP
+.B
+toplevelof(W)
+.br
+.RS
+.LP
+Shortcut for \fIwinfo([toplevel, W])\&.\fR 
+.RE
+.LP
+.B
+childrenof(W)
+.br
+.RS
+.LP
+Shortcut for \fIwinfo([children, W])\&.\fR 
+.RE
+.LP
+.B
+classof(W)
+.br
+.RS
+.LP
+Shortcut for \fIwinfo([class, W])\&.\fR 
+.RE
+.LP
+.B
+cget(W, Opt)
+.br
+.RS
+.LP
+Invokes the command "cget" on the widget \fIW\fR 
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+rcget(W, Opt)
+.br
+.RS
+.LP
+Invokes the "raw" command "cget" on the widget \fIW\fR 
+.RE
+.LP
+.B
+configure(W, Opts)
+.br
+.RS
+.LP
+Invokes the command "configure" on the widget \fIW\fR
+.LP
+Example:
+
+.nf
+
+.fi
+.RE
+.LP
+.B
+tkStrictMotif()
+.br
+.B
+tkStrictMotif(Bool)
+.br
+.RS
+.LP
+Queries respective sets the property "strictMotif" 
+.RE
+.SH AUTHOR
+.nf
+Tony Rogvall - support@erlang.ericsson.se
+.fi

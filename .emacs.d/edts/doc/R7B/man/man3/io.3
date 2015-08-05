@@ -1,0 +1,524 @@
+.TH io 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+io \- Standard I/O Server Interface Functions 
+.SH DESCRIPTION
+.LP
+This module provides an interface to standard Erlang IO servers\&. The output functions all return \fIok\fR if they are successful, or exit if they are not\&. In the following description, a parameter within square brackets means that that parameter is optional\&. \fI[IoDevice, ]\fR is such an example\&. If included, it must be the Pid of a process which handles the IO protocols\&. This is often the \fIIoDevice\fR returned by \fIfile:open/2\fR (see \fIfile\fR)\&. For a description of the I/O protocols refer to Armstrong, Virding and Williams, \&'Concurrent Programming in Erlang\&', Chapter 13\&. 
+
+.SH EXPORTS
+.LP
+.B
+put_chars([IoDevice,] Chars)
+.br
+.RS
+.LP
+Writes the characters \fIChars\fR to the standard output (\fIIoDevice\fR)\&. \fIChars\fR is a list of characters\&. The list is not necessarily flat\&. 
+.RE
+.LP
+.B
+nl([IoDevice])
+.br
+.RS
+.LP
+Writes new line to the standard output (\fIIoDevice\fR)\&. 
+.RE
+.LP
+.B
+get_chars([IoDevice,] Prompt, Count)
+.br
+.RS
+.LP
+Gets \fICount\fR characters from standard input (\fIIoDevice\fR), prompting it with \fIPrompt\fR\&. It returns: 
+.RS 2
+.TP 4
+.B
+\fIListOfChars\fR:
+Returns the input characters, if they are less than\fICount\fR\&. 
+.TP 4
+.B
+\fIeof\fR:
+End of file was encountered\&. 
+.RE
+.RE
+.LP
+.B
+get_line([IoDevice,] Prompt)
+.br
+.RS
+.LP
+Gets a line from the standard input (\fIIoDevice\fR), prompting it with \fIPrompt\fR\&. It returns: 
+.RS 2
+.TP 4
+.B
+\fIListOfChars\fR:
+The characters in the line terminated by a LF unless the line read was the last line of the file and was not terminated by LF\&. 
+.TP 4
+.B
+\fIeof\fR:
+End of file was encountered\&. 
+.RE
+.RE
+.LP
+.B
+write([IoDevice,] Term)
+.br
+.RS
+.LP
+Writes the term \fITerm\fR to the standard output (\fIIoDevice\fR)\&. 
+.RE
+.LP
+.B
+read([IoDevice,] Prompt)
+.br
+.RS
+.LP
+Reads a term from the standard input (\fIIoDevice\fR), prompting it with \fIPrompt\fR\&. It returns: 
+.RS 2
+.TP 4
+.B
+\fI{ok, Term}\fR:
+The parsing was successful\&. 
+.TP 4
+.B
+\fI{error, ErrorInfo}\fR:
+The parsing failed\&. 
+.TP 4
+.B
+\fIeof\fR:
+End of file was encountered\&. 
+.RE
+.RE
+.LP
+.B
+fwrite(Format)
+.br
+.B
+format(Format)
+.br
+.RS
+.LP
+Equivalent to \fIfwrite(Format, [])\fR\&. 
+.RE
+.LP
+.B
+fwrite([IoDevice,] Format, Arguments)
+.br
+.B
+format([IoDevice,] Format, Arguments)
+.br
+.RS
+.LP
+Writes the list of items in \fIArguments\fR on the standard output (\fIIoDevice\fR) in accordance with \fIFormat\fR\&. \fIFormat\fR is a list of plain characters which are copied to the output device, and control sequences which cause the arguments to be printed\&. If \fIFormat\fR is an atom, it is first converted to a list with the aid of \fIatom_to_list/1\fR\&.\fIArguments\fR is the list of items to be printed\&.
+
+.nf
+> io:fwrite("Hello world!~n", [])\&.
+Hello world
+ok
+.fi
+.LP
+The general format of a control sequence is \fI~F\&.P\&.PadC\fR\&. The character \fIC\fR determines the type of control sequence to be used, \fIF\fR and \fIP\fR are optional numeric arguments\&. If \fIF\fR, \fIP\fR, or \fIPad\fR is \fI*\fR, the next argument in \fIArguments\fR is used as the numeric value of \fIF\fR or \fIP\fR\&. 
+.LP
+\fIF\fR is the \fIfield width\fR of the printed argument\&. A negative value means that the argument will be left justified within the field, otherwise it will be right justified\&. If no field width is specified, the required print width will be used\&. If the field width specified is too small, then the whole field will be filled with \fI*\fR characters\&. 
+.LP
+\fIP\fR is the \fIprecision\fR of the printed argument\&. A default value is used if no precision is specified\&. The interpretation of precision depends on the control sequences\&. Unless otherwise specified, the argument \fIwithin\fR is used to determine print width\&.
+.LP
+\fIPad\fR is the padding character\&. This is the character used to pad the printed representation of the argument so that it conforms to the specified field width and precision\&. Only one padding character can be specified and, whenever applicable, it is used for both the field width and precision\&. The default padding character is \fI\&' \&'\fR (space)\&.
+.LP
+The following control sequences are available:
+.RS 2
+.TP 4
+.B
+\fI~\fR:
+The character \fI~\fR is written\&. 
+.TP 4
+.B
+\fIc\fR:
+The argument is a number that will be interpreted as an ASCII code\&. The precision is the number of times the character is printed and it defaults to the field width, which in turn defaults to one\&. The following example illustrates:
+.RS 4
+
+.nf
+> io:fwrite("|~10\&.5c|~-10\&.5c|~5c|~n", [$a, $b, $c])\&.
+|     aaaaa|aaaaa     |ccccc|
+ok
+.fi
+.RE
+.TP 4
+.B
+\fIf\fR:
+The argument is a float which is written as \fI[-]ddd\&.ddd\fR, where the precision is the number of digits after the decimal point\&. The default precision is 6\&. 
+.TP 4
+.B
+\fIe\fR:
+The argument is a float which is written as \fI[-]d\&.ddde+-ddd\fR, where the precision is the number of digits written\&. The default precision is 6\&. 
+.TP 4
+.B
+\fIg\fR:
+The argument is a float which is written as \fIf\fR, if it is > 0\&.1, and < 10^4\&. Otherwise, it is written as \fIe\fR\&. The precision is the number of significant digits\&. It defaults to 6\&. There must always be a sufficient number of digits for printing a correct floating point representation of the argument\&. 
+.TP 4
+.B
+\fIs\fR:
+Prints the argument with the \fIstring\fR syntax\&. The argument is a list of character codes (possibly not a flat list), or an atom\&. The characters are printed without quotes\&. In this format, the printed argument is truncated to the given precision and field width\&. 
+.RS 4
+.LP
+This format can be used for printing any object and truncating the output so it fits a specified field:
+
+.nf
+> io:fwrite("|~10w|~n", [{hey, hey, hey}])\&.
+|**********|
+ok
+> io:fwrite("|~10s|~n", [io_lib:write({hey, hey, hey})])\&.
+|{hey, hey, h|
+ok
+.fi
+.RE
+.TP 4
+.B
+\fIw\fR:
+Writes data with the standard syntax\&. This is used to output Erlang terms\&. Atoms are printed within quotes if they contain embedded non-printable characters, and floats are printed in the default \fIg\fR format\&. 
+.TP 4
+.B
+\fIp\fR:
+Writes the data with standard syntax in the same way as \fI~w\fR, but breaks terms whose printed representation is longer than one line into many lines and indents each line sensibly\&. It also tries to detect lists of printable characters and to output these as strings\&. For example:
+.RS 4
+
+.nf
+> T = [{attributes,[[{id,age,1\&.50000},{mode,explicit},
+       {typename,"INTEGER"}],
+       [{id,cho},{mode,explicit},{typename,\&'Cho\&'}]]},
+       {typename,\&'Person\&'},{tag,{\&'PRIVATE\&',3}},
+       {mode,implicit}]\&.
+\&.\&.\&.
+> io:fwrite("~w~n", [T])\&.                                     
+[{attributes,[[{id,age,1\&.50000},{mode,explicit},{typename,
+[73,78,84,69,71,69,82]}],[{id,cho},{mode,explicit},{typena
+me,\&'Cho\&'}]]},{typename,\&'Person\&'},{tag,{\&'PRIVATE\&',3}},{mode
+,implicit}]
+ok
+> io:fwrite("~p~n", [T])\&.                                     
+[{attributes,[[{id,age,1\&.50000},
+               {mode,explicit},
+               {typename,"INTEGER"}],
+              [{id,cho},{mode,explicit},{typename,\&'Cho\&'}]]},
+ {typename,\&'Person\&'},
+ {tag,{\&'PRIVATE\&',3}},
+ {mode,implicit}]
+ok
+.fi
+.LP
+
+.LP
+The field width specifies the maximum line length\&. It defaults to 80\&. The precision specifies the initial indentation of the term\&. It defaults to the number of characters printed on this line in the \fIsame\fR call to \fIio:fwrite\fR or\fIio:format\fR\&. For example, using \fIT\fR above:
+
+.nf
+> io:fwrite("Here T = ~p~n", [T])\&.
+Here T = [{attributes,[[{id,age,1\&.50000},
+                        {mode,explicit},
+                        {typename,"INTEGER"}],
+                       [{id,cho},{mode,explicit},
+                        {typename,\&'Cho\&'}]]},
+          {typename,\&'Person\&'},
+          {tag,{\&'PRIVATE\&',3}},
+          {mode,implicit}]
+ok
+.fi
+.RE
+.TP 4
+.B
+\fIW\fR:
+Writes data in the same way as \fI~w\fR, but takes an extra argument which is the maximum depth to which terms are printed\&. Anything below this depth is replaced with \fI\&.\&.\&.\fR\&. For example, using \fIT\fR above:
+.RS 4
+
+.nf
+> io:fwrite("~W~n", [T,9])\&.
+[{attributes,[[{id,age,1\&.50000},{mode,explicit},{typename|
+\&.\&.\&.}],[{id,cho},{mode|\&.\&.\&.},{\&.\&.\&.}]]},{typename,\&'Person\&'},{t
+ag,{\&'PRIVATE\&',3}},{mode,implicit}]
+ok
+.fi
+.LP
+
+.LP
+If the maximum depth has been reached, then it is impossible to read in the resultant output\&. Also, the \fI|\&.\&.\&.\fR form in a tuple denotes that there are more elements in the tuple but these are below the print depth\&. 
+.RE
+.TP 4
+.B
+\fIP\fR:
+Writes data in the same way as \fI~p\fR, but takes an extra argument which is the maximum depth to which terms are printed\&. Anything below this depth is replaced with \fI\&.\&.\&.\fR\&. For example:
+.RS 4
+
+.nf
+> io:fwrite("~P~n", [T,9])\&.
+[{attributes,[[{id,age,1\&.50000},{mode,explicit},
+               {typename|\&.\&.\&.}],
+              [{id,cho},{mode|\&.\&.\&.},{\&.\&.\&.}]]},
+ {typename,\&'Person\&'},
+ {tag,{\&'PRIVATE\&',3}},
+ {mode,implicit}]
+ok
+.fi
+.RE
+.TP 4
+.B
+\fIn\fR:
+Writes a new line\&. 
+.TP 4
+.B
+\fIi\fR:
+Ignores the next term\&. 
+.RE
+.LP
+Returns: 
+.RS 2
+.TP 4
+.B
+\fIok\fR:
+The formatting succeeded\&. 
+.RE
+.LP
+If an error occurs, there is no output\&. For example:
+
+.nf
+> io:fwrite("~s ~w ~i ~w ~c ~n",[\&'abc def\&', \&'abc def\&',
+                                 {foo, 1},{foo, 1}, 65])\&.
+abc def \&'abc def\&'  {foo, 1} A
+ok
+> io:fwrite("~s", [65])\&.
+** exited: {badarg,[{io,format,[<0\&.21\&.0>,"~s","A"]},
+                    {erl_eval,expr,3},
+                    {erl_eval,exprs,4},
+                    {shell,eval_loop,2}]} **
+.fi
+.LP
+In this example, an attempt was made to output the single character \&'65\&' with the aid of the string formatting directive "~s"\&. 
+.LP
+The two functions \fIfwrite\fR and \fIformat\fR are identical\&. The old name \fIformat\fR has been retained for backwards compatibility, while the new name \fIfwrite\fR has been added as a logical complement to \fIfread\fR\&. 
+.RE
+.LP
+.B
+fread([IoDevice,] Prompt, Format)
+.br
+.RS
+.LP
+Reads characters from the standard input (\fIIoDevice\fR), prompting it with \fIPrompt\fR\&. Interprets the characters in accordance with \fIFormat\fR\&. \fIFormat\fR is a list of control sequences which directs the interpretation of the input\&. 
+.LP
+\fIFormat\fR may contain: 
+.RS 2
+.TP 2
+*
+White space characters (SPACE, TAB and NEWLINE) which cause input to be read to the next non-white space character\&. 
+.TP 2
+*
+Ordinary characters which must match the next input character\&. 
+.TP 2
+*
+Control sequences, which have the general format\fI~*FC\fR\&. The character \fI*\fR is an optional return suppression character\&. It provides a method to specify a field which is to be omitted\&. \fIF\fR is the \fIfield width\fR of the input field and \fIC\fR determines the type of control sequence\&.
+.RS 2
+.LP
+
+.LP
+Unless otherwise specified, leading white-space is ignored for all control sequences\&. An input field cannot be more than one line wide\&. The following control sequences are available: 
+.RS 2
+.TP 4
+.B
+\fI~\fR:
+A single \fI~\fR is expected in the input\&. 
+.TP 4
+.B
+\fId\fR:
+A decimal integer is expected\&. 
+.TP 4
+.B
+\fIf\fR:
+A floating point number is expected\&. It must follow the Erlang floating point number syntax\&. 
+.TP 4
+.B
+\fIs\fR:
+A string of non-white-space characters is read\&. If a field width has been specified, this number of characters are read and all trailing white-space characters are stripped\&. An Erlang string (list of characters) is returned\&. 
+.TP 4
+.B
+\fIa\fR:
+Similar to \fIs\fR, but the resulting string is converted into an atom\&. 
+.TP 4
+.B
+\fIc\fR:
+The number of characters equal to the field width are read (default is 1) and returned as an Erlang string\&. However, leading and trailing white-space characters are not omitted as they are with \fIs\fR\&. All characters are returned\&. 
+.TP 4
+.B
+\fIl\fR:
+Returns the number of characters which have been scanned up to that point, including white-space characters\&. 
+.RE
+.LP
+
+.LP
+It returns: 
+.RS 2
+.TP 4
+.B
+\fI{ok, InputList}\fR:
+The read was successful and \fIInputList\fR is the list of successfully matched and read items\&. 
+.TP 4
+.B
+\fI{error, What}\fR:
+The read operation failed and the parameter\fIWhat\fR can be used as argument to\fIreport_error/1\fR to produce an error message\&. 
+.TP 4
+.B
+\fIeof\fR:
+End of file was encountered\&. 
+.RE
+.RE
+.RE
+.LP
+Examples:
+
+.nf
+> io:fread(\&'enter>\&', "~f~f~f")\&.
+enter>1\&.9 35\&.5e3 15\&.0
+{ok, [1\&.90000, 3\&.55000e+4, 15\&.0000]}
+> io:fread(\&'enter>\&', "~10f~d")\&.
+enter>     5\&.67899
+{ok, [5\&.67800, 99]}
+> io:fread(\&'enter>\&', ":~10s:~10c:")\&.
+enter>:   alan  :   joe   :           
+{ok, ["alan", "   joe    "]}
+.fi
+.RE
+.LP
+.B
+scan_erl_exprs(Prompt)
+.br
+.B
+scan_erl_exprs([IoDevice,] Prompt, StartLine)
+.br
+.RS
+.LP
+Reads data from the standard input (\fIIoDevice\fR), prompting it with \fIPrompt\fR\&. Reading starts at line number \fIStartLine\fR (1)\&. The data is tokenized as if it were a sequence of Erlang expressions until a final \fI\&'\&.\&'\fR is reached\&. This token is also returned\&. It returns: 
+.RS 2
+.TP 4
+.B
+\fI{ok, Tokens, EndLine}\fR:
+The tokenization succeeded\&. 
+.TP 4
+.B
+\fI{error, ErrorInfo, EndLine}\fR:
+An error occurred\&. 
+.TP 4
+.B
+\fI{eof, EndLine}\fR:
+End of file was encountered\&. 
+.RE
+.LP
+Example:
+
+.nf
+> io:scan_erl_exprs(\&'enter>\&')\&.
+enter>abc(), "hey"\&.              
+{ok,[{atom, 1, abc},{\&'(\&', 1}, {\&')\&', 1}, {\&', \&', 1}, 
+    {string, 1, "hey"}, {dot, 1}], 2}
+> io:scan_erl_exprs(\&'enter>\&')\&.
+enter>1\&.0er\&.                    
+{error, {1, erl_scan, float}, 2}
+.fi
+.RE
+.LP
+.B
+scan_erl_form(Prompt)
+.br
+.B
+scan_erl_form(IoDevice, Prompt[, StartLine])
+.br
+.RS
+.LP
+Reads data from the standard input (\fIIoDevice\fR), prompting it with \fIPrompt\fR\&. Starts reading at line number \fIStartLine\fR (1)\&. The data is tokenized as if it were an Erlang form - one of the valid Erlang expressions in an Erlang source file - until a final \fI\&'\&.\&'\fR is reached\&. This last token is also returned\&. The return values are the same as for \fIscan_erl_exprs\fR\&. 
+.RE
+.LP
+.B
+parse_erl_exprs(Prompt)
+.br
+.B
+parse_erl_exprs(IoDevice, Prompt[, StartLine])
+.br
+.RS
+.LP
+Reads data from the standard input (\fIIoDevice\fR), prompting it with \fIPrompt\fR\&. Starts reading at line number \fIStartLine\fR (1)\&. The data is tokenized and parsed as if it were a sequence of Erlang expressions until a final \fI\&'\&.\&'\fR is reached\&. It returns: 
+.RS 2
+.TP 4
+.B
+\fI{ok, ExpressionList, EndLine}\fR:
+The parsing was successful\&. 
+.TP 4
+.B
+\fI{error, ErrorInfo, EndLine}\fR:
+An error occurred\&. 
+.TP 4
+.B
+\fI{eof, EndLine}\fR:
+End of file was encountered\&.
+.RE
+.LP
+Example:
+
+.nf
+> io:parse_erl_exprs(\&'enter>\&')\&.
+enter>abc(), "hey"\&.               
+{ok, [{call, 1, [], abc, []}, {string, 1, "hey"}], 2}
+> io:parse_erl_exprs (\&'enter>\&')\&.
+enter>abc("hey"\&.                 
+{error, {1, erl_parse, {before, {terminator,\&') \&'}, {dot, 1}}}, 2}
+.fi
+.RE
+.LP
+.B
+parse_erl_form(Prompt)
+.br
+.B
+parse_erl_form(IoDevice, Prompt[, StartLine])
+.br
+.RS
+.LP
+Reads data from the standard input (\fIIoDevice\fR), prompting it with \fIPrompt\fR Starts reading at line number \fIStartLine\fR (1)\&. The data is tokenized and parsed as if it were an Erlang form - one of the valid Erlang expressions in an Erlang source file - until a final \fI\&'\&.\&'\fR is reached\&. It returns: 
+.RS 2
+.TP 4
+.B
+\fI{ok, Form, EndLine}\fR:
+The parsing was successful\&. 
+.TP 4
+.B
+\fI{error, ErrorInfo, EndLine}\fR:
+An error occurred\&. 
+.TP 4
+.B
+\fI{eof, EndLine}\fR:
+End of file was encountered\&. 
+.RE
+.RE
+.SH Standard Input/Output
+.LP
+All Erlang processes have a default standard IO device\&. This device is used when no \fIIoDevice\fR argument is specified in the IO calls\&. However, it is sometimes desirable to use an explicit \fIIoDevice\fR argument which refers to the default IO device\&. This is the case with functions that can access either a file or the default IO device\&. The atom \fIstandard_io\fR has this special meaning\&. The following example illustrates this:
+
+.nf
+  > io:read(\&'enter>\&')\&.
+  enter>foo\&.
+  {term, foo}
+  > io:read(standard_io, \&'enter>\&')\&.
+  enter>bar\&.
+  {term, bar}
+.fi
+.LP
+There is always a process registered under the name of \fIuser\fR\&. This can be used for sending output to the user\&. 
+.SH Error Information
+.LP
+The \fIErrorInfo\fR mentioned above is the standard \fIErrorInfo\fR structure which is returned from all IO modules\&. It has the following format: 
+
+.nf
+    {ErrorLine, Module, ErrorDescriptor}
+.fi
+.LP
+A string which describes the error is obtained with the following call: 
+
+.nf
+apply(Module, format_error, ErrorDescriptor)
+.fi
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

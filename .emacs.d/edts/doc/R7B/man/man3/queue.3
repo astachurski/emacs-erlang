@@ -1,0 +1,72 @@
+.TH queue 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+queue \- Abstract Data Type for FIFO Queues
+.SH DESCRIPTION
+.LP
+This module implements FIFO queues in an efficient manner\&. 
+
+.SH EXPORTS
+.LP
+.B
+new() -> Queue
+.br
+.RS
+.TP
+Types
+Queue = queue()
+.br
+.RE
+.RS
+.LP
+Returns an empty queue\&. 
+.RE
+.LP
+.B
+in(Item, Q1) -> Q2
+.br
+.RS
+.TP
+Types
+Item = term()
+.br
+Q1 = Q2 = queue()
+.br
+.RE
+.RS
+.LP
+Inserts \fIItem\fR into the queue \fIQ1\fR\&. Returns a new queue \fIQ2\fR\&. 
+.RE
+.LP
+.B
+out(Q) -> Result
+.br
+.RS
+.TP
+Types
+Result = {{value, Item}, Q1} | {empty, Q1}
+.br
+Q = Q1 = queue()
+.br
+.RE
+.RS
+.LP
+Removes the oldest element from the queue \fIQ\fR\&. Returns the tuple \fI{{value, Item}, Q1}\fR, where \fIItem\fR is the element removed and \fIQ1\fR is an identifier for the new queue\&. If \fIQ\fR is empty, the tuple \fI{empty, Q}\fR is returned\&. 
+.RE
+.LP
+.B
+to_list(Q) -> list()
+.br
+.RS
+.TP
+Types
+Q = queue()
+.br
+.RE
+.RS
+.LP
+Returns a list of the elements in the queue, with the oldest element first\&. 
+.RE
+.SH AUTHOR
+.nf
+Claes Wikstrom - support@erlang.ericsson.se
+.fi

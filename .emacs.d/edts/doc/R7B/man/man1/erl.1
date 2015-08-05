@@ -1,0 +1,255 @@
+.TH erl 1 "erts  5.0.1" "Ericsson Utvecklings AB" "USER COMMANDS"
+.SH NAME
+erl \- The Erlang Emulator
+.SH DESCRIPTION
+.LP
+The \fIerl\fR program starts the Erlang runtime system\&. The exact details (e\&.g\&. whether \fIerl\fR is a script or a program and which other programs it calls) are system-dependent\&. 
+.LP
+Windows 95/98/2000/NT users will probably want to use the \fIwerl\fR program instead, which run in its own window with scrollbars and supports command-line editing\&. The \fIerl\fR program on Windows provides no line editing in its shell, and on Windows 95 there is no way to scroll back to text which has scrolled off the screen\&. The \fIerl\fR program must be used, however, in pipelines or if you want to redirect standard input or output\&. 
+
+.SH EXPORTS
+.LP
+.B
+erl <arguments>
+.br
+.RS
+.LP
+Starts the Erlang system\&. 
+.LP
+Any argument starting with a plus sign (\fI+\fR) is always interpreted as a system flag (described below), regardless of where it occurs on the command line\&. 
+.LP
+Arguments starting with a hyphen (\fI-\fR) are the start of a flag\&. A flag includes all following arguments up to the next argument starting with a hyphen\&. 
+.LP
+Example:
+
+.nf
+erl -sname arne -myflag 1 -s mod func arg
+.fi
+.LP
+Here \fI-sname arne\fR is a flag and so are \fI-myflag 1\fR and \fI-s mod func arg\fR\&. Note that these flags are treated differently\&. \fI-sname arne\fR is interpreted by the OTP system, but it still included in the list of flags returned by \fIinit:get_arguments/0\fR\&. \fI-s mod func arg\fR is also treated specially and it is not included in the return value for \fIinit:get_arguments/0\fR\&. Finally, \fI-myflag 1\fR is not interpreted by the OTP system in any way, but it is included in \fIinit:get_arguments/0\fR\&. 
+.LP
+Plain arguments are not interpreted in any way\&. They can be retrieved using \fIinit:get_args/0\fR\&. Plain arguments can occur in two places: Before the first flag argument on the command line, or after a \fI--\fR argument\&. 
+.RE
+.SH Flags
+.LP
+The following flags are supported: 
+.RS 2
+.TP 4
+.B
+--:
+Any arguments \fI--\fR following will not be interpreted in any way\&. They can be retrieved by \fIinit:get_args/0\fR\&. The exception is arguments starting with a \fI+\fR, which will be interpreted as system flags (see below)\&. 
+.TP 4
+.B
+-AppName Key Value:
+Overrides the \fIKey\fR configuration parameter of the \fIAppName\fR application\&. See application(3)\&. This type of flag can also be retrieved using the \fIinit\fR module\&. 
+.TP 4
+.B
+-boot File:
+Specifies the name of the boot script, \fIFile\fR\&.boot, which is used to start the system\&. See init(3)\&. Unless\fIFile\fR contains an absolute path, the system searches for \fIFile\fR\&.boot in the current and \fI<ERL_INSTALL_DIR>/bin\fR directories\&. 
+.RS 4
+.LP
+If this flag is omitted, the \fI<ERL_INSTALL_DIR>/bin/start\&.boot\fR boot script is used\&. 
+.RE
+.TP 4
+.B
+-boot_var Var Directory [Var Directory]:
+If the boot script used contains another path variable than $ROOT, this variable must have a value assigned in order to start the system\&. A boot variable is used if user applications have been installed in another location than underneath the \fI<ERL_INSTALL_DIR>/lib\fR directory\&. \fI$Var\fR is expanded to \fIDirectory\fR in the boot script\&. 
+.TP 4
+.B
+-compile mod1 mod2 \&.\&.\&.\&.:
+Makes the Erlang system compile \fImod1\&.erl mod2\&.erl \&.\&.\&.\&.\fR and then terminate (with non-zero exit code if the compilation of some file didn\&'t succeed)\&. Implies \fI-noinput\fR\&. Not recommended - use erlc(1) instead\&. 
+.TP 4
+.B
+-config Config:
+Reads the \fIConfig\fR\&.config configuration file in order to configure the system\&. See application(3)\&. 
+.TP 4
+.B
+-connect_all false:
+If this flag is present, \fIglobal\fR will \fInot\fR maintain a fully connected network of distributed erlang nodes, and then global name registration cannot be used\&. See global(3)\&.
+.TP 4
+.B
+-cookie:
+Obsolete flag without any effect and common misspelling for \fI-setcookie\fR\&. Use \fI-setcookie Cookie\fR option if want to override the default cookie\&. 
+.TP 4
+.B
+-detached:
+Starts the Erlang system detached from the system console\&. Useful for running daemons and backgrounds processes\&. 
+.TP 4
+.B
+-emu_args:
+Useful for debugging\&. Prints out the actual arguments sent to the emulator\&. 
+.TP 4
+.B
+-env Variable Value:
+Sets the HOST OS environment variable \fIVariable\fR to the value \fIValue\fR of the Erlang system\&. For example: 
+.RS 4
+
+.nf
+% erl -env DISPLAY gin:0
+.fi
+.LP
+
+.LP
+In this example, an Erlang system is started with the DISPLAY environment variable set to the value \fIgin:0\fR\&. 
+.RE
+.TP 4
+.B
+-heart:
+Starts heart beat monitoring of the Erlang system\&. See heart(3)\&. 
+.TP 4
+.B
+-hosts Hosts:
+Specifies the IP addresses for the hosts on which an Erlang boot servers are running\&. This flag is mandatory if the \fI-loader inet\fR flag is present\&. On each host, there must be one Erlang node running, on which the \fIboot_server\fR must be started\&. 
+.RS 4
+.LP
+The IP addresses must be given in the standard form (four decimal numbers separated by periods, for example "150\&.236\&.20\&.74")\&. Hosts names are not acceptable, but an broadcast address (preferably limited to the local network) is\&. 
+.RE
+.TP 4
+.B
+-id Id:
+Specifies the identity of the Erlang system\&. If the system runs as a distributed node, \fIId\fR must be identical to the name supplied together with the \fI-sname\fR or \fI-name\fR distribution flags\&. 
+.TP 4
+.B
+-instr:
+Selects an instrumented Erlang system (virtual machine) to run, instead of the ordinary one\&. When running an instrumented system, some resource usage data can be obtained and analysed using the module \fIinstrument\fR\&. Functionally, it behaves exactly like an ordinary Erlang system\&. 
+.TP 4
+.B
+-loader Loader:
+Specifies the name of the loader used to load Erlang modules into the system\&. See erl_prim_loader(3)\&. \fILoader\fR can be \fIefile\fR (use the local file system), or \fIinet\fR (load using the \fIboot_server\fR on another Erlang node)\&. If \fILoader\fR is something else, the user supplied \fILoader\fR port program is started\&. 
+.RS 4
+.LP
+If the \fI-loader\fR flag is omitted \fIefile\fR is assumed\&. 
+.RE
+.TP 4
+.B
+-make:
+Makes the Erlang system invoke \fImake:all()\fR in the current work directory and then terminate\&. See make(3)\&. Implies \fI-noinput\fR\&. 
+.TP 4
+.B
+-man Module:
+Displays the manual page for the Erlang module \fIModule\fR\&. Only supported on Unix\&. 
+.TP 4
+.B
+-mode Mode:
+The mode flag indicates if the system will load code automatically at runtime, or if all code is loaded during system initialization\&. \fIMode\fR can be either \fIinteractive\fR to allow automatic code loading, or \fIembedded\fR to load all code during start-up\&. See code(3)\&. 
+.TP 4
+.B
+-name Name:
+Makes the node a distributed node\&. This flag invokes all network servers necessary for a node to become distributed\&. See net_kernel(3)\&. 
+.RS 4
+.LP
+The name of the node will be \fIName@Host\fR, where \fIHost\fR is the fully qualified host name of the current host\&. This flag also ensures that \fIepmd\fR runs on the current host before Erlang is started\&. See epmd(1)\&. 
+.RE
+.TP 4
+.B
+-noinput:
+Ensures that the Erlang system never tries to read any input\&. Implies \fI-noshell\fR\&. 
+.TP 4
+.B
+-noshell:
+Starts an Erlang system with no shell at all\&. This flag makes it possible to have the Erlang system as a component in a series of UNIX pipes\&. 
+.TP 4
+.B
+-nostick:
+Disables the sticky directory facility of the \fIcode server\fR\&. See code(3)\&. 
+.TP 4
+.B
+-oldshell:
+Invokes the old Erlang shell from Erlang release 3\&.3\&. The old shell can still be used\&. 
+.TP 4
+.B
+-pa Directories:
+Adds the directories \fIDirectories\fR to the head of the search path of the code server, as if \fIcode:add_pathsa/1\fR was called\&. See code(3)\&. 
+.TP 4
+.B
+-pz Directories:
+Adds the directories \fIDirectories\fR to the end of the search path of the code server, as if \fIcode:add_pathsa/1\fR was called\&. See code(3)\&. 
+.TP 4
+.B
+-s Mod [Fun [Args]]:
+Passes the \fI-s\fR flag to the \fIinit:boot()\fR routine\&. See init(3)\&. 
+.TP 4
+.B
+-setcookie Cookie:
+Sets the magic cookie of the current node to \fICookie\fR\&. As \fIerlang:set_cookie(node(), Cookie)\fR is used, all other nodes will also be assumed to have their cookies set to \fICookie\fR\&. In this way, several nodes can share one magic cookie\&. Erlang magic cookies are explained in auth(3)\&. 
+.TP 4
+.B
+-sname Name:
+This is the same as the \fI-name\fR flag, with the exception that the host name portion of the node name will not be fully qualified\&. The following command is used do start Erlang at the host with the name \fIgin\&.eua\&.ericsson\&.se\fR 
+.RS 4
+
+.nf
+% erl -sname klacke
+Eshell V4\&.7 (abort with ^G)
+(klacke@gin)1>
+.fi
+.LP
+
+.LP
+Only the host name portion of the node name will be relevant\&. This is sometimes the only way to run distributed Erlang if the DNS (Domain Name System) is not running\&. There can be no communication between systems running with the \fI-sname\fR flag and those running with the \fI-name\fR flag, as node names must be unique in distributed Erlang systems\&. 
+.RE
+.TP 4
+.B
+-version:
+Makes the system print out its version number\&. 
+.RE
+.LP
+All these flags are processed during the start-up of the Erlang kernel servers and before any user processes are started\&. All flags are passed to \fIinit:boot(Args)\fR\&. See init(3)\&. All additional flags passed to the script will be passed to \fIinit:boot/2\fR as well, and they can be accessed using the \fIinit\fR module\&. 
+.SH System Flags
+.LP
+The \fIerl\fR script invokes the code for the Erlang virtual machine\&. This program supports the following flags: 
+.RS 2
+.TP 4
+.B
++A size:
+Sets the pool size for device driver threads\&. Default is 0\&. 
+.TP 4
+.B
++B:
+De-activates the break handler for ^C and ^\\ \&. 
+.TP 4
+.B
++h size:
+Sets the default heap size of processes to the size \fIsize\fR\&. 
+.TP 4
+.B
++l:
+Displays info while loading code\&. 
+.TP 4
+.B
++P Number:
+Sets the total number of processes for this system\&. The \fINumber\fR must be in the range [15,32768]\&. 
+.TP 4
+.B
++s size:
+Sets the default stack size for Erlang processes to the size \fIsize\fR\&. 
+.TP 4
+.B
++v:
+Verbose 
+.TP 4
+.B
++V:
+Prints the version of Erlang at start-up\&. 
+.RE
+.LP
+Example: 
+
+.nf
+% erl -name foo +B +l
+.fi
+.LP
+In this example, a distributed node is started with the break handler turned off and a lot of info is displayed while the code is loading\&. 
+.SH See Also
+.LP
+init(3), erl_prim_loader(3), erl_boot_server(3), code(3), application(3), heart(3), net_kernel(3), auth(3), make(3), epmd(1) 
+.SH AUTHORS
+.nf
+Joe Armstrong - support@erlang.ericsson.se
+Magnus Froberg - support@erlang.ericsson.se
+Per Hedeland - support@erlang.ericsson.se
+Sebastian Strollo - support@erlang.ericsson.se
+Claes Wikstrom - support@erlang.ericsson.se
+Mike Williams - support@erlang.ericsson.se
+Robert Virding - support@erlang.ericsson.se
+.fi

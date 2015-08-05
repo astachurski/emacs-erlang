@@ -1,0 +1,1518 @@
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+MODULE
+     odbc - Open Data Base Connectivity
+
+DESCRIPTION
+     The ODBC API is divided into three parts:
+
+       * Start and Stop
+         Starts and stops the server process.
+
+       * Basic API
+         Gives access to the IDL Interface functions,  which  are
+         mapped on ODBC functions.
+
+       * Utility API
+         Consists of functions that are easier to  use  than  the
+         Basic  API.  These  functions  are on a higher level, do
+         more of the job, but allow less control to the  applica-
+         tion programmer.
+
+     All functions described are synchronous. The interface  sup-
+     ports  all ODBC defined SQL data types except binaries. They
+     are all mapped on Erlang strings. The  type  _s_t_r_i_n_g()  is  a
+     _l_i_s_t()  of  integers  representing  ASCII  codes.  The  type
+     _b_o_o_l_e_a_n()  is  either  the  macro  ?_S_Q_L__T_R_U_E  or  the  macro
+     ?_S_Q_L__F_A_L_S_E.  The  default  Timeout for all functions is 5000
+     ms, unless otherwise stated.
+
+
+Start and Stop
+EXPORTS
+     start_link(Args, Options) ->
+     start_link(ServerName, Args, Options) -> Result
+
+          Types
+               Args = [Arg]
+               Arg = {buffer_size,  integer()}  |  {max_len_data,
+               integer()}|    {max_len_err_msg,    integer()}   |
+               {max_len_str, integer()}
+                 {_b_u_f_f_e_r__s_i_z_e, _i_n_t_e_g_e_r()}: The  initial  size  of
+               the  buffer through which communication with the C
+               node is done. The value does not limit the  amount
+               of  data  that  can  pass in either direction of a
+               function call, since the buffer will grow  dynami-
+               cally. The default is 32 kb. The minimum is 4 kb.
+
+                 {_m_a_x__l_e_n__d_a_t_a, _i_n_t_e_g_e_r()}: The  maximum  length,
+               including   null-termination,   of   table   data,
+               returned from ODBC. This value must be chosen with
+               the  buffer size in mind. The default is 8 kb. The
+               argument is used only by the Utility  API.   _N_O_T_E:
+               _T_h_e  _d_a_t_a  _s_o_u_r_c_e _o_r _d_r_i_v_e_r _m_a_y _h_a_v_e _a _l_o_w_e_r _l_i_m_i_t
+               _f_o_r _t_h_e _m_a_x_i_m_u_m _s_i_z_e _o_f _r_e_t_u_r_n_e_d _d_a_t_a. _T_h_i_s  _l_i_m_i_t
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                   1
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+               _i_s  _t_h_e  _v_a_l_u_e _o_f _t_h_e _o_p_t_i_o_n_a_l _s_t_a_t_e_m_e_n_t _a_t_t_r_i_b_u_t_e
+               _S_Q_L__A_T_T_R__M_A_X__L_E_N_G_T_H (_s_e_e [_1]).
+
+                 {_m_a_x__l_e_n__e_r_r__m_s_g,   _i_n_t_e_g_e_r()}:   The    maximum
+               length, including null-termination, of the message
+               part of ODBC error messages. This  value  must  be
+               chosen  with  the buffer size in mind. The default
+               is 1 kb. The argument is used only by the  Utility
+               API.
+
+                 {_m_a_x__l_e_n__s_t_r, _i_n_t_e_g_e_r()}:  The  maximum  length,
+               including   null-termination,   of  other  strings
+               passed from ODBC to the ODBC server  (e.g.  column
+               names).  The  value  does  not  limit  the size of
+               returned table values. It must be chosen with  the
+               buffer  size  in  mind.  The  default is 1 kb. The
+               argument is used only by the Utility API.
+               Options = [Opt]
+               Opt = {timeout, integer()} |{debug, [Dbg]}
+                 _t_i_m_e_o_u_t: The time in ms allowed for  initialisa-
+               tion (see _g_e_n__s_e_r_v_e_r). _d_e_b_u_g: Debug options.
+                Dbg = trace | log |  statistics  |  {log_to_file,
+               FileName} | {install, {Func, FuncState}}
+                  See _g_e_n__s_e_r_v_e_r and _s_y_s.
+               ServerName = {local, atom()} | {global, atom()}
+                  When  supplied,  causes  the   server   to   be
+               registered  locally  or globally. If the server is
+               started without a name it can only be called using
+               the returned pid.
+               Result = {ok, pid()} | {error, Reason}
+                  The pid of the server or an error tuple.
+               Reason =  {already_started,  pid()}  |  timeout  |
+               {no_c_node, Info}
+                  The server was already started, a  timeout  has
+               expired,  or  the C node could not be started (the
+               program may not have been found or  may  not  have
+               been executable e.g.).
+               Info = string()
+                 More information.
+
+          Starts a new ODBC server process, registers it with the
+          supervisor,  and links it to the calling process. Opens
+          a unique IDL connection to a new C node  on  the  local
+          host,  using  the same cookie as is used by the node of
+          the calling process. Links to  the  process  on  the  C
+          node.
+
+  Note:
+     There is no default timeout value.  Not  using  the  timeout
+     option is equivalent to having an infinite timeout value.
+      An expired timeout is reported as an  error  here,  not  an
+     exception.
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                   2
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+      The debug options are described in the _s_y_s module  documen-
+     tation.
+
+
+     stop(Server) ->
+     stop(Server, Timeout) -> ok
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               Timeout = integer() | infinity
+                  Max time (ms) for serving the request.
+
+          Stops the ODBC server process as soon  as  all  already
+          submitted  requests  have been processed. The C node is
+          also stopped.
+
+Utility API
+     The Utility API uses three maximum string length parameters:
+     the  maximum  data string length (max_len_data), the maximum
+     error message  length  (max_len_err_msg),  and  the  maximum
+     length  of  'other  strings' (e.g. column names) passed from
+     ODBC  (max_len_str).  These  can  be  set  in  the  call  to
+     _s_t_a_r_t__l_i_n_k/[_2,  _3],  but  there  are  default values. Errors
+     reported by the ODBC API are returned in lists. The relative
+     order of these errors is the same as specified in [1]. Warn-
+     ings are always ignored and execution  proceeds.  Should  an
+     error occur, execution stops.
+
+EXPORTS
+     init_env(Server) ->
+     init_env(Server, Timeout) -> {ok,  RefEnvHandle}  |  {error,
+     {Fcn, [Reason]}}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               Timeout = integer() | infinity
+                  Max time (ms) for serving the request.
+               RefEnvHandle = term()
+                  Reference to the initialised environment.
+               Fcn = atom()
+                 The originating function.
+               Reason = {SqlState, MoreInfo}
+                  An ODBC error tuple.
+               SqlState = string()
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                   3
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+                  The SQL state, see [1].
+               MoreInfo = {NativeCode, Msg, LenMsg}
+                  More error info.
+               NativeCode = string()
+                  Data source specific error code.
+                Msg = string()
+                 Error message.
+               LenMsg = integer()
+                  Length of _M_s_g before truncation.
+
+          Initialises the ODBC environment on the C node.
+
+     connect(Server, RefEnvHandle, ConnectStr) ->
+     connect(Server, RefEnvHandle, ConnectStr, Timeout) ->
+     connect(Server, RefEnvHandle, DSN, UID, PWD) ->
+     connect(Server, RefEnvHandle, DSN,  UID,  PWD,  Timeout)  ->
+     {ok, RefConnHandle} | {error, {Fcn, [Reason]}}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefEnvHandle = term()
+                  Reference  to  the  environment.  Returned   by
+               _i_n_i_t__e_n_v/[_1, _2].
+               ConnectStr = string()
+                  Connection string. For syntax see SQLDriverCon-
+               nect in [1].
+               DSN = string()
+                  Name of the data source.
+               UID = string()
+                  User ID.
+               PWD = string()
+                  Password.
+               Timeout = integer() | infinity
+                 Maximum time (ms) for serving the request.
+               RefConnHandle = term()
+                  Reference to the opened connection.
+               Fcn = atom()
+                 The originating function.
+               Reason = {SqlState, MoreInfo}
+                  An ODBC error tuple.
+               SqlState = string()
+                  The SQL state, see [1].
+               MoreInfo = {NativeCode, Msg, LenMsg}
+                  More error info.
+               NativeCode = string()
+                  Data source specific error code.
+                Msg = string()
+                 Error message.
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                   4
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+               LenMsg = integer()
+                  Length of _M_s_g before truncation.
+
+          Opens a connection to a data source. There can be  only
+          one open data source connection per server. _c_o_n_n_e_c_t/[_3,
+          _4] is used when the information that  can  be  supplied
+          through _c_o_n_n_e_c_t/[_5, _6] does not suffice.
+
+  Note:
+     The syntax to be used  for  _C_o_n_n_e_c_t_S_t_r  is  described  under
+     SQLDriverConnect in [1]. The _C_o_n_n_e_c_t_S_t_r must be complete.
+
+
+     execute_stmt(Server, RefConnHandle, Stmt) ->
+     execute_stmt(Server,  RefConnHandle,   Stmt,   Timeout)   ->
+     {updated,  NRows}  |  {selected,  [ColName],  [Row]} {error,
+     {Fcn, [Reason]}}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefConnHandle = term()
+                  Reference to an open  connection.  Returned  by
+               _c_o_n_n_e_c_t/[_3, _4, _5, _6].
+               Stmt = string()
+                  SQL statement to execute.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               NRows = integer()
+                  The number of updated rows for UPDATE,  INSERT,
+               or  DELETE  statements, or -1 if the number is not
+               available. For other statement types the value  is
+               driver defined, see [1].
+               ColName = string()
+                 The name of a column in the resulting table.
+               Row = [Value]
+                  One row of the resulting table.
+               Value = string() | null
+                 One value in a row.
+               Fcn = atom()
+                 The originating function.
+               Reason = {SqlState, MoreInfo}
+                  An ODBC error tuple.
+               SqlState = string()
+                  The SQL state, see [1].
+               MoreInfo = {NativeCode, Msg, LenMsg}
+                  More error info.
+               NativeCode = string()
+                  Data source specific error code.
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                   5
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+                Msg = string()
+                 Error message.
+               LenMsg = integer()
+                  Length of _M_s_g before truncation.
+
+          Executes a single SQL statement.  All  changes  to  the
+          data source are, by default, automatically committed if
+          successful. Data that is returned for SELECT statements
+          is in string form.
+
+  Note:
+     {_u_p_d_a_t_e_d, _0} or {_u_p_d_a_t_e_d, -_1} is returned when  a  statement
+     that does not select or update any rows is successfully exe-
+     cuted.
+
+      The _C_o_l_N_a_m_e_s are ordered the same way as the _V_a_l_u_e_s in  the
+     _R_o_w_s  (the  first _C_o_l_N_a_m_e is associated with the first _V_a_l_u_e
+     of each _R_o_w etc.). The _R_o_w_s have no defined order since they
+     represent a set.
+
+      Column names will be truncated if they are longer than  the
+     maximum  string  length  (see  option to _s_t_a_r_t__l_i_n_k/[_2, _3]).
+     Table values will be truncated if they are longer  than  the
+     maximum  data length, or longer than the value of the state-
+     ment attribute SQL_ATTR_MAX_LENGTH. If the amount of  memory
+     needed  to retrieve a table value from a data source can not
+     be  determined,  the  default  maximum  data   length   (see
+     _s_t_a_r_t__l_i_n_k/[_2, _3]) is used.
+
+
+
+
+     disconnect(Server, RefConnHandle) ->
+     disconnect(Server, RefConnHandle, Timeout) -> ok  |  {error,
+     {Fcn, [Reason]}}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefConnHandle = term()
+                  Reference to an open  connection.  Returned  by
+               _c_o_n_n_e_c_t/[_3, _4, _5, _6].
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Fcn = atom()
+                 The originating function.
+               Reason = {SqlState, MoreInfo}
+                  An ODBC error tuple.
+               SqlState = string()
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                   6
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+                  The SQL state, see [1].
+               MoreInfo = {NativeCode, Msg, LenMsg}
+                  More error info.
+               NativeCode = string()
+                  Data source specific error code.
+                Msg = string()
+                 Error message.
+               LenMsg = integer()
+                  Length of _M_s_g before truncation.
+
+          Closes the connection to a data source.
+
+     terminate_env(Server, RefEnvHandle) ->
+     terminate_env(Server, RefEnvHandle, Timeout) -> ok | {error,
+     {Fcn, [Reason]}}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefEnvHandle = term()
+                  Reference  to  the  environment.  Returned   by
+               _i_n_i_t__e_n_v/[_1, _2].
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Fcn = atom()
+                 The originating function.
+               Reason = {SqlState, MoreInfo}
+                  An ODBC error tuple.
+               SqlState = string()
+                  The SQL state, see [1].
+               MoreInfo = {NativeCode, Msg, LenMsg}
+                  More error info.
+               NativeCode = string()
+                  Data source specific error code.
+                Msg = string()
+                 Error message.
+               LenMsg = integer()
+                  Length of _M_s_g before truncation.
+
+          Cleans up the ODBC environment on the C node.
+
+Basic API
+     To use the Basic API it is necessary to gain a comprehensive
+     understandingof  ODBC by studying [1]. ODBC defines the con-
+     cept of deferred buffers. A  deferred  buffer  is  one  that
+     exists  longer  than one function call, so it can be used in
+     several calls. Deferred buffers  come  in  pairs:  one  data
+     buffer and one length/indicator buffer. The length/indicator
+     buffer is used for communicating the length of data  in  the
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                   7
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+     data  buffer,  or to indicate something about the data (e.g.
+     that it is  a  null-value).  The  Basic  API  handles  these
+     buffers  accordingly: they are allocated, deallocated, read,
+     and written pair-wise.
+
+EXPORTS
+      sql_alloc_handle(Server, HandleType, RefInputHandle) ->
+     sql_alloc_handle(Server,     HandleType,     RefInputHandle,
+     Timeout) -> {Result, RefOutputHandle}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               HandleType = ?SQL_HANDLE_ENV |  ?SQL_HANDLE_DBC  |
+               ?SQL_HANDLE_STMT
+                  Macros that determine which type of  handle  to
+               allocate.
+               RefInputHandle = term() | ?SQL_NULL_HANDLE
+                 The context in which the new  handle  is  to  be
+               allocated.  When allocating an environment handle,
+               use ?_S_Q_L__N_U_L_L__H_A_N_D_L_E. When allocating a connection
+               handle  the argument must be an environment handle
+               and when allocating a statement handle it must  be
+               a connection handle.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                  Result macro.
+               RefOutputHandle  =  term()  |   ?SQL_NULL_HENV   |
+               ?SQL_NULL_HDBC | ?SQL_NULL_HSTMT
+                  Reference to the allocated handle, or  a  value
+               representing an error.
+
+          Allocates memory for  an  environment,  connection,  or
+          statement handle. See SQLAllocHandle in [1].
+
+            _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           Allocation of descriptor handles is not supported. The
+          parameters _S_e_r_v_e_r and _T_i_m_e_o_u_t have been added. The ODBC
+          output parameter _O_u_t_p_u_t_H_a_n_d_l_e_P_t_r has been changed  into
+          the  returned value _R_e_f_O_u_t_p_u_t_H_a_n_d_l_e. Connection pooling
+          is not supported.
+
+     sql_bind_col(Server, RefStmtHandle, ColNum, RefBuf) ->
+     sql_bind_col(Server, RefStmtHandle, ColNum, RefBuf, Timeout)
+     -> Result
+
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                   8
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefStmtHandle = term()
+                  Reference to the statement handle.
+               ColNum = integer()
+                  Column number from left to right starting at 1.
+               RefBuf = integer() | ?NULL_REF
+                  Reference to the buffer where the  column  data
+               is  placed (and to the associated length/indicator
+               buffer). ?_N_U_L_L__R_E_F removes the binding  between  a
+               buffer and a column.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                  Result macro.
+
+          Assigns storage and data type for a column in a  result
+          set  (binds  a  buffer  to a column). See SQLBindCol in
+          [1]. Buffers/columns can also be unbound.
+
+
+  Note:
+     The memory  associated  with  _R_e_f_B_u_f  has  to  be  allocated
+     already.
+
+
+
+     _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+
+     Neither binding of arrays nor the use of binding offsets  is
+     supported.  It  is  not  possible  to unbind the data buffer
+     without also  unbinding  the  length/indicator  buffer.  The
+     parameters  _S_e_r_v_e_r  and  _T_i_m_e_o_u_t  have been added. The input
+     parameters  _T_a_r_g_e_t_T_y_p_e,  _T_a_r_g_e_t_V_a_l_u_e_P_t_r,  _B_u_f_f_e_r_L_e_n_g_t_h,  and
+     _S_t_r_L_e_n__o_r__I_n_d_P_t_r  of  the  ODBC  function have been replaced
+     with the _R_e_f_B_u_f parameter (which represents the same data).
+
+     sql_close_cursor(Server, RefStmtHandle) ->
+     sql_close_cursor(Server, RefStmtHandle, Timeout) -> Result
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                   9
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+               RefStmtHandle = term()
+                  Reference to the statement handle.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                  Result macro.
+
+          Closes a cursor that has been opened on a statement and
+          discards pending results. See SQLCloseCursor in [1].
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           The parameters _S_e_r_v_e_r and _T_i_m_e_o_u_t have been added.
+
+     sql_connect(Server, RefConnHandle, DSN, UID, Auth) ->
+     sql_connect(Server, RefConnHandle, DSN, UID, Auth,  Timeout)
+     -> Result
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefConnHandle = term()
+                  Reference to the connection handle.
+               DSN = string()
+                 The name of the data source.
+               UID = string()
+                  The user ID
+               Auth = string()
+                  The user's password for the data source.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                  Result macro.
+
+          Establishes a connection to a driver and a data source.
+          See SQLConnect in [1].
+            _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           Connection pooling is not  supported.  The  parameters
+          _S_e_r_v_e_r  and  _T_i_m_e_o_u_t have been added. The input parame-
+          ters _N_a_m_e_L_e_n_g_t_h_1, _N_a_m_e_L_e_n_g_t_h_2, and _N_a_m_e_L_e_n_g_t_h_3  of  the
+          ODBC function have been excluded.
+
+     sql_describe_col(Server, RefStmtHandle,  ColNum,  BufLenCol-
+     Name) ->
+     sql_describe_col(Server, RefStmtHandle,  ColNum,  BufLenCol-
+     Name,  Timeout)  ->  {Result,{ColName, LenColName}, SqlType,
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  10
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+     ColSize, DecDigs, Nullable}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefStmtHandle = term()
+                  Reference to the statement handle.
+               ColNum = integer()
+                  The column number from left to right,  starting
+               at 1.
+               BufLenColName = integer()
+                  Length (>0) of the  _C_o_l_N_a_m_e buffer. Allow  room
+               for null-termination.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                  Result macro.
+               ColName = string()
+                  The column name.
+               LenColName = integer()
+                 The actual length of _C_o_l_N_a_m_e. An ODBC  SQL  data
+               type  (ODBC  supported  data  types  are  supplied
+               through macros).
+               SqlType = integer()
+                 An ODBC SQL data type (ODBC supported data types
+               are  supplied through macros) or a driver-specific
+               type (not supplied through macros).
+               ColSize = integer()
+                 The precision of the column (see appendix  D  in
+               [1]).  If the precision cannot be determined, 0 is
+               returned.
+               DecDigs = integer()
+                 The scale of the column (see appendix D in [1]).
+               If  the  scale  cannot  be  determined,  or is not
+               applicable, 0 is returned.
+               Nullable  =  ?SQL_NO_NULLS   |   ?SQL_NULLABLE   |
+               ?SQL_NULLABLE_UNKNOWN
+                 Indicates whether the column allows null  values
+               or not.
+
+          Returns the result descriptor  --  column  name,  type,
+          column size, decimal digits, and nullability -- for one
+          column in the result set. See SQLDescribeCol in [1]. To
+          decide  the  buffer size (how many characters or bytes)
+          needed to retrieve data for the column it is  necessary
+          to  calculate  the display size (see also appendix D in
+          [1]). The function  _d_i_s_p_l_a_y__s_i_z_e(_S_q_l_T_y_p_e,  _C_o_l_S_i_z_e)  ->
+          _i_n_t_e_g_e_r()  does  the  calculation. The input parameters
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  11
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+          are returned by _s_q_l__d_e_s_c_r_i_b_e__c_o_l/[_4, _5].
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           The function does not support  retrieval  of  bookmark
+          column  data.  The  parameters  _S_e_r_v_e_r and _T_i_m_e_o_u_t have
+          been   added.   The   output   parameters   _C_o_l_u_m_n_N_a_m_e,
+          _N_a_m_e_L_e_n_g_t_h_P_t_r,  _D_a_t_a_T_y_p_e_P_t_r,  _C_o_l_u_m_n_S_i_z_e_P_t_r, _D_e_c_i_m_a_l_D_i_-
+          _g_i_t_s_P_t_r, and _N_u_l_l_a_b_l_e_P_t_r of the ODBC function have been
+          changed  into  the returned values _C_o_l_N_a_m_e, _L_e_n_C_o_l_N_a_m_e,
+          _S_q_l_T_y_p_e, _C_o_l_S_i_z_e, _D_e_c_D_i_g_s, and _N_u_l_l_a_b_l_e.  _B_u_f_L_e_n_C_o_l_N_a_m_e
+          must be > 0.
+
+     sql_disconnect(Server, RefConnHandle) ->
+     sql_disconnect(Server, RefConnHandle, Timeout) -> Result
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefConnHandle = term()
+                  Reference to the connection handle.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                 Result macro.
+
+          Closes the connection associated with a  specific  con-
+          nection handle. See SQLDisconnect in [1].
+
+            _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           Connection pooling is not  supported.  The  parameters
+          _S_e_r_v_e_r and _T_i_m_e_o_u_t have been added.
+
+     sql_driver_connect(Server,     RefConnHandle,     InConnStr,
+     BufLenOutConnStr, DrvCompletion) ->
+     sql_driver_connect(Server,     RefConnHandle,     InConnStr,
+     BufLenOutConnStr,   DrvCompletion,   Timeout)   ->  {Result,
+     {OutConnStr, LenOutConnStr}}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefConnHandle = term()
+                  Reference to the connection handle.
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  12
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+               InConnStr = string()
+                 A complete connection string  (enough  for  con-
+               necting anyway).
+               BufLenOutConnStr = integer()
+                  Length (>0) of  the  _O_u_t_C_o_n_n_S_t_r  buffer.  Allow
+               room for null-termination.
+               DrvCompletion = ?SQL_DRIVER_NOPROMPT
+                  No prompting with pop-ups.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR | ?SQL_NO_DATA
+                  Result macro.
+               OutConnStr = string()
+                  A complete connection string.
+               LenOutConnStr = integer()
+                  The length of _O_u_t_C_o_n_n_S_t_r before truncation.
+
+          Establishes a connection to a driver and a data  sourc,
+          which needs more connection information than SQLConnect
+          offers. See SQLDriverConnect in [1].
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           The function does not support prompting with  pop-ups,
+          so  the connection string supplied must be complete or,
+          at least, complete enough for connecting.  The  parame-
+          ters  _S_e_r_v_e_r  and  _T_i_m_e_o_u_t  have  been added. The input
+          parameters _W_i_n_d_o_w_H_a_n_d_l_e and _S_t_r_i_n_g_L_e_n_g_t_h_1 of  the  ODBC
+          function  have  been  excluded.  The  output parameters
+          _O_u_t_C_o_n_n_e_c_t_i_o_n_S_t_r_i_n_g  and  _S_t_r_i_n_g_L_e_n_g_t_h_2_P_t_r  have   been
+          changed   into   the  returned  values  _O_u_t_C_o_n_n_S_t_r  and
+          _L_e_n_O_u_t_C_o_n_n_S_t_r. _B_u_f_L_e_n_O_u_t_C_o_n_n_S_t_r must be > 0.
+
+     sql_end_tran(Server, HandleType, RefHandle, ComplType) ->
+     sql_end_tran(Server,   HandleType,   RefHandle,   ComplType,
+     Timeout) -> Result
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               HandleType = ?SQL_HANDLE_ENV | ?SQL_HANDLE_DBC
+                  The type of handle for  which  to  perform  the
+               transaction  (all  connections  associated with an
+               environment or a specific connection).
+               RefHandle = term()
+                  Reference to the handle.
+               ComplType = ?SQL_COMMIT | ?SQL_ROLLBACK
+                 Commit operation or rollback operation.
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  13
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                  Result macro.
+
+
+          Requests a commit or rollback operation for all  active
+          operations  on  all statement handles associated with a
+          connection. It can also request that a commit or  roll-
+          back operation be performed for all connections associ-
+          ated with the environment  handle.  See  SQLEndTran  in
+          [1].
+
+  Note:
+     Rollback of transactions may be unsupported  by  core  level
+     drivers.
+
+
+
+     _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+
+
+     The parameters _S_e_r_v_e_r and _T_i_m_e_o_u_t have been added.
+
+     sql_exec_direct(Server, RefStmtHandle, Stmt) ->
+     sql_exec_direct(Server,  RefStmtHandle,  Stmt,  Timeout)  ->
+     Result
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefStmtHandle = term()
+                  Reference to the statement handle.
+               Stmt = string()
+                  An SQL statement.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE  | ?SQL_ERROR | ?SQL_NEED_DATA
+               | ?SQL_NO_DATA
+                  Result macro.
+
+          Executes a statement. See SQLExecDirect in [1].
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           ?_S_Q_L__N_O__D_A_T_A  is  returned  only  in  connection  with
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  14
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+          positioned updates, which are not supported. The param-
+          eters _S_e_r_v_e_r and _T_i_m_e_o_u_t have  been  added.  The  input
+          parameter  _T_e_x_t_L_e_n_g_t_h  of  the  ODBC  function has been
+          excluded.
+
+     sql_fetch(Server, RefStmtHandle) ->
+     sql_fetch(Server, RefStmtHandle, Timeout) -> Result
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefStmtHandle = term()
+                  Reference to the statement handle.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR | ?SQL_NO_DATA
+                  Result macro.
+
+          Fetches a row of data from a  result  set.  The  driver
+          returns data for all columns that were bound to storage
+          locations with _s_q_l__b_i_n_d__c_o_l/[_4,  _5].  See  SQLFetch  in
+          [1].
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           The parameters _S_e_r_v_e_r and _T_i_m_e_o_u_t have been added.
+
+     sql_free_handle(Server, HandleType, RefHandle) ->
+     sql_free_handle(Server, HandleType, RefHandle,  Timeout)  ->
+     Result
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               HandleType = ?SQL_HANDLE_ENV |  ?SQL_HANDLE_DBC  |
+               ?SQL_HANDLE_STMT
+                  Macros which define the type of handle to free.
+               RefHandle = term()
+                  Reference to the handle.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result  =  ?SQL_SUCCESS  |  ?SQL_INVALID_HANDLE  |
+               ?SQL_ERROR
+                  Result macro.
+
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  15
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+          Releases a handle and frees  all  resources  associated
+          with it. See SQLFreeHandle in [1].
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           The function does not support deallocation of descrip-
+          tor  handles.  The  parameters  _S_e_r_v_e_r and _T_i_m_e_o_u_t have
+          been added.
+
+     sql_get_connect_attr(Server, RefConnHandle,  Attr,  BufType)
+     ->
+     sql_get_connect_attr(Server, RefConnHandle,  Attr,  BufType,
+     Timeout) -> {Result, Value}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefConnHandle = term()
+                  Reference to the connection handle.
+               Attr = integer()
+                  One of the  attributes  described  below  or  a
+               driver-specific attribute.
+               BufType = {?SQL_C_CHAR, BufLen} |  ?SQL_C_ULONG  |
+               {?SQL_C_ULONG, IntType}
+                  The buffer type used for retrieving  the  data.
+               For  character type data also the buffer size. For
+               integer type data that is driver-specific, also  a
+               subtype.
+               BufLen = integer()
+                  Buffer size (>0) for character type data. Allow
+               room for null-termination
+               IntType = ?SQL_IS_UINTEGER | ?SQL_IS_INTEGER
+                  Used only for driver-specific  attributes.  See
+               SQLGetConnectAttr in [1].
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR | ?SQL_NO_DATA
+                  Result macro.
+               Value = {CharValue, LenCharValue} | NumValue
+                 Attribute data.
+               CharValue = string()
+                 The value of the  attribute  when  of  character
+               type.
+               LenCharValue = integer()
+                 The length of CharValue before truncation.
+               NumValue = integer()
+                  The value of  the  attribute  when  of  numeric
+               type.
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  16
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+          Returns the current setting of a connection  attribute.
+          See SQLGetConnectAttr in [1].
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           Only the  following  attributes,  and  their  possible
+          values,  are  supported (through macros). More informa-
+          tion can  be  found  under  SQLSetConnectAttr  in  [1].
+          Driver-specific  attributes  are  not supported through
+          macros, but can be retrieved, if they are of  character
+          or signed/unsigned long integer types.
+
+            * ?SQL_ATTR_ACCESS_MODE
+
+            * ?SQL_ATTR_AUTOCOMMIT
+
+            * ?SQL_ATTR_ODBC_CURSORS
+
+            * ?SQL_ATTR_TRACE
+
+            * ?SQL_ATTR_TRACEFILE
+
+            * ?SQL_ATTR_TRANSLATE_LIB
+
+            * ?SQL_ATTR_TRANSLATE_OPTION
+
+          According to [1], _B_u_f_L_e_n (BufferLength) can be  set  to
+          ?_S_Q_L__N_T_S.  This is probably not correct, since it would
+          make it impossible for the driver to detect  that  data
+          needs  to  be  truncated. Hence, the ?_S_Q_L__N_T_S value has
+          been disallowed. The function takes a _B_u_f_T_y_p_e parameter
+          to  distinguish  between  character type attributes and
+          numeric type attributes. For character data the maximum
+          string  length  must  be supplied (allow room for null-
+          termination). For driver-specific numeric  type  attri-
+          butes,  a  subtype must be supplied. The returned value
+          is either a tuple containing the attribute  string  and
+          its  length,  or an integer, depending on the specified
+          buffer type. The parameters  _S_e_r_v_e_r  and  _T_i_m_e_o_u_t  have
+          been   added.   The   output  parameters  _V_a_l_u_e_P_t_r  and
+          _S_t_r_i_n_g_L_e_n_g_t_h_P_t_r of the ODBC function have been  changed
+          into the returned values _C_h_a_r_V_a_l_u_e and _L_e_n_C_h_a_r_V_a_l_u_e for
+          character type  attributes  and  _N_u_m_V_a_l_u_e  for  integer
+          types.   The  input  parameter  _B_u_f_f_e_r_L_e_n_g_t_h  has  been
+          included in the _B_u_f_T_y_pe parameter. _B_u_f_L_e_n must be > 0.
+
+     sql_get_diag_rec(Server,  HandleType,   RefHandle,   RecNum,
+     BufLenErrMsg) ->
+     sql_get_diag_rec(Server,  HandleType,   RefHandle,   RecNum,
+     BufLenErrMsg,  Timeout)  ->  {Result,  SqlState,  NativeErr,
+     {ErrMsg, LenErrMsg}}
+
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  17
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               HandleType = ?SQL_HANDLE_ENV |  ?SQL_HANDLE_DBC  |
+               ?SQL_HANDLE_STMT
+                 The type of handle for which to retrieve  infor-
+               mation.
+               RefHandle = term()
+                 Reference to the handle.
+               RecNum = integer()
+                 Indicates  the  status  record  from  which   to
+               retrieve information (> 0).
+               BufLenErrMsg = integer()
+                  Length of the _E_r_r_M_s_g buffer  (>0).  Allow  room
+               for null-termination.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR | ?SQL_NO_DATA
+                  Result macro.
+               SqlState = string()
+                 The  SQL  state  pertaining  to  the  diagnostic
+               record.
+               NativeErr = integer()
+                 Data-source specific error code.
+               ErrMsg = string(
+                 Error message.
+               LenErrMsg = integer()
+                  The length of _E_r_r_M_s_g before truncation.
+
+          Retrieves the current values of multiple  fields  of  a
+          diagnostic  record  that  contains  error, warning, and
+          status information. See SQLGetDiagRec in [1].
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           Retrieving information associated with descriptor han-
+          dles  is  not  supported.  The  parameters  _S_e_r_v_e_r  and
+          _T_i_m_e_o_u_t  have  been  added.   The   output   parameters
+          _S_q_l_S_t_a_t_e,      _N_a_t_i_v_e_E_r_r_o_r_P_t_r,     _M_e_s_s_a_g_e_T_e_x_t,     and
+          _T_e_x_t_L_e_n_g_t_h_P_t_r of the ODBC function  have  been  changed
+          into  the  returned values _S_q_l_S_t_a_t_e, _N_a_t_i_v_e_E_r_r, _E_r_r_M_s_g,
+          and _L_e_n_E_r_r_M_s_g. _B_u_f_L_e_n_E_r_r_M_s_g must be > 0.
+
+     sql_num_result_cols(Server, RefStmtHandle) ->
+     sql_num_result_cols(Server,   RefStmtHandle,   Timeout)   ->
+     {Result, ColCount}
+
+          Types
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  18
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefStmtHandle = term()
+                 Reference to the statement handle.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                  Result macro.
+               ColCount = integer()
+                 The number of columns in the result set.
+
+          Returns the number of columns  in  a  result  set.  See
+          SQLNumResultCols in [1].
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           The parameters _S_e_r_v_e_r and _T_i_m_e_o_u_t have been added. The
+          output  parameter  _C_o_l_u_m_n_C_o_u_n_t_P_t_r  of the ODBC function
+          has been changed into the returned value _C_o_l_C_o_u_n_t.
+
+     sql_row_count(Server, RefStmtHandle) ->
+     sql_row_count(Server, RefStmtHandle,  Timeout)  ->  {Result,
+     RowCount}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefStmtHandle = term()
+                  Reference to the statement handle.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                  Result macro.
+               RowCount = integer()
+                 The number of affected rows. If  the  number  of
+               affected rows is not available -1 is returned. For
+               exceptions, see SQLRowCount in [1].
+
+          Returns the number  of  rows  affected  by  an  UPDATE,
+          INSERT, or DELETE statement. See SQLRowCount in [1].
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           The parameters _S_e_r_v_e_r and _T_i_m_e_o_u_t have been added. The
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  19
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+          output  parameter  _R_o_w_C_o_u_n_t_P_t_r of the ODBC function has
+          been changed into the returned value _R_o_w_C_o_u_n_t.
+
+     sql_set_connect_attr(Server,  RefConnHandle,  Attr,   Value,
+     BufType) ->
+     sql_set_connect_attr(Server,  RefConnHandle,  Attr,   Value,
+     BufType, Timeout) -> Result
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefConnHandle = term()
+                 Reference to the connection handle.
+               Attr = integer()
+                 One   of   the   attributes   described    under
+               _s_q_l__g_e_t__c_o_n_n_e_c_t__a_t_t_r/[_4,  _5]  or a driver-specific
+               attribute. The attributes defined by ODBC are sup-
+               plied  through  macros, but driver-specific attri-
+               butes are not.
+               Value = string() | integer()
+                 The new attribute value.
+               BufType   =   ?SQL_C_CHAR   |    ?SQL_C_ULONG    |
+               {?SQL_C_ULONG, IntType}
+                  The buffer  type.  Either  a  (null-terminated)
+               string, an ODBC defined attribute of integer type,
+               or a driver-specific  attribute  of  integer  type
+               (which also has a subtype).
+               IntType = ?SQL_IS_UINTEGER | ?SQL_IS_INTEGER
+                  Subtype for driver-specific integer attributes.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                  Result macro.
+
+          Sets attributes that govern aspects of connections. See
+          SQLSetConnectAttr  in [1]. The supported attributes are
+          listed  under  _s_q_l__g_e_t__c_o_n_n_e_c_t__a_t_t_r/[_4,   _5].   Driver-
+          specific  attributes  are not supported through macros,
+          but can be set if they are strings  or  signed/unsigned
+          long integers.
+
+           _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           Only character and signed/unsigned long integer attri-
+          bute  types  are  supported.  The parameters _S_e_r_v_e_r and
+          _T_i_m_e_o_u_t  have   been   added.   The   input   parameter
+          _S_t_r_i_n_g_L_e_n_g_t_h  of  the  ODBC  function has been replaced
+          with the input parameter _B_u_f_T_y_p_e.
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  20
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+     sql_set_env_attr(Server, RefEnvHandle, Attr, Value, BufType)
+     ->
+     sql_set_env_attr(Server, RefEnvHandle, Attr, Value, BufType,
+     Timeout) -> Result
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefEnvHandle = term()
+                 Reference to the environment handle.
+               Attr = integer()
+                 One of the supported attributes described below.
+               Value = string() | intiger()
+                 The new attribute value.
+               BufType = ?SQL_C_CHAR | ?SQL_C_ULONG
+                 The  buffer  type.  Either  a  (null-terminated)
+               string  or  an  ODBC  defined attribute of integer
+               type.
+               Timeout = integer() | infinity
+                  Max time (ms) for serving the request.
+               Result = ?SQL_SUCCESS |  ?SQL_SUCCESS_WITH_INFO  |
+               ?SQL_INVALID_HANDLE | ?SQL_ERROR
+                  Result macro.
+
+          Sets attributes that govern  aspects  of  environments.
+          The  following  attributes,  and their possible values,
+          are supported (through macros). More information can be
+          found under SQLSetEnvAttr in [1]. Other data types than
+          character or unsigned long integer are not supported.
+
+            * ?SQL_ATTR_ODBC_VERSION
+
+
+
+          _D_i_f_f_e_r_e_n_c_e_s _f_r_o_m _t_h_e _O_D_B_C _F_u_n_c_t_i_o_n:
+
+           Only character and  unsigned  long  integer  attribute
+          types  are supported. The parameters _S_e_r_v_e_r and _T_i_m_e_o_u_t
+          have been added. The input  parameter  _S_t_r_i_n_g_L_e_n_g_t_h  of
+          the  ODBC  function  has  been  replaced with the input
+          parameter _B_u_f_T_y_p_e.
+
+     alloc_buffer(Server, BufCType, Size) ->
+     alloc_buffer(Server,  BufCType,  Size,  Timeout)   ->   {ok,
+     RefBuf}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  21
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               BufCType = ?SQL_C_CHAR | ?SQL_C_BINARY
+                 The C data type of the buffer.
+               Size = integer()
+                 The buffer size (>0). For character data,  allow
+               room for null-termination.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               RefBuf = term()
+                 A handle to the buffer.
+
+          Allocates a deferred  data  buffer  and  an  associated
+          length/indicator buffer.
+
+     dealloc_buffer(Server, RefBuf) ->
+     dealloc_buffer(Server, RefBuf, Timeout) -> ok
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefBuf = term()
+                 A handle to the buffer.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+
+          Deallocates a deferred data buffer and  the  associated
+          length/indicator buffer.
+
+     read_buffer(Server, RefBuf) ->
+     read_buffer(Server, RefBuf, Timeout) ->  {ok,  {Value,  Len-
+     Ind}}
+
+          Types
+               Server = pid() | Name | {global,  Name}  |  {Name,
+               Node}
+                 The pid of  the  server  process,  a  registered
+               name,  a globally registered name, or a registered
+               name on a remote node.
+               RefBuf = term()
+                 A handle to the buffer.
+               Timeout = integer() | infinity
+                  Maximum time (ms) for serving the request.
+               Value = string()
+                  Contents of the buffer associated with _R_e_f_B_u_f.
+               LenInd   =   integer()    |    ?SQL_NULL_DATA    |
+               ?SQL_NO_TOTAL
+                  Length/indicator value associated with _R_e_f_B_u_f.
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  22
+
+
+
+
+
+
+odbc(3)             ERLANG MODULE DEFINITION              odbc(3)
+
+
+
+          Returns the contents of a deferred data buffer and  its
+          associated  length/indicator buffer. Used in connection
+          with _s_q_l__f_e_t_c_h/[_2, _3].
+
+Error Messages and Exceptions
+     Errors caused by inability to contact the C  node,  allocate
+     memory,  or  otherwise call ODBC functions cause exceptions.
+     Exceptions are common to all  functions.  Errors  caused  by
+     ODBC  not  being  able to execute calls are reported through
+     returned errors.
+      These exceptions terminate the client only.
+
+       * {'EXIT', {badarg, M, F, A, ArgNo, Info}}
+          The argument is of wrong type or out of range.
+
+       * {'EXIT', {internal_error, Info}}
+          Internal error.
+
+       * {'EXIT', GenServerSpecificInfo}
+          Error detected by _g_e_n__s_e_r_v_e_r.
+
+     These cause the ODBC server, and the C node, to terminate as
+     well:
+
+       * {'EXIT', {timeout, Info}}
+          Timeout expired.
+
+       * {'EXIT', {stopped, Reason}}
+          The ODBC server died.
+
+References
+     [1]: Microsoft ODBC  3.0,  Programmer's  Reference  and  SDK
+     Guide
+
+AUTHOR
+     Joakim Hirsch - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: odbc  0.8.2                  23
+
+
+

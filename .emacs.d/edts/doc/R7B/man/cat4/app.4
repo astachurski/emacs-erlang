@@ -1,0 +1,198 @@
+
+
+
+app(4)                        FILES                        app(4)
+
+
+
+NAME
+     app - Application resource file
+
+DESCRIPTION
+     The _a_p_p_l_i_c_a_t_i_o_n _r_e_s_o_u_r_c_e _f_i_l_e  specifies  the  resources  an
+     application  uses, and how the application is started. There
+     must always be one application resource file for each appli-
+     cation in the system.
+
+     This file is read when an application is loaded, or  by  the
+     start script generating tools (_s_y_s_t_o_o_l_s).
+
+
+FILE SYNTAX
+     The application resource file is called _N_a_m_e._a_p_p where  _N_a_m_e
+     is  the  name of the application. The file should be located
+     in the _e_b_i_n directory for the application.
+
+     The ._a_p_p file contains one  single  Erlang  term,  which  is
+     called  an  _a_p_p_l_i_c_a_t_i_o_n _s_p_e_c_i_f_i_c_a_t_i_o_n. The file has the fol-
+     lowing syntax:
+
+     {application, ApplName,
+       [{description,  String},
+        {vsn,          String},
+        {id,           String},
+        {modules,      [{Mod1,Vsn1}, Mod2, {Mod3,Vsn3} .., {ModN,VsnN}]},
+        {maxP,         Int | infinity},
+        {maxT,         Seconds | infinity},
+        {registered,   [Name1, Name2, ...]},
+        {applications, [Appl1, Appl2, .., ApplN]},
+        {included_applications, [Appl1, Appl2, .., ApplN]},
+        {env,          [{Par1, Val1}, {Par2, Val2} .., {ParN, ValN}]},
+        {mod,          {Mod, StartArgs}},
+        {start_phases, [{Phase, PhaseArgs}]}]}.
+
+     The keys have the following meanings:
+
+       * _N_a_m_e = _a_t_o_m() is the name of the application.
+
+       * _D_e_s_c_r_i_p_t_i_o_n = _s_t_r_i_n_g() is a textual description  of  the
+         application.
+
+       * _V_s_n = _s_t_r_i_n_g() is the version of the  application.  This
+         string must be a valid filename.
+
+       * _I_d = _s_t_r_i_n_g()  is  the  product  identification  of  the
+         application.
+
+       * _M_o_d_u_l_e_s = [_M_o_d_1 | {_M_o_d_1, _V_s_n_1}] is a  list  of  all  the
+         modules  and  their versions introduced by this applica-
+         tion. A module can be listed without version,  only  the
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+app(4)                        FILES                        app(4)
+
+
+
+         name  of  the  module  is  stated.  A module can only be
+         defined in one application.
+
+       * _M_a_x_T = _i_n_t() | _i_n_f_i_n_i_t_y is the  maximum  time  that  the
+         application can run (or the atom _i_n_f_i_n_i_t_y). The key _m_a_x_T
+         is optional and defaults to _i_n_f_i_n_i_t_y.
+
+       * _R_e_g_i_s_t_e_r_e_d = [_a_t_o_m()] is a list  of  all  the  names  of
+         registered processes started in this application.
+
+       * _a_p_p_l_i_c_a_t_i_o_n_s = [_a_t_o_m()] is a list of applications  which
+         must be started before this application is started. Most
+         applications have dependencies to the Kernel and  STDLIB
+         applications.
+
+       * _i_n_c_l_u_d_e_d__a_p_p_l_i_c_a_t_i_o_n_s = [_a_t_o_m()] is a list  of  applica-
+         tions   which  are  included  by  this  application.  An
+         included application is loaded, but not started, by  the
+         _a_p_p_l_i_c_a_t_i_o_n__c_o_n_t_r_o_l_l_e_r.   Processes  implemented  in  an
+         included  application  should  be  placed  underneath  a
+         supervisor  in  the  including  application. This key is
+         optional and defaults to [].
+
+       * _e_n_v is a list of the environment variables in the appli-
+         cation.  Each parameter _P_a_r_X is an atom, and the associ-
+         ated _V_a_l_X can be any term. The _e_n_v key is  optional  and
+         defaults to an empty list.
+
+       * _m_o_d is the application callback module of  the  applica-
+         tion behaviour. The application master starts the appli-
+         cation by evaluating the function _M_o_d:_s_t_a_r_t(_T_y_p_e,  _S_t_a_r_-
+         _t_A_r_g_s).  When the application has stopped, by command or
+         because it  terminates,  the  application  master  calls
+         _M_o_d:_s_t_o_p(_S_t_a_t_e)  to  let the application clean up. If no
+         _S_t_a_t_e was returned  from  _M_o_d:_s_t_a_r_t/_2,  _M_o_d:_s_t_o_p([])  is
+         called.
+
+         The _m_o_d key should be omitted for applications which are
+         code  libraries,  such  as the application STDLIB. These
+         applications have no dynamic behaviour of their own  and
+         should not have a start function.
+
+       * _s_t_a_r_t__p_h_a_s_e_s is a list of start phases and the  attached
+         start  arguments  for  the  application. The application
+         master starts the application by evaluating the function
+         _M_o_d:_s_t_a_r_t__p_h_a_s_e(_P_h_a_s_e, _T_y_p_e, _P_h_a_s_e_A_r_g_s) for each defined
+         start phase. _M_o_d is the same callback module as  defined
+         in the _m_o_d key. Each parameter _P_h_a_s_e is an atom, and the
+         associated _P_h_a_s_e_A_r_g_s is a list of  any  terms.  The  key
+         _s_t_a_r_t__p_h_a_s_e_s  is optional, and the behaviour of the sys-
+         tem is dependent if the key is defined or not, refer  to
+         application (3).
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+app(4)                        FILES                        app(4)
+
+
+
+SEE ALSO
+     application(3), systools(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+

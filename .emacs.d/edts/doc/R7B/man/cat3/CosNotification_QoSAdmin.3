@@ -1,0 +1,132 @@
+
+
+
+CosNotification_QoSAdmEiRnL(A3N)G MODULE DEFICNoIsTNIoOtNification_QoSAdmin(3)
+
+
+
+MODULE
+     CosNotification_QoSAdmin -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     All objects, which inherit this interface, export  functions
+     described in this module.
+
+
+EXPORTS
+     get_qos(Object) -> Reply
+
+          Types
+               Object = #objref
+               Reply = [QoSProperty]
+               QoSProperty  =   #'CosNotification_Property'{name,
+               value}
+               name = string()
+               value = #any
+
+          This operation  returns  list  name-value  pairs  which
+          encapsulates  the  current  QoS settings for the target
+          object.
+
+     set_qos(Object, QoS) -> Reply
+
+          Types
+               Object = #objref
+               QoS = [QoSProperty]
+               QoSProperty  =   #'CosNotification_Property'{name,
+               value}
+               name = string()
+               value = #any
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosNotification_UnsupportedQoS'{qos_err}}
+               qos_err = PropertyErrorSeq
+               PropertyErrorSeq = [PropertyError]
+               PropertyError                                    =
+               #'CosNotification_PropertyError'{code,       name,
+               available_range}
+               code       =       'UNSUPPORTED_PROPERTY'        |
+               'UNAVAILABLE_PROPERTY'   |  'UNSUPPORTED_VALUE'  |
+               'UNAVAILABLE_VALUE' | 'BAD_PROPERTY' |  'BAD_TYPE'
+               | 'BAD_VALUE'
+               name = string()
+               available_range = PropertyRange
+               PropertyRange                                    =
+               #CosNotification_PropertyRange{low_val, high_val}
+               low_val = high_val = #any
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+CosNotification_QoSAdmEiRnL(A3N)G MODULE DEFICNoIsTNIoOtNification_QoSAdmin(3)
+
+
+
+          To alter the current QoS settings for the target object
+          this  function  must  be used. If it is not possible to
+          set the requested QoS the _U_n_s_u_p_p_o_r_t_e_d_Q_o_S  exception  is
+          raised,  which  inlcudes  a sequence of _P_r_o_p_e_r_t_y_E_r_r_o_r's
+          describing which QoS, possible range  and  why  is  not
+          allowed.
+
+     validate_qos(Object, QoS) -> Reply
+
+          Types
+               Object = #objref
+               QoS = [QoSProperty]
+               QoSProperty = #'Property'{name, value}
+               name = string()
+               value = #any
+               Reply =  {ok,  NamedPropertyRangeSeq}  |  {'EXCEP-
+               TION', CosNotification_UnsupportedQoS{}}
+               NamedPropertyRangeSeq = [NamedPropertyRange]
+               NamedPropertyRange                               =
+               #CosNotification_NamedPropertyRange{name, range}
+               name = string()
+               range  =   #CosNotification_PropertyRange{low_val,
+               high_val}
+               low_val = #any
+               high_val = #any
+
+          The purpose of this operations is to  check  if  a  QoS
+          setting  is  supported  by the target object and if so,
+          the operation returns additional properties which could
+          be optionally added as well.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+

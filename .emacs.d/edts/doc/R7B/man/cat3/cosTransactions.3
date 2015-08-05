@@ -1,0 +1,198 @@
+
+
+
+cosTransactions(3)  ERLANG MODULE DEFINITION   cosTransactions(3)
+
+
+
+MODULE
+     cosTransactions -  The main module  of  the  cosTransactions
+     application
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -
+     _i_n_c_l_u_d_e__l_i_b("_c_o_s_T_r_a_n_s_a_c_t_i_o_n_s/_i_n_c_l_u_d_e/_C_o_s_T_r_a_n_s_a_c_t_i_o_n_s._h_r_l").
+
+     This module contains the functions for starting and stopping
+     the   application.  If  the  application  is  started  using
+     _a_p_p_l_i_c_a_t_i_o_n:_s_t_a_r_t(_c_o_s_T_r_a_n_s_a_c_t_i_o_n_s) the default configuration
+     is used (see listing below). The Factory reference is stored
+     using    the    CosNaming    Service    under     the     id
+     "_o_e__c_o_s_T_r_a_n_s_a_c_t_i_o_n_s_F_a_c__I_P_N_o".
+
+     The following application configuration parameters exist:
+
+       * _m_a_x_R_e_t_r_i_e_s - default is 40 times, i.e., if a transaction
+         participant is unreachable the application will retry to
+         contact it _N times. Reaching the maximum  is  considered
+         to be a disaster.
+
+       * _c_o_m_F_a_i_l_W_a_i_t - default is 5000 milliseconds, i.e., before
+         the  application retries to contact unreachable transac-
+         tion  participants  the  application  wait   _T_i_m_e   mil-
+         liseconds.
+
+
+EXPORTS
+     start() -> Return
+
+          Types
+               Return = ok | {error, Reason}
+
+          This operation starts the cosTransactions application.
+
+     stop() -> Return
+
+          Types
+               Return = ok | {error, Reason}
+
+          This operation stops the cosTransactions application.
+
+     start_factory() -> TransactionFactory
+
+          Types
+               TransactionFactory = #objref
+
+          This operation creates a Transaction Factory. The  Fac-
+          tory  is  used  to  create  a new top-level transaction
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             1
+
+
+
+
+
+
+cosTransactions(3)  ERLANG MODULE DEFINITION   cosTransactions(3)
+
+
+
+          using default options (see listing below).
+
+     start_factory(FacDef) -> TransactionFactory
+
+          Types
+               FacDef = [Options], see Option listing below.
+               TransactionFactory = #objref
+
+          This operation creates a Transaction Factory. The  Fac-
+          tory is used to create a new top-level transaction.
+
+          The FacDef list must be a list of {Item, Value} tuples,
+          where the following values are allowed:
+
+            * {hash_max, HashValue}  -  This  value  denotes  the
+              upper  bound  of  the  hash  value the  Coordinator
+              uses.  Default  is  _1_0_1_3.  HashValue  must  be   an
+              integer.
+
+            * {allow_subtr, Boolean} - If set to true it is  pos-
+              sible to create subtransactions. Default is _t_r_u_e.
+
+            * {typecheck, Boolean} - If set to to true all  tran-
+              saction operation's arguments will be type-checked.
+              Default is _t_r_u_e.
+
+            * {tty, Boolean} - Enables or  disables  error  prin-
+              touts  to  the tty. If Flag is false, all text that
+              the error logger would have sent to the terminal is
+              discarded. If Flag is true, error messages are sent
+              to the terminal screen.
+
+            * {logfile, FileName} - This function makes it possi-
+              ble  to  store  all  system information in _F_i_l_e_N_a_m_e
+              (string()). It can be used in combination with  the
+              tty(false)  item  in to have a silent system, where
+              all system information are logged  to  a  file.  As
+              default no logfile is used.
+
+            * {_m_a_x_R_e_t_r_i_e_s, _I_n_t_e_g_e_r} - default is 40 times,  i.e.,
+              if  a  transaction  participant  is unreachable the
+              application will  retry  to  contact  it  _N  times.
+              Reaching  the  maximum is considered to be a disas-
+              ter. This option overrides the  application  confi-
+              guration parameter.
+
+            * {_c_o_m_F_a_i_l_W_a_i_t,  _I_n_t_e_g_e_r}  -  default  is  5000  mil-
+              liseconds,  i.e., before the application retries to
+              contact unreachable  transaction  participants  the
+              application  wait  _T_i_m_e  milliseconds.  This option
+              overrides the application configuration parameter.
+
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             2
+
+
+
+
+
+
+cosTransactions(3)  ERLANG MODULE DEFINITION   cosTransactions(3)
+
+
+
+     stop_factory(TransactionFactory) -> Reply
+
+          Types
+               TransactionFactory = #objref
+               Reply = ok | {'EXCEPTION', E}
+
+          This operation stop the target transaction factory.
+
+AUTHOR
+     Niclas Eklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             3
+
+
+

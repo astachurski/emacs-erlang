@@ -1,0 +1,150 @@
+.TH erl_prim_loader 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+erl_prim_loader \- The Low Level Erlang Loader\&.
+.SH DESCRIPTION
+.LP
+The \fIerl_prim_loader\fR is used to load all Erlang modules into the system\&. The start script is also fetched with the low level loader\&. 
+.LP
+The \fIerl_prim_loader\fR knows about the environment and how to fetch modules\&. The loader could, for example, fetch files using the file system (with absolute file names as input), or a database (where the binary format of a module is stored)\&. 
+.LP
+The \fI-loader Loader\fR command line flag can be used to choose the method used by the \fIerl_prim_loader\fR\&. Two \fILoader\fR methods are supported by the Erlang runtime system: \fIefile\fR and \fIinet\fR\&. If another loader is required, then it has to be implemented by the user\&. The \fILoader\fR provided by the user must fulfill the protocol defined below, and it is started with the \fIerl_prim_loader\fR by evaluating\fIopen_port({spawn, Loader}, [binary])\fR\&.
+
+.SH EXPORTS
+.LP
+.B
+start(Id,Loader,Hosts) -> {ok, Pid} | {error, What}
+.br
+.RS
+.TP
+Types
+Id = term()
+.br
+Loader = atom() | string()
+.br
+Hosts = [Host]
+.br
+Host = atom()
+.br
+Pid = pid()
+.br
+What = term()
+.br
+.RE
+.RS
+.LP
+Starts the Erlang low level loader\&. This function is called by the \fIinit\fR process (and module)\&. The \fIinit\fR process reads the command line flags \fI-id Id\fR, \fI-loader Loader\fR, and \fI-hosts Hosts\fR\&. These are the arguments supplied to the \fIstart/3\fR function\&.
+.LP
+If \fI-loader\fR is not given, the default loader is \fIefile\fR which tells the system to read from the file system\&.
+.LP
+If \fI-loader\fR is \fIinet\fR, the \fI-id Id\fR, \fI-hosts Hosts\fR, and \fI-setcookie Cookie\fR flags must also be supplied\&. \fIHosts\fR identifies hosts which this node can contact in order to load modules\&. One Erlang runtime system with a \fIerl_boot_server\fR process must be started on each of hosts given in \fIHosts\fR in order to answer the requests\&. See \fIerl_boot_server(3)\fR\&. 
+.LP
+If \fI-loader\fR is something else, the given port program is started\&. The port program is supposed to follow the protocol specified below\&. 
+.RE
+.LP
+.B
+get_file(File) -> {ok, Bin, FullName} | error
+.br
+.RS
+.TP
+Types
+File = string()
+.br
+Bin = binary()
+.br
+FullName = string()
+.br
+.RE
+.RS
+.LP
+This function fetches a file using the low level loader\&. \fIFile\fR is either an absolute file name or just the name of the file, for example \fI"lists\&.beam"\fR\&. If an internal path is set to the loader, this path is used to find the file\&. If a user supplied loader is used, the path can be stripped off if it is obsolete, and the loader does not use a path\&. \fIFullName\fR is the complete name of the fetched file\&. \fIBin\fR is the contents of the file as a binary\&.
+.RE
+.LP
+.B
+get_path() -> {ok, Path}
+.br
+.RS
+.TP
+Types
+Path = [Dir]
+.br
+Dir = string()
+.br
+.RE
+.RS
+.LP
+This function gets the path set in the loader\&. The path is set by the \fIinit\fR process according to information found in the start script\&. 
+.RE
+.LP
+.B
+set_path(Path) -> ok
+.br
+.RS
+.TP
+Types
+Path = [Dir]
+.br
+Dir = string()
+.br
+.RE
+.RS
+.LP
+This function sets the path of the loader if \fIinit\fR interprets a \fIpath\fR command in the start script\&. 
+.RE
+.SH Protocol
+.LP
+The following protocol must be followed if a user provided loader port program is used\&. The \fILoader\fR port program is started with the command \fIopen_port({spawn, Loader}, [binary])\fR\&. The protocol is as follows: 
+.LP
+
+
+.nf
+Function          Send               Receive
+-------------------------------------------------------------
+get_file          [102 | FileName]   [121 | BinaryFile] (on success)
+                                     [122]              (failure)
+
+stop              eof                terminate
+.fi
+.SH Command Line Flags
+.LP
+The \fIerl_prim_loader\fR module interprets the following flags: 
+.RS 2
+.TP 4
+.B
+\fI-loader Loader\fR:
+Specifies the name of the loader used by \fIerl_prim_loader\fR\&. \fILoader\fR can be \fIefile\fR (use the local file system), or \fIinet\fR (load using the \fIboot_server\fR on another Erlang node)\&. If \fILoader\fR is user defined, the defined \fILoader\fR port program is started\&. 
+.RS 4
+.LP
+If the \fI-loader\fR flag is omitted, it defaults to \fIefile\fR\&.
+.RE
+.TP 4
+.B
+\fI-hosts Hosts\fR:
+Specifies which other Erlang nodes the \fIinet\fR loader can use\&. This flag is mandatory if the \fI-loader inet\fR flag is present\&. On each host, there must be on Erlang node with the \fIerl_boot_server\fR which handles the load requests\&. \fIHosts\fR is a list of IP addresses (hostnames are not acceptable)\&. 
+.RS 4
+.LP
+
+.RE
+.TP 4
+.B
+\fI-id Id\fR:
+Specifies the identity of the Erlang runtime system\&. If the system runs as a distributed node, \fIId\fR must be identical to the name supplied with the \fI-sname\fR or \fI-name\fR distribution flags\&. 
+.RS 4
+.LP
+
+.RE
+.TP 4
+.B
+\fI-setcookie Cookie\fR:
+Specifies the cookie of the Erlang runtime system\&. This flag is mandatory if the \fI-loader inet\fR flag is present\&. 
+.RS 4
+.LP
+
+.RE
+.RE
+.SH SEE ALSO
+.LP
+init(3), erl_boot_server(3) 
+.SH AUTHOR
+.nf
+Magnus Froberg - support@erlang.ericsson.se
+.fi

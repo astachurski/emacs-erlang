@@ -1,0 +1,54 @@
+.TH CosTransactions_Control 3 "cosTransactions  1.1.1.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+CosTransactions_Control \-  
+.SH DESCRIPTION
+.LP
+To get access to the record definitions for the structures use:
+.br
+ \fI-include_lib("cosTransactions/include/CosTransactions\&.hrl")\&.\fR 
+
+.SH EXPORTS
+.LP
+.B
+get_coordinator(Control) -> Return
+.br
+.RS
+.TP
+Types
+Control = #objref
+.br
+Return = Coordinator | {\&'EXCEPTION\&', E}
+.br
+ Coordinator = #objref
+.br
+E = #\&'CosTransactions_Unavailable\&' {}
+.br
+.RE
+.RS
+.LP
+This operation returns the Coordinator object associated with the target object\&. The Coordinator supports operations for termination of a transaction\&. 
+.RE
+.LP
+.B
+get_terminator(Control) -> Return
+.br
+.RS
+.TP
+Types
+Control = #objref
+.br
+Return = Terminator | {\&'EXCEPTION\&', E}
+.br
+Terminator = #objref
+.br
+E = #\&'CosTransactions_Unavailable\&' {}
+.br
+.RE
+.RS
+.LP
+This operation returns the Terminator object associated with the target object\&. The Terminator supports operations for termination of a transaction\&. 
+.RE
+.SH AUTHOR
+.nf
+Niclas Eklund - support@erlang.ericsson.se
+.fi

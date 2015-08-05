@@ -1,0 +1,266 @@
+.TH digraph_utils 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+digraph_utils \- Algorithms for Directed Graphs
+.SH DESCRIPTION
+.LP
+The \fIdigraph_utils\fR module implements some algorithms based on depth-first traversal of directed graphs\&. See the \fIdigraph\fR module for basic functions on directed graphs\&. 
+.LP
+A \fIdirected graph\fR (or just "graph") is a pair (V, E) of a finite set V of \fIvertices\fR and a finite set E of \fIdirected edges\fR (or just "edges")\&. The set of edges E is a subset of V   V (the Cartesian product of V with itself)\&. 
+.LP
+Graphs can be annotated with additional information\&. Such information may be attached to the vertices and to the edges of the graph\&. A graph which has been annotated is called a \fIlabeled graph\fR, and the information attached to a vertex or an edge is called a \fIlabel\fR\&. 
+.LP
+An edge e = (v, w) is said to \fIemanate\fR from vertex v and to be \fIincident\fR on vertex w\&. If there is an edge emanating from v and incident on w, then w is is said to be an \fIout-neighbour\fR of v\&. A \fIpath\fR P from v[1] to v[k] in a graph (V, E) is a non-empty sequence v[1], v[2], \&.\&.\&., v[k] of vertices in V such that there is an edge (v[i],v[i+1]) in E for 1 <= i < k\&. The \fIlength\fR of the path P is k-1\&. P is a \fIcycle\fR if the length of P is not zero and v[1] = v[k]\&. A \fIloop\fR is a cycle of length one\&. An \fIacyclic graph\fR is a graph that has no cycles\&. 
+.LP
+A \fIdepth-first traversal\fR of a directed graph can be viewed as a process that visits all vertices of the graph\&. Initially, all vertices are marked as unvisited\&. The traversal starts with an arbitrarily chosen vertex, which is marked as visited, and follows an edge to an unmarked vertex, marking that vertex\&. The search then proceeds from that vertex in the same fashion, until there is no edge leading to an unvisited vertex\&. At that point the process backtracks, and the traversal continues as long as there are unexamined edges\&. If there remain unvisited vertices when all edges from the first vertex have been examined, some hitherto unvisited vertex is chosen, and the process is repeated\&. 
+.LP
+A \fIpartial ordering\fR of a set S is a transitive, antisymmetric and reflexive relation between the objects of S\&. The problem of \fItopological sorting\fR is to find a total ordering of S that is a superset of the partial ordering\&. A graph G = (V, E) is equivalent to a relation E on V (we neglect the fact that the version of directed graphs implemented in the \fIdigraph\fR module allows multiple edges between vertices)\&. If the graph has no cycles of length two or more, then the reflexive and transitive closure of E is a partial ordering\&. 
+.LP
+A \fIsubgraph\fR G  of G is a graph whose vertices and edges form subsets of the vertices and edges of G\&. G  is \fImaximal\fR with respect to a property P if all other subgraphs that include the vertices of G  do not have the property P\&. A \fIstrongly connected component\fR is a maximal subgraph such that there is a path between each pair of vertices\&. A \fIconnected component\fR is a maximal subgraph such that there is a path between each pair of vertices, considering all edges undirected\&. 
+
+.SH EXPORTS
+.LP
+.B
+components(Graph) -> [Component]
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+Component = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns a list of connected components\&. Each component is represented by its vertices\&. The order of vertices and the order of components are arbitrary\&. Each vertex of the graph is occurs in exactly one component\&. 
+.RE
+.LP
+.B
+strong_components(Graph) -> [StrongComponent]
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+StrongComponent = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns a list of strongly connected components\&. Each strongly component is represented by its vertices\&. The order of vertices and the order of components are arbitrary\&. Each vertex of the graph is occurs in exactly one strong component\&. 
+.RE
+.LP
+.B
+cyclic_strong_components(Graph) -> [StrongComponent]
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+StrongComponent = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns a list of strongly connected components\&. Each strongly component is represented by its vertices\&. The order of vertices and the order of components are arbitrary\&. Only vertices that are included in some cycle are returned, otherwise the returned list is equal to that returned by \fIstrong_components/1\fR\&. 
+.RE
+.LP
+.B
+reachable(Vertices, Graph) -> Vertices
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+Vertices = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns an unsorted list of graph vertices such that for each vertex in the list, there is a path from some of the given vertices to the vertex\&. In particular, since paths may have length zero, all the given vertices are included in the returned list\&. 
+.RE
+.LP
+.B
+reachable_neighbours(Vertices, Graph) -> Vertices
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+Vertices = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns an unsorted list of graph vertices such that for each vertex in the list, there is a path of length one or more from some of the given vertices to the vertex\&. As a consequence, only those of the given vertices that are included in some cycle are returned\&. 
+.RE
+.LP
+.B
+reaching(Vertices, Graph) -> Vertices
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+Vertices = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns an unsorted list of graph vertices such that for each vertex in the list, there is a path from the vertex to some of the given vertices\&. In particular, since paths may have length zero, all the given vertices are included in the returned list\&. 
+.RE
+.LP
+.B
+reaching_neighbours(Vertices, Graph) -> Vertices
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+Vertices = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns an unsorted list of graph vertices such that for each vertex in the list, there is a path of length one or more from the vertex to some of the given vertices\&. As a consequence, only those of the given vertices that are included in some cycle are returned\&. 
+.RE
+.LP
+.B
+topsort(Graph) -> Vertices | false
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+Vertices = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns a topological ordering of all the graph s vertices if such an ordering exists, \fIfalse\fR otherwise\&. For each vertex in the list, there are no out-neighbours that occur earlier in the list\&. 
+.RE
+.LP
+.B
+is_acyclic(Graph) -> bool()
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if and only if the graph is acyclic\&. 
+.RE
+.LP
+.B
+loop_vertices(Graph) -> Vertices
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+Vertices = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns a list of all vertices that are included in some loop\&. 
+.RE
+.LP
+.B
+subgraph(Graph, Vertices, Options) -> Subgraph | {error, Reason} 
+.br
+.B
+subgraph(Graph, Vertices) -> Subgraph | {error, Reason} 
+.br
+.RS
+.TP
+Types
+Graph = Subgraph = graph()
+.br
+Options = [{type, SubgraphType}, {keep_labels, bool()}]
+.br
+Reason = {invalid_option, term()} | {unknown_type, term()}
+.br
+SubgraphType = inherit | type()
+.br
+Vertices = [vertex()]
+.br
+.RE
+.RS
+.LP
+Creates a maximal subgraph of \fIGraph\fR having as vertices those vertices of \fIGraph\fR that are mentioned in \fIVertices\fR\&. 
+.LP
+If the value of the option \fItype\fR is \fIinherit\fR, which is the default, then the type of \fIGraph\fR is used for the subgraph as well\&. Otherwise the option value of \fItype\fR is used as argument to \fIdigraph:new/1\fR\&. 
+.LP
+If the value of the option \fIkeep_labels\fR is \fItrue\fR, which is the default, then the labels of vertices and edges of \fIGraph\fR are used for the subgraph as well\&. If the value is \fIfalse\fR, then the default label, \fI[]\fR, is used for the subgraph s vertices and edges\&. 
+.LP
+\fIsubgraph(Graph, Vertices)\fR is equivalent to \fIsubgraph(Graph, Vertices, [])\fR\&. 
+.RE
+.LP
+.B
+condensation(Graph) -> CondensedGraph
+.br
+.RS
+.TP
+Types
+Graph = CondensedGraph = graph()
+.br
+.RE
+.RS
+.LP
+Creates a graph where the vertices are the strongly connected components as returned by \fIstrong_components/1\fR\&. If X and Y are strongly connected components, and there exist vertices x and y in X and Y respectively such that there is an edge emanating from x and incident on y, then an edge emanating from X and incident on Y is created\&. 
+.LP
+The created graph has the same type as \fIGraph\fR\&. All vertices and edges have the default label \fI[]\fR\&. 
+.LP
+Each and every cycle is included in some strongly connected component, which implies that there always exists a topological ordering of the created graph\&. 
+.RE
+.LP
+.B
+preorder(Graph) -> Vertices
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+Vertices = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns all vertices of the graph\&. The order is given by a depth-first traversal of the graph, collecting visited vertices in pre-order\&. 
+.RE
+.LP
+.B
+postorder(Graph) -> Vertices
+.br
+.RS
+.TP
+Types
+Graph = graph()
+.br
+Vertices = [vertex()]
+.br
+.RE
+.RS
+.LP
+Returns all vertices of the graph\&. The order is given by a depth-first traversal of the graph, collecting visited vertices in postorder\&. More precisely, the vertices visited while searching from an arbitrarily chosen vertex are collected in postorder, and all those collected vertices are placed before the subsequently visited vertices\&. 
+.RE
+.SH See Also
+.LP
+digraph(3) 
+.SH AUTHOR
+.nf
+Hans Bolinder - support@erlang.ericsson.se
+.fi

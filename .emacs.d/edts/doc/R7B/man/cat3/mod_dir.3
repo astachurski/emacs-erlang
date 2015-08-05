@@ -1,0 +1,66 @@
+
+
+
+mod_dir(3)          ERLANG MODULE DEFINITION           mod_dir(3)
+
+
+
+MODULE
+     mod_dir - Basic directory handling.
+
+DESCRIPTION
+     This module generates an  HTML  directory  listing  (Apache-
+     style)  if  a client sends a request for a directory instead
+     of a file. This module is not configurable and it  needs  to
+     be  removed  from  the Modules config directive if directory
+     listings is unwanted.
+
+
+EWSAPI MODULE INTERACTION
+     Uses the following EWSAPI interaction data, if available:
+
+       {_r_e_a_l__n_a_m_e, {_P_a_t_h, _A_f_t_e_r_P_a_t_h}}:
+           as defined in mod_alias(3).
+
+     Exports the following EWSAPI interaction data, if possible:
+
+       {_m_i_m_e__t_y_p_e, _M_i_m_e_T_y_p_e}:
+           The file suffix of the  incoming  URL  mapped  into  a
+           _M_i_m_e_T_y_p_e  as defined in the Mime Type Settings section
+           of _h_t_t_p_d__c_o_r_e(_3).
+
+     Uses the following EWSAPI functions:
+
+       * mod_alias:default_index/2
+
+       * mod_alias:path/3
+
+SEE ALSO
+     httpd(3), mod_alias(3)
+
+AUTHOR
+     Joakim Grebeno  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+

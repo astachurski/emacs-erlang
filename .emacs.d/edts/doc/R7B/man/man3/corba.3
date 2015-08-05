@@ -1,0 +1,262 @@
+.TH corba 3 "orber  3.1.8" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+corba \- The functions on CORBA module level
+.SH DESCRIPTION
+.LP
+This module contains functions that are specified on the CORBA module level\&. It also contains some functions for creating and disposing objects\&. 
+
+.SH EXPORTS
+.LP
+.B
+create(Module, TypeID) -> Object
+.br
+.B
+create(Module, TypeID, Env) -> Object
+.br
+.B
+create(Module, TypeID, Env, Optons1) -> Object
+.br
+.B
+create_link(Module, TypeID) -> Object
+.br
+.B
+create_link(Module, TypeID, Env) -> Object
+.br
+.B
+create_link(Module, TypeID, Env, Options2) -> Reply
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+TypeID = string()
+.br
+Env = term()
+.br
+Options1 = [{persistent, Bool} | {regname, RegName}]
+.br
+Options2 = [{sup_child, Bool} | {persistent, Bool} | {regname, RegName} | {pseudo, Bool}]
+.br
+RegName = {local, atom()} | {global, term()}
+.br
+Reply = #objref | {ok, Pid, #objref}
+.br
+Bool = true | false
+.br
+Object = #objref
+.br
+.RE
+.RS
+.LP
+These functions start a new server object\&. If you start it without \fIRegName\fR it can only be accessed through the returned object key\&. Started with a \fIRegName\fR the name is registered locally or globally\&. 
+.LP
+\fITypeID\fR is the repository ID of the server object type and could for example look like "IDL:StackModule/Stack:1\&.0"\&. 
+.LP
+\fIModule\fR is the name of the interface API module\&. 
+.LP
+\fIEnv\fR is the arguments passed which will be passed to the implementations \fIinit\fR call-back function\&. 
+.LP
+A server started with create/2, create/3 or create/4 does not care about the parent, which means that the parent is not handled explicitly in the generic process part\&. 
+.LP
+A server started with create_link2, create_link/3 or create_link/4 is initially linked to the caller, the parent, and it will terminate whenever the parent process terminates, and with the same reason as the parent\&. If the server traps exits, the terminate/2 call-back function is called in order to clean up before the termination\&. These functions should be used if the server is a worker in a supervision tree\&. 
+.LP
+If you use the option \fI{sup_child, true}\fR create_link/4 will return \fI{ok, Pid, #objref}\fR, otherwise \fI#objref\fR, and make it possible to start a server as a supervisor child (stdlib-1\&.7 or later)\&. 
+.LP
+If you use the option \fI{persistent, true}\fR you also must use the option \fI{regname, {global, Name}}\fR\&. This combination makes it possible to tell the difference between a server permanently terminated or in the process of restarting\&. 
+.LP
+The option \fI{pseudo, true}\fR, allow us to create an object which is not a server\&. Using \fI{pseudo, true}\fR overrides all other start options\&. For more information see section \fIModule_Interface\fR\&. 
+.LP
+If a server is started using the option \fI{persistent, true}\fR the object key will not be removed unless it terminates with reason \fInormal\fR or \fIshutdown\fR\&. Hence, if persistent servers is used as supervisor childs they should be \fItransient\fR and the \fIobjectkeys_gc_time\fR should be modified (default equals \fIinfinity\fR)\&. 
+
+.nf
+Example: 
+          
+  corba:create(\&'StackModule_Stack\&', "IDL:StackModule/Stack:1\&.0",
+               {10, test})
+.fi
+.RE
+.LP
+.B
+dispose(Object) -> ok
+.br
+.RS
+.TP
+Types
+Object = #objref
+.br
+.RE
+.RS
+.LP
+This function is used for terminating the execution of a server object\&. 
+.RE
+.LP
+.B
+create_subobject_key(Object, Key) -> Result
+.br
+.RS
+.TP
+Types
+Object = #objref
+.br
+Key = term()
+.br
+Result = #objref
+.br
+.RE
+.RS
+.LP
+This function is used to create a subobject in a server object\&. It can for example be useful when one wants unique access to separate rows in a mnesia or an ETS table\&. The \fIResult\fR is an object reference that will be seen as a unique reference to the outside world but will access the same server object where one can use the \fIget_subobject_key/1\fR function to get the private key value\&. 
+.LP
+\fIKey\fR is stored in the object reference \fIObject\fR\&. If it is a binary it will be stored as is and otherwise it is converted to a binary before storage\&. 
+.RE
+.LP
+.B
+get_subobject_key(Object) -> Result
+.br
+.RS
+.TP
+Types
+Object = #objref
+.br
+Result = #binary
+.br
+.RE
+.RS
+.LP
+This function is used to fetch a subobject key from the object reference \fIObject\fR\&. The result is a always a binary, if it was an Erlang term that was stored with \fIcreate_subobject_key/2\fR one can to do \fIbinary_to_term/1\fR to get the real value\&. 
+.RE
+.LP
+.B
+get_pid(Object) -> Result
+.br
+.RS
+.TP
+Types
+Object = #objref
+.br
+Result = #pid | {error, Reason} | {\&'EXCEPTION\&', E}
+.br
+.RE
+.RS
+.LP
+This function is to get the process id from an object, which is a must when Corba objects is started/handled in a supervisor tree\&. The function will throw exceptions if the key is not found or some other error occurs\&. 
+.RE
+.LP
+.B
+raise(Exception)
+.br
+.RS
+.TP
+Types
+Exception = record()
+.br
+.RE
+.RS
+.LP
+This function is used for raising corba exceptions as an Erlang user generated exit signal\&. It will throw the tuple \fI{\&'EXCEPTION\&', \fR\fIException\fR\fI}\fR\&. 
+.RE
+.LP
+.B
+resolve_initial_references(ObjectId) -> Object
+.br
+.RS
+.TP
+Types
+ObjectId = string()
+.br
+Object = #objref
+.br
+.RE
+.RS
+.LP
+This function returns the object reference for the object id asked for (just now only the "NameService")\&. 
+.RE
+.LP
+.B
+list_initial_services() -> [ObjectId]
+.br
+.RS
+.TP
+Types
+ObjectId = string()
+.br
+.RE
+.RS
+.LP
+This function returns a list of allowed object id\&'s (just now only the "NameService")\&. 
+.RE
+.LP
+.B
+resolve_initial_references_remote(ObjectId, Address) -> Object
+.br
+.RS
+.TP
+Types
+Address = [RemoteModifier]
+.br
+RemoteModifier = string()
+.br
+ObjectId = string()
+.br
+Object = #objref
+.br
+.RE
+.RS
+.LP
+This function returns the object reference for the object id asked for (depends on the orb, for orber it is just the "NameService")\&. The remote modifier string has the following format: \fI"iiop://host:port"\fR\&. 
+.RE
+.LP
+.B
+list_initial_services_remote(Address) -> [ObjectId]
+.br
+.RS
+.TP
+Types
+Address = [RemoteModifier]
+.br
+RemoteModifier = string()
+.br
+ObjectId = string()
+.br
+.RE
+.RS
+.LP
+This function returns a list of allowed object id\&'s (depends on the orb, for orber it is just the "NameService")\&. The remote modifier string has the following format: \fI"iiop://host:port"\fR\&. 
+.RE
+.LP
+.B
+object_to_string(Object) -> IOR_string
+.br
+.RS
+.TP
+Types
+Object = #objref
+.br
+IOR_string = string()
+.br
+.RE
+.RS
+.LP
+This function returns the object reference as the external string representation of an IOR\&. 
+.RE
+.LP
+.B
+string_to_object(IOR_string) -> Object
+.br
+.RS
+.TP
+Types
+IOR_string = string()
+.br
+Object = #objref
+.br
+.RE
+.RS
+.LP
+This function takes an IOR on the external string representation and returns the object reference\&. 
+.RE
+.SH AUTHOR
+.nf
+Lars Thorsen - support@erlang.ericsson.se
+.fi

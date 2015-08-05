@@ -1,0 +1,66 @@
+
+
+
+CosTransactions_ControElR(L3A)NG MODULE DEFINCIoTsITOrNansactions_Control(3)
+
+
+
+MODULE
+     CosTransactions_Control -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -
+     _i_n_c_l_u_d_e__l_i_b("_c_o_s_T_r_a_n_s_a_c_t_i_o_n_s/_i_n_c_l_u_d_e/_C_o_s_T_r_a_n_s_a_c_t_i_o_n_s._h_r_l").
+
+
+EXPORTS
+     get_coordinator(Control) -> Return
+
+          Types
+               Control = #objref
+               Return = Coordinator | {'EXCEPTION', E}
+                Coordinator = #objref
+               E = #'CosTransactions_Unavailable' {}
+
+          This operation returns the Coordinator  object  associ-
+          ated  with  the target object. The Coordinator supports
+          operations for termination of a transaction.
+
+     get_terminator(Control) -> Return
+
+          Types
+               Control = #objref
+               Return = Terminator | {'EXCEPTION', E}
+               Terminator = #objref
+               E = #'CosTransactions_Unavailable' {}
+
+          This operation returns the Terminator object associated
+          with  the target object. The Terminator supports opera-
+          tions for termination of a transaction.
+
+AUTHOR
+     Niclas Eklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             1
+
+
+

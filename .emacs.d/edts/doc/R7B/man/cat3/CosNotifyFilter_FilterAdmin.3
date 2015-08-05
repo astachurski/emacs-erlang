@@ -1,0 +1,132 @@
+
+
+
+CosNotifyFilter_FilterEARdLmAiNnG(3M)ODULE DCEoFsINNoItTiIfOyNFilter_FilterAdmin(3)
+
+
+
+MODULE
+     CosNotifyFilter_FilterAdmin -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     All objects, which inherit this interface, export  functions
+     described in this module.
+
+
+EXPORTS
+     add_filter(Object, Filter) -> FilterID
+
+          Types
+               Object = #objref
+               Filter = #objref
+               FilterID = long()
+
+          This operation connects a  new  _F_i_l_t_e_r  to  the  target
+          object.  This  _F_i_l_t_e_r will, together with other associ-
+          ated _F_i_l_t_e_r_s, be used to select events  to  forward.  A
+          unique  Id  is  returned  and  should  be used if we no
+          longer want to consult the given _F_i_l_t_e_r.
+
+     remove_filter(Object, FilterID) -> ok
+
+          Types
+               Object = #objref
+               FilterID = long()
+
+          If a certain _F_i_l_t_e_r no longer should be associated with
+          the  target  object this operation must be used. Events
+          will no longer be tested against the _F_i_l_t_e_r  associated
+          with the given Id.
+
+     get_filter(Object, FilterID) -> Reply
+
+          Types
+               Object = #objref
+               FilterID = long()
+               Reply      =      Filter      |      {'EXCEPTION',
+               #'CosNotifyFilter_FilterNotFound'{}}
+               Filter = #objref
+
+          If the target object is associated with a _F_i_l_t_e_r match-
+          ing  the given Id the reference will be returned. If no
+          such _F_i_l_t_e_r is known by the target object an  exception
+          is raised.
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+CosNotifyFilter_FilterEARdLmAiNnG(3M)ODULE DCEoFsINNoItTiIfOyNFilter_FilterAdmin(3)
+
+
+
+     get_all_filters(Object) -> FilterIDSeq
+
+          Types
+               Object = #objref
+               FilterIDSeq = [FilterID]
+               FilterID = long()
+
+          Id's for all _F_i_l_t_e_r objects associated with the  target
+          object is returned by this operation.
+
+     remove_all_filters(Object) -> ok
+
+          Types
+               Object = #objref
+
+          If we want to remove all _F_i_l_t_e_r_s  associated  with  the
+          target object we can use this function.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+

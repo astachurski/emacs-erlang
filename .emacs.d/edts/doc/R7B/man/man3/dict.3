@@ -1,0 +1,344 @@
+.TH dict 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+dict \- Key-Value Dictionary
+.SH DESCRIPTION
+.LP
+\fIDict\fR implements a \fIKey\fR - \fIValue\fR dictionary\&. The representation of a dictionary is not defined\&. 
+
+.SH EXPORTS
+.LP
+.B
+append(Key, Value, Dict1) -> Dict2
+.br
+.RS
+.TP
+Types
+Key = Value = term()
+.br
+Dict1 = Dict2 = dictionary()
+.br
+.RE
+.RS
+.LP
+This function appends a new \fIValue\fR to the current list of values associated with \fIKey\fR\&. An exception is generated if the initial value associated with \fIKey\fR is not a list of values\&. 
+.RE
+.LP
+.B
+append_list(Key, ValList, Dict1) -> Dict2
+.br
+.RS
+.TP
+Types
+ValList = [Value]
+.br
+Key = Value = [term()]
+.br
+Dict1 = Dict2 = dictionary()
+.br
+.RE
+.RS
+.LP
+This function appends a list of values \fIValList\fR to the current list of values associated with \fIKey\fR\&. An exception is generated if the initial value associated with \fIKey\fR is not a list of values\&. 
+.RE
+.LP
+.B
+erase(Key, Dict1) -> Dict2
+.br
+.RS
+.TP
+Types
+Key = term()
+.br
+Dict1 = Dict2 = dictionary()
+.br
+.RE
+.RS
+.LP
+This function erases all items with a given key from a dictionary\&. 
+.RE
+.LP
+.B
+fetch(Key, Dict) -> Value
+.br
+.RS
+.TP
+Types
+Key = Value = term()
+.br
+Dict = dictionary()
+.br
+.RE
+.RS
+.LP
+This function returns the value associated with \fIKey\fR in the dictionary \fIDict\fR\&. \fIfetch\fR assumes that the \fIKey\fR is present in the dictionary and an exception is generated if \fIKey\fR is not in the dictionary\&. 
+.RE
+.LP
+.B
+fetch_keys(Dict) -> Keys
+.br
+.RS
+.TP
+Types
+Dict = dictionary()
+.br
+Keys = [term()]
+.br
+.RE
+.RS
+.LP
+This function returns a list of all keys in the dictionary\&. 
+.RE
+.LP
+.B
+filter(Pred, Dict1) -> Dict2
+.br
+.RS
+.TP
+Types
+Pred = fun(Key, Value) -> bool()
+.br
+Dict1 = Dict2 = dictionary()
+.br
+.RE
+.RS
+.LP
+\fIDict2\fR is a dictionary of all keys and values in \fIDict1\fR for which \fIPred(Key, Value)\fR is \fItrue\fR\&. 
+.RE
+.LP
+.B
+find(Key, Dict) -> Result
+.br
+.RS
+.TP
+Types
+Key = term()
+.br
+Dict = dictionary()
+.br
+Result = {ok, Value} | error
+.br
+.RE
+.RS
+.LP
+This function searches for a key in a dictionary\&. Returns \fI{ok, Value}\fR where \fIValue\fR is the value associated with \fIKey\fR, or \fIerror\fR if the key is not present in the dictionary\&. 
+.RE
+.LP
+.B
+fold(Function, Acc0, Dict) -> Acc1
+.br
+.RS
+.TP
+Types
+Function = fun(Key, Value, AccIn) -> AccOut
+.br
+Acc0 = Acc1 = AccIn = AccOut = term()
+.br
+Dict = dictionary()
+.br
+.RE
+.RS
+.LP
+Calls \fIFunction\fR on successive keys and values of \fIDict\fR together with an extra argument \fIAcc\fR (short for accumulator)\&. \fIFunction\fR must return a new accumulator which is passed to the next call\&. \fIAcc0\fR is returned if the list is empty\&. The evaluation order is undefined\&. 
+.RE
+.LP
+.B
+from_list(List) -> Dict
+.br
+.RS
+.TP
+Types
+List = [{Key, Value}]
+.br
+Dict = dictionary()
+.br
+.RE
+.RS
+.LP
+This function converts the dictionary to a list representation\&. 
+.RE
+.LP
+.B
+is_key(Key, Dict) -> bool()
+.br
+.RS
+.TP
+Types
+Key = term()
+.br
+Dict = dictionary()
+.br
+.RE
+.RS
+.LP
+This function tests if \fIKey\fR is contained in the dictionary \fIDict\fR 
+.RE
+.LP
+.B
+map(Func, Dict1) -> Dict2
+.br
+.RS
+.TP
+Types
+Func = fun(Key, Value) -> Value
+.br
+Dict1 = Dict2 = dictionary()
+.br
+.RE
+.RS
+.LP
+\fImap\fR calls \fIFunc\fR on successive keys and values of Dict to return a new value for each key\&. The evaluation order is undefined\&. 
+.RE
+.LP
+.B
+merge(Func, Dict1, Dict2) -> Dict3
+.br
+.RS
+.TP
+Types
+Func = fun(Key, Value1, Value2) -> Value
+.br
+Dict1 = Dict2 = Dict3 = dictionary()
+.br
+.RE
+.RS
+.LP
+\fImerge\fR merges two dictionaries, Dict1 and Dict2, to create a new dictionary\&. All the \fIKey\fR - \fIValue\fR pairs from both dictionaries are included in the new dictionary\&. If a key occurs in both dictionaries then \fIFunc\fR is called with the key and both values to return a new value\&. \fImerge\fR could be defined as:
+
+.nf
+merge(Fun, D1, D2) ->
+    fold(fun (K, V1, D) ->
+                 update(K, fun (V2) -> Fun(K, V1, V2) end, V1, D)
+         end, D2, D1)\&.
+.fi
+.LP
+but is faster\&. 
+.RE
+.LP
+.B
+new() -> dictionary()
+.br
+.RS
+.LP
+This function creates a new dictionary\&. 
+.RE
+.LP
+.B
+store(Key, Value, Dict1) -> Dict2
+.br
+.RS
+.TP
+Types
+Key = Value = term()
+.br
+Dict1 = Dict2 = dictionary()
+.br
+.RE
+.RS
+.LP
+This function stores a \fIKey\fR - \fIValue\fR pair in a dictionary\&. If the \fIKey\fR already exists in \fIDict1\fR, the associated value is replaced by \fIValue\fR\&. 
+.RE
+.LP
+.B
+to_list(Dict) -> List
+.br
+.RS
+.TP
+Types
+Dict = dictionary()
+.br
+List = [{Key, Value}]
+.br
+.RE
+.RS
+.LP
+This function converts the dictionary to a list representation\&. 
+.RE
+.LP
+.B
+update(Key, Function, Dict) -> Dict
+.br
+.RS
+.TP
+Types
+Key = term()
+.br
+Function = fun(Value) -> Value
+.br
+Dict = dictionary()
+.br
+.RE
+.RS
+.LP
+Update the a value in a dictionary by calling \fIFunction\fR on the value to get a new value\&. An exception is generated if \fIKey\fR is not present in the dictionary\&. 
+.RE
+.LP
+.B
+update(Key, Function, Initial, Dict) -> Dict
+.br
+.RS
+.TP
+Types
+Key = Initial = term()
+.br
+Function = fun(Value) -> Value
+.br
+Dict = dictionary()
+.br
+.RE
+.RS
+.LP
+Update the a value in a dictionary by calling \fIFunction\fR on the value to get a new value\&. If \fIKey\fR is not present in the dictionary then \fIInitial\fR will be stored as the first value\&. For example we could define append/3 as:
+
+.nf
+append(Key, Val, D) ->
+    update(Key, fun (Old) -> Old ++ [Val] end, [Val], D)\&.
+.fi
+.RE
+.LP
+.B
+update_counter(Key, Increment, Dict) -> Dict
+.br
+.RS
+.TP
+Types
+Key = term()
+.br
+Increment = number()
+.br
+Dict = dictionary()
+.br
+.RE
+.RS
+.LP
+Add \fIIncrement\fR to the value associated with \fIKey\fR and store this value\&. If \fIKey\fR is not present in the dictionary then \fIIncrement\fR will be stored as the first value\&. 
+.LP
+This is could have been defined as:
+
+.nf
+update_counter(Key, Incr, D) ->
+    update(Key, fun (Old) -> Old + Incr end, Incr, D)\&.
+.fi
+.LP
+but is faster\&. 
+.RE
+.SH Notes
+.LP
+The functions \fIappend\fR and \fIappend_list\fR are included so we can store keyed values in a list \fIaccumulator\fR\&. For example:
+
+.nf
+> D0 = dict:new(),
+  D1 = dict:store(files, [], D0),
+  D2 = dict:append(files, f1, D1),
+  D3 = dict:append(files, f2, D2),
+  D4 = dict:append(files, f3, D3),
+  dict:fetch(files, D4)\&.
+[f1,f2,f3]
+.fi
+.LP
+This saves the trouble of first fetching a keyed value, appending a new value to the list of stored values, and storing the result\&. 
+.LP
+The function \fIfetch\fR should be used if the key is known to be in the dictionary, otherwise \fIfind\fR\&. 
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

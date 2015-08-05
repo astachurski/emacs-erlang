@@ -1,0 +1,198 @@
+
+
+
+pg2(3)              ERLANG MODULE DEFINITION               pg2(3)
+
+
+
+MODULE
+     pg2 - Distributed Named Process Groups
+
+DESCRIPTION
+     This module implements process groups. The  groups  in  this
+     module  differ  from  the groups in the module _p_g in several
+     ways. In _p_g, each message is sent  to  all  members  in  the
+     group.  In  this  module,  each  message may be sent to one,
+     some, or all members.
+
+     A group of processes can be accessed by a common  name.  For
+     example,  if  there  is a group named _f_o_o_b_a_r, there can be a
+     set of processes (which can be located on  different  nodes)
+     which  are all members of the group _f_o_o_b_a_r. There is no spe-
+     cial functions for sending a message to the group.  Instead,
+     client  functions  should  be  written  with  the  functions
+     _g_e_t__m_e_m_b_e_r_s/_1 and _g_e_t__l_o_c_a_l__m_e_m_b_e_r_s/_1 to find out which pro-
+     cess  are members of the group. Then the message can be sent
+     to one or more members of the group.
+
+     If a member terminates, it is automatically removed from the
+     group.
+
+  Warning:
+     This module is used by the _d_i_s_k__l_o_g module for managing dis-
+     tributed  disk  logs.  The  disk log names are used as group
+     names, which means that some action may need to be taken  to
+     avoid name clashes.
+
+
+
+EXPORTS
+     create(Name) -> void()
+
+          Types
+               Name = term()
+
+          Creates a new, empty process group. The group  is  glo-
+          bally  visible on all nodes. If the group exists, noth-
+          ing happens.
+
+     delete(Name) -> void()
+
+          Types
+               Name = term()
+
+          Deletes a process group.
+
+     get_closest_pid(Name) -> Pid | {error, Reason}
+
+          Types
+               Name = term()
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+pg2(3)              ERLANG MODULE DEFINITION               pg2(3)
+
+
+
+          This is a useful dispatch function which  can  be  used
+          from  client  functions.  It  returns  a process on the
+          local node, if such  a  process  exist.  Otherwise,  it
+          chooses one randomly.
+
+     get_members(Name) -> [Pid] | {error, Reason}
+
+          Types
+               Name = term()
+
+          Returns all processes in the group _N_a_m_e. This  function
+          should  be  used  from  within  a  client function that
+          accesses the group. It is then optimized for speed.
+
+     get_local_members(Name) -> [Pid] | {error, Reason}
+
+          Types
+               Name = term()
+
+          Returns all processes running on the local node in  the
+          group _N_a_m_e. This function should to be used from within
+          a client function that accesses the group. It  is  then
+          optimized for speed.
+
+     join(Name, Pid) -> ok | {error, Reason}
+
+          Types
+               Name = term()
+
+          Joins the process _P_i_d to the group _N_a_m_e.
+
+     leave(Name, Pid) -> ok | {error, Reason}
+
+          Types
+               Name = term()
+
+          Makes the process _P_i_d leave the group _N_a_m_e.
+
+     which_groups() -> [Name]
+
+          Types
+               Name = term()
+
+          Returns a list of all known groups.
+
+     start()
+     start_link() -> {ok, Pid} | {error, Reason}
+
+          Starts the pg2 server. Normally, the  server  does  not
+          need to be started explicitly, as it is started dynami-
+          cally if it is needed. This is useful  during  develop-
+          ment,  but  in  a  target  system  the server should be
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+pg2(3)              ERLANG MODULE DEFINITION               pg2(3)
+
+
+
+          started explicitly. Use  configuration  parameters  for
+          _k_e_r_n_e_l for this.
+
+See Also
+     kernel(3), pg(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+

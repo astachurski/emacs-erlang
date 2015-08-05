@@ -1,0 +1,357 @@
+.TH ssl_socket 3 "ssl  2.3.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+ssl_socket \- Old interface to Secure Socket Layer
+.SH DESCRIPTION
+.LP
+This manual describes the old interface to Secure Socket Layer\&. It should not be used for new development\&. 
+.LP
+The information in this manual is not up-to-date, and will not be updated in the future\&. However, the following applies for the SSL 2\&.0 version: Windows and UNIX are supported; the "-log " option in \fISSLFlags\fR is not supported anymore\&. 
+.LP
+SSL Sockets are the secure BSD UNIX interface to communication protocols based on SSLeay library written by Eric Young (eay@mincom\&.oz\&.au)\&. 
+.LP
+\fI Users of the SSL sockets must be aware of the patent rights and export restrictions of cryprographic algorithms in Europe and USA\&. Please see the \fRRequirements\fI section and the SSLeay documentations on the legal aspects on algorithm use\&. \fR 
+.LP
+Only the \fIAF_INET\fR protocol family and the \fISTREAM\fR protocols are supported\&. 
+.LP
+A socket is a full duplex communications channel between two UNIX processes, either over a network to a remote machine, or locally between processes running on the same machine\&. A socket connects two parties, the initiator and the connector\&. The initiator is the UNIX process which first opens the socket\&. It issues a series of system calls to set up the socket and then waits for another process to create a connection to the socket\&. When the connector starts, it also issues a series of system calls to set up the socket\&. Then both processes continue running and the communications channel is bound to a file descriptor which both processes use for reading and writing\&. 
+
+.SH EXPORTS
+.LP
+.B
+listen(Protocol, Family, Address, Mode) 
+.br
+.RS
+.LP
+Sets up a socket listening to \fIAddress\fR\&. It also binds the name specified by \fIAddress\fR to the socket\&. \fIProtocol\fR must be the atom \fISTREAM\fR (connection-oriented)\&. \fIFamily\fR must be \fIAF_INET\fR\&. 
+.LP
+The UNIX process that is to connect to the socket can run on any other accessible machine on the Internet\&. The \fIAddress\fR is an integer specifying what port number is to be listened to\&. This port number uniquely identifies the socket on the machine\&. If port number \fI0\fR is chosen, a free port number is automatically chosen by the UNIX kernel\&. \fINote:\fR These port numbers are not to be confused with Erlang ports; they are UNIX-socket ports\&. Socket ports are used with a host name to create an end point for a socket connection\&. \fIlisten/4\fR with \fIProtocol\fR=\fISTREAM\fR returns the tuple \fI{Filedescriptor, Portnumber}\fR\&. \fIFiledescriptor\fR is an integer specifying the file descriptor assigned to the socket which is being listened to\&. \fIPortnumber\fR is an integer specifying the port number assigned to the socket\&. If \fIAddress\fR is not zero in the call to \fIlisten\fR, the returned port number is equal to \fIAddress\fR\&. 
+.LP
+\fIMode\fR must be one of: 
+
+.nf
+{packet, N}
+{binary_packet, N}
+raw       == {packet, 0}
+onebyte   == {packet, 1}
+twobytes  == {packet, 2}
+fourbytes == {packet, 4}
+asn1
+.fi
+.LP
+where valid values for \fIN\fR are \fI0, 1, 2\fR and \fI4\fR\&. This parameter specifies the way to read or write to the socket\&. If \fIMode\fR is \fI{packet, N}\fR, then each series of bytes written to the socket will be prepended with \fIN\fR bytes indicating the length of the string\&. These \fIN\fR bytes are in binary format, with the most significant byte first\&. In this way it can be checked that all bytes that were written also are read\&. For this reason no partitioned messages will ever be delivered\&. 
+.LP
+If \fIMode\fR is \fI{binary_packet, N}\fR, the socket is in binary mode, and binary data will be prepended with a bytes header of \fIN\fR\&. When data is delivered to a socket in binary mode, the data will be delivered as a binary (instead of being unpacked as a byte list\&.) If \fIN\fR is 0, nothing will be prepended\&. If \fIMode\fR is \fIasn1\fR, the receiving side of the connection will assume that BER-coded \fIASN\&.1\fR messages are sent on the socket\&. The header of the \fIASN\&.1\fR message will then be checked to find out the total length of the \fIASN\&.1\fR message\&. That number of bytes will then be read from the socket and only one message at a time delivered to the Erlang runtime system\&. \fINote!\fR the \fIasn1\fR mode will only work if all BER encoded data uses the definite length form\&. If the indefinite length form is used (the sender\&'s decision), only the tag and length bytes will be received and then the connection will be broken\&. If the indefinite length form can occur (received by the Erlang runtime system) the \fIraw\fR or \fI{packet, 0}\fR mode should be used\&. 
+.LP
+For this reason if the options \fI{packet, N}\fR, \fI{binary_packet, N}\fR (N > 0) or \fIasn1\fR are set on the socket, all that is written at the sender side will be read (in one chunk) on the reader side\&. This can be very convenient as this is not guaranteed in TCP\&. In TCP the messages may be divided partition in unpredictable ways\&. With TCP a STREAM of bytes is delivered; it is not a datagram protocol\&. 
+.LP
+Example: 
+
+.nf
+ListenSocket = ssl_socket:listen(\&'STREAM\&', \&'AF_INET\&', 3000, 
+                                 {packet, 2})\&.
+.fi
+.LP
+\fIListenSocket\fR may be bound to {3, 3000}, where 3 is a file descriptor and 3000 is the port listened to\&. If not successful the process evaluating \fIlisten\fR evaluates \fIexit({listen, syncerror})\fR\&. This happens if, for example, \fIPortnumber\fR is set to a number which is already occupied on the machine\&. 
+.RE
+.LP
+.B
+accept(ListenSocket, SSLFlags) 
+.br
+.RS
+.LP
+After a \fIlisten\fR, the incoming requests to connect for a connection oriented (STREAM) socket may be accepted\&. This is done with the call \fIaccept\fR\&. The parameter \fIListenSocket\fR is the tuple returned from the previous call to \fIlisten\fR\&. The call to \fIaccept\fR suspends the caller until a connection has been established from outside\&. A process identifier is returned to the caller\&. This process is located between the user and the actual socket\&. All communication with the socket is through this process, which understands a series of messages and also sends a series of messages to the process that initiated the call to \fIaccept\fR\&. 
+.LP
+\fISSLFlags\fR is an ASCII list which contains a combination of the following options separated by space/s: 
+.LP
+\fI-cert\fR ARG specify the certificate file to use\&. File should be in PEM format\&. Server must always have a certificate\&. 
+.LP
+\fI-key\fR ARG specify the private key file to use\&. File should be in PEM format\&. If certificate file contains private key then there is no need to specify private key file\&. 
+.LP
+\fI-cipher\fR ARG specify the list of ciphers to use, list of the following: NULL-MD5 RC4-MD5 EXP-RC4-MD5 IDEA-CBC-MD5 RC2-CBC-MD5 EXP-RC2-CBC-MD DES-CBC-MD5 DES-CBC-SHA DES-CBC3-MD5 DES-CBC3-SHA DES-CFB-M1, separated by \&':\&'\&. If this option is not specified then the value of environment variable SSL_CIPHER will be used\&. 
+.LP
+\fI-verify\fR ARG specify the certificate verification level\&. ARG could be one of: 0 - server does not ask for a client certificate; client does not check the server certificate but uses it for establishing a SSL connection 1 - server asks for client certificate; both do a certificate check; if it fails because of unknown issuer certificate the connection still gets established 2 - server asks for client certificate; both do a certificate check; SSL connection gets established only if the certificate check is successful\&. \fINote:\fR default level of verification is 0\&. 
+.LP
+\fI-log\fR ARG specify the log file 
+.LP
+Example: 
+
+.nf
+Socket = ssl_socket:accept(ListenSocket, 
+                           "-cert server_cert\&.pem -key server_key\&.pem")
+.fi
+.LP
+After the statement above it is possible to communicate with the socket\&. The messages, which may be sent to the socket are: 
+
+.nf
+Socket ! {self(), {deliver, ByteList}}\&.
+.fi
+.LP
+or 
+
+.nf
+Socket ! {self(), {deliver, Binary}}\&.
+.fi
+.LP
+Causes \fIBinary\fR/\fIByteList\fR to be written to the socket\&. 
+.LP
+
+
+.nf
+Socket ! {self(), close}\&.
+.fi
+.LP
+Closes the socket down in an orderly way\&. If the socket is not closed in this way, it will be automatically closed when the process terminates\&. The messages that can be received from the socket are best explained by an example: 
+.LP
+
+
+.nf
+receive
+    {Socket, {socket_closed, normal}} ->
+        ok;   %% socket closed by foreign host
+    {Socket, {socket_closed, Error}} ->
+        notok; %% something has happened to the socket 
+    {Socket, {fromsocket, Bytes}} ->
+        {bytes, Bytes}
+end\&.
+.fi
+.LP
+Two messages may be sent to the socket, i\&.e\&. deliver and close\&. The socket can send three messages back: two error messages and one message indicating the arrival of new data\&. All of these are shown below\&. 
+.LP
+Input to the socket: 
+
+.nf
+  -  {self(), {deliver, ByteList}}
+  -  {self(), {deliver, Binary}}
+  -  {self(), close}
+.fi
+.LP
+Output from the socket: 
+
+.nf
+  -  {Socket, {socket_closed, normal}}
+  -  {Socket, {socket_closed, Error}}
+  -  {Socket, {fromsocket, ByteList}}
+  -  {Socket, {fromsocket, Binary}}
+.fi
+.LP
+It may sometimes be convenient to listen to several sockets at the same time\&. This is most easily achieved by having one Erlang process for each port number for listening\&. 
+.LP
+Another common situation in network programming is when a server is listening to one or more ports waiting for a connect message from the network\&. Once it arrives, a separate process is spawned to specifically handle the connection\&. It returns and continues waiting for new connections from the network\&. 
+.LP
+The code for this could be similar to the following: 
+
+.nf
+top(Port) ->
+    Listen = ssl_socket:listen(\&'STREAM\&', \&'AF_INET\&', Port, 
+                               {packet, 2}),
+    loop(Listen)\&.
+
+loop(Listen) ->
+    Pid = spawn(mymod, connection, [Listen, self()]), 
+    receive
+        {Pid, ok} ->
+            loop(Listen)
+    end\&.
+
+connection(Listen, Father) ->
+    Socket = ssl_socket:accept(Listen, "-cert ssl_server\&.pem"), 
+    Father ! {self(), ok}, 
+    Socket ! {self(), {deliver, "Hello there"}}, 
+    \&.\&.\&.\&.\&.
+    \&.\&.\&.\&.
+.fi
+.LP
+This code first spawns a process, and lets the new process be suspended while waiting for the connection from the network\&. Once the new process is connected, the original process is informed about it by the \fI{self(), ok}\fR message\&. That process then spawns another, etc\&. 
+.LP
+If there is a listening function to a port and \fIaccept/2\fR has been evaluated, the process is suspended and cannot be aborted\&. In order to stop accepting input, the process making the call receives an EXIT signal\&. The accept call will then terminate and no more connections will be accepted until a new accept call is made to the same \fIListenSocket\fR\&. To achieve this, \fIloop(Listen)\fR can be modified in the following way: 
+
+.nf
+loop(Listen) ->
+    Pid = spawn(mymod, connection, [Listen, self()]), 
+    loop(Pid, Listen)\&.
+
+loop(Pid, Listen) ->
+    receive
+        {Pid, ok} ->
+            loop(Listen);
+        stop ->
+            exit(Pid, abort), 
+            exit(normal)
+    end\&.
+.fi
+.LP
+After the code above has received the \fIstop\fR message and exited, there is no error in the \fIListen\fR socket\&. It is still intact and can be used again in a new call to \fIloop/1\fR\&. 
+.LP
+Another common situation in socket programming is wanting to listen to an address for connections, and then having all the connections handled by a single special process (that reads and writes several sockets simultaneously)\&. The code for that would be similar to the following example: 
+
+.nf
+my_accept(ListenFd, User) ->
+    S = ssl_socket:accept(ListenFd, "-cert ssl_server\&.pem"), 
+    ssl_socket:controlling_process(S, User), 
+    my_accept(ListenFd, User)\&.
+.fi
+.LP
+The process User runs code that is similar to the following: 
+
+.nf
+run(Sockets) when list(Sockets) ->
+    receive
+        {From, {fromsocket, Bytes}} ->
+            case lists:member(From, Sockets) of
+                true ->  %% old socket
+                    handle_input(Bytes), 
+                    run(Sockets);
+                false ->  %% new connection
+                    handle_input(Bytes), 
+                    run([From|Sockets])
+            end;
+        \&.\&.\&.\&.\&.\&.\&.\&.\&.\&.   etc\&.
+.fi
+.LP
+
+.RE
+.LP
+.B
+client(Protocol, Family, Address, Mode, SSLFlags) 
+.br
+.RS
+.LP
+If another UNIX process is already listening to a socket, the socket on the client side may be opened with this call\&. As before, \fIProtocol\fR must be the atom \fISTREAM\fR and \fIFamily\fR must be \fIAF_INET\fR\&. \fIAddress\fR must be a tuple of the type \fI{IPAddress, Portnumber}\fR\&. It may be argued that users should not have to know port numbers, only names of services as in the BSD library routine \fIgetservbyname()\fR\&. However, this idea has not been implemented in this package, so when a client is to be connected to a socket over the Internet, the port number has to be specified\&. Examples: 
+
+.nf
+Socket1 = 
+  ssl_socket:client(\&'STREAM\&', \&'AF_INET\&', 
+                    {\&'gin\&.eua\&.ericsson\&.se\&', 1000}, raw,
+                    "-cert client_cert\&.pem -cert client_key\&.pem"), 
+Socket2 = 
+  ssl_socket:client(\&'STREAM\&', \&'AF_INET\&', 
+                    {\&'134\&.138\&.99\&.53\&', 1002}, asn1, 
+                    "-cert ssl_client\&.pem"), 
+Socket3 = 
+  ssl_socket:client(\&'STREAM\&', \&'AF_INET\&', 
+                    {\&'gin\&', 1003}, {binary_packet, 4}, ""),
+.fi
+.LP
+As can be seen in the examples above, several formats are allowed for \fIAddress\fR\&. The \fIMode\fR variable in the call to \fIclient\fR is the same as in the calls to \fIlisten\fR\&. The \fISSLFlags\fR variable is the same as in the calls to \fIaccept\fR, with one exception it is recommended for client to have a certificate but it is not necessary\&. 
+.LP
+\fIclient\fR returns a process identifier of a process with the same characteristics as the process described for the \fIaccept\fR call above\&. 
+.RE
+.LP
+.B
+controlling_process(Socket, Pid) 
+.br
+.RS
+.LP
+When a value has been returned from the call to \fIaccept\fR or the call to \fIclient\fR, the Pid of the process which performed the initiation is known by the socket\&. All output from the socket is sent to this process\&. All input to the socket must also be wrapped with the Pid of the original process\&. 
+.LP
+If the controlling process is to be changed, the socket must be informed\&. This is similar to the way an Erlang port needs to know the Pid of the process which opened it\&. The socket (and the port) must know where to send messages\&. The function above assigns a new controlling process to the socket\&. Thus, this function ensures that all output from the socket is sent to a process other than the process which created the socket\&. It also ensures that no messages from the socket are lost while the switch takes place\&. 
+.RE
+.LP
+.B
+peername(Socket) 
+.br
+.RS
+.LP
+Returns the name of the peer to \fISocket\fR\&. 
+.LP
+If AF_UNIX is used \fIpeername\fR returns the filename used as address of a string\&. If AF_INET is used \fIpeername\fR returns the tuple \fI{Portnumber, IPAddress}\fR\&. 
+.RE
+.LP
+.B
+resolve() 
+.br
+.RS
+.LP
+Returns the official name of the current host\&. 
+.RE
+.LP
+.B
+resolve(IPAddress) 
+.br
+.RS
+.LP
+Returns the official name of the host with the address \fIIPAddress\fR\&. 
+.RE
+.LP
+.B
+close(Socket) 
+.br
+.RS
+.LP
+Closes the socket\&. This is equivalent to sending a \fI{self(), close}\fR message to the process controlling the socket\&. It also operates on sockets returned by the \fIlisten\fR call\&. This is the method to stop the listening to a socket\&. 
+.RE
+.LP
+.B
+start() 
+.br
+.RS
+.LP
+Starts the socket server\&. 
+.RE
+.LP
+.B
+stop() 
+.br
+.RS
+.LP
+Stops the socket server, and closes all open sockets\&. 
+.RE
+.SH FEATURES
+.LP
+Even if a socket is opened in \fI{packet, N}\fR mode, it is possible to write binaries to it\&. The receiving part of the socket determines if data from the socket is to be unpacked as a byte list or not\&. i\&.e\&. a sender may be in binary mode (\fI{binary_packet, N}\fR) and the receiver in byte list mode (\fI{packet, N}\fR) or vice versa\&. The only restriction is that the packet sizes must match\&. 
+.LP
+The modes \fIraw\fR and \fItwobytes\fR are kept for backwards compatibility, and the modes \fIonebyte\fR and \fIfourbytes\fR have been added for forward compatibility\&. 
+.LP
+In order to be able to use this module it is required to generate a key and a certificate\&. 
+.LP
+For test purposes a private key and a certificate can be generated by using: 
+
+.nf
+      req -new -x509 -nodes -out test\&.pem -keyout test\&.pem
+      ln -sf test\&.pem `x509 -noout -hash < test\&.pem`\&.0
+.fi
+.LP
+Certificate signing request can be generated by using: 
+
+.nf
+      req -new -out csr\&.pem -keyout key\&.pem -days XXX
+.fi
+.LP
+A certificate signing request (csr\&.pem) is then could be send to a Certificate Authority (CA) for the purpose of of CA signing the request\&. 
+.LP
+Some of Certification Authorities: 
+
+.nf
+http://www\&.verisign\&.com <http://www\&.verisign\&.com> - Verisignhttp://www\&.thawte\&.com/certs <http://www\&.thawte\&.com/certs> - Thawte Consultinghttp://www\&.eurosign\&.com <http://eurosign\&.com> - EuroSignhttp://www\&.cost\&.se <http://www\&.cost\&.se> - COST
+.fi
+.LP
+Environment variables \fISSL_CERT_DIR\fR and \fISSL_CERT_FILE\fR could be used to set the location of the certificate of the trusted certifying authority\&. This is used during the certificate verification process\&. 
+.SH REQUIREMENTS
+.LP
+When using this module, both client and server must be SSL-enabled\&. A SSL-server will hang if a non-SSL client tries to connect to it\&. If a SSL-client tries to connect to a non-SSL-server, the connection will fail\&. 
+.LP
+SSL sockets need the SSLeay version 0\&.6\&.6 package installed in shared library form\&. You can get it from ftp://ftp\&.psy\&.uq\&.oz\&.au/pub/Crypto/SSL <ftp://ftp\&.psy\&.uq\&.oz\&.au/pub/Crypto/SSL> or you can find other mirrored locations at http://www\&.psy\&.uq\&.oz\&.au/~ftp/Crypto/ <http://www\&.psy\&.uq\&.oz\&.au/~ftp/Crypto/>\&. 
+.LP
+The SSLeay package implements several well known cryptographic algorithms\&. Some of these are protected by software patents in some countries\&. The package can be configured to exclude algorithms at installation\&. Below follows a summary on software patents and restrictions for algorithms in SSLeay, see the SSLeay documentation for details: 
+.LP
+The use of the RSA algorithm must be licensed in the USA due to US software patents\&. This includes any products sold to the USA that use the SSLeay RSA package\&. Export from the USA is restricted for software containing cryptographic algorithms\&. 
+.LP
+The IDEA algorithm is protected by a patent in Europe and must be licensed\&. 
+.LP
+General use of cryptography is prohibited in France\&. 
+.SH BUGS
+.LP
+At this stage it is not possible to establish connection between a server and a client residing on the same Erlang node due to blocking of SSL_connect()\&. 
+.LP
+Please note that at this stage it is not possible to use private key encrypted with a pass phrase\&. To remove pass phrase do: 
+
+.nf
+      rsa -in key-protected -out key-unprotected\&.pem
+.fi
+.LP
+The result of this restriction is that the secury of the private key relies on the file system security mechanism\&. Keep the private key and the certificate in separate files\&. 
+.SH AUTHORS
+.nf
+ Claes Wikstrom - support@erlang.ericsson.se
+ Helen Airiyan - support@erlang.ericsson.se
+.fi

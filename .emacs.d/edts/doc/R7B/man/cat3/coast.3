@@ -1,0 +1,660 @@
+
+
+
+coast(3)            ERLANG MODULE DEFINITION             coast(3)
+
+
+
+MODULE
+     coast - Coverage and Statistics Analysis Tool
+
+DESCRIPTION
+     The module _c_o_a_s_t provides a set of  functions  for  coverage
+     and call statistics analysis of Erlang programs.
+
+     Coverage analysis consists of monitoring executing programs,
+     observing  if each line of code is executed, and, if so, the
+     number of times.
+
+     Call statistics analysis consists  of  monitoring  executing
+     programs, observing the number of times certain modules, and
+     the functions in them, are called. This analysis may be done
+     in various levels of detail.
+
+     Before any analysis can take place, the  module(s)  must  be
+     compiled  in  a special way. Execution may then take place -
+     in this phase executional data is gathered: in  an  internal
+     database,  a  counter for each statement in the module(s) is
+     incremented every time that  particular  statement  is  exe-
+     cuted.  In  the  final  phase we analyse the collected data,
+     presenting it in various ways.  (The  observant  reader  may
+     here correctly conclude that a module has to be executed, at
+     least partially, before any useful coverage and call statis-
+     tics analysis can take place.)
+
+EXPORTS
+     compile(Module) -> Result
+     compile(Module, Options) -> Result
+
+          Types
+               Module = ModuleName | [ModuleName]
+               ModuleName = atom() | string()
+               Options = [CompilerOptions]
+               CompilerOptions = {outdir, OutDir}  |  {i,  Inclu-
+               deDir} | {d, Def} | OtherOptions
+               OutDir = atom() | string()
+               IncludeDir = atom() | string()
+               Result = {ok, CompiledModules} | {error, Reason}
+               CompiledModules =  CompiledModule  |  [CompiledMo-
+               dule]
+               CompiledModule = atom() | string()
+
+          Compiles a module  for  coverage  and  call  statistics
+          analysis. Currently _c_o_m_p_i_l_e does not search for modules
+          - if _M_o_d_u_l_e not resides in the durrent  working  direc-
+          tory,  the  complete path has to be specified. The file
+          extension ._e_r_l may be omitted.
+
+          _c_o_m_p_i_l_e/_2 makes it possible to pass several options  to
+          the  compiler. Some of these options are the tuples {_i,
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   1
+
+
+
+
+
+
+coast(3)            ERLANG MODULE DEFINITION             coast(3)
+
+
+
+          _I_n_c_l_u_d_e_D_i_r}, {_o_u_t_d_i_r, _O_u_t_D_i_r}, and {_d, _D_e_f}; for a com-
+          plete   list,   please   see  the  manual  page(s)  for
+          _c_o_m_p_i_l_e:_f_i_l_e/_2.
+
+          The return value _R_e_s_u_l_t is one of the following:
+
+            {_o_k, _C_o_m_p_i_l_e_d_M_o_d_u_l_e_s}:
+                Compilation and loading succeeded,  meaning  that
+                _C_o_m_p_i_l_e_d_M_o_d_u_l_e  now  is prepared for coverage and
+                call statistics analysis.
+
+            {_e_r_r_o_r, _R_e_a_s_o_n}:
+                The compilation failed, due to the reason  speci-
+                fied in _R_e_a_s_o_n.
+
+          The  function  creates  the  subdirectories  _C_O_A_S_T  and
+          _C_O_A_S_T/_t_m_p__c_o_d_e  in  either the current directory or the
+          directory specified using the {_o_u_t_d_i_r, _O_u_t_D_i_r}  option.
+          In  _C_O_A_S_T/_t_m_p__c_o_d_e  two  files, <_F_i_l_e>._C_O_A_S_T._p_r_e_t_t_y._e_r_l
+          and     <_F_i_l_e>._C_O_A_S_T._e_r_l,     will      be      placed.
+          <_F_i_l_e>._C_O_A_S_T._p_r_e_t_t_y._e_r_l is a transformed version (among
+          other things, containing no comments) of  the  original
+          file, <_F_i_l_e>._e_r_l. <_F_i_l_e>._C_O_A_S_T._e_r_l contains the code in
+          <_F_i_l_e>._C_O_A_S_T._p_r_e_t_t_y._e_r_l, modified with the counter code
+          necessary  to  gather coverage and call statistics data
+          during execution.
+
+          In either the  current  working  directory  or  in  the
+          directory  specified using the {_o_u_t_d_i_r, _O_u_t_D_i_r} option,
+          the file <_F_i_l_e>._b_e_a_m will be placed. This file  is  the
+          the compiled version of <_F_i_l_e>._C_O_A_S_T._e_r_l.
+
+          Note:  <_F_i_l_e>._C_O_A_S_T._p_r_e_t_t_y._e_r_l   and   <_F_i_l_e>._C_O_A_S_T._e_r_l
+          shall  never  ever be renamed or moved, or the coverage
+          and call statistics analysis will fail!
+
+          Example:
+
+                    1> coast:compile(test).
+                    {ok,test}
+                    2> coast:compile("../can", [{outdir, "../ebin"}]).
+                    {ok,"../can"}
+
+     compile_all() -> Result
+     compile_all(Dir) -> Result
+     compile_all(Dir, Options) -> Result
+
+          Types
+               Dir = atom() | string()
+               Options = [CompilerOptions]
+               CompilerOptions = {outdir, OutDir}  |  {i,  Inclu-
+               deDir} | {d, Def} | OtherOptions
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   2
+
+
+
+
+
+
+coast(3)            ERLANG MODULE DEFINITION             coast(3)
+
+
+
+               OutDir = atom() | string()
+               IncludeDir = atom() | string()
+               Result = {ok, CompiledModules} | {error, Reason}
+               CompiledModules = [CompiledModule]
+               CompiledModule = atom() | string()
+
+          _c_o_m_p_i_l_e__a_l_l/_0 evaluates _c_o_m_p_i_l_e/_1 for  all  ._e_r_l  files
+          found in the current working directory _D_i_r.
+
+          _c_o_m_p_i_l_e__a_l_l/_1 evaluates _c_o_m_p_i_l_e/_1 for  all  ._e_r_l  files
+          found in the directory _D_i_r.
+
+          _c_o_m_p_i_l_e__a_l_l/_2 evaluates _c_o_m_p_i_l_e/_2 for  all  ._e_r_l  files
+          found in the directory _D_i_r.
+
+          Example:
+
+                    3> coast:compile_all().
+                    {ok,["can","test"]}
+
+     run(Module, Function, ArgumentList) -> Result
+
+          Types
+               Module = atom()
+               Function = atom()
+               ArgumentList = [Args]
+               Result = term()
+
+          _r_u_n/_3 applies (the presumably coast-compiled)  _F_u_n_c_t_i_o_n
+          in  _M_o_d_u_l_e  on  _A_r_g_u_m_e_n_t_L_i_s_t.  The function in question
+          must have been exported from _M_o_d_u_l_e. The length of  the
+          _A_r_g_u_m_e_n_t_L_i_s_t is the arity of the function.
+
+          A function in a coast-compiled module cannot be started
+          from  the  shell  directly, it has to be started either
+          using the function _r_u_n/_3 or from another  process  than
+          the shell.
+
+          Example:
+
+                    4> coast:run(can,start,[10]).
+                    <0.91.0>
+
+     mod_calls(Modules) -> Result
+
+          Types
+               Modules = ModuleName | [ModuleName]
+               ModuleName = atom()
+               Result = {module_calls, ModuleResults}  |  {error,
+               Reason}
+               ModuleResults = [ModuleResult]
+               ModuleResult    =     {ModuleName,     TotalCalls,
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   3
+
+
+
+
+
+
+coast(3)            ERLANG MODULE DEFINITION             coast(3)
+
+
+
+               ExternalCalls, InternalNonRecursiveCalls}
+               TotalCalls = ExternalCalls = InternalNonRecursive-
+               Calls = integer()
+               Reason = {not_coast_compiled, ModuleName}
+
+          _m_o_d__c_a_l_l_s/_1 lists the number of times _M_o_d_u_l_e_s have been
+          called. The listing is presented module by module, with
+          the following data:
+
+            _T_o_t_a_l_C_a_l_l_s:
+                The total number of times the module  (i.e.,  the
+                functions  in  the  module) has been called. This
+                number is the sum  of  both  internal  calls  and
+                calls made from other modules.
+
+            _E_x_t_e_r_n_a_l_C_a_l_l_s:
+                The number of times the module (i.e.,  the  func-
+                tions  in  the module) has been called from other
+                modules.
+
+            _I_n_t_e_r_n_a_l_N_o_n_R_e_c_u_r_s_i_v_e_C_a_l_l_s:
+                The number of times the module  has  been  called
+                non-recursively   by  itself.  Here  a  recursive
+                module call is defined as when the module  (i.e.,
+                a function in the module) calls itself (i.e., the
+                same or another function in  the  module).  Using
+                this  definition,  it  follows  that a module can
+                never call itself non-recursively,  meaning  that
+                _I_n_t_e_r_n_a_l_N_o_n_R_e_c_u_r_s_i_v_e_C_a_l_l_s   always  equals  to  0
+                (zero). (The reason for  nevertheless  presenting
+                it  is  to produce results having the same format
+                from   the    _m_o_d__c_a_l_l_s/_1,    _f_u_n_c__c_a_l_l_s/_1    and
+                _c_l_a_u_s_e__c_a_l_l_s/_1 functions.)
+
+          Example:
+
+                    5> coast:mod_calls(can).
+                    {module_calls,[{can,37,3,0}]}
+                    6> coast:mod_calls([can,test]).
+                    {module_calls,[{can,37,3,0},{test,0,0,0}]}
+
+     func_calls(Modules) -> Result
+
+          Types
+               Modules = ModuleName | [ModuleName]
+               ModuleName = atom()
+               Result  =  {function_calls,   FunctionResults}   |
+               {error, Reason}
+               FunctionResults = [FunctionResult]
+               FunctionResult = {Function, TotalCalls,  External-
+               Calls, InternalNonRecursiveCalls}
+               Function = {ModuleName, FunctionName, Arity}
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   4
+
+
+
+
+
+
+coast(3)            ERLANG MODULE DEFINITION             coast(3)
+
+
+
+               FunctionName = atom()
+               Arity = integer()
+               TotalCalls = ExternalCalls = InternalNonRecursive-
+               Calls = integer()
+               Reason = {not_coast_compiled, ModuleName}
+
+          _f_u_n_c__c_a_l_l_s/_1 lists the number of times the functions in
+          _M_o_d_u_l_e_s  have  been called. The listing is presented in
+          order, module by module and function by function,  with
+          the following data:
+
+            _T_o_t_a_l_C_a_l_l_s:
+                The total number of times the function  in  ques-
+                tion  has  been called. This number is the sum of
+                both internal calls (i.e., calls  made  from  the
+                same module) and calls made from other modules.
+
+            _E_x_t_e_r_n_a_l_C_a_l_l_s:
+                The number of times the function in question  has
+                been called from other modules.
+
+            _I_n_t_e_r_n_a_l_N_o_n_R_e_c_u_r_s_i_v_e_C_a_l_l_s:
+                The number of times the function in question  has
+                been  called non-recursively from the same module
+                (i.e., by other functions in the same module).
+
+          Example:
+
+                    7> coast:func_calls(can).
+                    {function_calls,[{{can,create_rects,2},1,0,1},
+                                     {{can,create_rects,3},11,0,1},
+                                     {{can,event_loop,2},20,0,1},
+                                     {{can,f,1},1,0,1},
+                                     {{can,mk_canvas,1},1,1,0},
+                                     {{can,prov,1},2,1,1},
+                                     {{can,prov2,1},0,0,0},
+                                     {{can,start,1},1,1,0}]}
+
+     clause_calls(Modules) -> Result
+
+          Types
+               Modules = ModuleName | [ModuleName]
+               ModuleName = atom()
+               Result = {clause_calls, ClauseResults}  |  {error,
+               Reason}
+               ClauseResults = [ClauseResult]
+               ClauseResult = {Clause, TotalCalls, ExternalCalls,
+               InternalNonRecursiveCalls}
+               Clause   =   {ModuleName,   FunctionName,   Arity,
+               ClauseNumber}
+               FunctionName = atom()
+               Arity = ClauseNumber = integer()
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   5
+
+
+
+
+
+
+coast(3)            ERLANG MODULE DEFINITION             coast(3)
+
+
+
+               TotalCalls = ExternalCalls = InternalNonRecursive-
+               Calls = integer()
+               Reason = {not_coast_compiled, ModuleName}
+
+          _c_l_a_u_s_e__c_a_l_l_s/_1 lists the number of times  the  function
+          clauses  in  _M_o_d_u_l_e_s  have  been called. The listing is
+          presented in order, module by module, function by func-
+          tion  and  clause  by  clause.  To  distinguish between
+          clauses in a function, they are numbered  sequentially,
+          the  first  clause  encountered getting number 1 (one).
+          For each clause the following data is presented:
+
+            _T_o_t_a_l_C_a_l_l_s:
+                The total number of times the function clause  in
+                question  has been called. This number is the sum
+                of both internal calls (i.e., calls made from the
+                same module) and calls made from other modules.
+
+            _E_x_t_e_r_n_a_l_C_a_l_l_s:
+                The number of times the function clause in  ques-
+                tion has been called from other modules.
+
+            _I_n_t_e_r_n_a_l_N_o_n_R_e_c_u_r_s_i_v_e_C_a_l_l_s:
+                The number of times the function clause in  ques-
+                tion  has  been  called  non-recursively from the
+                same module (i.e., by other functions in the same
+                module).  (Please  note  that a call from another
+                clause _i_n _t_h_e _s_a_m_e _f_u_n_c_t_i_o_n also is  a  recursive
+                call!)
+
+          Example:
+
+                    8> coast:clause_calls(can).
+                    {clause_calls,[{{can,create_rects,2,1},1,0,1},
+                                   {{can,create_rects,3,1},10,0,1},
+                                   {{can,create_rects,3,2},1,0,0},
+                                   {{can,event_loop,2,1},20,0,1},
+                                   {{can,f,1,1},1,0,1},
+                                   {{can,mk_canvas,1,1},1,1,0},
+                                   {{can,prov,1,1},1,0,1},
+                                   {{can,prov,1,2},1,1,0},
+                                   {{can,prov2,1,1},0,0,0},
+                                   {{can,prov2,1,2},0,0,0},
+                                   {{can,start,1,1},1,1,0}]}
+
+     mod_coverage(Modules) -> Result
+
+          Types
+               Modules = ModuleName | [ModuleName]
+               ModuleName = atom()
+               Result  =   {module_coverage,   ModuleResults}   |
+               {error, Reason}
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   6
+
+
+
+
+
+
+coast(3)            ERLANG MODULE DEFINITION             coast(3)
+
+
+
+               ModuleResults = [ModuleResult]
+               ModuleResult = {ModuleName, Covered, Uncovered}
+               Covered = Uncovered = integer()
+               Reason = {not_coast_compiled, ModuleName}
+
+          _m_o_d__c_o_v_e_r_a_g_e/_1  lists  the  number   of   covered   and
+          uncovered  lines  of  code  in  _M_o_d_u_l_e_s. The listing is
+          presented module by module.
+
+          Example:
+
+                    9> coast:mod_coverage(can).
+                    {module_coverage,[{can,22,4}]}
+
+     func_coverage(Modules) -> Result
+
+          Types
+               Modules = ModuleName | [ModuleName]
+               ModuleName = atom()
+               Result =  {function_coverage,  FunctionResults}  |
+               {error, Reason}
+               FunctionResults = [FunctionResult]
+               FunctionResult = {Function, Covered, Uncovered}
+               Function = {ModuleName, FunctionName, Arity}
+               FunctionName = atom()
+               Arity = integer()
+               Covered = Uncovered = integer()
+               Reason = {not_coast_compiled, ModuleName}
+
+          _f_u_n_c__c_o_v_e_r_a_g_e/_1 lists, for each  function  in  _M_o_d_u_l_e_s,
+          the number of covered and uncovered lines of code.
+
+          Example:
+
+                    10> coast:func_coverage(can).
+                    {function_coverage,[{{can,create_rects,2},1,0},
+                                        {{can,create_rects,3},5,0},
+                                        {{can,event_loop,2},5,2},
+                                        {{can,f,1},1,0},
+                                        {{can,mk_canvas,1},6,0},
+                                        {{can,prov,1},3,0},
+                                        {{can,prov2,1},0,2},
+                                        {{can,start,1},1,0}]}
+
+     clause_coverage(Modules) -> Result
+
+          Types
+               Modules = ModuleName | [ModuleName]
+               ModuleName = atom()
+               Result  =   {clause_coverage,   ClauseResults}   |
+               {error, Reason}
+               ClauseResults = [ClauseResult]
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   7
+
+
+
+
+
+
+coast(3)            ERLANG MODULE DEFINITION             coast(3)
+
+
+
+               ClauseResult = {Clause, Covered, Uncovered}
+               Clause   =   {ModuleName,   FunctionName,   Arity,
+               ClauseNumber}
+               FunctionName = atom()
+               Arity = integer()
+               ClauseNumber = integer()
+               Covered = Uncovered = integer()
+               Reason = {not_coast_compiled, ModuleName}
+
+          _c_l_a_u_s_e__c_o_v_e_r_a_g_e/_1 lists, for each  function  clause  in
+          _M_o_d_u_l_e_s,  the  number of covered and uncovered lines of
+          code. To distinguish between  clauses  in  a  function,
+          they   are  numbered  sequentially,  the  first  clause
+          encountered getting number 1 (one).
+
+          Example:
+
+                    11> coast:clause_coverage(can).
+                    {clause_coverage,[{{can,create_rects,2,1},1,0},
+                                      {{can,create_rects,3,1},4,0},
+                                      {{can,create_rects,3,2},1,0},
+                                      {{can,event_loop,2,1},5,2},
+                                      {{can,f,1,1},1,0},
+                                      {{can,mk_canvas,1,1},6,0},
+                                      {{can,prov,1,1},1,0},
+                                      {{can,prov,1,2},2,0},
+                                      {{can,prov2,1,1},0,1},
+                                      {{can,prov2,1,2},0,1},
+                                      {{can,start,1,1},1,0}]}
+
+     analyse_to_file(Modules) -> Result
+
+          Types
+               Modules = ModuleName | [ModuleName]
+               ModuleName = atom()
+               Result = {ok, Files} | {error, Reason}
+               Files = [FileName]
+               FileName = string()
+               Reason = {not_coast_compiled, ModuleName} | Other-
+               Reason
+
+          _a_n_a_l_y_s_e__t_o__f_i_l_e/_1   performs   a   detailed    coverage
+          analysis,  showing  the  number  of  times each line in
+          _M_o_d_u_l_e_s has been called so far. The result is stored in
+          _F_i_l_e_N_a_m_e_s (one file for each module).
+
+          Example:
+
+          12> coast:analyse_to_file([can,test]).
+          {ok,["/clearcase/otp/tools/devtools/tools/ebin/COAST/can.COAST.out",
+          "/clearcase/otp/tools/devtools/tools/ebin/COAST/test.COAST.out"]}
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   8
+
+
+
+
+
+
+coast(3)            ERLANG MODULE DEFINITION             coast(3)
+
+
+
+     known_modules() -> Result
+
+          Types
+               Result = [ModuleName]
+               ModuleName = atom()
+
+          _k_n_o_w_n__m_o_d_u_l_e_s/_0 lists the modules that the  coast  pro-
+          gram is aware of, i.e., the coast-compiled modules that
+          so far, during this session working  with  coast,  have
+          been   coast-compiled  or  subject  to  execution.  The
+          _a_b_s_e_n_c_e of a module in the list probably means  it  has
+          never  been  coast-compiled.  The  _p_r_e_s_e_n_c_e of an unex-
+          pected module in the list probably means  that  an  old
+          coast-compiled module has been executed.
+
+          Example:
+
+                    13> coast:known_modules().
+                    [can,test]
+
+     source_files(Modules) -> Result
+
+          Types
+               Modules = ModuleName | [ModuleName]
+               ModuleName = atom()
+               Result = [ModuleResult]
+               ModuleResult = FileName | {error, Reason}
+               FileName = string()
+               Reason   =    {no_such_module,    ModuleName}    |
+               {not_coast_compiled, ModuleName} | OtherReason
+
+          _s_o_u_r_c_e__f_i_l_e_s/_1 lists the source files that  the  coast-
+          compiled modules specified in _M_o_d_u_l_e_s originates from.
+
+          _R_e_s_u_l_t  is  a  list  containing  (for  each  module  in
+          _M_o_d_u_l_e_s) either the corresponding source file found, or
+          an error.
+
+          This function is useful if one wants to make sure  that
+          the correct module actually is the one being subject to
+          coverage and call statistics analysis.
+
+          Example:
+
+                    14> coast:source_files(coast:known_modules()).
+                    ["/clearcase/otp/tools/devtools/tools/ebin/can.erl",
+                     "/clearcase/otp/tools/devtools/tools/ebin/test.erl"]
+                    15> c(test).
+                    {ok,test}
+                    16> coast:source_files([can,xxx,test]).
+                    ["/clearcase/otp/tools/devtools/tools/ebin/can.erl",
+                     {error,{no_such_module,xxx}},
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   9
+
+
+
+
+
+
+coast(3)            ERLANG MODULE DEFINITION             coast(3)
+
+
+
+                     {error,{not_coast_compiled,test}}]
+
+     clear(Modules) -> ok
+
+          Types
+               Modules = ModuleName | [ModuleName]
+               ModuleName = atom()
+
+          _c_l_e_a_r/_1 discards all coverage and call statistics data,
+          concerning  one  or  more modules, that has been stored
+          (in the internal database) up to the  present.  (Trying
+          to  analyse  any of the modules cleared will then yield
+          the same result as when they still not have  been  sub-
+          ject to any execution.)
+
+     clear_all() -> ok
+
+          _c_l_e_a_r__a_l_l/_0 discards all coverage and  call  statistics
+          data that has been stored (in the internal database) up
+          to the present.
+
+     quit() -> ok
+
+          _q_u_i_t/_0 stops the server controlling the collected  cov-
+          erage and call statistics data.
+
+Note
+     This module has replaced the  _c_o_v_e_r  module,  which  is  now
+     obsolete.
+
+AUTHOR
+     Fredrik Gustafson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  10
+
+
+

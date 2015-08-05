@@ -1,0 +1,169 @@
+.TH mod_include 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mod_include \- Server-parsed documents\&. 
+.SH DESCRIPTION
+.LP
+This module makes it possible to expand "macros" embedded in HTML pages before they are delivered to the client, that is Server-Side Includes (SSI)\&. To make this possible the server parses HTML pages on-the-fly and optionally includes the current date, the requested file\&'s last modification date or the size (or last modification date) of other files\&. In its more advanced form, it can include output from embedded CGI and \fI/bin/sh\fR scripts\&. 
+.SS Note:
+.LP
+Having the server parse HTML pages is a double edged sword! It can be costly for a heavily loaded server to perform parsing of HTML pages while sending them\&. Furthermore, it can be considered a security risk to have average users executing commands in the name of the Erlang node user\&. Carefully consider these items before activating server-side includes\&. 
+
+
+.SH SERVER-SIDE INCLUDES (SSI) SETUP
+.LP
+The server must be told which filename extensions to be used for the parsed files\&. These files, while very similar to HTML, are not HTML and are thus not treated the same\&. Internally, the server uses the magic MIME type \fItext/x-server-parsed-html\fR to identify parsed documents\&. It will then perform a format conversion to change these files into HTML for the client\&. Update the \fImime\&.types\fR file, as described in the Mime Type Settings section of \fIhttpd(3)\fR, to tell the server which extension to use for parsed files, for example: 
+
+.nf
+text/x-server-parsed-html shtml shtm
+.fi
+.LP
+This makes files ending with \fI\&.shtml\fR and \fI\&.shtm\fR into parsed files\&. Alternatively, if the performance hit is not a problem, \fIall\fR HTML pages can be marked as parsed: 
+
+.nf
+text/x-server-parsed-html html htm
+.fi
+.SH SERVER-SIDE INCLUDES (SSI) FORMAT
+.LP
+All server-side include directives to the server are formatted as SGML comments within the HTML page\&. This is in case the document should ever find itself in the client\&'s hands unparsed\&. Each directive has the following format: 
+
+.nf
+<!--#command tag1="value1" tag2="value2" -->
+.fi
+.LP
+Each command takes different arguments, most only accept one tag at a time\&. Here is a breakdown of the commands and their associated tags: 
+.RS 2
+.TP 4
+.B
+\fIconfig\fR:
+The config directive controls various aspects of the file parsing\&. There are two valid tags: 
+.RS 4
+.RS 2
+.TP 4
+.B
+\fIerrmsg\fR:
+controls the message sent back to the client if an error occurred while parsing the document\&. All errors are logged in the server\&'s error log\&. 
+.TP 4
+.B
+\fIsizefmt\fR:
+determines the format used to display the size of a file\&. Valid choices are \fIbytes\fR or \fIabbrev\fR\&. \fIbytes\fR for a formatted byte count or \fIabbrev\fR for an abbreviated version displaying the number of kilobytes\&. 
+.RE
+.RE
+.TP 4
+.B
+\fIinclude\fR:
+will insert the text of a document into the parsed document\&. This command accepts two tags: 
+.RS 4
+.RS 2
+.TP 4
+.B
+\fIvirtual\fR:
+gives a virtual path to a document on the server\&. Only normal files and other parsed documents can be accessed in this way\&. 
+.TP 4
+.B
+\fIfile\fR:
+gives a pathname relative to the current directory\&. \fI\&.\&./\fR cannot be used in this pathname, nor can absolute paths\&. As above, you can send other parsed documents, but you cannot send CGI scripts\&. 
+.RE
+.RE
+.TP 4
+.B
+\fIecho\fR:
+prints the value of one of the include variables (defined below)\&. The only valid tag to this command is \fIvar\fR, whose value is the name of the variable you wish to echo\&. 
+.TP 4
+.B
+\fIfsize\fR:
+prints the size of the specified file\&. Valid tags are the same as with the \fIinclude\fR command\&. The resulting format of this command is subject to the \fIsizefmt\fR parameter to the \fIconfig\fR command\&. 
+.TP 4
+.B
+\fIflastmod\fR:
+prints the last modification date of the specified file\&. Valid tags are the same as with the \fIinclude\fR command\&. 
+.TP 4
+.B
+\fIexec\fR:
+executes a given shell command or CGI script\&. Valid tags are: 
+.RS 4
+.RS 2
+.TP 4
+.B
+\fIcmd\fR:
+executes the given string using \fI/bin/sh\fR\&. All of the variables defined below are defined, and can be used in the command\&. 
+.TP 4
+.B
+\fIcgi\fR:
+executes the given virtual path to a CGI script and includes its output\&. The server does not perform error checking on the script output\&. 
+.RE
+.RE
+.RE
+.SH SERVER-SIDE INCLUDES (SSI) ENVIRONMENT VARIABLES
+.LP
+A number of variables are made available to parsed documents\&. In addition to the CGI variable set, the following variables are made available: 
+.RS 2
+.TP 4
+.B
+\fIDOCUMENT_NAME\fR:
+The current filename\&. 
+.TP 4
+.B
+\fIDOCUMENT_URI\fR:
+The virtual path to this document (such as \fI/docs/tutorials/foo\&.shtml\fR)\&. 
+.TP 4
+.B
+\fIQUERY_STRING_UNESCAPED\fR:
+The unescaped version of any search query the client sent, with all shell-special characters escaped with \fI\\\fR\&. 
+.TP 4
+.B
+\fIDATE_LOCAL\fR:
+The current date, local time zone\&. 
+.TP 4
+.B
+\fIDATE_GMT\fR:
+Same as DATE_LOCAL but in Greenwich mean time\&. 
+.TP 4
+.B
+\fILAST_MODIFIED\fR:
+The last modification date of the current document\&. 
+.RE
+.SH EWSAPI MODULE INTERACTION
+.LP
+Uses the following EWSAPI interaction data, if available: 
+.RS 2
+.TP 4
+.B
+\fI{real_name, {Path, AfterPath}}\fR:
+as defined in mod_alias(3)\&.
+.TP 4
+.B
+\fI{remote_user, RemoteUser}\fR:
+as defined in mod_auth(3)
+.RE
+.LP
+Exports the following EWSAPI interaction data, if possible: 
+.RS 2
+.TP 4
+.B
+\fI{mime_type, MimeType}\fR:
+The file suffix of the incoming URL mapped into a \fIMimeType\fR as defined in the Mime Type Settings section of \fIhttpd_core(3)\fR\&.
+.RE
+.LP
+Uses the following EWSAPI functions: 
+.RS 2
+.TP 2
+*
+mod_cgi:env/3
+.TP 2
+*
+mod_alias:path/3
+.TP 2
+*
+mod_alias:real_name/3
+.TP 2
+*
+mod_alias:real_script_name/3
+.RE
+.SH SEE ALSO
+.LP
+httpd(3), mod_alias(3), mod_auth(3), mod_security(3), mod_cgi(3) 
+.SH AUTHORS
+.nf
+Joakim Grebeno  - support@erlang.ericsson.se
+Mattias Nilsson  - support@erlang.ericsson.se
+.fi

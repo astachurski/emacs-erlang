@@ -1,0 +1,132 @@
+
+
+
+httpd_conf(3)       ERLANG MODULE DEFINITION        httpd_conf(3)
+
+
+
+MODULE
+     httpd_conf - Configuration utility functions to be  used  by
+     the EWSAPI programmer.
+
+DESCRIPTION
+     This module provides  the  EWSAPI  programmer  with  utility
+     functions for adding run-time configuration directives.
+
+  Warning:
+     The current implementation of EWSAPI  is  under  review  and
+     feedback is welcomed.
+
+
+
+EXPORTS
+     check_enum(EnumString,ValidEnumStrings) -> Result
+
+          Types
+               EnumString = string()
+               ValidEnumStrings = [string()]
+               Result = {ok, atom()} | {error, not_valid}
+
+          _c_h_e_c_k__e_n_u_m/_2 checks if _E_n_u_m_S_t_r_i_n_g is a  valid  enumera-
+          tion  of  _V_a_l_i_d_E_n_u_m_S_t_r_i_n_g_s in which case it is returned
+          as an atom.
+
+     clean(String) -> Stripped
+
+          Types
+               String = Stripped = string()
+
+          _c_l_e_a_n/_1 removes leading and/or  trailing  white  spaces
+          from _S_t_r_i_n_g.
+
+     custom_clean(String,Before,After) -> Stripped
+
+          Types
+               Before = After = regexp()
+               String = Stripped = string()
+
+          _c_u_s_t_o_m__c_l_e_a_n/_3 removes leading  and/or  trailing  white
+          spaces  and  custom  characters from _S_t_r_i_n_g. _B_e_f_o_r_e and
+          _A_f_t_e_r are regular expressions, as defined in _r_e_g_e_x_p(_3),
+          describing the custom characters.
+
+     is_directory(FilePath) -> Result
+
+          Types
+               FilePath = string()
+               Result = {ok, Directory} | {error, Reason}
+               Directory = string()
+               Reason = string() | enoent | eaccess |  enotdir  |
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+httpd_conf(3)       ERLANG MODULE DEFINITION        httpd_conf(3)
+
+
+
+               FileInfo
+               FileInfo = File info record
+
+          _i_s__d_i_r_e_c_t_o_r_y/_1 checks if _F_i_l_e_P_a_t_h  is  a  directory  in
+          which  case  it  is returned. Please read _f_i_l_e(_3) for a
+          description of _e_n_o_e_n_t, _e_a_c_c_e_s_s and _e_n_o_t_d_i_r. The defini-
+          tion  of the file info record can be found by including
+          _f_i_l_e._h_r_l from the kernel application, see file(3).
+
+     is_file(FilePath) -> Result
+
+          Types
+               FilePath = string()
+               Result = {ok, File} | {error, Reason}
+               File = string()
+               Reason = string() | enoent | eaccess |  enotdir  |
+               FileInfo
+               FileInfo = File info record
+
+          _i_s__f_i_l_e/_1 checks if _F_i_l_e_P_a_t_h is a regular file in which
+          case  it is returned. Read _f_i_l_e(_3) for a description of
+          _e_n_o_e_n_t, _e_a_c_c_e_s_s and _e_n_o_t_d_i_r. The definition of the file
+          info record can be found by including _f_i_l_e._h_r_l from the
+          kernel application, see file(3).
+
+     make_integer(String) -> Result
+
+          Types
+               String = string()
+               Result = {ok, integer()} | {error, nomatch}
+
+          _m_a_k_e__i_n_t_e_g_e_r/_1 returns  an  integer  representation  of
+          _S_t_r_i_n_g.
+
+SEE ALSO
+     httpd(3)
+
+AUTHOR
+     Joakim Grebeno  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+

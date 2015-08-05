@@ -1,0 +1,660 @@
+
+
+
+io(3)               ERLANG MODULE DEFINITION                io(3)
+
+
+
+MODULE
+     io - Standard I/O Server Interface Functions
+
+DESCRIPTION
+     This module provides an  interface  to  standard  Erlang  IO
+     servers. The output functions all return _o_k if they are suc-
+     cessful, or exit if they are not. In the following  descrip-
+     tion,  a  parameter  within  square brackets means that that
+     parameter is optional. [_I_o_D_e_v_i_c_e, ] is such an  example.  If
+     included,  it must be the Pid of a process which handles the
+     IO  protocols.  This  is  often  the  _I_o_D_e_v_i_c_e  returned  by
+     _f_i_l_e:_o_p_e_n/_2  (see _f_i_l_e). For a description of the I/O proto-
+     cols refer to Armstrong, Virding and  Williams,  'Concurrent
+     Programming in Erlang', Chapter 13.
+
+
+EXPORTS
+     put_chars([IoDevice,] Chars)
+
+          Writes the characters  _C_h_a_r_s  to  the  standard  output
+          (_I_o_D_e_v_i_c_e).  _C_h_a_r_s is a list of characters. The list is
+          not necessarily flat.
+
+     nl([IoDevice])
+
+          Writes new line to the standard output (_I_o_D_e_v_i_c_e).
+
+     get_chars([IoDevice,] Prompt, Count)
+
+          Gets _C_o_u_n_t characters from standard  input  (_I_o_D_e_v_i_c_e),
+          prompting it with _P_r_o_m_p_t. It returns:
+
+            _L_i_s_t_O_f_C_h_a_r_s:
+                Returns the input characters, if  they  are  less
+                than_C_o_u_n_t.
+
+            _e_o_f:
+                End of file was encountered.
+
+     get_line([IoDevice,] Prompt)
+
+          Gets a line from the standard input (_I_o_D_e_v_i_c_e), prompt-
+          ing it with _P_r_o_m_p_t. It returns:
+
+            _L_i_s_t_O_f_C_h_a_r_s:
+                The characters in the line  terminated  by  a  LF
+                unless  the  line  read  was the last line of the
+                file and was not terminated by LF.
+
+            _e_o_f:
+                End of file was encountered.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+io(3)               ERLANG MODULE DEFINITION                io(3)
+
+
+
+     write([IoDevice,] Term)
+
+          Writes the term _T_e_r_m to the standard output (_I_o_D_e_v_i_c_e).
+
+     read([IoDevice,] Prompt)
+
+          Reads  a  term  from  the  standard  input  (_I_o_D_e_v_i_c_e),
+          prompting it with _P_r_o_m_p_t. It returns:
+
+            {_o_k, _T_e_r_m}:
+                The parsing was successful.
+
+            {_e_r_r_o_r, _E_r_r_o_r_I_n_f_o}:
+                The parsing failed.
+
+            _e_o_f:
+                End of file was encountered.
+
+     fwrite(Format)
+     format(Format)
+
+          Equivalent to _f_w_r_i_t_e(_F_o_r_m_a_t, []).
+
+     fwrite([IoDevice,] Format, Arguments)
+     format([IoDevice,] Format, Arguments)
+
+          Writes the list of items in _A_r_g_u_m_e_n_t_s on  the  standard
+          output  (_I_o_D_e_v_i_c_e) in accordance with _F_o_r_m_a_t. _F_o_r_m_a_t is
+          a list of plain characters which are copied to the out-
+          put device, and control sequences which cause the argu-
+          ments to be printed. If _F_o_r_m_a_t is an atom, it is  first
+          converted    to    a    list    with    the    aid   of
+          _a_t_o_m__t_o__l_i_s_t/_1._A_r_g_u_m_e_n_t_s is the list  of  items  to  be
+          printed.
+
+          > io:fwrite("Hello world!~n", []).
+          Hello world
+          ok
+
+          The general format of a control sequence is  ~_F._P._P_a_d_C.
+          The character _C determines the type of control sequence
+          to be used, _F and _P are optional numeric arguments.  If
+          _F,  _P,  or  _P_a_d is *, the next argument in _A_r_g_u_m_e_n_t_s is
+          used as the numeric value of _F or _P.
+
+          _F is the _f_i_e_l_d _w_i_d_t_h of the printed argument.  A  nega-
+          tive  value means that the argument will be left justi-
+          fied within the field, otherwise it will be right  jus-
+          tified.  If  no  field width is specified, the required
+          print width will be used. If the field width  specified
+          is  too small, then the whole field will be filled with
+          * characters.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+io(3)               ERLANG MODULE DEFINITION                io(3)
+
+
+
+          _P is the _p_r_e_c_i_s_i_o_n of the printed argument.  A  default
+          value  is  used  if  no  precision  is  specified.  The
+          interpretation of  precision  depends  on  the  control
+          sequences.  Unless  otherwise  specified,  the argument
+          _w_i_t_h_i_n is used to determine print width.
+
+          _P_a_d is the padding character.  This  is  the  character
+          used  to pad the printed representation of the argument
+          so that it conforms to the specified  field  width  and
+          precision.  Only one padding character can be specified
+          and, whenever applicable, it is used for both the field
+          width and precision. The default padding character is '
+          ' (space).
+
+          The following control sequences are available:
+
+            ~:  The character ~ is written.
+
+            _c:  The argument is a number that will be interpreted
+                as  an ASCII code. The precision is the number of
+                times the character is printed and it defaults to
+                the  field  width, which in turn defaults to one.
+                The following example illustrates:
+
+                > io:fwrite("|~10.5c|~-10.5c|~5c|~n", [$a, $b, $c]).
+                |     aaaaa|aaaaa     |ccccc|
+                ok
+
+            _f:  The argument is a float which is  written  as  [-
+                ]_d_d_d._d_d_d,  where  the  precision is the number of
+                digits after the decimal point. The default  pre-
+                cision is 6.
+
+            _e:  The argument is a float which is  written  as  [-
+                ]_d._d_d_d_e+-_d_d_d,  where  the precision is the number
+                of digits written. The default precision is 6.
+
+            _g:  The argument is a float which is written as _f, if
+                it is > 0.1, and < 10^4. Otherwise, it is written
+                as _e. The precision is the number of  significant
+                digits.  It defaults to 6. There must always be a
+                sufficient  number  of  digits  for  printing   a
+                correct  floating  point  representation  of  the
+                argument.
+
+            _s:  Prints the argument with the _s_t_r_i_n_g  syntax.  The
+                argument  is  a list of character codes (possibly
+                not a flat list), or an atom. The characters  are
+                printed  without  quotes.  In  this  format,  the
+                printed argument is truncated to the given preci-
+                sion and field width.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+io(3)               ERLANG MODULE DEFINITION                io(3)
+
+
+
+                This format can be used for printing  any  object
+                and  truncating the output so it fits a specified
+                field:
+
+                > io:fwrite("|~10w|~n", [{hey, hey, hey}]).
+                |**********|
+                ok
+                > io:fwrite("|~10s|~n", [io_lib:write({hey, hey, hey})]).
+                |{hey, hey, h|
+                ok
+
+            _w:  Writes data with the  standard  syntax.  This  is
+                used  to  output  Erlang terms. Atoms are printed
+                within  quotes  if  they  contain  embedded  non-
+                printable  characters,  and floats are printed in
+                the default _g format.
+
+            _p:  Writes the data with standard syntax in the  same
+                way   as  ~_w,  but  breaks  terms  whose  printed
+                representation is longer than one line into  many
+                lines  and  indents  each  line sensibly. It also
+                tries to detect lists of printable characters and
+                to output these as strings. For example:
+
+                > T = [{attributes,[[{id,age,1.50000},{mode,explicit},
+                       {typename,"INTEGER"}],
+                       [{id,cho},{mode,explicit},{typename,'Cho'}]]},
+                       {typename,'Person'},{tag,{'PRIVATE',3}},
+                       {mode,implicit}].
+                ...
+                > io:fwrite("~w~n", [T]).
+                [{attributes,[[{id,age,1.50000},{mode,explicit},{typename,
+                [73,78,84,69,71,69,82]}],[{id,cho},{mode,explicit},{typena
+                me,'Cho'}]]},{typename,'Person'},{tag,{'PRIVATE',3}},{mode
+                ,implicit}]
+                ok
+                > io:fwrite("~p~n", [T]).
+                [{attributes,[[{id,age,1.50000},
+                               {mode,explicit},
+                               {typename,"INTEGER"}],
+                              [{id,cho},{mode,explicit},{typename,'Cho'}]]},
+                 {typename,'Person'},
+                 {tag,{'PRIVATE',3}},
+                 {mode,implicit}]
+                ok
+
+                The  field  width  specifies  the  maximum   line
+                length.  It  defaults to 80. The precision speci-
+                fies the initial  indentation  of  the  term.  It
+                defaults  to  the number of characters printed on
+                this  line  in  the  _s_a_m_e   call   to   _i_o:_f_w_r_i_t_e
+                or_i_o:_f_o_r_m_a_t. For example, using _T above:
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+io(3)               ERLANG MODULE DEFINITION                io(3)
+
+
+
+                > io:fwrite("Here T = ~p~n", [T]).
+                Here T = [{attributes,[[{id,age,1.50000},
+                                        {mode,explicit},
+                                        {typename,"INTEGER"}],
+                                       [{id,cho},{mode,explicit},
+                                        {typename,'Cho'}]]},
+                          {typename,'Person'},
+                          {tag,{'PRIVATE',3}},
+                          {mode,implicit}]
+                ok
+
+            _W:  Writes data in the same way as ~_w, but  takes  an
+                extra  argument  which  is  the  maximum depth to
+                which terms  are  printed.  Anything  below  this
+                depth  is replaced with .... For example, using _T
+                above:
+
+                > io:fwrite("~W~n", [T,9]).
+                [{attributes,[[{id,age,1.50000},{mode,explicit},{typename|
+                ...}],[{id,cho},{mode|...},{...}]]},{typename,'Person'},{t
+                ag,{'PRIVATE',3}},{mode,implicit}]
+                ok
+
+                If the maximum depth has been reached, then it is
+                impossible to read in the resultant output. Also,
+                the |... form in a tuple denotes that  there  are
+                more  elements  in  the tuple but these are below
+                the print depth.
+
+            _P:  Writes data in the same way as ~_p, but  takes  an
+                extra  argument  which  is  the  maximum depth to
+                which terms  are  printed.  Anything  below  this
+                depth is replaced with .... For example:
+
+                > io:fwrite("~P~n", [T,9]).
+                [{attributes,[[{id,age,1.50000},{mode,explicit},
+                               {typename|...}],
+                              [{id,cho},{mode|...},{...}]]},
+                 {typename,'Person'},
+                 {tag,{'PRIVATE',3}},
+                 {mode,implicit}]
+                ok
+
+            _n:  Writes a new line.
+
+            _i:  Ignores the next term.
+
+          Returns:
+
+            _o_k: The formatting succeeded.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+io(3)               ERLANG MODULE DEFINITION                io(3)
+
+
+
+          If an error occurs, there is no output. For example:
+
+          > io:fwrite("~s ~w ~i ~w ~c ~n",['abc def', 'abc def',
+                                           {foo, 1},{foo, 1}, 65]).
+          abc def 'abc def'  {foo, 1} A
+          ok
+          > io:fwrite("~s", [65]).
+          ** exited: {badarg,[{io,format,[<0.21.0>,"~s","A"]},
+                              {erl_eval,expr,3},
+                              {erl_eval,exprs,4},
+                              {shell,eval_loop,2}]} **
+
+          In this example, an attempt was made to output the sin-
+          gle  character  '65' with the aid of the string format-
+          ting directive "~s".
+
+          The two functions _f_w_r_i_t_e and _f_o_r_m_a_t are identical.  The
+          old  name _f_o_r_m_a_t has been retained for backwards compa-
+          tibility, while the new name _f_w_r_i_t_e has been added as a
+          logical complement to _f_r_e_a_d.
+
+     fread([IoDevice,] Prompt, Format)
+
+          Reads characters from the  standard  input  (_I_o_D_e_v_i_c_e),
+          prompting  it with _P_r_o_m_p_t. Interprets the characters in
+          accordance with _F_o_r_m_a_t. _F_o_r_m_a_t is  a  list  of  control
+          sequences  which  directs  the  interpretation  of  the
+          input.
+
+          _F_o_r_m_a_t may contain:
+
+            * White space characters  (SPACE,  TAB  and  NEWLINE)
+              which  cause input to be read to the next non-white
+              space character.
+
+            * Ordinary characters which must match the next input
+              character.
+
+            * Control   sequences,   which   have   the   general
+              format~*_F_C.  The  character * is an optional return
+              suppression character.  It  provides  a  method  to
+              specify  a  field  which is to be omitted. _F is the
+              _f_i_e_l_d _w_i_d_t_h of the input field and _C determines the
+              type of control sequence.
+
+              Unless otherwise specified, leading white-space  is
+              ignored  for  all control sequences. An input field
+              cannot be more than one line  wide.  The  following
+              control sequences are available:
+
+                ~:  A single ~ is expected in the input.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+
+
+
+
+io(3)               ERLANG MODULE DEFINITION                io(3)
+
+
+
+                _d:  A decimal integer is expected.
+
+                _f:  A floating point number is expected. It  must
+                    follow  the Erlang floating point number syn-
+                    tax.
+
+                _s:  A string  of  non-white-space  characters  is
+                    read.  If  a  field width has been specified,
+                    this number of characters are  read  and  all
+                    trailing white-space characters are stripped.
+                    An Erlang  string  (list  of  characters)  is
+                    returned.
+
+                _a:  Similar to _s, but  the  resulting  string  is
+                    converted into an atom.
+
+                _c:  The number of characters equal to  the  field
+                    width are read (default is 1) and returned as
+                    an Erlang string. However, leading and trail-
+                    ing white-space characters are not omitted as
+                    they are with _s. All characters are returned.
+
+                _l:  Returns the number of characters  which  have
+                    been  scanned  up  to  that  point, including
+                    white-space characters.
+
+              It returns:
+
+                {_o_k, _I_n_p_u_t_L_i_s_t}:
+                    The read was successful and _I_n_p_u_t_L_i_s_t is  the
+                    list of successfully matched and read items.
+
+                {_e_r_r_o_r, _W_h_a_t}:
+                    The read operation failed and the  parameter-
+                    _W_h_a_t can be used as argument to_r_e_p_o_r_t__e_r_r_o_r/_1
+                    to produce an error message.
+
+                _e_o_f:
+                    End of file was encountered.
+
+          Examples:
+
+          > io:fread('enter>', "~f~f~f").
+          enter>1.9 35.5e3 15.0
+          {ok, [1.90000, 3.55000e+4, 15.0000]}
+          > io:fread('enter>', "~10f~d").
+          enter>     5.67899
+          {ok, [5.67800, 99]}
+          > io:fread('enter>', ":~10s:~10c:").
+          enter>:   alan  :   joe   :
+          {ok, ["alan", "   joe    "]}
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  7
+
+
+
+
+
+
+io(3)               ERLANG MODULE DEFINITION                io(3)
+
+
+
+     scan_erl_exprs(Prompt)
+     scan_erl_exprs([IoDevice,] Prompt, StartLine)
+
+          Reads data from the standard input (_I_o_D_e_v_i_c_e),  prompt-
+          ing  it  with  _P_r_o_m_p_t.  Reading  starts  at line number
+          _S_t_a_r_t_L_i_n_e (1). The data is tokenized as if  it  were  a
+          sequence  of  Erlang  expressions  until a final '.' is
+          reached. This token is also returned. It returns:
+
+            {_o_k, _T_o_k_e_n_s, _E_n_d_L_i_n_e}:
+                The tokenization succeeded.
+
+            {_e_r_r_o_r, _E_r_r_o_r_I_n_f_o, _E_n_d_L_i_n_e}:
+                An error occurred.
+
+            {_e_o_f, _E_n_d_L_i_n_e}:
+                End of file was encountered.
+
+          Example:
+
+          > io:scan_erl_exprs('enter>').
+          enter>abc(), "hey".
+          {ok,[{atom, 1, abc},{'(', 1}, {')', 1}, {', ', 1},
+              {string, 1, "hey"}, {dot, 1}], 2}
+          > io:scan_erl_exprs('enter>').
+          enter>1.0er.
+          {error, {1, erl_scan, float}, 2}
+
+     scan_erl_form(Prompt)
+     scan_erl_form(IoDevice, Prompt[, StartLine])
+
+          Reads data from the standard input (_I_o_D_e_v_i_c_e),  prompt-
+          ing  it  with  _P_r_o_m_p_t.  Starts  reading  at line number
+          _S_t_a_r_t_L_i_n_e (1). The data is tokenized as if it  were  an
+          Erlang form - one of the valid Erlang expressions in an
+          Erlang source file - until a final '.' is reached. This
+          last  token is also returned. The return values are the
+          same as for _s_c_a_n__e_r_l__e_x_p_r_s.
+
+     parse_erl_exprs(Prompt)
+     parse_erl_exprs(IoDevice, Prompt[, StartLine])
+
+          Reads data from the standard input (_I_o_D_e_v_i_c_e),  prompt-
+          ing  it  with  _P_r_o_m_p_t.  Starts  reading  at line number
+          _S_t_a_r_t_L_i_n_e (1). The data is tokenized and parsed  as  if
+          it  were a sequence of Erlang expressions until a final
+          '.' is reached. It returns:
+
+            {_o_k, _E_x_p_r_e_s_s_i_o_n_L_i_s_t, _E_n_d_L_i_n_e}:
+                The parsing was successful.
+
+            {_e_r_r_o_r, _E_r_r_o_r_I_n_f_o, _E_n_d_L_i_n_e}:
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  8
+
+
+
+
+
+
+io(3)               ERLANG MODULE DEFINITION                io(3)
+
+
+
+                An error occurred.
+
+            {_e_o_f, _E_n_d_L_i_n_e}:
+                End of file was encountered.
+
+          Example:
+
+          > io:parse_erl_exprs('enter>').
+          enter>abc(), "hey".
+          {ok, [{call, 1, [], abc, []}, {string, 1, "hey"}], 2}
+          > io:parse_erl_exprs ('enter>').
+          enter>abc("hey".
+          {error, {1, erl_parse, {before, {terminator,') '}, {dot, 1}}}, 2}
+
+     parse_erl_form(Prompt)
+     parse_erl_form(IoDevice, Prompt[, StartLine])
+
+          Reads data from the standard input (_I_o_D_e_v_i_c_e),  prompt-
+          ing it with _P_r_o_m_p_t Starts reading at line number _S_t_a_r_t_-
+          _L_i_n_e (1). The data is tokenized and  parsed  as  if  it
+          were  an  Erlang form - one of the valid Erlang expres-
+          sions in an Erlang source file - until a final  '.'  is
+          reached. It returns:
+
+            {_o_k, _F_o_r_m, _E_n_d_L_i_n_e}:
+                The parsing was successful.
+
+            {_e_r_r_o_r, _E_r_r_o_r_I_n_f_o, _E_n_d_L_i_n_e}:
+                An error occurred.
+
+            {_e_o_f, _E_n_d_L_i_n_e}:
+                End of file was encountered.
+
+Standard Input/Output
+     All Erlang processes have a default standard IO device. This
+     device is used when no _I_o_D_e_v_i_c_e argument is specified in the
+     IO calls. However, it  is  sometimes  desirable  to  use  an
+     explicit  _I_o_D_e_v_i_c_e  argument  which refers to the default IO
+     device. This is the case  with  functions  that  can  access
+     either a file or the default IO device. The atom _s_t_a_n_d_a_r_d__i_o
+     has this special meaning. The following example  illustrates
+     this:
+
+       > io:read('enter>').
+       enter>foo.
+       {term, foo}
+       > io:read(standard_io, 'enter>').
+       enter>bar.
+       {term, bar}
+
+     There is always a process registered under the name of _u_s_e_r.
+     This can be used for sending output to the user.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  9
+
+
+
+
+
+
+io(3)               ERLANG MODULE DEFINITION                io(3)
+
+
+
+Error Information
+     The _E_r_r_o_r_I_n_f_o mentioned  above  is  the  standard  _E_r_r_o_r_I_n_f_o
+     structure  which is returned from all IO modules. It has the
+     following format:
+
+         {ErrorLine, Module, ErrorDescriptor}
+
+     A string which describes the error is obtained with the fol-
+     lowing call:
+
+     apply(Module, format_error, ErrorDescriptor)
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                 10
+
+
+

@@ -1,0 +1,264 @@
+
+
+
+CosTransactions_CoordiEnRaLtAoNrG(3M)ODULE DCEoFsITNrIaTnIsOaNctions_Coordinator(3)
+
+
+
+MODULE
+     CosTransactions_Coordinator -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -
+     _i_n_c_l_u_d_e__l_i_b("_c_o_s_T_r_a_n_s_a_c_t_i_o_n_s/_i_n_c_l_u_d_e/_C_o_s_T_r_a_n_s_a_c_t_i_o_n_s._h_r_l").
+
+
+EXPORTS
+     create_subtransaction(Coordinator) -> Control
+
+          Types
+               Coordinator = #objref
+               Control = #objref
+
+          A new subtransaction is created  whose  parent  is  the
+          Coordinator argument.
+
+          Raises exception:
+
+            * 'SubtransactionsUnavailable' - if  nested  transac-
+              tions are not supported.
+
+            * 'Inactive' - if target transaction has already been
+              prepared.
+
+     get_transaction_name(Coordinator) -> Name
+
+          Types
+               Coordinator = #objref
+               Name       =        string()        of        type
+               "oe_name@machine_type_timestamp"
+
+          Returns a printable string, which describe the transac-
+          tion. The main purpose is to support debugging.
+
+     get_parent_status(Coordinator) -> Status
+
+          Types
+               Coordinator = #objref
+               Status = atom()
+
+          Returns the status of the parent transaction associated
+          with  the target object. If the target object is a top-
+          level  transaction  this  operation  is  equivalent  to
+          _g_e_t__s_t_a_t_u_s/_1 operation.
+
+          Possible Status replies:
+
+            * 'StatusCommitted'
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             1
+
+
+
+
+
+
+CosTransactions_CoordiEnRaLtAoNrG(3M)ODULE DCEoFsITNrIaTnIsOaNctions_Coordinator(3)
+
+
+
+            * 'StatusCommitting'
+
+            * 'StatusMarkedRollback'
+
+            * 'StatusRollingBack'
+
+            * 'StatusRolledBack'
+
+            * 'StatusActive'
+
+            * 'StatusPrepared'
+
+            * 'StatusUnknown'
+
+            * 'StatusNoTransaction'
+
+            * 'StatusPreparing'
+
+     get_status(Coordinator) -> Status
+
+          Types
+               Coordinator = #objref
+               Status = atom()
+
+          Returns the status of the transaction  associated  with
+          the target object.
+
+     get_top_level_status(Coordinator) -> Status
+
+          Types
+               Coordinator = #objref
+               Status = atom()
+
+          Returns the status of the top-level transaction associ-
+          ated with the target object.
+
+     hash_top_level_tran(Coordinator) -> Return
+
+          Types
+               Coordinator = #objref
+               Return = integer()
+
+          Returns a hash code for the top-level transaction asso-
+          ciated  with  the  target  object. Equals the operation
+          _h_a_s_h__t_r_a_n_s_a_c_t_i_o_n/_1 if the target object is a  top-level
+          transaction.
+
+     hash_transaction(Coordinator) -> Return
+
+          Types
+               Coordinator = #objref
+               Return = integer()
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             2
+
+
+
+
+
+
+CosTransactions_CoordiEnRaLtAoNrG(3M)ODULE DCEoFsITNrIaTnIsOaNctions_Coordinator(3)
+
+
+
+          Returns a hash code for the transaction associated with
+          the target object.
+
+     is_descendant_transaction(Coordinator, OtherCoordinator)  ->
+     Return
+
+          Types
+               Coordinator = #objref
+               OtherCoordinator = #objref
+               Return = Boolean
+
+          Returns true if the transction associated with the tar-
+          get  object  is a descendant of the transaction associ-
+          ated with the parameter object.
+
+     is_same_transaction(Coordinator, OtherCoordinator) -> Return
+
+          Types
+               Coordinator = #objref
+               OtherCoordinator = #objref
+               Return = Boolean
+
+          Returns true if the transction associated with the tar-
+          get  object  is  related  to the transaction associated
+          with the parameter object.
+
+     is_top_level_transaction(Coordinator) -> Return
+
+          Types
+               Coordinator = #objref
+               Return = Boolean
+
+          Returns true if the transction associated with the tar-
+          get object is a top-level transaction.
+
+     register_resource(Coordinator, Resource) ->  RecoveryCoordi-
+     nator
+
+          Types
+               Coordinator = #objref
+               Resource = #objref
+               RecoveryCoordinator = #objref
+
+          This operation registers the parameter _R_e_s_o_u_r_c_e  object
+          as a participant in the transaction associated with the
+          target object. The _R_e_c_o_v_e_r_y_C_o_o_r_d_i_n_a_t_o_r returned by this
+          operation can be used by this Resource during recovery.
+
+  Note:
+     The Resources will be called in FIFO-order when preparing or
+     committing.  Hence, be sure to register the Resources in the
+     correct order.
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             3
+
+
+
+
+
+
+CosTransactions_CoordiEnRaLtAoNrG(3M)ODULE DCEoFsITNrIaTnIsOaNctions_Coordinator(3)
+
+
+
+     Raises exception:
+
+       * 'Inactive' - if  target  transaction  has  already  been
+         prepared.
+
+     register_subtran_aware(Coordinator,              Subtransac-
+     tionAwareResource) -> Return
+
+          Types
+               Coordinator = #objref
+               Return = ok
+
+          This  operation  registers  the  parameter  _S_u_b_t_r_a_n_s_a_c_-
+          _t_i_o_n_A_w_a_r_e_R_e_s_o_u_r_c_e  object such that it will be notified
+          when the transaction, associated wit the target object,
+          has committed or rolled back.
+
+  Note:
+     The Resources will be called in FIFO-order. Hence,  be  sure
+     to register the Resources in the correct order.
+
+
+     rollback_only(Coordinator) -> Return
+
+          Types
+               Coordinator = #objref
+               Return = ok
+
+          The transaction associated with the  target  object  is
+          modified  so  the  only possible outcome is to rollback
+          the transaction.
+
+AUTHOR
+     Niclas Eklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             4
+
+
+

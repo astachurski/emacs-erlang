@@ -1,0 +1,33 @@
+.TH mesh 6 "mesh  1.1.0" "Ericsson Utvecklings AB" "ERLANG APPLICATION DEFINITION"
+.SH APPLICATION
+mesh  \- Mesh 
+.SH DESCRIPTION
+.LP
+The measurement handler Mesh is an Operation and Maintenance management application that firstly, provides support to applications and managers for creation and control of measurement types and objects, and secondly, allows control of the associated logs\&. 
+.LP
+Mesh is designed to be a distributed global application, which means that although it may only be running at one node at a time, with the other nodes as standby nodes, clients may access the Mesh functionality from any node\&. 
+.LP
+The Mesh API can be used to make management protocol specific interfaces to Mesh, for example SNMP, CORBA, or HTTP interfaces\&. Currently, an SNMP interface is included in the application; others may follow\&. 
+.LP
+Mesh uses the Mnesia DBMS to store data\&. This means that Mnesia must be running on all nodes where Mesh may run, and that the tables Mesh uses must be created and configured correctly\&. Mesh provides a function that should be called to create tables, and to define replicas for Mnesia\&. This function is called \fIcreate_tables\fR, and takes one parameter, a list of nodes\&. The Mnesia tables will be replicated on these nodes; some on disk, and some in RAM\&. It is important that these nodes are the same as those where Mesh will run\&. 
+.LP
+Mesh also uses EVA functionality to send and log generated events and alarms\&. The logs can be examined by a manager at a later time, however, the configuration and start of EVA is left to the client application programmer (please see the EVA User\&'s Guide and manual pages)\&. 
+.LP
+Commonly used statistical functions may be found in the module \fImesh_lib\fR\&. 
+
+.SH Configuration
+.LP
+The following configuration parameters are defined for the Mesh application (for more information about configuration parameters see application(3)): 
+.RS 2
+.TP 4
+.B
+\fIsnmp_adapted = true | false <optional>\fR:
+Specifies whether or not the Mesh SNMP adaptation shall be started\&. The default is \fIfalse\fR, meaning that the adaptation is not started\&. 
+.RE
+.SH SEE ALSO
+.LP
+mesh(3), mesh_lib(3), eva(3), eva_sup(3) 
+.SH AUTHOR
+.nf
+Fredrik Gustafson - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,1506 @@
+.TH odbc 3 "odbc  0.8.2" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+odbc \- Open Data Base Connectivity
+.SH DESCRIPTION
+.LP
+The ODBC API is divided into three parts: 
+.RS 2
+.TP 2
+*
+Start and Stop 
+.br
+Starts and stops the server process\&.
+.TP 2
+*
+Basic API 
+.br
+Gives access to the IDL Interface functions, which are mapped on ODBC functions\&.
+.TP 2
+*
+Utility API
+.br
+Consists of functions that are easier to use than the Basic API\&. These functions are on a higher level, do more of the job, but allow less control to the application programmer\&.
+.RE
+.LP
+All functions described are synchronous\&. The interface supports all ODBC defined SQL data types except binaries\&. They are all mapped on Erlang strings\&. The type\fI string()\fR is a \fIlist()\fR of integers representing ASCII codes\&. The type \fIboolean()\fR is either the macro \fI?SQL_TRUE\fR or the macro \fI?SQL_FALSE\fR\&. The default Timeout for all functions is 5000 ms, unless otherwise stated\&.
+
+.SH Start and Stop
+.SH EXPORTS
+.LP
+.B
+start_link(Args, Options) -> 
+.br
+.B
+start_link(ServerName, Args, Options) -> Result
+.br
+.RS
+.TP
+Types
+Args = [Arg]
+.br
+Arg = {buffer_size, integer()} | {max_len_data, integer()}| {max_len_err_msg, integer()} | {max_len_str, integer()} 
+.br
+  \fI{buffer_size, integer()}\fR: The initial size of the buffer through which communication with the C node is done\&. The value does not limit the amount of data that can pass in either direction of a function call, since the buffer will grow dynamically\&. The default is 32 kb\&. The minimum is 4 kb\&.
+.br
+
+.br
+  \fI{max_len_data, integer()}\fR: The maximum length, including null-termination, of table data, returned from ODBC\&. This value must be chosen with the buffer size in mind\&. The default is 8 kb\&. The argument is used only by the Utility API\&. \fI NOTE: The data source or driver may have a lower limit for the maximum size of returned data\&. This limit is the value of the optional statement attribute SQL_ATTR_MAX_LENGTH (see [1])\&.\fR
+.br
+
+.br
+  \fI{max_len_err_msg, integer()}\fR: The maximum length, including null-termination, of the message part of ODBC error messages\&. This value must be chosen with the buffer size in mind\&. The default is 1 kb\&. The argument is used only by the Utility API\&.
+.br
+
+.br
+  \fI{max_len_str, integer()}\fR: The maximum length, including null-termination, of other strings passed from ODBC to the ODBC server (e\&.g\&. column names)\&. The value does not limit the size of returned table values\&. It must be chosen with the buffer size in mind\&. The default is 1 kb\&. The argument is used only by the Utility API\&.
+.br
+Options = [Opt]
+.br
+Opt = {timeout, integer()} |{debug, [Dbg]}
+.br
+  \fItimeout\fR: The time in ms allowed for initialisation (see \fIgen_server\fR)\&. \fIdebug\fR: Debug options\&.
+.br
+ Dbg = trace | log | statistics | {log_to_file, FileName} | {install, {Func, FuncState}}
+.br
+   See \fIgen_server\fR and \fIsys\fR\&.
+.br
+ServerName = {local, atom()} | {global, atom()}
+.br
+   When supplied, causes the server to be registered locally or globally\&. If the server is started without a name it can only be called using the returned pid\&.
+.br
+Result = {ok, pid()} | {error, Reason}
+.br
+   The pid of the server or an error tuple\&.
+.br
+Reason = {already_started, pid()} | timeout | {no_c_node, Info}
+.br
+   The server was already started, a timeout has expired, or the C node could not be started (the program may not have been found or may not have been executable e\&.g\&.)\&.
+.br
+Info = string()
+.br
+  More information\&.
+.br
+.RE
+.RS
+.LP
+Starts a new ODBC server process, registers it with the supervisor, and links it to the calling process\&. Opens a unique IDL connection to a new C node on the local host, using the same cookie as is used by the node of the calling process\&. Links to the process on the C node\&.
+.SS Note:
+.LP
+There is no default timeout value\&. Not using the timeout option is equivalent to having an infinite timeout value\&.
+.br
+ An expired timeout is reported as an error here, not an exception\&.
+.br
+ The debug options are described in the \fIsys\fR module documentation\&.
+
+.RE
+.LP
+.B
+stop(Server) -> 
+.br
+.B
+stop(Server, Timeout) -> ok
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+Timeout = integer() | infinity
+.br
+   Max time (ms) for serving the request\&. 
+.br
+.RE
+.RS
+.LP
+Stops the ODBC server process as soon as all already submitted requests have been processed\&. The C node is also stopped\&. 
+.RE
+.SH Utility API
+.LP
+The Utility API uses three maximum string length parameters: the maximum data string length (max_len_data), the maximum error message length (max_len_err_msg), and the maximum length of \&'other strings\&' (e\&.g\&. column names) passed from ODBC (max_len_str)\&. These can be set in the call to \fIstart_link/[2, 3]\fR, but there are default values\&. Errors reported by the ODBC API are returned in lists\&. The relative order of these errors is the same as specified in [1]\&. Warnings are always ignored and execution proceeds\&. Should an error occur, execution stops\&. 
+.SH EXPORTS
+.LP
+.B
+init_env(Server) ->
+.br
+.B
+init_env(Server, Timeout) -> {ok, RefEnvHandle} | {error, {Fcn, [Reason]}}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+Timeout = integer() | infinity
+.br
+   Max time (ms) for serving the request\&.
+.br
+RefEnvHandle = term()
+.br
+   Reference to the initialised environment\&.
+.br
+Fcn = atom()
+.br
+  The originating function\&.
+.br
+Reason = {SqlState, MoreInfo}
+.br
+   An ODBC error tuple\&.
+.br
+SqlState = string()
+.br
+   The SQL state, see [1]\&.
+.br
+MoreInfo = {NativeCode, Msg, LenMsg}
+.br
+   More error info\&.
+.br
+NativeCode = string()
+.br
+   Data source specific error code\&.
+.br
+ Msg = string()
+.br
+  Error message\&.
+.br
+LenMsg = integer()
+.br
+   Length of\fI Msg\fR before truncation\&.
+.br
+.RE
+.RS
+.LP
+Initialises the ODBC environment on the C node\&. 
+.RE
+.LP
+.B
+connect(Server, RefEnvHandle, ConnectStr) ->
+.br
+.B
+connect(Server, RefEnvHandle, ConnectStr, Timeout) ->
+.br
+.B
+connect(Server, RefEnvHandle, DSN, UID, PWD) ->
+.br
+.B
+connect(Server, RefEnvHandle, DSN, UID, PWD, Timeout) -> {ok, RefConnHandle} | {error, {Fcn, [Reason]}}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefEnvHandle = term()
+.br
+   Reference to the environment\&. Returned by \fI init_env/[1, 2]\fR\&.
+.br
+ConnectStr = string()
+.br
+   Connection string\&. For syntax see SQLDriverConnect in [1]\&.
+.br
+DSN = string()
+.br
+   Name of the data source\&.
+.br
+UID = string()
+.br
+   User ID\&.
+.br
+PWD = string()
+.br
+   Password\&.
+.br
+Timeout = integer() | infinity 
+.br
+  Maximum time (ms) for serving the request\&.
+.br
+RefConnHandle = term()
+.br
+   Reference to the opened connection\&.
+.br
+Fcn = atom()
+.br
+  The originating function\&.
+.br
+Reason = {SqlState, MoreInfo}
+.br
+   An ODBC error tuple\&.
+.br
+SqlState = string()
+.br
+   The SQL state, see [1]\&.
+.br
+MoreInfo = {NativeCode, Msg, LenMsg}
+.br
+   More error info\&.
+.br
+NativeCode = string()
+.br
+   Data source specific error code\&.
+.br
+ Msg = string()
+.br
+  Error message\&.
+.br
+LenMsg = integer()
+.br
+   Length of\fI Msg\fR before truncation\&.
+.br
+.RE
+.RS
+.LP
+Opens a connection to a data source\&. There can be only one open data source connection per server\&. \fIconnect/[3, 4]\fR is used when the information that can be supplied through \fIconnect/[5, 6]\fR does not suffice\&. 
+.SS Note:
+.LP
+The syntax to be used for \fIConnectStr\fR is described under SQLDriverConnect in [1]\&. The \fIConnectStr\fR must be complete\&.
+
+.RE
+.LP
+.B
+execute_stmt(Server, RefConnHandle, Stmt) ->
+.br
+.B
+execute_stmt(Server, RefConnHandle, Stmt, Timeout) -> {updated, NRows} | {selected, [ColName], [Row]} {error, {Fcn, [Reason]}}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefConnHandle = term()
+.br
+   Reference to an open connection\&. Returned by \fIconnect/[3, 4, 5, 6]\fR\&.
+.br
+Stmt = string()
+.br
+   SQL statement to execute\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+NRows = integer()
+.br
+   The number of updated rows for UPDATE, INSERT, or DELETE statements, or -1 if the number is not available\&. For other statement types the value is driver defined, see [1]\&.
+.br
+ColName = string()
+.br
+  The name of a column in the resulting table\&.
+.br
+Row = [Value]
+.br
+   One row of the resulting table\&.
+.br
+Value = string() | null
+.br
+  One value in a row\&.
+.br
+Fcn = atom()
+.br
+  The originating function\&.
+.br
+Reason = {SqlState, MoreInfo}
+.br
+   An ODBC error tuple\&.
+.br
+SqlState = string()
+.br
+   The SQL state, see [1]\&.
+.br
+MoreInfo = {NativeCode, Msg, LenMsg}
+.br
+   More error info\&.
+.br
+NativeCode = string()
+.br
+   Data source specific error code\&.
+.br
+ Msg = string()
+.br
+  Error message\&.
+.br
+LenMsg = integer()
+.br
+   Length of\fI Msg\fR before truncation\&.
+.br
+.RE
+.RS
+.LP
+Executes a single SQL statement\&. All changes to the data source are, by default, automatically committed if successful\&. Data that is returned for SELECT statements is in string form\&. 
+.SS Note:
+.LP
+\fI{updated, 0}\fR or \fI{updated, -1\fR} is returned when a statement that does not select or update any rows is successfully executed\&.
+.br
+
+.br
+ The \fIColNames\fR are ordered the same way as the \fIValues\fR in the \fIRows\fR (the first \fIColName\fR is associated with the first \fIValue\fR of each \fIRow\fR etc\&.)\&. The \fIRows\fR have no defined order since they represent a set\&.
+.br
+
+.br
+ Column names will be truncated if they are longer than the maximum string length (see option to \fIstart_link/[2, 3])\fR\&. Table values will be truncated if they are longer than the maximum data length, or longer than the value of the statement attribute SQL_ATTR_MAX_LENGTH\&. If the amount of memory needed to retrieve a table value from a data source can not be determined, the default maximum data length (see \fIstart_link/[2, 3])\fR is used\&.
+
+
+.br
+
+.br
+.RE
+.LP
+.B
+disconnect(Server, RefConnHandle) ->
+.br
+.B
+disconnect(Server, RefConnHandle, Timeout) -> ok | {error, {Fcn, [Reason]}}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefConnHandle = term()
+.br
+   Reference to an open connection\&. Returned by \fIconnect/[3, 4, 5, 6]\fR\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Fcn = atom()
+.br
+  The originating function\&.
+.br
+Reason = {SqlState, MoreInfo}
+.br
+   An ODBC error tuple\&.
+.br
+SqlState = string()
+.br
+   The SQL state, see [1]\&.
+.br
+MoreInfo = {NativeCode, Msg, LenMsg}
+.br
+   More error info\&.
+.br
+NativeCode = string()
+.br
+   Data source specific error code\&.
+.br
+ Msg = string()
+.br
+  Error message\&.
+.br
+LenMsg = integer()
+.br
+   Length of\fI Msg\fR before truncation\&.
+.br
+.RE
+.RS
+.LP
+Closes the connection to a data source\&.
+.RE
+.LP
+.B
+terminate_env(Server, RefEnvHandle) ->
+.br
+.B
+terminate_env(Server, RefEnvHandle, Timeout) -> ok | {error, {Fcn, [Reason]}}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefEnvHandle = term()
+.br
+   Reference to the environment\&. Returned by \fI init_env/[1, 2]\fR\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Fcn = atom()
+.br
+  The originating function\&.
+.br
+Reason = {SqlState, MoreInfo}
+.br
+   An ODBC error tuple\&.
+.br
+SqlState = string()
+.br
+   The SQL state, see [1]\&.
+.br
+MoreInfo = {NativeCode, Msg, LenMsg}
+.br
+   More error info\&.
+.br
+NativeCode = string()
+.br
+   Data source specific error code\&.
+.br
+ Msg = string()
+.br
+  Error message\&.
+.br
+LenMsg = integer()
+.br
+   Length of\fI Msg\fR before truncation\&.
+.br
+.RE
+.RS
+.LP
+Cleans up the ODBC environment on the C node\&.
+.RE
+.SH Basic API
+.LP
+To use the Basic API it is necessary to gain a comprehensive understandingof ODBC by studying [1]\&. ODBC defines the concept of deferred buffers\&. A deferred buffer is one that exists longer than one function call, so it can be used in several calls\&. Deferred buffers come in pairs: one data buffer and one length/indicator buffer\&. The length/indicator buffer is used for communicating the length of data in the data buffer, or to indicate something about the data (e\&.g\&. that it is a null-value)\&. The Basic API handles these buffers accordingly: they are allocated, deallocated, read, and written pair-wise\&.
+.SH EXPORTS
+.LP
+.B
+ sql_alloc_handle(Server, HandleType, RefInputHandle) -> 
+.br
+.B
+sql_alloc_handle(Server, HandleType, RefInputHandle, Timeout) -> {Result, RefOutputHandle}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+HandleType = ?SQL_HANDLE_ENV | ?SQL_HANDLE_DBC | ?SQL_HANDLE_STMT
+.br
+   Macros that determine which type of handle to allocate\&.
+.br
+RefInputHandle = term() | ?SQL_NULL_HANDLE
+.br
+  The context in which the new handle is to be allocated\&. When allocating an environment handle, use \fI?SQL_NULL_HANDLE\fR\&. When allocating a connection handle the argument must be an environment handle and when allocating a statement handle it must be a connection handle\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+RefOutputHandle = term() | ?SQL_NULL_HENV | ?SQL_NULL_HDBC | ?SQL_NULL_HSTMT
+.br
+   Reference to the allocated handle, or a value representing an error\&.
+.br
+.RE
+.RS
+.LP
+Allocates memory for an environment, connection, or statement handle\&. See SQLAllocHandle in [1]\&.
+.br
+
+.br
+ \fI Differences from the ODBC Function:\fR
+.br
+
+.br
+ Allocation of descriptor handles is not supported\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&. The ODBC output parameter \fIOutputHandlePtr\fR has been changed into the returned value \fIRefOutputHandle\fR\&. Connection pooling is not supported\&.
+.RE
+.LP
+.B
+sql_bind_col(Server, RefStmtHandle, ColNum, RefBuf) -> 
+.br
+.B
+sql_bind_col(Server, RefStmtHandle, ColNum, RefBuf, Timeout) -> Result
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefStmtHandle = term()
+.br
+   Reference to the statement handle\&.
+.br
+ColNum = integer()
+.br
+   Column number from left to right starting at 1\&.
+.br
+RefBuf = integer() | ?NULL_REF
+.br
+   Reference to the buffer where the column data is placed (and to the associated length/indicator buffer)\&. \fI?NULL_REF\fR removes the binding between a buffer and a column\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+.RE
+.RS
+.LP
+Assigns storage and data type for a column in a result set (binds a buffer to a column)\&. See SQLBindCol in [1]\&. Buffers/columns can also be unbound\&.
+
+.br
+.SS Note:
+.LP
+The memory associated with \fIRefBuf\fR has to be allocated already\&.
+
+
+.br
+.LP
+\fIDifferences from the ODBC Function:\fR
+.br
+ 
+.LP
+Neither binding of arrays nor the use of binding offsets is supported\&. It is not possible to unbind the data buffer without also unbinding the length/indicator buffer\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&. The input parameters \fITargetType\fR, \fITargetValuePtr\fR, \fIBufferLength\fR, and \fIStrLen_or_IndPtr\fR of the ODBC function have been replaced with the \fIRefBuf\fR parameter (which represents the same data)\&.
+.RE
+.LP
+.B
+sql_close_cursor(Server, RefStmtHandle) ->
+.br
+.B
+sql_close_cursor(Server, RefStmtHandle, Timeout) -> Result
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefStmtHandle = term()
+.br
+   Reference to the statement handle\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+.RE
+.RS
+.LP
+Closes a cursor that has been opened on a statement and discards pending results\&. See SQLCloseCursor in [1]\&.
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ The parameters \fIServer\fR and \fITimeout\fR have been added\&.
+.RE
+.LP
+.B
+sql_connect(Server, RefConnHandle, DSN, UID, Auth) -> 
+.br
+.B
+sql_connect(Server, RefConnHandle, DSN, UID, Auth, Timeout) -> Result
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefConnHandle = term()
+.br
+   Reference to the connection handle\&.
+.br
+DSN = string()
+.br
+  The name of the data source\&.
+.br
+UID = string()
+.br
+   The user ID
+.br
+Auth = string()
+.br
+   The user\&'s password for the data source\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+.RE
+.RS
+.LP
+Establishes a connection to a driver and a data source\&. See SQLConnect in [1]\&.
+.br
+ \fI Differences from the ODBC Function:\fR
+.br
+
+.br
+ Connection pooling is not supported\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&. The input parameters \fINameLength1\fR, \fINameLength2\fR, and \fINameLength3\fR of the ODBC function have been excluded\&.
+.RE
+.LP
+.B
+sql_describe_col(Server, RefStmtHandle, ColNum, BufLenColName) ->
+.br
+.B
+sql_describe_col(Server, RefStmtHandle, ColNum, BufLenColName, Timeout) -> {Result,{ColName, LenColName}, SqlType, ColSize, DecDigs, Nullable} 
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefStmtHandle = term()
+.br
+   Reference to the statement handle\&.
+.br
+ColNum = integer()
+.br
+   The column number from left to right, starting at 1\&.
+.br
+BufLenColName = integer()
+.br
+   Length (>0) of the \fI ColName\fR buffer\&. Allow room for null-termination\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+ColName = string() 
+.br
+   The column name\&.
+.br
+LenColName = integer()
+.br
+  The actual length of \fIColName\fR\&. An ODBC SQL data type (ODBC supported data types are supplied through macros)\&.
+.br
+SqlType = integer()
+.br
+  An ODBC SQL data type (ODBC supported data types are supplied through macros) or a driver-specific type (not supplied through macros)\&.
+.br
+ColSize = integer()
+.br
+  The precision of the column (see appendix D in [1])\&. If the precision cannot be determined, 0 is returned\&.
+.br
+DecDigs = integer()
+.br
+  The scale of the column (see appendix D in [1])\&. If the scale cannot be determined, or is not applicable, 0 is returned\&.
+.br
+Nullable = ?SQL_NO_NULLS | ?SQL_NULLABLE | ?SQL_NULLABLE_UNKNOWN
+.br
+  Indicates whether the column allows null values or not\&.
+.br
+.RE
+.RS
+.LP
+Returns the result descriptor -- column name, type, column size, decimal digits, and nullability -- for one column in the result set\&. See SQLDescribeCol in [1]\&. To decide the buffer size (how many characters or bytes) needed to retrieve data for the column it is necessary to calculate the display size (see also appendix D in [1])\&. The function \fIdisplay_size(SqlType, ColSize) -> integer()\fR does the calculation\&. The input parameters are returned by \fIsql_describe_col/[4, 5]\fR\&.
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ The function does not support retrieval of bookmark column data\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&. The output parameters \fIColumnName\fR, \fINameLengthPtr\fR, \fIDataTypePtr\fR, \fIColumnSizePtr\fR, \fIDecimalDigitsPtr\fR, and \fINullablePtr\fR of the ODBC function have been changed into the returned values \fIColName\fR, \fILenColName\fR, \fISqlType\fR, \fIColSize\fR, \fIDecDigs\fR, and \fINullable\fR\&. \fIBufLenColName\fR must be > 0\&.
+.RE
+.LP
+.B
+sql_disconnect(Server, RefConnHandle) ->
+.br
+.B
+sql_disconnect(Server, RefConnHandle, Timeout) -> Result
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefConnHandle = term()
+.br
+   Reference to the connection handle\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+  Result macro\&.
+.br
+.RE
+.RS
+.LP
+Closes the connection associated with a specific connection handle\&. See SQLDisconnect in [1]\&.
+.br
+
+.br
+ \fI Differences from the ODBC Function:\fR
+.br
+
+.br
+ Connection pooling is not supported\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&.
+.RE
+.LP
+.B
+sql_driver_connect(Server, RefConnHandle, InConnStr, BufLenOutConnStr, DrvCompletion) ->
+.br
+.B
+sql_driver_connect(Server, RefConnHandle, InConnStr, BufLenOutConnStr, DrvCompletion, Timeout) -> {Result, {OutConnStr, LenOutConnStr}}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefConnHandle = term()
+.br
+   Reference to the connection handle\&.
+.br
+InConnStr = string()
+.br
+  A complete connection string (enough for connecting anyway)\&.
+.br
+BufLenOutConnStr = integer()
+.br
+   Length (>0) of the \fIOutConnStr\fR buffer\&. Allow room for null-termination\&.
+.br
+DrvCompletion = ?SQL_DRIVER_NOPROMPT
+.br
+   No prompting with pop-ups\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR | ?SQL_NO_DATA
+.br
+   Result macro\&.
+.br
+OutConnStr = string()
+.br
+   A complete connection string\&.
+.br
+LenOutConnStr = integer()
+.br
+   The length of \fIOutConnStr\fR before truncation\&.
+.br
+.RE
+.RS
+.LP
+Establishes a connection to a driver and a data sourc, which needs more connection information than SQLConnect offers\&. See SQLDriverConnect in [1]\&.
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ The function does not support prompting with pop-ups, so the connection string supplied must be complete or, at least, complete enough for connecting\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&. The input parameters \fIWindowHandle\fR and \fIStringLength1\fR of the ODBC function have been excluded\&. The output parameters \fIOutConnectionString\fR and \fIStringLength2Ptr\fR have been changed into the returned values \fIOutConnStr\fR and \fILenOutConnStr\fR\&. \fIBufLenOutConnStr\fR must be > 0\&.
+.RE
+.LP
+.B
+sql_end_tran(Server, HandleType, RefHandle, ComplType) ->
+.br
+.B
+sql_end_tran(Server, HandleType, RefHandle, ComplType, Timeout) -> Result
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+HandleType = ?SQL_HANDLE_ENV | ?SQL_HANDLE_DBC 
+.br
+   The type of handle for which to perform the transaction (all connections associated with an environment or a specific connection)\&.
+.br
+RefHandle = term()
+.br
+   Reference to the handle\&.
+.br
+ComplType = ?SQL_COMMIT | ?SQL_ROLLBACK
+.br
+  Commit operation or rollback operation\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+
+.br
+.RE
+.RS
+.LP
+Requests a commit or rollback operation for all active operations on all statement handles associated with a connection\&. It can also request that a commit or rollback operation be performed for all connections associated with the environment handle\&. See SQLEndTran in [1]\&.
+.SS Note:
+.LP
+Rollback of transactions may be unsupported by core level drivers\&.
+
+
+.br
+.LP
+\fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ 
+.LP
+The parameters \fIServer\fR and \fITimeout\fR have been added\&. 
+.RE
+.LP
+.B
+sql_exec_direct(Server, RefStmtHandle, Stmt) ->
+.br
+.B
+sql_exec_direct(Server, RefStmtHandle, Stmt, Timeout) -> Result
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefStmtHandle = term()
+.br
+   Reference to the statement handle\&.
+.br
+Stmt = string()
+.br
+   An SQL statement\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR | ?SQL_NEED_DATA | ?SQL_NO_DATA
+.br
+   Result macro\&.
+.br
+.RE
+.RS
+.LP
+Executes a statement\&. See SQLExecDirect in [1]\&. 
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ \fI?SQL_NO_DATA\fR is returned only in connection with positioned updates, which are not supported\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&. The input parameter \fITextLength\fR of the ODBC function has been excluded\&. 
+.RE
+.LP
+.B
+sql_fetch(Server, RefStmtHandle) ->
+.br
+.B
+sql_fetch(Server, RefStmtHandle, Timeout) -> Result
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefStmtHandle = term()
+.br
+   Reference to the statement handle\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR | ?SQL_NO_DATA
+.br
+   Result macro\&.
+.br
+.RE
+.RS
+.LP
+Fetches a row of data from a result set\&. The driver returns data for all columns that were bound to storage locations with \fIsql_bind_col/[4, 5]\fR\&. See SQLFetch in [1]\&. 
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ The parameters \fIServer\fR and \fITimeout\fR have been added\&.
+.RE
+.LP
+.B
+sql_free_handle(Server, HandleType, RefHandle) ->
+.br
+.B
+sql_free_handle(Server, HandleType, RefHandle, Timeout) -> Result
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+HandleType = ?SQL_HANDLE_ENV | ?SQL_HANDLE_DBC | ?SQL_HANDLE_STMT
+.br
+   Macros which define the type of handle to free\&.
+.br
+RefHandle = term()
+.br
+   Reference to the handle\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+.RE
+.RS
+.LP
+Releases a handle and frees all resources associated with it\&. See SQLFreeHandle in [1]\&.
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ The function does not support deallocation of descriptor handles\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&.
+.RE
+.LP
+.B
+sql_get_connect_attr(Server, RefConnHandle, Attr, BufType) ->
+.br
+.B
+sql_get_connect_attr(Server, RefConnHandle, Attr, BufType, Timeout) -> {Result, Value}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefConnHandle = term()
+.br
+   Reference to the connection handle\&.
+.br
+Attr = integer()
+.br
+   One of the attributes described below or a driver-specific attribute\&.
+.br
+BufType = {?SQL_C_CHAR, BufLen} | ?SQL_C_ULONG | {?SQL_C_ULONG, IntType}
+.br
+   The buffer type used for retrieving the data\&. For character type data also the buffer size\&. For integer type data that is driver-specific, also a subtype\&.
+.br
+BufLen = integer()
+.br
+   Buffer size (>0) for character type data\&. Allow room for null-termination
+.br
+IntType = ?SQL_IS_UINTEGER | ?SQL_IS_INTEGER
+.br
+   Used only for driver-specific attributes\&. See SQLGetConnectAttr in [1]\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR | ?SQL_NO_DATA
+.br
+   Result macro\&.
+.br
+Value = {CharValue, LenCharValue} | NumValue
+.br
+  Attribute data\&.
+.br
+CharValue = string() 
+.br
+  The value of the attribute when of character type\&.
+.br
+LenCharValue = integer()
+.br
+  The length of CharValue before truncation\&.
+.br
+NumValue = integer()
+.br
+   The value of the attribute when of numeric type\&.
+.br
+.RE
+.RS
+.LP
+Returns the current setting of a connection attribute\&. See SQLGetConnectAttr in [1]\&.
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ Only the following attributes, and their possible values, are supported (through macros)\&. More information can be found under SQLSetConnectAttr in [1]\&. Driver-specific attributes are not supported through macros, but can be retrieved, if they are of character or signed/unsigned long integer types\&.
+.RS 2
+.TP 2
+*
+?SQL_ATTR_ACCESS_MODE
+.TP 2
+*
+?SQL_ATTR_AUTOCOMMIT
+.TP 2
+*
+?SQL_ATTR_ODBC_CURSORS
+.TP 2
+*
+?SQL_ATTR_TRACE
+.TP 2
+*
+?SQL_ATTR_TRACEFILE
+.TP 2
+*
+?SQL_ATTR_TRANSLATE_LIB
+.TP 2
+*
+?SQL_ATTR_TRANSLATE_OPTION
+.RE
+.LP
+According to [1], \fIBufLen\fR (BufferLength) can be set to \fI?SQL_NTS\fR\&. This is probably not correct, since it would make it impossible for the driver to detect that data needs to be truncated\&. Hence, the \fI?SQL_NTS\fR value has been disallowed\&. The function takes a \fIBufType\fR parameter to distinguish between character type attributes and numeric type attributes\&. For character data the maximum string length must be supplied (allow room for null-termination)\&. For driver-specific numeric type attributes, a subtype must be supplied\&. The returned value is either a tuple containing the attribute string and its length, or an integer, depending on the specified buffer type\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&. The output parameters \fIValuePtr\fR and \fIStringLengthPtr\fR of the ODBC function have been changed into the returned values \fICharValue\fR and \fILenCharValue\fR for character type attributes and \fINumValue\fR for integer types\&. The input parameter \fIBufferLength\fR has been included in the \fIBufTyp\fRe parameter\&. \fIBufLen\fR must be > 0\&.
+.RE
+.LP
+.B
+sql_get_diag_rec(Server, HandleType, RefHandle, RecNum, BufLenErrMsg) ->
+.br
+.B
+sql_get_diag_rec(Server, HandleType, RefHandle, RecNum, BufLenErrMsg, Timeout) -> {Result, SqlState, NativeErr, {ErrMsg, LenErrMsg}}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+HandleType = ?SQL_HANDLE_ENV | ?SQL_HANDLE_DBC | ?SQL_HANDLE_STMT
+.br
+  The type of handle for which to retrieve information\&.
+.br
+RefHandle = term()
+.br
+  Reference to the handle\&.
+.br
+RecNum = integer()
+.br
+  Indicates the status record from which to retrieve information (> 0)\&.
+.br
+BufLenErrMsg = integer()
+.br
+   Length of the \fIErrMsg\fR buffer (>0)\&. Allow room for null-termination\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR | ?SQL_NO_DATA
+.br
+   Result macro\&.
+.br
+SqlState = string()
+.br
+  The SQL state pertaining to the diagnostic record\&.
+.br
+NativeErr = integer() 
+.br
+  Data-source specific error code\&.
+.br
+ErrMsg = string(
+.br
+  Error message\&.
+.br
+LenErrMsg = integer()
+.br
+   The length of \fIErrMsg\fR before truncation\&.
+.br
+.RE
+.RS
+.LP
+Retrieves the current values of multiple fields of a diagnostic record that contains error, warning, and status information\&. See SQLGetDiagRec in [1]\&. 
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ Retrieving information associated with descriptor handles is not supported\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&. The output parameters \fISqlState\fR, \fINativeErrorPtr\fR, \fIMessageText\fR, and \fITextLengthPtr\fR of the ODBC function have been changed into the returned values \fISqlState\fR, \fINativeErr\fR, \fIErrMsg\fR, and \fILenErrMsg\fR\&. \fIBufLenErrMsg\fR must be > 0\&.
+.RE
+.LP
+.B
+sql_num_result_cols(Server, RefStmtHandle) ->
+.br
+.B
+sql_num_result_cols(Server, RefStmtHandle, Timeout) -> {Result, ColCount} 
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefStmtHandle = term()
+.br
+  Reference to the statement handle\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+ColCount = integer()
+.br
+  The number of columns in the result set\&.
+.br
+.RE
+.RS
+.LP
+Returns the number of columns in a result set\&. See SQLNumResultCols in [1]\&.
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ The parameters \fIServer\fR and \fITimeout\fR have been added\&. The output parameter \fIColumnCountPtr\fR of the ODBC function has been changed into the returned value \fIColCount\fR\&.
+.RE
+.LP
+.B
+sql_row_count(Server, RefStmtHandle) ->
+.br
+.B
+sql_row_count(Server, RefStmtHandle, Timeout) -> {Result, RowCount}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefStmtHandle = term()
+.br
+   Reference to the statement handle\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+RowCount = integer()
+.br
+  The number of affected rows\&. If the number of affected rows is not available -1 is returned\&. For exceptions, see SQLRowCount in [1]\&.
+.br
+.RE
+.RS
+.LP
+Returns the number of rows affected by an UPDATE, INSERT, or DELETE statement\&. See SQLRowCount in [1]\&. 
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ The parameters \fIServer\fR and \fITimeout\fR have been added\&. The output parameter \fIRowCountPtr\fR of the ODBC function has been changed into the returned value \fIRowCount\fR\&.
+.RE
+.LP
+.B
+sql_set_connect_attr(Server, RefConnHandle, Attr, Value, BufType) ->
+.br
+.B
+sql_set_connect_attr(Server, RefConnHandle, Attr, Value, BufType, Timeout) -> Result
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefConnHandle = term()
+.br
+  Reference to the connection handle\&.
+.br
+Attr = integer() 
+.br
+  One of the attributes described under \fIsql_get_connect_attr/[4, 5]\fR or a driver-specific attribute\&. The attributes defined by ODBC are supplied through macros, but driver-specific attributes are not\&.
+.br
+Value = string() | integer()
+.br
+  The new attribute value\&.
+.br
+BufType = ?SQL_C_CHAR | ?SQL_C_ULONG | {?SQL_C_ULONG, IntType}
+.br
+   The buffer type\&. Either a (null-terminated) string, an ODBC defined attribute of integer type, or a driver-specific attribute of integer type (which also has a subtype)\&.
+.br
+IntType = ?SQL_IS_UINTEGER | ?SQL_IS_INTEGER 
+.br
+   Subtype for driver-specific integer attributes\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+.RE
+.RS
+.LP
+Sets attributes that govern aspects of connections\&. See SQLSetConnectAttr in [1]\&. The supported attributes are listed under \fIsql_get_connect_attr/[4, 5]\fR\&. Driver-specific attributes are not supported through macros, but can be set if they are strings or signed/unsigned long integers\&.
+.br
+
+.br
+ \fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ Only character and signed/unsigned long integer attribute types are supported\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&. The input parameter \fIStringLength\fR of the ODBC function has been replaced with the input parameter \fIBufType\fR\&.
+.RE
+.LP
+.B
+sql_set_env_attr(Server, RefEnvHandle, Attr, Value, BufType) ->
+.br
+.B
+sql_set_env_attr(Server, RefEnvHandle, Attr, Value, BufType, Timeout) -> Result
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefEnvHandle = term()
+.br
+  Reference to the environment handle\&.
+.br
+Attr = integer()
+.br
+  One of the supported attributes described below\&.
+.br
+Value = string() | intiger()
+.br
+  The new attribute value\&.
+.br
+BufType = ?SQL_C_CHAR | ?SQL_C_ULONG
+.br
+  The buffer type\&. Either a (null-terminated) string or an ODBC defined attribute of integer type\&.
+.br
+Timeout = integer() | infinity
+.br
+   Max time (ms) for serving the request\&.
+.br
+Result = ?SQL_SUCCESS | ?SQL_SUCCESS_WITH_INFO | ?SQL_INVALID_HANDLE | ?SQL_ERROR
+.br
+   Result macro\&.
+.br
+.RE
+.RS
+.LP
+Sets attributes that govern aspects of environments\&. The following attributes, and their possible values, are supported (through macros)\&. More information can be found under SQLSetEnvAttr in [1]\&. Other data types than character or unsigned long integer are not supported\&.
+.RS 2
+.TP 2
+*
+?SQL_ATTR_ODBC_VERSION
+.RE
+
+.br
+
+.br
+.LP
+\fIDifferences from the ODBC Function:\fR
+.br
+
+.br
+ Only character and unsigned long integer attribute types are supported\&. The parameters \fIServer\fR and \fITimeout\fR have been added\&. The input parameter \fIStringLength\fR of the ODBC function has been replaced with the input parameter \fIBufType\fR\&.
+.RE
+.LP
+.B
+alloc_buffer(Server, BufCType, Size) ->
+.br
+.B
+alloc_buffer(Server, BufCType, Size, Timeout) -> {ok, RefBuf}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+BufCType = ?SQL_C_CHAR | ?SQL_C_BINARY
+.br
+  The C data type of the buffer\&.
+.br
+Size = integer()
+.br
+  The buffer size (>0)\&. For character data, allow room for null-termination\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+RefBuf = term()
+.br
+  A handle to the buffer\&.
+.br
+.RE
+.RS
+.LP
+Allocates a deferred data buffer and an associated length/indicator buffer\&.
+.RE
+.LP
+.B
+dealloc_buffer(Server, RefBuf) ->
+.br
+.B
+dealloc_buffer(Server, RefBuf, Timeout) -> ok
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefBuf = term()
+.br
+  A handle to the buffer\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+.RE
+.RS
+.LP
+Deallocates a deferred data buffer and the associated length/indicator buffer\&.
+.RE
+.LP
+.B
+read_buffer(Server, RefBuf) ->
+.br
+.B
+read_buffer(Server, RefBuf, Timeout) -> {ok, {Value, LenInd}}
+.br
+.RS
+.TP
+Types
+Server = pid() | Name | {global, Name} | {Name, Node} 
+.br
+  The pid of the server process, a registered name, a globally registered name, or a registered name on a remote node\&.
+.br
+RefBuf = term()
+.br
+  A handle to the buffer\&.
+.br
+Timeout = integer() | infinity
+.br
+   Maximum time (ms) for serving the request\&.
+.br
+Value = string()
+.br
+   Contents of the buffer associated with \fIRefBuf\fR\&.
+.br
+LenInd = integer() | ?SQL_NULL_DATA | ?SQL_NO_TOTAL
+.br
+   Length/indicator value associated with \fIRefBuf\fR\&.
+.br
+.RE
+.RS
+.LP
+Returns the contents of a deferred data buffer and its associated length/indicator buffer\&. Used in connection with \fIsql_fetch/[2, 3]\fR\&.
+.RE
+.SH Error Messages and Exceptions
+.LP
+Errors caused by inability to contact the C node, allocate memory, or otherwise call ODBC functions cause exceptions\&. Exceptions are common to all functions\&. Errors caused by ODBC not being able to execute calls are reported through returned errors\&.
+.br
+ These exceptions terminate the client only\&.
+.RS 2
+.TP 2
+*
+{\&'EXIT\&', {badarg, M, F, A, ArgNo, Info}}
+.br
+ The argument is of wrong type or out of range\&.
+.TP 2
+*
+{\&'EXIT\&', {internal_error, Info}}
+.br
+ Internal error\&.
+.TP 2
+*
+{\&'EXIT\&', GenServerSpecificInfo}
+.br
+ Error detected by \fIgen_server\fR\&.
+.RE
+.LP
+These cause the ODBC server, and the C node, to terminate as well: 
+.RS 2
+.TP 2
+*
+{\&'EXIT\&', {timeout, Info}}
+.br
+ Timeout expired\&.
+.TP 2
+*
+{\&'EXIT\&', {stopped, Reason}}
+.br
+ The ODBC server died\&.
+.RE
+.SH References
+.LP
+[1]: Microsoft ODBC 3\&.0, Programmer\&'s Reference and SDK Guide 
+.SH AUTHOR
+.nf
+Joakim Hirsch - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,330 @@
+
+
+
+dict(3)             ERLANG MODULE DEFINITION              dict(3)
+
+
+
+MODULE
+     dict - Key-Value Dictionary
+
+DESCRIPTION
+     _D_i_c_t implements a _K_e_y - _V_a_l_u_e dictionary. The representation
+     of a dictionary is not defined.
+
+
+EXPORTS
+     append(Key, Value, Dict1) -> Dict2
+
+          Types
+               Key = Value = term()
+               Dict1 = Dict2 = dictionary()
+
+          This function appends a new _V_a_l_u_e to the  current  list
+          of  values  associated  with  _K_e_y. An exception is gen-
+          erated if the initial value associated with _K_e_y is  not
+          a list of values.
+
+     append_list(Key, ValList, Dict1) -> Dict2
+
+          Types
+               ValList = [Value]
+               Key = Value = [term()]
+               Dict1 = Dict2 = dictionary()
+
+          This function appends a list of values _V_a_l_L_i_s_t  to  the
+          current  list  of values associated with _K_e_y. An excep-
+          tion is generated if the initial value associated  with
+          _K_e_y is not a list of values.
+
+     erase(Key, Dict1) -> Dict2
+
+          Types
+               Key = term()
+               Dict1 = Dict2 = dictionary()
+
+          This function erases all items with a given key from  a
+          dictionary.
+
+     fetch(Key, Dict) -> Value
+
+          Types
+               Key = Value = term()
+               Dict = dictionary()
+
+          This function returns the value associated with _K_e_y  in
+          the  dictionary  _D_i_c_t.  _f_e_t_c_h  assumes  that the _K_e_y is
+          present in the dictionary and an exception is generated
+          if _K_e_y is not in the dictionary.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+dict(3)             ERLANG MODULE DEFINITION              dict(3)
+
+
+
+     fetch_keys(Dict) -> Keys
+
+          Types
+               Dict = dictionary()
+               Keys = [term()]
+
+          This function returns a list of all keys  in  the  dic-
+          tionary.
+
+     filter(Pred, Dict1) -> Dict2
+
+          Types
+               Pred = fun(Key, Value) -> bool()
+               Dict1 = Dict2 = dictionary()
+
+          _D_i_c_t_2 is a dictionary of all keys and values  in  _D_i_c_t_1
+          for which _P_r_e_d(_K_e_y, _V_a_l_u_e) is _t_r_u_e.
+
+     find(Key, Dict) -> Result
+
+          Types
+               Key = term()
+               Dict = dictionary()
+               Result = {ok, Value} | error
+
+          This function searches  for  a  key  in  a  dictionary.
+          Returns {_o_k, _V_a_l_u_e} where _V_a_l_u_e is the value associated
+          with _K_e_y, or _e_r_r_o_r if the key is  not  present  in  the
+          dictionary.
+
+     fold(Function, Acc0, Dict) -> Acc1
+
+          Types
+               Function = fun(Key, Value, AccIn) -> AccOut
+               Acc0 = Acc1 = AccIn = AccOut = term()
+               Dict = dictionary()
+
+          Calls _F_u_n_c_t_i_o_n on successive keys and  values  of  _D_i_c_t
+          together  with an extra argument _A_c_c (short for accumu-
+          lator). _F_u_n_c_t_i_o_n must return a new accumulator which is
+          passed  to  the next call. _A_c_c_0 is returned if the list
+          is empty. The evaluation order is undefined.
+
+     from_list(List) -> Dict
+
+          Types
+               List = [{Key, Value}]
+               Dict = dictionary()
+
+          This  function  converts  the  dictionary  to  a   list
+          representation.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+dict(3)             ERLANG MODULE DEFINITION              dict(3)
+
+
+
+     is_key(Key, Dict) -> bool()
+
+          Types
+               Key = term()
+               Dict = dictionary()
+
+          This function tests if _K_e_y is contained in the diction-
+          ary _D_i_c_t
+
+     map(Func, Dict1) -> Dict2
+
+          Types
+               Func = fun(Key, Value) -> Value
+               Dict1 = Dict2 = dictionary()
+
+          _m_a_p calls _F_u_n_c on successive keys and values of Dict to
+          return  a  new value for each key. The evaluation order
+          is undefined.
+
+     merge(Func, Dict1, Dict2) -> Dict3
+
+          Types
+               Func = fun(Key, Value1, Value2) -> Value
+               Dict1 = Dict2 = Dict3 = dictionary()
+
+          _m_e_r_g_e merges two  dictionaries,  Dict1  and  Dict2,  to
+          create a new dictionary. All the _K_e_y - _V_a_l_u_e pairs from
+          both dictionaries are included in the  new  dictionary.
+          If  a  key  occurs  in  both  dictionaries then _F_u_n_c is
+          called with the key and both values  to  return  a  new
+          value. _m_e_r_g_e could be defined as:
+
+          merge(Fun, D1, D2) ->
+              fold(fun (K, V1, D) ->
+                           update(K, fun (V2) -> Fun(K, V1, V2) end, V1, D)
+                   end, D2, D1).
+
+          but is faster.
+
+     new() -> dictionary()
+
+          This function creates a new dictionary.
+
+     store(Key, Value, Dict1) -> Dict2
+
+          Types
+               Key = Value = term()
+               Dict1 = Dict2 = dictionary()
+
+          This function stores a _K_e_y - _V_a_l_u_e pair in  a  diction-
+          ary. If the _K_e_y already exists in _D_i_c_t_1, the associated
+          value is replaced by _V_a_l_u_e.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+dict(3)             ERLANG MODULE DEFINITION              dict(3)
+
+
+
+     to_list(Dict) -> List
+
+          Types
+               Dict = dictionary()
+               List = [{Key, Value}]
+
+          This  function  converts  the  dictionary  to  a   list
+          representation.
+
+     update(Key, Function, Dict) -> Dict
+
+          Types
+               Key = term()
+               Function = fun(Value) -> Value
+               Dict = dictionary()
+
+          Update the a value in a dictionary by calling  _F_u_n_c_t_i_o_n
+          on  the  value to get a new value. An exception is gen-
+          erated if _K_e_y is not present in the dictionary.
+
+     update(Key, Function, Initial, Dict) -> Dict
+
+          Types
+               Key = Initial = term()
+               Function = fun(Value) -> Value
+               Dict = dictionary()
+
+          Update the a value in a dictionary by calling  _F_u_n_c_t_i_o_n
+          on  the value to get a new value. If _K_e_y is not present
+          in the dictionary then _I_n_i_t_i_a_l will be  stored  as  the
+          first value. For example we could define append/3 as:
+
+          append(Key, Val, D) ->
+              update(Key, fun (Old) -> Old ++ [Val] end, [Val], D).
+
+     update_counter(Key, Increment, Dict) -> Dict
+
+          Types
+               Key = term()
+               Increment = number()
+               Dict = dictionary()
+
+          Add _I_n_c_r_e_m_e_n_t to the  value  associated  with  _K_e_y  and
+          store this value. If _K_e_y is not present in the diction-
+          ary then _I_n_c_r_e_m_e_n_t will be stored as the first value.
+
+          This is could have been defined as:
+
+          update_counter(Key, Incr, D) ->
+              update(Key, fun (Old) -> Old + Incr end, Incr, D).
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+dict(3)             ERLANG MODULE DEFINITION              dict(3)
+
+
+
+          but is faster.
+
+Notes
+     The functions _a_p_p_e_n_d and _a_p_p_e_n_d__l_i_s_t are included so we  can
+     store keyed values in a list _a_c_c_u_m_u_l_a_t_o_r. For example:
+
+     > D0 = dict:new(),
+       D1 = dict:store(files, [], D0),
+       D2 = dict:append(files, f1, D1),
+       D3 = dict:append(files, f2, D2),
+       D4 = dict:append(files, f3, D3),
+       dict:fetch(files, D4).
+     [f1,f2,f3]
+
+     This saves the trouble of  first  fetching  a  keyed  value,
+     appending  a  new  value  to  the list of stored values, and
+     storing the result.
+
+     The function _f_e_t_c_h should be used if the key is known to  be
+     in the dictionary, otherwise _f_i_n_d.
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+

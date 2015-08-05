@@ -1,0 +1,132 @@
+
+
+
+mod_actions(3)      ERLANG MODULE DEFINITION       mod_actions(3)
+
+
+
+MODULE
+     mod_actions - Filetype/method-based script execution.
+
+DESCRIPTION
+     This module runs CGI scripts whenever a file  of  a  certain
+     type or HTTP method (See RFC 1945) is requested. The follow-
+     ing config directives are described:
+
+       * Action
+
+       * Script
+
+
+DIRECTIVE: Action
+     _S_y_n_t_a_x: _A_c_t_i_o_n mime-type cgi-script
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_actions(3)
+
+     _A_c_t_i_o_n adds an action,  which  will  activate  a  _c_g_i-_s_c_r_i_p_t
+     whenever a file of a certain _m_i_m_e-_t_y_p_e is requested. It pro-
+     pagates the URL and file  path  of  the  requested  document
+     using   the   standard  CGI  _P_A_T_H__I_N_F_O  and  _P_A_T_H__T_R_A_N_S_L_A_T_E_D
+     environment variables.
+
+     Examples:
+
+     Action text/plain /cgi-bin/log_and_deliver_text
+     Action home-grown/mime-type1 /~bob/do_special_stuff
+
+DIRECTIVE: Script
+     _S_y_n_t_a_x: _S_c_r_i_p_t method cgi-script
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_actions(3)
+
+     _S_c_r_i_p_t adds an action,  which  will  activate  a  _c_g_i-_s_c_r_i_p_t
+     whenever  a  file  is requested using a certain HTTP _m_e_t_h_o_d.
+     The _m_e_t_h_o_d is either _G_E_T or _P_O_S_T as defined in RFC 1945.  It
+     propagates  the  URL and file path of the requested document
+     using  the  standard  CGI  _P_A_T_H__I_N_F_O   and   _P_A_T_H__T_R_A_N_S_L_A_T_E_D
+     environment variables.
+
+     Examples:
+
+     Script GET /cgi-bin/get
+     Script PUT /~bob/put_and_a_little_more
+
+EWSAPI MODULE INTERACTION
+     Uses the following EWSAPI interaction data, if available:
+
+       {_r_e_a_l__n_a_m_e, {_P_a_t_h, _A_f_t_e_r_P_a_t_h}}:
+           as defined in mod_alias(3).
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+mod_actions(3)      ERLANG MODULE DEFINITION       mod_actions(3)
+
+
+
+     Exports the following EWSAPI interaction data, if possible:
+
+       {_n_e_w__r_e_q_u_e_s_t__u_r_i, _R_e_q_u_e_s_t_U_R_I}:
+           An alternative _R_e_q_u_e_s_t_U_R_I has been generated.
+
+     Uses the following exported EWSAPI functions:
+
+       * mod_alias:path/3
+
+SEE ALSO
+     httpd(3), mod_alias(3)
+
+AUTHOR
+     Joakim Grebeno  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+

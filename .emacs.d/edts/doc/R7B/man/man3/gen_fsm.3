@@ -1,0 +1,471 @@
+.TH gen_fsm 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+gen_fsm \- A Finite State Machine Behaviour
+.SH DESCRIPTION
+.LP
+This module provides a standard way of writing Finite State Machine (FSM) processes\&. All FSMs written as gen_fsms share a common set of interface functions\&. The generic parts of the FSM contains functions for debugging, for handling the termination of the parent process, and for presentation of illustrative error information if something goes wrong in the process\&. 
+.LP
+The state of the FSM is defined by two parameters, the \fIStateName\fR and the \fIStateData\fR\&. For each \fIStateName\fR, there must be a corresponding function exported from the call-back module\&. When an event is received, and the current state of the FSM is \fIStateName\fR, \fIModule:StateName(Event, StateData)\fR is called\&. This function should return the next state, which is the next \fIStateName\fR\&. 
+.LP
+It is also possible to define a function \fIModule:handle_event(Event, StateName, StateData)\fR to take care of events which should always be handled, regardless of their state\&. This function is called when \fIgen_fsm:send_all_state_event/2\fR is used to generate an event\&. 
+.LP
+Events can be handled synchronously as well\&. This means that the caller waits for a reply to the event\&. 
+.LP
+The relationship between the generic interface functions (and received messages) and the callback functions can be illustrated as follows: 
+
+.nf
+Callback module                            gen_fsm
+----------------                            -------
+gen_fsm:start_link                 ----->   start a new fsm process
+Module:init/1                     <----- 
+                                            looping
+
+gen_fsm:send_event                ----->          
+Module:StateName/2                <-----
+
+gen_fsm:sync_send_event           ----->          
+Module:StateName/3                <-----
+
+gen_fsm:send_all_state_event      ----->          
+Module:handle_event/3             <-----
+
+gen_fsm:sync_send_all_state_event ----->          
+Module:handle_sync_event/4        <-----
+
+
+Module:handle_info/3              <-----     other message
+                                             received\&.
+
+Module:terminate/3                <-----     clean up before
+                                             termination\&.
+.fi
+.SS Note:
+.LP
+Trapping of exits, if required, must be done explicitly\&.
+
+.LP
+An instance of the \fIgen_fsm\fR behaviour can be debugged by using the module \fIsys\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+start(Module, StartArgs, Options) -> StartRet
+.br
+.B
+start_link(Module, StartArgs, Options) -> StartRet
+.br
+.B
+start(Name, Module, StartArgs, Options) -> StartRet
+.br
+.B
+start_link(Name, Module, StartArgs, Options) -> StartRet
+.br
+.RS
+.TP
+Types
+Name = {local, atom()} | {global, atom()}
+.br
+Module = atom()
+.br
+StartArgs = term()
+.br
+Options = [Opt]
+.br
+Opt = {debug, [Dbg]} | {timeout, Time}
+.br
+Dbg = trace | log | statistics | {log_to_file, FileName} | {install, {Func, FuncState}}
+.br
+StartRet = {ok, Pid} | ignore | {error, Reason}
+.br
+Pid = pid()
+.br
+Reason = {already_started, Pid} | term()
+.br
+.RE
+.RS
+.LP
+Starts an FSM process\&. An anonymous process is started if \fIName\fR is not specified\&. This process can only be called by using the returned \fIPid\fR identifier\&. 
+.LP
+A process which is started with \fIstart\fR does not care about the parent, which means that the parent is not handled explicitly in the generic process part\&. If started in this manner, this function \fImust not\fR be used if the FSM is a worker in a supervision tree\&. 
+.LP
+A process started with \fIstart_link\fR is initially linked to the caller - the parent - and will terminate whenever the parent process terminates, and with the same reason as the parent\&. If started in this manner, this function \fIshould\fR be used if the FSM is a worker in a supervision tree\&. 
+.LP
+The function \fIModule:init(StartArgs)\fR is called (see below)\&. 
+.LP
+\fITime\fR specifies how long time, in milliseconds, the server is allowed to initialize itself\&. 
+.LP
+The debug options are described in \fIsys(3)\fR\&. 
+.RE
+.LP
+.B
+send_event(ProcessRef,Event) -> void()
+.br
+.RS
+.TP
+Types
+ProcessRef = Name | {Name, Node} | {global, Name} | pid()
+.br
+Name = atom()
+.br
+Node = atom()
+.br
+Event = term()
+.br
+.RE
+.RS
+.LP
+Sends an event asynchronously to the FSM process\&. In the callback module, the function \fIStateName/2\fR is called, where \fIStateName\fR is the name of the current state\&. 
+.RE
+.LP
+.B
+send_all_state_event(ProcessRef,Event) -> void()
+.br
+.RS
+.TP
+Types
+ProcessRef = Name | {Name, Node} | {global, Name} | pid()
+.br
+Name = atom()
+.br
+Node = atom()
+.br
+Event = term()
+.br
+.RE
+.RS
+.LP
+An event, which can be handled in all states, is sent asynchronously to the FSM process\&. In the callback module, \fIhandle_event/3\fR is called\&. 
+.RE
+.LP
+.B
+sync_send_event(ProcessRef,Event) -> Reply
+.br
+.B
+sync_send_event(ProcessRef,Event, Timeout) -> Reply
+.br
+.RS
+.TP
+Types
+ProcessRef = Name | {Name, Node} | {global, Name} | pid()
+.br
+Name = atom()
+.br
+Node = atom()
+.br
+Event = term()
+.br
+Timeout = int() > 0 | infinity
+.br
+Reply = term()
+.br
+.RE
+.RS
+.LP
+Sends an event synchronously to the FSM process and waits for the answer\&. In the callback module, the function \fIStateName/3\fR is called, where \fIStateName\fR is the name of the current state\&. 
+.LP
+\fITimeout\fR should be set to some reasonable value\&. The special value \fIinfinity\fR can be used if the user has no idea how long the request is supposed to take\&. The default is 5000\&. 
+.LP
+If \fITimeout\fR has an integer value and if no response has been delivered within \fITimeout\fR milliseconds, the client will terminate with reason \fI{timeout, {gen_fsm, sync_send_event, [ProcessRef, Event, Timeout]}}\fR\&. 
+.LP
+If the server should crash during the request and the client is linked to the server and the client is trapping exits, (phew) the exit message is read out from the clients receive queue and then this function call fails with the exit reason that was read\&. This is a remnant from when monitors did not exist and links was the only way to supervise the request, and the behaviour may change in a future release\&. In this release, unfortuneately, under certain circumstances (e\&.g\&. \fIProcessRef = {Name, Node}\fR, \fINode\fR crashes during call) the exit message cannot be read out\&. Note that if the server crashes in between calls, the client must take care of the exit message anyway\&. 
+.RE
+.LP
+.B
+sync_send_all_state_event(ProcessRef,Event) -> Reply
+.br
+.B
+sync_send_all_state_event(ProcessRef,Event,Timeout) -> Reply
+.br
+.RS
+.TP
+Types
+ProcessRef = Name | {Name, Node} | {global, Name} | pid()
+.br
+Name = atom()
+.br
+Node = atom()
+.br
+Event = term()
+.br
+Timeout = int() > 0 | infinity
+.br
+Reply = term()
+.br
+.RE
+.RS
+.LP
+An event, which can be handled in all states, is sent synchronously to the FSM process\&. In the callback module, \fIhandle_event/4\fR is called\&. 
+.LP
+\fITimeout\fR should be set to some reasonable value\&. The special value \fIinfinity\fR can be used if the user has no idea how long the request is supposed to take\&. The default is 5000\&. 
+.LP
+If \fITimeout\fR has an integer value and no response has been delivered within \fITimeout\fR milliseconds, the client will terminate with reason \fI{timeout, {gen_fsm, sync_send_all_state_event, [ProcessRef, Event, Timeout]}}\fR\&. 
+.RE
+.LP
+.B
+reply(To, Reply) -> true
+.br
+.RS
+.TP
+Types
+To = {pid(), Tag}
+.br
+Tag = term()
+.br
+Reply = term()
+.br
+.RE
+.RS
+.LP
+If a reply cannot be returned immediately - as the return value of \fIModule:StateName/3\fR or \fIModule:handle_sync_event/4\fR - this function can be used to make an explicit reply\&. \fITo\fR has the same value as the \fIFrom\fR argument in these functions\&. 
+.RE
+.SH Callback Functions
+.LP
+The following functions should be exported from a \fIgen_fsm\fR callback module\&. 
+.SH EXPORTS
+.LP
+.B
+Module:init(StartArgs) -> Return
+.br
+.RS
+.TP
+Types
+StartArgs = term()
+.br
+StateName = atom()
+.br
+StateData = term()
+.br
+Timeout = int() > 0 | infinity
+.br
+StopReason = term()
+.br
+Return = {ok, StateName, StateData} | {ok, StateName, StateData, Timeout} | ignore | {stop, StopReason}
+.br
+.RE
+.RS
+.LP
+This function initializes the FSM process and returns the initial state\&. The \fITimeout\fR variable specifies that the process shall wait for \fITimeout\fR milliseconds for the first message\&. If no message has arrived within the specified time, \fIModule:StateName(timeout, StateData)\fR is called\&. 
+.LP
+The \fIStartArgs\fR argument supplied to the \fIinit/1\fR function is the same as the argument supplied to the \fIgen_fsm:start\fR functions\&. 
+.LP
+If the process should trap exits, this has to be explicitly expressed here with \fIprocess_flag(trap_exit, true)\fR\&. 
+.LP
+The representation of the FSM \fIStateData\fR is an implementation specific detail which has to be decided by the designer of the FSM\&. It can be any Erlang term\&. \fIStateData\fR will be visible as an argument to all callback functions\&. To change something in \fIStateData\fR, a new value is returned from the callback function using the terms described below\&. 
+.LP
+If the initializing procedure fails, the reason is supplied as \fIStopReason\fR with the \fI{stop, StopReason}\fR return value\&. 
+.LP
+This function can return \fIignore\fR in order to inform the parent, especially if it is a supervisor, that the FSM, as an example, has not started in accordance with the configuration data\&. 
+.RE
+.LP
+.B
+Module:StateName(Event, StateData) -> Return
+.br
+.RS
+.TP
+Types
+Event = term()
+.br
+StateData = term()
+.br
+Return = {next_state, NextStateName, NextStateData} | {next_state, NextStateName, NextStateData, Timeout} | {stop, Reason, NewStateData}
+.br
+NextStateName = atom()
+.br
+NextStateData = term()
+.br
+Reason = normal | shutdown | term()
+.br
+.RE
+.RS
+.LP
+Handles events in the state \fIStateName\fR\&. The \fITimeout\fR variable is as in \fIModule:init/1\fR above\&. 
+.LP
+Whenever the function \fIgen_fsm:send_event\fR is called, this function is called to handle the event\&. If the FSM times out, this function is also called with \fIEvent = timeout\fR\&. 
+.LP
+\fIEvent\fR is the same term as supplied in the above client call\&. 
+.LP
+If the FSM decides to terminate, this function should return \fI{stop, Reason, NewStateData}\fR, and the function \fIModule:terminate(Reason, StateName, NewStateData)\fR is called\&. If \fIReason\fR is something other than \fInormal\fR or \fIshutdown\fR, the FSM is assumed to have terminated with a runtime failure\&. In this case, a lot of information about the failure is reported\&. The atom \fInormal\fR causes a normal termination while \fIshutdown\fR causes an abnormal, but faultless, termination of the process\&. 
+.RE
+.LP
+.B
+Module:StateName(Event, From, StateData) -> Return
+.br
+.RS
+.TP
+Types
+Event = term()
+.br
+From = {pid(), Tag}
+.br
+StateData = term()
+.br
+Return = {next_state, NextStateName, NextStateData} | {next_state, NextStateName, NextStateData, Timeout} | {reply, Reply, NextStateName, NextStateData} | {reply, Reply, NextStateName, NextStateData, Timeout} | {stop, Reason, NewStateData} | {stop, Reason, Reply, NewStateData}
+.br
+NextStateName = atom()
+.br
+NextStateData = term()
+.br
+Reply = term()
+.br
+Reason = normal | shutdown | term()
+.br
+.RE
+.RS
+.LP
+Handles synchronous events in the state \fIStateName\fR\&. The \fITimeout\fR variable is as in \fIModule:init/1\fR above\&. 
+.LP
+Whenever the function \fIgen_fsm:sync_send_event/2, 3\fR is called, this function is called to handle the event\&. 
+.LP
+\fIEvent\fR is the same as the term supplied with the above client call\&. 
+.LP
+The FSM decides if a reply is sent to the caller directly (\fI{reply, \&.\&.\&.}\fR), indirectly (\fI{next_state, \&.\&.\&.}\fR), or if the FSM has to terminate (\fI{stop, \&.\&.\&.}\fR) as a result of the request\&. If \fI{next_state, \&.\&.\&.}\fR is returned, a reply can be sent to the caller using the \fIreply/2\fR function\&. 
+.LP
+If the FSM decides to terminate, this function returns \fI{stop, Reason, NewStateData}\fR or \fI{stop, Reason, Reply, NewStateData}\fR, and the function \fIModule:terminate(Reason, StateName, NewStateData)\fR is called\&. If \fIReason\fR is something other than \fInormal\fR or \fIshutdown\fR, the FSM is assumed to have terminated with a runtime failure\&. In this case, a lot of information about the failure is reported\&. The atom \fInormal\fR causes a normal termination while \fIshutdown\fR causes an abnormal, but faultless, termination of the process\&. 
+.RE
+.LP
+.B
+Module:handle_event(Event, StateName, StateData) -> Return
+.br
+.RS
+.TP
+Types
+Event = term()
+.br
+StateName = atom()
+.br
+StateData = term()
+.br
+.RE
+.RS
+.LP
+Handles events generated with the function \fIgen_fsm:send_all_state_event/2\fR\&. 
+.LP
+The \fIReturn\fR value is the same as for \fIModule:StateName/2\fR\&. 
+.RE
+.LP
+.B
+Module:handle_sync_event(Event, From, StateName, StateData) -> Return
+.br
+.RS
+.TP
+Types
+Event = term()
+.br
+From = {pid(), Tag}
+.br
+StateName = atom()
+.br
+StateData = term()
+.br
+.RE
+.RS
+.LP
+Handles events generated with the function \fIgen_fsm:sync_send_all_state_event/2, 3\fR\&. 
+.LP
+The \fIReturn\fR value is the same as for \fIModule:StateName/3\fR\&. 
+.RE
+.LP
+.B
+Module:handle_info(Info, StateName, StateData) -> Return
+.br
+.RS
+.TP
+Types
+Info = term()
+.br
+StateName = atom()
+.br
+StateData = term()
+.br
+.RE
+.RS
+.LP
+This function receives all messages sent to this process which are not generated by \fIgen_fsm:send_event/2\fR, \fIgen_fsm:send_all_state_event/2\fR, \fIgen_fsm:sync_send_event/2, 3\fR, or \fIgen_fsm:sync_send_all_state_event/2, 3\fR\&. Typical messages handled here include: 
+.RS 2
+.TP 4
+.B
+\fI{\&'EXIT\&', Pid, Reason}\fR:
+If the process traps exit signals, the corresponding messages are handled here\&. 
+.TP 4
+.B
+\fI{nodedown, Node}\fR:
+If another Erlang node is monitored, the corresponding \fInodedown\fR message is handled here\&. 
+.TP 4
+.B
+\fIMsg\fR:
+All other messages sent to the process using \fIFsm ! Msg\fR are also handled here\&. 
+.RE
+.SS Note:
+.LP
+Communication with the FSM should always go through the interface functions described above\&. 
+
+.LP
+The \fIReturn\fR value is the same as for \fIModule:StateName/2\fR\&. 
+.RE
+.LP
+.B
+Module:terminate(Reason, StateName, StateData) -> void()
+.br
+.RS
+.TP
+Types
+Reason = term()
+.br
+StateName = atom()
+.br
+StateData = term()
+.br
+.RE
+.RS
+.LP
+This callback function is called whenever the FSM is about to terminate\&. Either one of the above callback functions have returned \fI{stop, StopReason, \&.\&.\&.}\fR, in which case \fIReason\fR is equal to \fIStopReason\fR; or some other fault has been caught\&. \fIReason\fR is any term which describes the termination reason\&. If the FSM traps exits, the \fIterminate\fR function is called if the FSM\&'s parent (normally a supervisor) dies or orders the FSM to die\&. If the FSM does not trap exits, it dies immediately if the parent dies\&. 
+.LP
+With this function, the FSM can clean up before the process terminates\&. It can, for example, de-allocate external resources\&. 
+.LP
+The termination reason cannot be changed here\&. The FSM will terminate due to\fIReason\fR regardless of what was returned from this function\&. 
+.RE
+.LP
+.B
+Module:code_change(OldVsn, StateName, StateData, Extra) -> {ok, NewState, NewStateData}
+.br
+.RS
+.TP
+Types
+OldVsn = undefined | term()
+.br
+StateName = atom()
+.br
+StateData = term()
+.br
+Extra = term()
+.br
+NewStateName = atom()
+.br
+NewStateData = term()
+.br
+.RE
+.RS
+.LP
+This function is called when a code change is performed, which implies that the internal data structures of the FSM have changed\&. The function is supposed to convert the old state to the new one\&. \fIOldVsn\fR is the \fIvsn\fR attribute of the old version of the module\&. If no such attribute was defined, the atom \fIundefined\fR is sent\&. \fIExtra\fR is an optional term, typically defined in the release upgrade script\&. 
+.RE
+.SH System events
+.LP
+The \fIgen_fsm\fR behaviour generates the following system events, handled by the \fIsys\fR module: 
+.RS 2
+.TP 2
+*
+\fI{in, Msg}\fR when a message is received\&. 
+.TP 2
+*
+\fI{out, Msg, To, StateName}\fR when a message is sent\&. 
+.TP 2
+*
+\fIreturn\fR when an event handling callback function returns\&. 
+.RE
+.SH See Also
+.LP
+sys(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

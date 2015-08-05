@@ -1,0 +1,1056 @@
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+MODULE
+     orber_ifr - The Interface Repository stores  representations
+     of IDL information
+
+DESCRIPTION
+     This module contains functions for  managing  the  Interface
+     Repository  (IFR). This documentation should be used in con-
+     junction with the documentation in chapter 6 of  CORBA  2.0.
+     Whenever the term IFR object is used in this manual page, it
+     refers to a pseudo object used only for interaction with the
+     IFR rather than a CORBA object.
+
+
+Initialisation of the IFR
+     The following functions are used to initialise the Interface
+     Repository  and to obtain the initial reference to the repo-
+     sitory.
+
+EXPORTS
+     init(Nodes,Timeout) -> ok
+
+          Types
+               Nodes = list()
+               Timeout = integer() | infinity
+
+          This function should be called to initialise  the  IFR.
+          It creates the necessary mnesia-tables. A mnesia schema
+          should exist, and mnesia must be running.
+
+     find_repository() -> #IFR_Repository_objref
+
+          Find the IFR object reference for the Repository.  This
+          reference  should  be  used  when adding objects to the
+          IFR, and when extracting information from the IFR.  The
+          first  time this function is called, it will create the
+          repository and all the primitive definitions.
+
+General methods
+     The following functions are the  methods  of  the  IFR.  The
+     first  argument  is  always  an  #IFR_objref,  i.e.  the IFR
+     (pseudo)object on which to apply this  method.  These  func-
+     tions  are  useful  when the type of IFR object is not know,
+     but they are somewhat slower  than  the  specific  functions
+     listed  below  which  only  accept  a particular type of IFR
+     object as the first argument.
+
+EXPORTS
+     get_def_kind(Objref) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Return  =  atom()   (one   of   dk_none,   dk_all,
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   1
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+               dk_Attribute,      dk_Constant,      dk_Exception,
+               dk_Interface, dk_Module, dk_Operation, dk_Typedef,
+               dk_Alias,     dk_Struct,     dk_Union,    dk_Enum,
+               dk_Primitive,  dk_String,  dk_Sequence,  dk_Array,
+               dk_Repository)
+
+          Objref is an IFR object of any kind. Returns the defin-
+          ition kind of the IFR object.
+
+     destroy(Objref) -> Return
+
+          Types
+               Objref = #IFR_object
+               Return = tuple()
+
+          Objref is an IFR object of any  kind  except  IRObject,
+          Contained  and  Container. Destroys that object and its
+          contents (if any). Returns whatever  mnesia:transaction
+          returns.
+
+     get_id(Objref) -> Return
+
+          Types
+               Objref = #IFR_object
+               Return = string()
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained. Returns the repository id of that object.
+
+     set_id(Objref,Id) -> ok
+
+          Types
+               Objref = #IFR_object
+               Id = string()
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained. Sets the repository id of that object.
+
+     get_name(Objref) -> Return
+
+          Types
+               Objref = #IFR_object
+               Return = string()
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained. Returns the name of that object.
+
+     set_name(Objref,Name) -> ok
+
+          Types
+               Objref = #IFR_object
+               Name = string()
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   2
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained. Sets the name of that object.
+
+     get_version(Objref) -> Return
+
+          Types
+               Objref = #IFR_object
+               Return = string()
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained. Returns the version of that object.
+
+     set_version(Objref,Version) -> ok
+
+          Types
+               Objref = #IFR_object
+               Version = string()
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained. Sets the version of that object.
+
+     get_defined_in(Objref) -> Return
+
+          Types
+               Objref = #IFR_object
+               Return = #IFR_Container_objref
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained. Returns the Container object that the object
+          is defined in.
+
+     get_absolute_name(Objref) -> Return
+
+          Types
+               Objref = #IFR_object
+               Return = string()
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained.  Returns  the absolute (scoped) name of that
+          object.
+
+     get_containing_repository(Objref) -> Return
+
+          Types
+               Objref = #IFR_object
+               Return = #IFR_Repository_objref
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained.  Returns  the  Repository that is eventually
+          reached   by   recursively   following   the   object's
+          defined_in attribute.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   3
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+     describe(Objref) -> Return
+
+          Types
+               Objref = #IFR_object
+               Return = tuple() (a contained_description  record)
+               | {exception, _}
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained. Returns a tuple describing the object.
+
+     move(Objref,New_container,New_name,New_version) -> Return
+
+          Types
+               Objref = #IFR_objref
+               New_container = #IFR_Container_objref
+               New_name = string()
+               New_version = string()
+               Return = ok | {exception, _}
+
+          Objref is an IFR object of any kind that inherits  from
+          Contained.  New_container  is an IFR object of any kind
+          that inherits from Container. Removes Objref  from  its
+          current  Container,  and  adds it to New_container. The
+          name attribute is changed to New_name and  the  version
+          attribute is changed to New_version.
+
+     lookup(Objref,Search_name) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Search_name = string()
+               Return = #IFR_object
+
+          Objref is an IFR object of any kind that inherits  from
+          Container.   Returns   an   IFR  object  identified  by
+          search_name (a scoped name).
+
+     contents(Objref,Limit_type,Exclude_inherited) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Limit_type  =  atom()  (one  of  dk_none,  dk_all,
+               dk_Attribute,      dk_Constant,      dk_Exception,
+               dk_Interface, dk_Module, dk_Operation, dk_Typedef,
+               dk_Alias,     dk_Struct,     dk_Union,    dk_Enum,
+               dk_Primitive,  dk_String,  dk_Sequence,  dk_Array,
+               dk_Repository)
+               Exclude_inherited = atom() (true or false)
+               Return = list() (a list of IFR#_objects)
+
+          Objref is an IFR object of any kind that inherits  from
+          Container. Returns the contents of that IFR object.
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   4
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+     lookup_name(Objref,Search_name,Levels_to_search, Limit_type,
+     Exclude_inherited) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Search_name = string()
+               Levels_to_search = integer()
+               Limit_type  =  atom()  (one  of  dk_none,  dk_all,
+               dk_Attribute,      dk_Constant,      dk_Exception,
+               dk_Interface, dk_Module, dk_Operation, dk_Typedef,
+               dk_Alias,     dk_Struct,     dk_Union,    dk_Enum,
+               dk_Primitive,  dk_String,  dk_Sequence,  dk_Array,
+               dk_Repository)
+               Exclude_inherited = atom() (true or false)
+               Return = list() (a list of #IFR_objects)
+
+          Objref is an IFR object of any kind that inherits  from
+          Container.  Returns  a  list of #IFR_objects with an id
+          matching Search_name.
+
+     describe_contents(Objref,Limit_type,Exclude_inherited,Max_returned_objs)
+     -> Return
+
+          Types
+               Objref = #IFR_objref
+               Limit_type  =  atom()  (one  of  dk_none,  dk_all,
+               dk_Attribute,      dk_Constant,      dk_Exception,
+               dk_Interface, dk_Module, dk_Operation, dk_Typedef,
+               dk_Alias,     dk_Struct,     dk_Union,    dk_Enum,
+               dk_Primitive,  dk_String,  dk_Sequence,  dk_Array,
+               dk_Repository)
+               Exclude_inherited = atom() (true or false)
+               Return   =    list()    (a    list    of    tuples
+               (contained_description records) | {exception, _}
+
+          Objref is an IFR object of any kind that inherits  from
+          Container.  Returns  a  list of descriptions of the IFR
+          objects in this Container's contents.
+
+     create_module(Objref,Id,Name,Version) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Id = string()
+               Name = string()
+               Version = string()
+               Return = #IFR_ModuleDef_objref
+
+          Objref is an IFR object of any kind that inherits  from
+          Container. Creates an IFR object of the type ModuleDef.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   5
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+     create_constant(Objref,Id,Name,Version,Type,Value) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Id = string()
+               Name = string()
+               Version = string()
+               Type = #IFR_IDLType_objref
+               Value = any()
+               Return = #IFR_ConstantDef_objref
+
+          Objref is an IFR object of any kind that inherits  from
+          Container.  Creates  an  IFR  object  of  the type Con-
+          stantDef.
+
+     create_struct(Objref,Id,Name,Version,Members) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Id = string()
+               Name = string()
+               Version = string()
+               Members = list() (list of structmember records)
+               Return = #IFR_StructDef_objref
+
+          Objref is an IFR object of any kind that inherits  from
+          Container. Creates an IFR object of the type StructDef.
+
+     create_union(Objref,Id,Name,Version,Discriminator_type,Members)
+     -> Return
+
+          Types
+               Objref = #IFR_objref
+               Id = string()
+               Name = string()
+               Version = string()
+               Discriminator_type = #IFR_IDLType_Objref
+               Members = list() (list of unionmember records)
+               Return = #IFR_UnionDef_objref
+
+          Objref is an IFR object of any kind that inherits  from
+          Container. Creates an IFR object of the type UnionDef.
+
+     create_enum(Objref,Id,Name,Version,Members) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Id = string()
+               Name = string()
+               Version = string()
+               Members = list() (list of strings)
+               Return = #IFR_EnumDef_objref
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   6
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+          Objref is an IFR object of any kind that inherits  from
+          Container. Creates an IFR object of the type EnumDef.
+
+     create_alias(Objref,Id,Name,Version,Original_type) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Id = string()
+               Name = string()
+               Version = string()
+               Original_type = #IFR_IDLType_Objref
+               Return = #IFR_AliasDef_objref
+
+          Objref is an IFR object of any kind that inherits  from
+          Container. Creates an IFR object of the type AliasDef.
+
+     create_interface(Objref,Id,Name,Version,Base_interfaces)  ->
+     Return
+
+          Types
+               Objref = #IFR_objref
+               Id = string()
+               Name = string()
+               Version = string()
+               Base_interfaces    =    list()    (a    list    of
+               IFR_InterfaceDef_objrefs   that   this   interface
+               inherits from
+               Return = #IFR_InterfaceDef_objref
+
+          Objref is an IFR object of any kind that inherits  from
+          Container.  Creates  an  IFR  object of the type Inter-
+          faceDef.
+
+     create_exception(Objref,Id,Name,Version,Members) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Id = string()
+               Name = string()
+               Version = string()
+               Members = list() (list of structmember records)
+               Return = #IFR_ExceptionDef_objref
+
+          Objref is an IFR object of any kind that inherits  from
+          Container. Creates an IFR object of the type Exception-
+          Def.
+
+     get_type(Objref) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Return = tuple() (a typecode tuple)
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   7
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+          Objref is an IFR object of any kind that inherits  from
+          IDLType  or  an  IFR  object  of  the kind ConstantDef,
+          ExceptionDef or AttributeDef. Returns the  typecode  of
+          the IFR object.
+
+     lookup_id(Objref,Search_id) -> Return
+
+          Types
+               Objref = #IFR_Repository_objref
+               Search_id = string()
+               Return = #IFR_objref
+
+          Returns an IFR object matching the Search_id.
+
+     get_primitive(Objref,Kind) -> Return
+
+          Types
+               Objref = #IFR_Repository_objref
+               Kind = atom() (one of pk_null, pk_void,  pk_short,
+               pk_long, pk_ushort, pk_ulong, pk_float, pk_double,
+               pk_boolean,     pk_char,     pk_octet,     pk_any,
+               pk_TypeCode, pk_Principal, pk_string, pk_objref)
+               Return = #IFR_PrimitiveDef_objref
+
+          Returns a PrimitiveDef of the specified kind.
+
+     create_string(Objref,Bound) -> Return
+
+          Types
+               Objref = #IFR_Repository_objref
+               Bound = integer() (unsigned long /= 0)
+               Return = #IFR_StringDef_objref
+
+          Creates an IFR objref of the type StringDef.
+
+     create_sequence(Objref,Bound,Element_type) -> Return
+
+          Types
+               Objref = #IFR_Repository_objref
+               Bound = integer() (unsigned long)
+               Element_type = #IFR_IDLType_objref
+               Return = #IFR_SequenceDef_objref
+
+          Creates an IFR objref of the type SequenceDef.
+
+     create_array(Objref,Length,Element_type) -> Return
+
+          Types
+               Objref = #IFR_Repository_objref
+               Bound = integer() (unsigned long)
+               Element_type = #IFR_IDLType_objref
+               Return = #IFR_ArrayDef_objref
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   8
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+          Creates an IFR objref of the type ArrayDef.
+
+     create_idltype(Objref,Typecode) -> Return
+
+          Types
+               Objref = #IFR_Repository_objref
+               Typecode = tuple() (a typecode tuple)
+               Return = #IFR_IDLType_objref
+
+          Creates an IFR objref of the type IDLType.
+
+     get_type_def(Objref) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Return = #IFR_IDLType_objref
+
+          Objref is an IFR object  of  the  kind  ConstantDef  or
+          AttributeDef. Returns an IFR object of the type IDLType
+          describing the type of the IFR object.
+
+     set_type_def(Objref,TypeDef) -> Return
+
+          Types
+               Objref = #IFR_objref
+               TypeDef = #IFR_IDLType_objref
+               Return = ok | {exception, _}
+
+          Objref is an IFR object  of  the  kind  ConstantDef  or
+          AttributeDef. Sets the type_def of the IFR Object.
+
+     get_value(Objref) -> Return
+
+          Types
+               Objref = #IFR_ConstantDef_objref
+               Return = any()
+
+          Returns the value attribute of an  IFR  Object  of  the
+          type ConstantDef.
+
+     set_value(Objref,Value) -> Return
+
+          Types
+               Objref = #IFR_ConstantDef_objref
+               Value = any()
+               Return = ok | {exception, _}
+
+          Sets the value attribute of an IFR Object of  the  type
+          ConstantDef.
+
+     get_members(Objref) -> Return
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   9
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+          Types
+               Objref = #IFR_objref
+               Return = list()
+
+          Objref is an IFR object the kind  StructDef,  UnionDef,
+          EnumDef  or  ExceptionDef.  For StructDef, UnionDef and
+          ExceptionDef: Returns a list  of  structmember  records
+          that are the constituent parts of the object. For Enum-
+          Def: Returns a list of strings describing the  enumera-
+          tions.
+
+     set_members(Objref,Members) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Members = list()
+               Return = ok | {exception, _}
+
+          Objref is an IFR object the kind  StructDef,  UnionDef,
+          EnumDef  or  ExceptionDef.  For StructDef, UnionDef and
+          ExceptionDef:  Members  is  a  list   of   structmember
+          records.  For  EnumDef:  Members  is  a list of strings
+          describing the enumerations. Sets  the  members  attri-
+          bute, which are the constituent parts of the exception.
+
+     get_discriminator_type(Objref) -> Return
+
+          Types
+               Objref = #IFR_UnionDef_objref
+               Return = tuple() (a typecode tuple)
+
+          Returns the discriminator typecode of an IFR object  of
+          the type UnionDef.
+
+     get_discriminator_type_def(Objref) -> Return
+
+          Types
+               Objref = #IFR_UnionDef_objref
+               Return = #IFR_IDLType_objref
+
+          Returns an IFR object of the  type  IDLType  describing
+          the  discriminator  type  of  an IFR object of the type
+          UnionDef.
+
+     set_discriminator_type_def(Objref,TypeDef) -> Return
+
+          Types
+               Objref = #IFR_UnionDef_objref
+               Return = #IFR_IDLType_objref
+
+          Sets  the  attribute  discriminator_type_def,  an   IFR
+          object of the type IDLType describing the discriminator
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                  10
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+          type of an IFR object of the type UnionDef.
+
+     get_original_type_def(Objref) -> Return
+
+          Types
+               Objref = #IFR_AliasDef_objref
+               Return = #IFR_IDLType_objref
+
+          Returns an IFR object of the  type  IDLType  describing
+          the original type.
+
+     set_original_type_def(Objref,TypeDef) -> Return
+
+          Types
+               Objref = #IFR_AliasDef_objref
+               Typedef = #IFR_IDLType_objref
+               Return = ok | {exception, _}
+
+          Sets the original_type_def  attribute  which  describes
+          the original type.
+
+     get_kind(Objref) -> Return
+
+          Types
+               Objref = #IFR_PrimitiveDef_objref
+               Return = atom()
+
+          Returns an atom  describing  the  primitive  type  (See
+          CORBA 2.0 p 6-21).
+
+     get_bound(Objref) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Return = integer (unsigned long)
+
+          Objref is an IFR object the kind StringDef  or  Sequen-
+          ceDef.  For  StringDef:  returns  the maximum number of
+          characters in the string. For SequenceDef: Returns  the
+          maximum  number of elements in the sequence. Zero indi-
+          cates an unbounded sequence.
+
+     set_bound(Objref,Bound) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Bound = integer (unsigned long)
+               Return = ok | {exception, _}
+
+          Objref is an IFR object the kind StringDef  or  Sequen-
+          ceDef.  For StringDef: Sets the maximum number of char-
+          acters in the string.  Bound  must  not  be  zero.  For
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                  11
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+          SequenceDef: Sets the maximum number of elements in the
+          sequence. Zero indicates an unbounded sequence.
+
+     get_element_type(Objref) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Return = tuple() (a typecode tuple)
+
+          Objref is an IFR object the kind SequenceDef or  Array-
+          Def.  Returns  the  typecode of the elements in the IFR
+          object.
+
+     get_element_type_def(Objref) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Return = #IFR_IDLType_objref
+
+          Objref is an IFR object the kind SequenceDef or  Array-
+          Def. Returns an IFR object of the type IDLType describ-
+          ing the type of the elements in Objref.
+
+     set_element_type_def(Objref,TypeDef) -> Return
+
+          Types
+               Objref = #IFR_objref
+               TypeDef = #IFR_IDLType_objref
+               Return = ok | {exception, _}
+
+          Objref is an IFR object the kind SequenceDef or  Array-
+          Def. Sets the element_type_def attribute, an IFR object
+          of the type IDLType describing the type of the elements
+          in Objref.
+
+     get_length(Objref) -> Return
+
+          Types
+               Objref = #IFR_ArrayDef_objref
+               Return = integer() (unsigned long)
+
+          Returns the number of elements in the array.
+
+     set_length(Objref,Length) -> Return
+
+          Types
+               Objref = #IFR_ArrayDef_objref
+               Length = integer() (unsigned long)
+
+          Sets the number of elements in the array.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                  12
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+     get_mode(Objref) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Return = atom()
+
+          Objref is an IFR object the kind AttributeDef or Opera-
+          tionDef.   For   AttributeDef:   Return   is   an  atom
+          ('ATTR_NORMAL'  or  'ATTR_READONLY')   specifying   the
+          read/write access for this attribute. For OperationDef:
+          Return is an atom ('OP_NORMAL' or 'OP_ONEWAY') specify-
+          ing the mode of the operation.
+
+     set_mode(Objref,Mode) -> Return
+
+          Types
+               Objref = #IFR_objref
+               Mode = atom()
+               Return = ok | {exception, _}
+
+          Objref is an IFR object the kind AttributeDef or Opera-
+          tionDef.  For  AttributeDef: Sets the read/write access
+          for this attribute. Mode is an atom  ('ATTR_NORMAL'  or
+          'ATTR_READONLY').  For  OperationDef:  Sets the mode of
+          the  operation.  Mode  is  an  atom   ('OP_NORMAL'   or
+          'OP_ONEWAY').
+
+     get_result(Objref) -> Return
+
+          Types
+               Objref = #IFR_OperationDef_objref
+               Return = tuple() (a typecode tuple)
+
+          Returns a typecode describing the  type  of  the  value
+          returned by the operation.
+
+     get_result_def(Objref) -> Return
+
+          Types
+               Objref = #IFR_OperationDef_objref
+               Return = #IFR_IDLType_objref
+
+          Returns an IFR object of the  type  IDLType  describing
+          the type of the result.
+
+     set_result_def(Objref,ResultDef) -> Return
+
+          Types
+               Objref = #IFR_OperationDef_objref
+               ResultDef = #IFR_IDLType_objref
+               Return = ok | {exception, _}
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                  13
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+          Sets the type_def attribute, an IFR Object of the  type
+          IDLType describing the result.
+
+     get_params(Objref) -> Return
+
+          Types
+               Objref = #IFR_OperationDef_objref
+               Return = list()  (list  of  parameter  description
+               records)
+
+          Returns a list of parameter description records,  which
+          describes the parameters of the OperationDef.
+
+     set_params(Objref,Params) -> Return
+
+          Types
+               Objref = #IFR_OperationDef_objref
+               Params  =  list()  (list  of  parameterdescription
+               records)
+               Return = ok | {exception, _}
+
+          Sets the params attribute, a list of  parameterdescrip-
+          tion records.
+
+     get_contexts(Objref) -> Return
+
+          Types
+               Objref = #IFR_OperationDef_objref
+               Return = list() (list of strings)
+
+          Returns a list of context identifiers  for  the  opera-
+          tion.
+
+     set_contexts(Objref,Contexts) -> Return
+
+          Types
+               Objref = #IFR_OperationDef_objref
+               Contexts = list() (list of strings)
+               Return = ok | {exception, _}
+
+          Set the context attribute for the operation.
+
+     get_exceptions(Objref) -> Return
+
+          Types
+               Objref = #IFR_OperationDef_objref
+               Return       =       list()        (list        of
+               #IFR_ExceptionDef_objrefs)
+
+          Returns a list of exception types that can be raised by
+          this operation.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                  14
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+     set_exceptions(Objref,Exceptions) -> Return
+
+          Types
+               Objref = #IFR_OperationDef_objref
+               Exceptions      =      list()       (list       of
+               #IFR_ExceptionDef_objrefs)
+               Return = ok | {exception, _}
+
+          Sets the exceptions attribute for this operation.
+
+     get_base_interfaces(Objref) -> Return
+
+          Types
+               Objref = #IFR_InterfaceDef_objref
+               Return       =       list()        (list        of
+               #IFR_InterfaceDef_objrefs)
+
+          Returns a list of InterfaceDefs from which this  Inter-
+          faceDef inherits.
+
+     set_base_interfaces(Objref,BaseInterfaces) -> Return
+
+          Types
+               Objref = #IFR_InterfaceDef_objref
+               BaseInterfaces     =     list()      (list      of
+               #IFR_InterfaceDef_objrefs)
+               Return = ok | {exception, _}
+
+          Sets the BaseInterfaces attribute.
+
+     is_a(Objref,Interface_id) -> Return
+
+          Types
+               Objref = #IFR_InterfaceDef_objref
+               Interface_id = #IFR_InterfaceDef_objref
+               Return = atom() (true or false)
+
+          Returns true if the InterfaceDef either is identical to
+          or inherits from Interface_id.
+
+     describe_interface(Objref) -> Return
+
+          Types
+               Objref = #IFR_InterfaceDef_objref
+               Return  =  tuple()   (a   fullinterfacedescription
+               record)
+
+          Returns a full inter face description record describing
+          the InterfaceDef.
+
+     create_attribute(Objref,Id,Name,Version,Type,Mode) -> Return
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                  15
+
+
+
+
+
+
+orber_ifr(3)        ERLANG MODULE DEFINITION         orber_ifr(3)
+
+
+
+          Types
+               Objref = #IFR_InterfaceDef_objref
+               Id = string()
+               Name = string()
+               Version = string()
+               Type = #IFR_IDLType_objref
+               Mode = atom() ('ATTR_NORMAL' or 'ATTR_READONLY')
+               Return = #IFR_AttributeDef_objref
+
+          Creates an IFR object of  the  type  AttributeDef  con-
+          tained in this InterfaceDef.
+
+     create_operation(Objref,Id,Name,Version,Result,Mode,Params,
+     Exceptions,Contexts) -> Return
+
+          Types
+               Objref = #IFR_InterfaceDef_objref
+               Id = string()
+               Name = string()
+               Version = string()
+               Result = #IFR_IDLType_objref
+               Mode = atom() ('OP_NORMAL' or 'OP_ONEWAY')
+               Params  =  list()  (list  of  parameterdescription
+               records)
+               Exceptions      =      list()       (list       of
+               #IFR_ExceptionDef_objrefs)
+               Contexts = list() (list of strings)
+               Return = #IFR_OperationDef_objref
+
+          Creates an IFR object of  the  type  OperationDef  con-
+          tained in this InterfaceDef.
+
+AUTHOR
+     Per Danielsson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                  16
+
+
+

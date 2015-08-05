@@ -1,0 +1,264 @@
+
+
+
+timer(3)            ERLANG MODULE DEFINITION             timer(3)
+
+
+
+MODULE
+     timer - Timer Functions
+
+DESCRIPTION
+     This module  provides  useful  functions  related  to  time.
+     Unless  otherwise  stated,  time  is always measured in _m_i_l_-
+     _l_i_s_e_c_o_n_d_s. All timer functions return  immediately,  regard-
+     less of work carried out by another process.
+
+     Successful evalutions of the timer  functions  yield  return
+     values  containing a timer reference, denoted _T_R_e_f below. By
+     using _c_a_n_c_e_l/_1, the returned reference can be used to cancel
+     any requested action. A _T_R_e_f is an Erlang term, the contents
+     of which must not be altered.
+
+     The timeouts are not exact, but should be _a_t _l_e_a_s_t  as  long
+     as requested.
+
+
+EXPORTS
+     start() -> ok
+
+          Starts the timer server. Normally, the server does  not
+          need  to  be  started explicitly. It is started dynami-
+          cally if it is needed. This is useful  during  develop-
+          ment,  but  in  a  target  system  the server should be
+          started explicitly. Use  configuration  parameters  for
+          _k_e_r_n_e_l for this.
+
+     apply_after(Time, Module, Function, Arguments) -> {ok, Tref}
+     | {error, Reason}
+
+          Types
+               Time = integer() in Milliseconds
+               Module = Function = atom()
+               Arguments = [term()]
+
+          Evaluates _a_p_p_l_y(_M, _F, _A) after _T_i_m_e amount of time  has
+          elapsed. Returns {_o_k, _T_R_e_f}, or {_e_r_r_o_r, _R_e_a_s_o_n}.
+
+     send_after(Time,   Pid,   Message)   ->   {ok,    TRef}    |
+     {error,Reason}
+     send_after(Time, Message) -> {ok, TRef} | {error,Reason}
+
+          Types
+               Time = integer() in Milliseconds
+               Pid = pid() | atom()
+               Message = term()
+               Result = {ok, TRef} | {error, Reason}
+
+            _s_e_n_d__a_f_t_e_r/_3:
+                Evaluates _P_i_d ! _M_e_s_s_a_g_e after _T_i_m_e amount of time
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+timer(3)            ERLANG MODULE DEFINITION             timer(3)
+
+
+
+                has  elapsed.  (_P_i_d  can  also  be  an  atom of a
+                registered name.) Returns {_o_k, _T_R_e_f}, or  {_e_r_r_o_r,
+                _R_e_a_s_o_n}.
+
+            _s_e_n_d__a_f_t_e_r/_2:
+                Same as _s_e_n_d__a_f_t_e_r(_T_i_m_e, _s_e_l_f(), _M_e_s_s_a_g_e).
+
+     exit_after(Time,   Pid,   Reason1)   ->   {ok,    TRef}    |
+     {error,Reason2}
+     exit_after(Time, Reason1) -> {ok, TRef} | {error,Reason2}
+     kill_after(Time, Pid)-> {ok, TRef} | {error,Reason2}
+     kill_after(Time) -> {ok, TRef} | {error,Reason2}
+
+          Types
+               Time = integer() in milliseconds
+               Pid = pid() | atom()
+               Reason1 = Reason2 = term()
+
+            _e_x_i_t__a_f_t_e_r/_3:
+                Send an exit signal with reason  _R_e_a_s_o_n_1  to  Pid
+                _P_i_d. Returns {_o_k, _T_R_e_f}, or {_e_r_r_o_r, _R_e_a_s_o_n_2}.
+
+            _e_x_i_t__a_f_t_e_r/_2:
+                Same as _e_x_i_t__a_f_t_e_r(_T_i_m_e, _s_e_l_f(), _R_e_a_s_o_n_1).
+
+            _k_i_l_l__a_f_t_e_r/_2:
+                Same as _e_x_i_t__a_f_t_e_r(_T_i_m_e, _P_i_d, _k_i_l_l).
+
+            _k_i_l_l__a_f_t_e_r/_1:
+                Same as _e_x_i_t__a_f_t_e_r(_T_i_m_e, _s_e_l_f(), _k_i_l_l).
+
+     apply_interval(Time, Module, Function,  Arguments)  ->  {ok,
+     TRef} | {error, Reason}
+
+          Types
+               Time = integer() in milliseconds
+               Module = Function = atom()
+               Arguments = [term()]
+
+          Evaluates _a_p_p_l_y(_M_o_d_u_l_e, _F_u_n_c_t_i_o_n, _A_r_g_u_m_e_n_t_s) repeatedly
+          at  intervals  of  _T_i_m_e. Returns {_o_k, _T_R_e_f}, or {_e_r_r_o_r,
+          _R_e_a_s_o_n}.
+
+     send_interval(Time, Pid, Message) -> {ok,  TRef}  |  {error,
+     Reason}
+     send_interval(Time, Message) -> {ok, TRef} | {error, Reason}
+
+          Types
+               Time = integer() in milliseconds
+               Pid = pid() | atom()
+               Message = term()
+               Reason = term()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+timer(3)            ERLANG MODULE DEFINITION             timer(3)
+
+
+
+            _s_e_n_d__i_n_t_e_r_v_a_l/_3:
+                Evaluates _P_i_d !  _M_e_s_s_a_g_e  repeatedly  after  _T_i_m_e
+                amount  of  time has elapsed. (_P_i_d can also be an
+                atom of a registered name.) Returns {_o_k, _T_R_e_f} or
+                {_e_r_r_o_r, _R_e_a_s_o_n}.
+
+            _s_e_n_d__i_n_t_e_r_v_a_l/_2:
+                Same as _s_e_n_d__i_n_t_e_r_v_a_l(_T_i_m_e, _s_e_l_f(), _M_e_s_s_a_g_e).
+
+     cancel(TRef) -> {ok, cancel} | {error, Reason}
+
+          Cancels a  previously  requested  timeout.  _T_R_e_f  is  a
+          unique  timer  reference returned by the timer function
+          in question. Returns {_o_k, _c_a_n_c_e_l}, or  {_e_r_r_o_r,  _R_e_a_s_o_n}
+          when _T_R_e_f is not a timer reference.
+
+     sleep(Time) -> ok
+
+          Types
+               Time = integer() in milliseconds
+
+          Suspends the process calling  this  function  for  _T_i_m_e
+          amount  of milliseconds and then returns _o_k. Naturally,
+          this function does _n_o_t return immediately.
+
+     tc(Module, Function, Arguments) -> {Time, Value}
+
+          Types
+               Module = Function = atom()
+               Arguments = [term()]
+               Time = integer() in microseconds
+               Value = term()
+
+          Evaluates _a_p_p_l_y(_M_o_d_u_l_e, _F_u_n_c_t_i_o_n, _A_r_g_u_m_e_n_t_s) and  meas-
+          ures  the  elapsed  real  time.  Returns {_T_i_m_e, _V_a_l_u_e},
+          where _T_i_m_e is the elapsed real  time  in  _m_i_c_r_o_s_e_c_o_n_d_s,
+          and _V_a_l_u_e is what is returned from the apply.
+
+     seconds(Seconds) -> Milliseconds
+
+          Returns the number of milliseconds in _S_e_c_o_n_d_s.
+
+     minutes(Minutes) -> Milliseconds
+
+          Returns the number of milliseconds in _M_i_n_u_t_e_s.
+
+     hours(Hours) -> Milliseconds
+
+          Returns the number of milliseconds in _H_o_u_r_s.
+
+     hms(Hours, Minutes, Seconds) -> Milliseconds
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+timer(3)            ERLANG MODULE DEFINITION             timer(3)
+
+
+
+          Returns the number of milliseconds in _H_o_u_r_s + _M_i_n_u_t_e_s +
+          _S_e_c_o_n_d_s.
+
+Examples
+     This example illustrates how to print out "Hello World!"  in
+     5 seconds:
+
+           1> timer:apply_after(5000, io, format, ["~nHello World!~n", []]).
+           {ok,TRef}
+           Hello World!
+           2>
+
+     The following coding example  illustrates  a  process  which
+     performs  a  certain  action  and if this action is not com-
+     pleted within a certain limit, then the process is killed.
+
+           Pid = spawn(mod, fun, [foo, bar]),
+           %% If pid is not finished in 10 seconds, kill him
+           {ok, R} = timer:kill_after(timer:seconds(10), Pid),
+           ...
+           %% We change our mind...
+           timer:cancel(R),
+           ...
+
+WARNING
+     A timer can always be removed by calling _c_a_n_c_e_l/_1.
+
+     An interval timer, i.e. a timer created by evaluating any of
+     the   functions   _a_p_p_l_y__i_n_t_e_r_v_a_l/_4,   _s_e_n_d__i_n_t_e_r_v_a_l/_3,   and
+     _s_e_n_d__i_n_t_e_r_v_a_l/_2, is linked to the process towards which  the
+     timer performs its task.
+
+     A one-shot timer, i.e. a timer created by evaluating any  of
+     the  functions  _a_p_p_l_y__a_f_t_e_r/_4,  _s_e_n_d__a_f_t_e_r/_3,  _s_e_n_d__a_f_t_e_r/_2,
+     _e_x_i_t__a_f_t_e_r/_3, _e_x_i_t__a_f_t_e_r/_2, _k_i_l_l__a_f_t_e_r/_2,  and  _k_i_l_l__a_f_t_e_r/_1
+     is not linked to any process. Hence, such a timer is removed
+     only when it reaches its timeout, or if  it  is  explicitely
+     removed by a call to _c_a_n_c_e_l/_1.
+
+AUTHORS
+      Sebastian Strollo - support@erlang.ericsson.se
+      Dan Gudmundsson - support@erlang.ericsson.se
+      Peter Hogfeldt - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+

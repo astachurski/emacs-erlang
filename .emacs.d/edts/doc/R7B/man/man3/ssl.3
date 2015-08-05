@@ -1,0 +1,493 @@
+.TH ssl 3 "ssl  2.3.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+ssl \- Interface Functions for Secure Socket Layer
+.SH DESCRIPTION
+.LP
+This module contains interface functions to the Secure Socket Layer\&. New implementations will use this module, and not the old \fIssl_socket\fR module, which is obsolete\&. 
+
+.SH Common data types
+.LP
+The following datatypes are used in the functions below: 
+.RS 2
+.TP 2
+*
+\fIoptions() = [option()]\fR 
+.TP 2
+*
+\fIoption() = socketoption() | ssloption()\fR 
+.TP 2
+*
+\fIsocketoption() = binary | {packet, size()} | {nodelay, boolean()} | {active, boolean()} | {backlog, integer()} | {ip, ipaddress()}\fR 
+.TP 2
+*
+\fIssloption() = {verify, code()} | {depth, depth()} | {certfile, path()} | {keyfile, path()} | {password, string()} | {cacertfile, path()} | {ciphers, string()} | {cachetimeout, integer()}\fR 
+.TP 2
+*
+\fIsize() = 0 | 1 | 2 | 4\fR 
+.TP 2
+*
+\fIreason() = atom() | {atom(), string()}\fR 
+.TP 2
+*
+\fIbytes() = [byte()]\fR 
+.TP 2
+*
+\fIstring() = [byte()]\fR 
+.TP 2
+*
+\fIbyte() = 0 | 1 | 2 | \&.\&.\&. | 255\fR 
+.TP 2
+*
+\fIcode() = 0 | 1 | 2\fR 
+.TP 2
+*
+\fIdepth() = byte()\fR 
+.TP 2
+*
+\fIaddress() = hostname() | ipstring() | ipaddress()\fR 
+.TP 2
+*
+\fIipaddress() = ipstring() | iptuple()\fR 
+.TP 2
+*
+\fIhostname() = string()\fR 
+.TP 2
+*
+\fIipstring() = string()\fR 
+.TP 2
+*
+\fIiptuple() = {byte(), byte(), byte(), byte()}\fR 
+.TP 2
+*
+\fIsslsocket()\fR 
+.TP 2
+*
+\fI \fR 
+.RE
+.LP
+The socket options \fI{backlog, integer()}\fR and \fI{ip, ipaddress}\fR are for \fIlisten/2\fR only\&. 
+.LP
+The following socket options are set by default: \fI{packet, 0}\fR, \fI{nodelay, false}\fR, \fI{active, true}\fR, \fI{backlog, 5}\fR, and \fI{ip, {0, 0, 0, 0}}\fR\&. 
+.LP
+The ssl options are for setting specific SSL parameters as follows: 
+.RS 2
+.TP 2
+*
+\fI{verify, code()}\fR Specifies type of verification: 0 = do not verify peer; 1 = verify peer, verify client once, 2 = verify peer, verify client once, fail if no peer certificate\&. The default value is 0\&. 
+.TP 2
+*
+\fI{depth, depth()}\fR Specifies verification depth, i\&.e\&. how far in a chain of certificates the verification process shall proceed before the verification is considered successful\&. The default value is 1\&. 
+.TP 2
+*
+\fI{certfile, path()}\fR Path to a file containing a chain of PEM encoded certificates\&. 
+.TP 2
+*
+\fI{keyfile, path()}\fR Path to file containing user\&'s private PEM encoded key\&. 
+.TP 2
+*
+\fI{password, string()}\fR String containing the user\&'s password\&. Only used if the private keyfile is password protected\&. 
+.TP 2
+*
+\fI{cacertfile, path()}\fR Path to file containing PEM encoded CA certificates\&. 
+.TP 2
+*
+\fI{ciphers, string()}\fR String of ciphers as a colon separated list of ciphers\&. 
+.TP 2
+*
+\fI{cachetimeout, integer()}\fR Session cache timeout in seconds\&. 
+.RE
+.LP
+The type \fIsslsocket()\fR is opaque to the user\&. 
+.LP
+The owner of a socket is the one that created it by a call to \fIaccept/1\fR, \fIconnect/3/4/\fR, or \fIlisten/2\fR\&. 
+.LP
+When a socket is in active mode (the default), data from the socket is delivered to the owner of the socket in the form of messages: 
+.RS 2
+.TP 2
+*
+\fI{ssl, Socket, Data}\fR 
+.TP 2
+*
+\fI{ssl_closed, Socket}\fR 
+.TP 2
+*
+\fI{ssl_error, Socket, Reason}\fR 
+.RE
+.LP
+A \fITimeout\fR argument specifies a timeout in milliseconds\&. The default value for a \fITimeout\fR argument is \fIinfinity\fR\&. 
+.LP
+Functions listed below may return the value \fI{error, closed}\fR, which only indicates that the SSL socket is considered closed for the operation in question\&. It is for instance possible to have \fI{error, closed}\fR returned from an call to \fIsend/2\fR, and a subsequent call to \fIrecv/3\fR returning \fI{ok, Data}\fR\&. 
+.LP
+Hence a return value of \fI{error, closed}\fR must not be interpreted as if the socket was completely closed\&. On the contrary, in order to free all resources occupied by an SSL socket, \fIclose/1\fR must be called, or else the process owning the socket has to terminate\&. 
+.LP
+For each SSL socket there is an Erlang process representing the socket\&. When a socket is opened, that process links to the calling client process\&. Implementations that want to detect abnormal exits from the socket process by receiving \fI{\&'EXIT\&', Pid, Reason}\fR messages, should use the function \fIpid/1\fR to retreive the process identifier from the socket, in order to be able to match exit messages properly\&. 
+.SH EXPORTS
+.LP
+.B
+accept(ListenSocket) -> {ok, Socket} | {error, Reason}
+.br
+.B
+accept(ListenSocket, Timeout) -> {ok, Socket} | {error, Reason}
+.br
+.RS
+.TP
+Types
+ListenSocket = Socket = sslsocket()
+.br
+Timeout = integer()
+.br
+.RE
+.RS
+.LP
+Accepts an incoming connection request on a listen socket\&. \fIListenSocket\fR must be a socket returned from \fIlisten/2\fR\&. 
+.LP
+The accepted socket inherits the options set for \fIListenSocket\fR in \fIlisten/2\fR\&. 
+.LP
+The default value for \fITimeout\fR is \fIinfinity\fR\&. If \fITimeout\fR is specified, and no connection is accepted within the given time, \fI{error, timeout}\fR is returned\&. 
+.RE
+.LP
+.B
+close(Socket) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = sslsocket()
+.br
+.RE
+.RS
+.LP
+Closes a socket returned by \fIaccept/1/2\fR, \fIconnect/3/4\fR, or \fIlisten/2\fR 
+.RE
+.LP
+.B
+connect(Address, Port, Options) -> {ok, Socket} | {error, Reason}
+.br
+.B
+connect(Address, Port, Options, Timeout) -> {ok, Socket} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Address = address()
+.br
+Port = integer()
+.br
+Options = [connect_option()]
+.br
+connect_option() = binary | {packet, size()} | {nodelay, boolean()} | {active, boolean()} | {verify, code()} | {depth, depth()} | {certfile, path()} | {keyfile, path()} | {password, string()} | {cacertfile, path()} | {ciphers, string()} | {cachetimeout, integer()}
+.br
+Timeout = integer()
+.br
+Socket = sslsocket()
+.br
+.RE
+.RS
+.LP
+Connects to \fIPort\fR at \fIAddress\fR\&. If the optional \fITimeout\fR argument is specified, and a connection could not be established within the given time, \fI{error, timeout}\fR is returned\&. The default value for \fITimeout\fR is \fIinfinity\fR\&. 
+.RE
+.LP
+.B
+controlling_process(Socket, NewOwner) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = sslsocket()
+.br
+NewOwner = pid()
+.br
+.RE
+.RS
+.LP
+Assigns a new controlling process to \fISocket\fR\&. A controlling process is the owner of a socket, and receives all messages from the socket\&. 
+.RE
+.LP
+.B
+format_error(ErrorCode) -> string()
+.br
+.RS
+.TP
+Types
+ErrorCode = term()
+.br
+.RE
+.RS
+.LP
+Returns a diagnostic string describing an error\&. 
+.RE
+.LP
+.B
+listen(Port, Options) -> {ok, ListenSocket} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Port = integer()
+.br
+Options = [listen_option()]
+.br
+listen_option() = binary | {packet, size()} | {active, boolean()} | {backlog, integer()} | {ip, ipaddress()} | {verify, code()} | {depth, depth()} | {certfile, path()} | {keyfile, path()} | {password, string()} | {cacertfile, path()} | {ciphers, string()} | {cachetimeout, integer()}
+.br
+ListenSocket = sslsocket()
+.br
+.RE
+.RS
+.LP
+Sets up a socket to listen on port \fIPort\fR at the local host\&. If \fIPort\fR is zero, \fIlisten/2\fR picks an available port number (use \fIport/1\fR to retreive it)\&. 
+.LP
+The listen queue size defaults to 5\&. If a different value is wanted, the option \fI{backlog, Size}\fR should be added to the list of options\&. 
+.LP
+The returned \fIListenSocket\fR can only be used in calls to \fIaccept/1/2\fR\&. 
+.RE
+.LP
+.B
+peername(Socket) -> {ok, {Address, Port}} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = sslsocket()
+.br
+Address = ipaddress()
+.br
+Port = integer()
+.br
+.RE
+.RS
+.LP
+Returns the address and port number of the peer\&. 
+.RE
+.LP
+.B
+pid(Socket) -> pid()
+.br
+.RS
+.TP
+Types
+Socket = sslsocket()
+.br
+.RE
+.RS
+.LP
+Returns the pid of the socket process\&. The returned pid should only be used for receiving exit messages\&. 
+.RE
+.LP
+.B
+port(Socket) -> {ok, Port}
+.br
+.RS
+.TP
+Types
+Socket = sslsocket()
+.br
+Port = integer()
+.br
+.RE
+.RS
+.LP
+Returns the local port number of socket \fISocket\fR\&. 
+.RE
+.LP
+.B
+recv(Socket, Length) -> {ok, Data} | {error, Reason}
+.br
+.B
+recv(Socket, Length, Timeout) -> {ok, Data} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = sslsocket()
+.br
+Length = integer() >= 0
+.br
+Timeout = integer()
+.br
+Data = bytes() | binary() 
+.br
+.RE
+.RS
+.LP
+Receives data on socket \fISocket\fR when the socket is in passive mode, i\&.e\&. when the option \fI{active, false}\fR has been specified\&. 
+.LP
+A notable return value is \fI{error, closed}\fR which indicates that the socket is closed\&. 
+.LP
+A positive value of the \fILength\fR argument is only valid when the socket is in raw mode (option \fI{packet, 0}\fR is set, and the option \fIbinary\fR is \fInot\fR set); otherwise it should be set to 0, whence all available bytes are returned\&. 
+.LP
+If the optional \fITimeout\fR parameter is specified, and no data was available within the given time, \fI{error, timeout}\fR is returned\&. The default value for \fITimeout\fR is \fIinfinity\fR\&. 
+.RE
+.LP
+.B
+send(Socket, Data) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = sslsocket()
+.br
+Data = iolist() | binary()
+.br
+.RE
+.RS
+.LP
+Writes \fIData\fR to \fISocket\fR\&. 
+.LP
+A notable return value is \fI{error, closed}\fR indicating that the socket is closed\&. 
+.RE
+.LP
+.B
+setopts(Socket, Options) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = sslsocket()
+.br
+Options = options()
+.br
+.RE
+.RS
+.LP
+Sets options according to \fIOptions\fR for the socket \fISocket\fR\&. 
+.LP
+Only the following option can be set: \fI{nodelay, boolean()}\fR\&. 
+.RE
+.LP
+.B
+sockname(Socket) -> {ok, {Address, Port}} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = sslsocket()
+.br
+Address = ipaddress()
+.br
+Port = integer()
+.br
+.RE
+.RS
+.LP
+Returns the local address and port number of the socket \fISocket\fR\&. 
+.RE
+.SH ERRORS
+.LP
+The possible error reasons and the corresponding diagnostic strings returned by \fIformat_error/1\fR are either the same as those defined in the \fIinet(3)\fR reference manual, or as follows: 
+.RS 2
+.TP 4
+.B
+\fIclosed\fR:
+Connection closed for the operation in question\&. 
+.TP 4
+.B
+\fIebadsocket\fR:
+Connection not found (internal error)\&. 
+.TP 4
+.B
+\fIebadstate\fR:
+Connection not in connect state (internal error)\&. 
+.TP 4
+.B
+\fIebrokertype\fR:
+Wrong broker type (internal error)\&. 
+.TP 4
+.B
+\fIecacertfile\fR:
+Own CA certificate file is invalid\&. 
+.TP 4
+.B
+\fIecertfile\fR:
+Own certificate file is invalid\&. 
+.TP 4
+.B
+\fIechaintoolong\fR:
+The chain of certificates provided by peer is too long\&. 
+.TP 4
+.B
+\fIecipher\fR:
+Own list of specified ciphers is invalid\&. 
+.TP 4
+.B
+\fIekeyfile\fR:
+Own private key file is invalid\&. 
+.TP 4
+.B
+\fIekeymismatch\fR:
+Own private key does not match own certificate\&. 
+.TP 4
+.B
+\fIenoissuercert\fR:
+Cannot find certificate of issuer of certificate provided by peer\&. 
+.TP 4
+.B
+\fIenoservercert\fR:
+Attempt to do accept without having set own certificate\&. 
+.TP 4
+.B
+\fIenotlistener\fR:
+Attempt to accept on a non-listening socket\&. 
+.TP 4
+.B
+\fIenoproxysocket\fR:
+No proxy socket found (internal error)\&. 
+.TP 4
+.B
+\fIeoptions\fR:
+Invalid list of options\&. 
+.TP 4
+.B
+\fIepeercert\fR:
+Certificate provided by peer is in error\&. 
+.TP 4
+.B
+\fIepeercertexpired\fR:
+Certificate provided by peer has expired\&. 
+.TP 4
+.B
+\fIepeercertinvalid\fR:
+Certificate provided by peer is invalid\&. 
+.TP 4
+.B
+\fIeselfsignedcert\fR:
+Certificate provided by peer is self signed\&. 
+.TP 4
+.B
+\fIesslaccept\fR:
+Server SSL handshake procedure between client and server failed\&. 
+.TP 4
+.B
+\fIesslconnect\fR:
+Client SSL handshake procedure between client and server failed\&. 
+.TP 4
+.B
+\fIesslerrssl\fR:
+SSL protocol failure\&. Typically because of a fatal alert from peer\&. 
+.TP 4
+.B
+\fIewantconnect\fR:
+Protocol wants to connect, which is not supported in this version of the SSL application\&. 
+.TP 4
+.B
+\fIex509lookup\fR:
+Protocol wants X\&.509 lookup, which is not supported in this version of the SSL application\&. 
+.TP 4
+.B
+\fI{badcall, Call}\fR:
+Call not recognized for current mode (active or passive) and state of socket\&. 
+.TP 4
+.B
+\fI{badcast, Cast}\fR:
+Call not recognized for current mode (active or passive) and state of socket\&. 
+.TP 4
+.B
+\fI{badinfo, Info}\fR:
+Call not recognized for current mode (active or passive) and state of socket\&. 
+.RE
+.SH SEE ALSO
+.LP
+gen_tcp(3), inet(3) 
+.SH AUTHOR
+.nf
+Peter Hogfeldt - support@erlang.ericsson.se
+.fi

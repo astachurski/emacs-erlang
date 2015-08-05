@@ -1,0 +1,66 @@
+
+
+
+CosTransactions_TransaEcRtLiAoNnGFaCMcoOtsDoTUrrLyaE(n3sD)aEFcItNiIoTnIsO_NTransactionFactory(3)
+
+
+
+MODULE
+     CosTransactions_TransactionFactory -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -
+     _i_n_c_l_u_d_e__l_i_b("_c_o_s_T_r_a_n_s_a_c_t_i_o_n_s/_i_n_c_l_u_d_e/_C_o_s_T_r_a_n_s_a_c_t_i_o_n_s._h_r_l").
+
+
+EXPORTS
+     create(TransactionFactory, Timeout) -> Control
+
+          Types
+               TransactionFactory = #objref
+               Timeout = integer()
+               Control = #objref
+
+          This operation creates a new top-level transaction.
+
+          The _T_i_m_e_o_u_t argument can be:
+
+            * 0 - no timeout.
+
+            * N (integer() > 0) - the transaction will be subject
+              to being rolled back if it does not complete before
+              N seconds have elapsed.
+
+AUTHOR
+     Niclas Eklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             1
+
+
+

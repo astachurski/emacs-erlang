@@ -1,0 +1,178 @@
+.TH instrument 3 "tools  1.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+instrument \- Analysis and Utility Functions for Instrumentation
+.SH DESCRIPTION
+.LP
+The module \fIinstrument\fR contains support for studying the resource usage in an Erlang runtime system\&. Currently, only the allocation of memory can be studied\&.
+.SS Note:
+.LP
+Note that this whole module is experimental, and the representations used as well as the functionality is likely to change in the future\&.
+
+.LP
+Some of the functions in this module are only available in Erlang compiled with instrumentation; otherwise they exit with \fIbadarg\fR\&. This is noted below for the individual functions\&. To start an Erlang runtime system with instrumentation, use the command-line option \fI-instr\fR to the \fIerl\fR command\&.
+.LP
+The basic object of study in the case of memory allocation is a memory allocation list, which contains one descriptor for each allocated memory block\&. Currently, a descriptor is a 4-tuple
+
+.nf
+        {Type, Address, Size, Pid}
+.fi
+.LP
+where \fIType\fR indicates what the block is used for, \fIAddress\fR is its place in memory, and \fISize\fR is its size, in bytes\&.\fIPid\fR is either \fIundefined\fR (if the block was allocated by the runtime system itself) or a tuple \fI{A, B, C}\fR representing the process which allocated the block, which corresponds to a pid with the user-visible representation \fI<A\&.B\&.C>\fR (the function \fIc:pid/3\fR can be used to transform the numbers to a real pid)\&.
+.LP
+Various details about memory allocation:
+.LP
+On Unix (for example, Solaris), memory for a process is allocated linearly, usually from 0\&. The current size of the process cannot be obtained from within Erlang, but can be seen with one of the system statistics tools, e\&.g\&., \fIps\fR or \fItop\fR\&. (There may be a hole above the highest used memory block; in that case the functions in the\fIinstrument\fR module cannot tell you about it; you have to compare the \fIHigh\fR value from \fImem_limits/1\fR with the value which the system reports for Erlang\&.)
+.LP
+In the memory allocation list, certain small objects do not show up individually, since they are allocated from blocks of 20 objects (called "fixalloc" blocks)\&. The blocks themselves do show up, but the amount of internal fragmentation in them currently cannot be observed\&.
+.LP
+Overhead for instrumentation: instrumented memory allocation uses 28 bytes extra for each block\&. The time overhead for managing the list is negligible\&.
+
+.SH EXPORTS
+.LP
+.B
+holes(AllocList) -> ok
+.br
+.RS
+.TP
+Types
+AllocList = [Desc]
+.br
+Desc = {int(), int(), int(), pid_tuple()}
+.br
+pid_tuple() = {int(), int(), int()}
+.br
+.RE
+.RS
+.LP
+Prints out the size of each hole (i\&.e\&., the space between allocated blocks) on the terminal\&. The list must be sorted (see \fIsort/1\fR)\&. 
+.RE
+.LP
+.B
+mem_limits(AllocList) -> {Low, High}
+.br
+.RS
+.TP
+Types
+AllocList = [Desc]
+.br
+Desc = {int(), int(), int(), pid_tuple()}
+.br
+pid_tuple() = {int(), int(), int()}
+.br
+Low = High = int()
+.br
+.RE
+.RS
+.LP
+returns a tuple \fI{Low, High}\fR indicating the lowest and highest address used\&. The list must be sorted (see \fIsort/1\fR)\&. 
+.RE
+.LP
+.B
+memory_data() -> AllocList
+.br
+.RS
+.TP
+Types
+AllocList = [Desc]
+.br
+Desc = {int(), int(), int(), pid_tuple()}
+.br
+pid_tuple() = {int(), int(), int()}
+.br
+.RE
+.RS
+.LP
+Returns the memory allocation list\&. Only available in an Erlang runtime system compiled for instrumentation\&. Blocks execution of other processes while the list is collected\&. 
+.RE
+.LP
+.B
+read_memory_data(File) -> {ok, AllocList} | {error, Reason}
+.br
+.RS
+.TP
+Types
+File = string()
+.br
+AllocList = [Desc]
+.br
+Desc = {int(), int(), int(), pid_tuple()}
+.br
+pid_tuple() = {int(), int(), int()}
+.br
+.RE
+.RS
+.LP
+Reads a memory allocation list from the file \fIFile\fR\&. The file is assumed to have been created by \fIstore_memory_data/1\fR\&. The error codes are the same as for \fIfile:consult/1\fR\&. 
+.RE
+.LP
+.B
+sort(AllocList) -> AllocList
+.br
+.RS
+.TP
+Types
+AllocList = [Desc]
+.br
+Desc = {int(), int(), int(), pid_tuple()}
+.br
+pid_tuple() = {int(), int(), int()}
+.br
+.RE
+.RS
+.LP
+Sorts a memory allocation list so the addresses are in ascending order\&. The list arguments to many of the functions in this module must be sorted\&. No other function in this module returns a sorted list\&. 
+.RE
+.LP
+.B
+store_memory_data(File) -> ok
+.br
+.RS
+.TP
+Types
+File = string()
+.br
+.RE
+.RS
+.LP
+Stores the memory allocation list on the file \fIFile\fR\&. The contents of the file can later be read using \fIread_memory_data/1\fR\&. Only available in an Erlang runtime system compiled for instrumentation\&. Blocks execution of other processes while the list is collected (the time to write the data is around 0\&.1 ms/line on a Sun Ultra 1)\&. 
+.LP
+Failure: \fIbadarg\fR if the file could not be written\&. 
+.RE
+.LP
+.B
+sum_blocks(AllocList) -> int()
+.br
+.RS
+.TP
+Types
+AllocList = [Desc]
+.br
+Desc = {int(), int(), int(), pid_tuple()}
+.br
+pid_tuple() = {int(), int(), int()}
+.br
+.RE
+.RS
+.LP
+Returns the total size of the memory blocks in the list\&. The list must be sorted (see \fIsort/1\fR)\&. 
+.RE
+.LP
+.B
+type_string(Type) -> string()
+.br
+.RS
+.TP
+Types
+Type = int()
+.br
+.RE
+.RS
+.LP
+Translates a memory block type number into a readable string, which is a short description of the block type\&. 
+.LP
+Failure: \fIbadarg\fR if the argument is not a valid block type number\&. 
+.RE
+.SH AUTHOR
+.nf
+Arndt Jonasson - support@erlang.ericsson.se
+.fi

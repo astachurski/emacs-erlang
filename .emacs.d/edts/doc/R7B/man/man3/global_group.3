@@ -1,0 +1,250 @@
+.TH global_group 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+global_group \- Grouping Nodes to Global Name Registration Groups
+.SH DESCRIPTION
+.LP
+The global group function makes it possible to group the nodes in a system into partitions, each partition having its own global name space, refer to \fIglobal(3)\fR\&. These partitions are called global groups\&. 
+.br
+The main advantage of dividing systems to global groups is that the background load decreases while the number of nodes to be updated is reduced when manipulating globally registered names\&. 
+.LP
+The \fIglobal_groups\fR-key in the \fI\&.config\fR file defines the global groups: 
+.LP
+\fI{global_groups, [{GroupName, [Node]}] }\fR 
+.LP
+\fIGroupName\fR is an \fIatom()\fR naming a global group\&. 
+.br
+\fINode\fR is an \fIatom()\fR naming a node\&. 
+.LP
+The command \fIerl -config File\fR starts a node with a configuration file named \fIFile\&.config\fR\&. If the \fIglobal_groups\fR-key is not defined the system will start as a whole, without any partitions\&. When the key is not defined, the services of this function will not give any extra value to \fIglobal(3)\fR\&. 
+.LP
+For the processes and nodes to run smoothly using this function the following criteria must be met: 
+.RS 2
+.TP 2
+*
+The global group function must have a server process, \fIglobal_group\fR, running on each node\&. 
+.br
+\fI NOTE:\fR The processes are automatically started and synchronized when a node is started\&.
+.TP 2
+*
+All processes must agree with the group definition in the immediate global group\&. If two nodes do not agree, these nodes will not synchronize their name space and an error message will be logged in the error logger\&. 
+.br
+Example: If one node has an illegal global group definition, such a node will run isolated from the other nodes regarding the global name space; but not regarding other system functions, e\&.g distribution of applications, refer to chapter \fINOTE\fR below\&.
+.TP 2
+*
+Nodes can only belong to one global group\&.
+.RE
+.LP
+When the global group definitions are to be changed in a system upgrade, the upgrade must fulfill the following steps: 
+.RS 2
+.TP 4
+1.
+First, all nodes which are to be removed from a global group must be taken down\&.
+.TP 4
+2.
+Nodes which are not affected by the redefinition of the global groups are to be upgraded to be aware of the new global group definitions\&. 
+.br
+\fI NOTE:\fR All nodes in the system, also nodes in unchanged global groups, must be upgraded\&. This because e\&.g \fIsend\fR must have an accurate view of the total system\&.
+.TP 4
+3.
+Finally, all nodes which are new to a global group can be started\&.
+.RE
+.LP
+When a non partitioned system is to be upgraded to become a partitioned system, all nodes belonging to a global group will be disconnected from all nodes not belonging to its immediate global group\&. 
+
+.SH EXPORTS
+.LP
+.B
+global_groups() -> {OwnGroupName, [OtherGroupName]} | undefined 
+.br
+.RS
+.TP
+Types
+OwnGroupName = atom()
+.br
+OtherGroupName = atom()
+.br
+ErrorMsg = term()
+.br
+.RE
+.RS
+.LP
+Returns the names of all the global groups known to the immediate global group\&. 
+.RE
+.LP
+.B
+info() -> [{state, State}, {own_group_name, atom()}, {own_group_nodes, [Node]}, {synced_nodes, [Node]}, {sync_error, [Node]}, {no_contact, [Node]}, {other_groups, Other_grps}, {monitoring, [pid()]}] 
+.br
+.RS
+.TP
+Types
+State = no_conf | synced
+.br
+Other_grps = [{OtherGrpName, [Node]}]
+.br
+OtherGrpName = atom()
+.br
+Node = atom()
+.br
+.RE
+.RS
+.LP
+Returns the state of the global group process\&. In the following \&'nodes\&' refers to nodes in the immediate global group\&. \fIsynced_nodes\fR lists the nodes this node is synchronized with at this moment\&. \fI\fR lists the nodes defining the own global group\&. \fIsync_error\fR lists the nodes with this node could not be synchronize\&. \fIno_contact\fR lists nodes with this node do not yet have established contact\&. \fIother_groups\fR shows the definition of the other global groups in the system\&. \fImonitoring\fR lists the processes which have subscribed on \fInodeup\fR and \fInodedown\fR messages\&. 
+.RE
+.LP
+.B
+monitor_nodes(Flag) -> ok 
+.br
+.RS
+.TP
+Types
+Flag = bool()
+.br
+.RE
+.RS
+.LP
+The requesting process receives \fI{nodeup, Node}\fR and \fI{nodedown, Node}\fR messages about the nodes from the immediate global group\&. If the flag \fIFlag\fR is set to \fItrue\fR the service is turned on; \fIfalse\fR turns it off\&. 
+.RE
+.LP
+.B
+own_nodes() -> [Node] | {error, ErrorMsg}
+.br
+.RS
+.TP
+Types
+Node = atom()
+.br
+ErrorMsg = term()
+.br
+.RE
+.RS
+.LP
+Returns the names of all nodes from the immediate global group, despite of the status of the nodes\&. Use \fIinfo/0\fR to get the information of the current status of the nodes\&. 
+.RE
+.LP
+.B
+registered_names({node, Node}) -> [Name] | {error, ErrorMsg}
+.br
+.B
+registered_names({group, GlobalGroupName}) -> [Name]
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+Node = atom()
+.br
+GlobalGroupName = atom()
+.br
+ErrorMsg = term()
+.br
+.RE
+.RS
+.LP
+Returns a lists of all globally registered names on the specified node or from the specified global group\&. 
+.RE
+.LP
+.B
+send(Name, Msg) -> Pid | {badarg, Msg} | {error, ErrorMsg}
+.br
+.B
+send({node, Node}, Name, Msg) -> Pid | {badarg, Msg} | {error, ErrorMsg}
+.br
+.B
+send({group, GlobalGroupName}, Name, Msg) -> Pid | {badarg, Msg} | {error, ErrorMsg}
+.br
+.RS
+.TP
+Types
+GlobalGroupName = atom()
+.br
+Msg = term()
+.br
+Name = term()
+.br
+Node = atom()
+.br
+Pid = pid()
+.br
+ErrorMsg = term()
+.br
+.RE
+.RS
+.LP
+\fIsend/2\fR searches for the registered \fIName\fR in all global groups defined, in the order of appearance in the \fI\&.config\fR-file, until the registered name is found or all groups are searched\&. If \fIName\fR is found, the message \fIMsg\fR is sent to it\&. If it is not found, the function exits with reason \fI{badarg, {Name, Msg}}\fR\&. 
+.LP
+\fIsend/3\fR searches for the registered \fIName\fR in either the specified node or the specified global group\&. If the registered name is found, the message \fIMsg\fR is sent to that process\&. If \fIName\fR is not found, the function exits with reason \fI{badarg, {Name, Msg}}\fR\&. 
+.RE
+.LP
+.B
+sync() -> ok 
+.br
+.RS
+.LP
+\fIsync\fR synchronizes the global name servers on the nodes in the immediate global group\&. It also unregisteres the names registered in the immediate global group on known nodes outside to the immediate global group\&. 
+.LP
+If it the \fIglobal_groups\fR definition is unvalid, the function exits with reason \fI{error, {\&'invalid global_groups definition\&', NodeGrpDef}}\fR\&. 
+.RE
+.LP
+.B
+whereis_name(Name) -> Pid | undefined | {error, ErrorMsg}
+.br
+.B
+whereis_name({node, Node}, Name) -> Pid | undefined | {error, ErrorMsg}
+.br
+.B
+whereis_name({group, GlobalGroupName}, Name) -> Pid | undefined | {error, ErrorMsg}
+.br
+.RS
+.TP
+Types
+GlobalGroupName = atom()
+.br
+Name = term()
+.br
+Node = atom()
+.br
+Pid = pid()
+.br
+.RE
+.RS
+.LP
+\fIwhereis_name/1\fR searches for the registered \fIName\fR in all global groups defined, in the order of appearance in the \fI\&.config\fR-file, until the registered name is found or all groups are searched\&. 
+.LP
+\fIwhereis_name/2\fR searches for the registered \fIName\fR in either the specified node or the specified global group\&. 
+.LP
+Returns either the atom \fIundefined\fR, or the Pid which is associated with \fIName\fR\&. 
+.RE
+.LP
+.B
+start()
+.br
+.B
+start_link() -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.LP
+This function starts the global group server\&. Normally, the server is started automatically\&. 
+.RE
+.LP
+.B
+stop() -> void()
+.br
+.RS
+.LP
+Stops the global group server\&. 
+.RE
+.SH NOTE
+.LP
+In the situation where a node has lost its connections to other nodes in its global group but has connections to nodes in other global groups, a request from the other global group may produce an incorrect or misleading result\&. When this occurs the isolated node may not have accurate information, for example, about registered names in its global group\&. 
+.LP
+Note also that the send function is not secure\&. 
+.LP
+Distribution of applications is highly dependent of the global group definitions\&. It is not recommended that an application is distributed over several global groups of the obvious reason that the registered names may be moved to another global group at failover/takeover\&. There is nothing preventing doing this, but the application code must in such case handle the situation\&. 
+.SH SEE ALSO
+.LP
+\fIerl(1), global(3) \fR 
+.SH AUTHOR
+.nf
+Esko Vierumaki - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,330 @@
+
+
+
+log(3)              ERLANG MODULE DEFINITION               log(3)
+
+
+
+MODULE
+     log - Client API for the log functionality in the EVA appli-
+     cation
+
+DESCRIPTION
+     This module contains client functions  to  the  generic  Log
+     Control  services in the EVA application. There are two ser-
+     vices available; log monitoring and log transfer.  The  logs
+     are  controlled  by  a  log  server,  and  each  log  may be
+     transfered with FTP to a remote host.
+
+     The log server has a list of all active logs in the  system.
+     An  application  that  wants to make a log controllable with
+     this functionality, must register the log in the log server.
+     Each  log  is implemented as a _d_i_s_k__l_o_g log. The application
+     stores its log  records  using  the  ordinary  functions  in
+     _d_i_s_k__l_o_g. The following picture illustrates the idea:
+
+      +------+     tell     +-------+
+      | Appl |   -------->  | log   |
+      +------+              | server|
+         |                _ +-------+
+         |open,          /
+         |log*,         /control
+         |close        /
+         |    +---------+
+         +--->| disk_log|
+              +---------+
+
+     First, the application opens the log. Thenit  registers  the
+     log  in  the  log server, which makes the log server control
+     the log. The application can store log records in  the  log,
+     until it eventually closes the log, and tells the log server
+     about it.
+
+     Each log has an administrative and  an  operational  status,
+     that  both  can  be  either  _u_p  or _d_o_w_n. The administrative
+     status is configurable, and reflects the desired operational
+     status.  Normally they are both the same. If the administra-
+     tive status is set to _u_p, the operational status will be  _u_p
+     as  well. However, if the log for some reason does not work,
+     for example if the disk partition is full,  the  operational
+     status will be _d_o_w_n. When the operational status is down, no
+     records are stored in the log.
+
+
+Alarms
+     Two  EVA  alarms   are   defined   in   the   _l_o_g   service,
+     _l_o_g__f_i_l_e__e_r_r_o_r and _l_o_g__w_r_a_p__t_o_o__o_f_t_e_n.
+
+       * _l_o_g__f_i_l_e__e_r_r_o_r. This alarm is generated if  there  is  a
+         file  error  when  an  item  should  be  logged. Default
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   1
+
+
+
+
+
+
+log(3)              ERLANG MODULE DEFINITION               log(3)
+
+
+
+         severity is _c_r_i_t_i_c_a_l. The cause for this  alarm  can  be
+         any  _R_e_a_s_o_n as returned from _f_i_l_e:_w_r_i_t_e in case of error
+         (it returns {_e_r_r_o_r, _R_e_a_s_o_n}). The alarm  is  cleared  if
+         the file system starts working again.
+
+       * _l_o_g__w_r_a_p__t_o_o__o_f_t_e_n. This alarm is generated when the log
+         wraps more often than the wrap time. Default severity is
+         _m_a_j_o_r. The cause for this alarm is undefined. The  alarm
+         is  cleared  if  the log wraps within the wrap time, the
+         next time it wraps.
+
+EXPORTS
+     close(Name) -> ok
+
+          Types
+               Name = string()
+
+          Use this function to remove a log from the log server.
+
+     get_logs() -> [Log]
+
+          Types
+               Log = #log
+
+          Returns all logs known to _l_o_g__s_e_r_v_e_r. The  record  #_l_o_g
+          is defined in the file _l_o_g._h_r_l.
+
+     open(Name,Type,WrapTime)
+
+          Types
+               Name = string()
+               Type = term()
+               WrapTime = integer()
+
+          Makes _l_o_g__s_e_r_v_e_r aware of the log _N_a_m_e. The log must be
+          an open _d_i_s_k__l_o_g log.
+
+          The  type  argument  is  there  for  information  to  a
+          manager.
+
+          If the log is a  wrap  log,  _l_o_g__s_e_r_v_e_r  generates  the
+          _l_o_g__w_r_a_p__t_o_o__o_f_t_e_n  alarm  if  the log wraps more often
+          than _W_r_a_p_T_i_m_e seconds. In  this  context,  wraps  means
+          that  _d_i_s_k__l_o_g  switches to a previously used file, and
+          some log items are lost.
+
+     set_admin_status(Name, AdminStatus) -> OperStatus |  {error,
+     Reason}
+
+          Types
+               Name = string()
+               AdminStatus = OperStatus = up | down
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   2
+
+
+
+
+
+
+log(3)              ERLANG MODULE DEFINITION               log(3)
+
+
+
+               Reason = {error, {no_such_log, Name}}
+
+          Sets the desired state of  the  log.  Returns  the  new
+          operational  status  of  the log. If the administrative
+          status is set to _u_p,  and  the  operational  status  is
+          _d_o_w_n,  there  is some error with the logging mechanism,
+          for example if the disk partition is full.
+
+          If the operational status of the log is  _d_o_w_n,  no  log
+          records  will  be stored in the log. This function uses
+          the  functions  _d_i_s_k__l_o_g:_b_l_o_c_k/_u_n_b_l_o_c_k  to  change  the
+          operational status.
+
+     transfer(Host,User,Passwd,DestFile,SearchFunc)   ->   ok   |
+     {error, Reason}
+
+          Types
+               Host = ip_address()
+               User = string()
+               Passwd = string()
+               DestFile = string()
+               SearchFunc = {M, F, A}
+               Reason  =  ftp_bad_address  |  ftp_login_error   |
+               ftp_write_error      |     ftp_tranfer_error     |
+               {bad_search_result, term()}
+               ip_address() = string() |  {int(),  int(),  int(),
+               int()}
+               M = F = atom()
+               A = list()
+               M:F(Continuation | A) -> SearchResult
+               SearchResult = eof |  {NewContinuation,  Bytes}  |
+               {error, R}
+               Continuation = start | cont()
+               NewContinuation = cont()
+               Bytes = binary()
+               R = term()
+
+          This function is used to transfer a log with FTP  to  a
+          remote  host, for example a mangement station. It could
+          be triggered from for example SNMP or from a web inter-
+          face  to  the  system. This log is received as one con-
+          tiguous file, although it is stored as several files in
+          the  underlying  _d_i_s_k__l_o_g log. It is possible to filter
+          the log for certain log records, and to format the  log
+          records. Thus, log records can be efficiently stored by
+          not formatting them when they are  written,  but  later
+          when  the log is actually needed. Of course, to further
+          improve performance, the log records can be transferred
+          unformatted  as  well,  and later formatted off-line at
+          the management station.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   3
+
+
+
+
+
+
+log(3)              ERLANG MODULE DEFINITION               log(3)
+
+
+
+          The _H_o_s_t argument is either a string  or  a  four-tuple
+          representing the IP address of the host. The string can
+          be the name of the host, or the IP  address  in  dotted
+          decimal notation, for example "150.236.14.136".
+
+          The _S_e_a_r_c_h_F_u_n_c argument specifies a function that  will
+          be called by the transfer session to get a chunk of log
+          records to transfer. At the first call, the atom  _s_t_a_r_t
+          is used as an initial continuation. Each time the func-
+          tion is called, it is supposed to  return  a  new  con-
+          tinuation  and  a  binary that contains the bytes to be
+          transferred (the formatted log records). When  the  end
+          of the log is reached, _e_o_f is returned by the function.
+          The return values of the _S_e_a_r_c_h_F_u_n_c is chosen to  match
+          those  of  _d_i_s_k__l_o_g:_c_h_u_n_k/_2. The extra arguments (_A) to
+          the functions can be used to pass filtering information
+          to  the  search  function. An example of a search func-
+          tion:
+
+          -module(my_log).
+
+          f(Cont, Time) ->
+              case disk_log:chunk("my_log", Cont) of
+                  eof ->
+                      eof;
+                  {error, R} ->
+                      {error, R};
+                  {NCont, ListOfTerms} ->
+                      List = lists:map(fun(Term) ->
+                                          format(Term, Time)
+                                       end, ListOfTerms),
+                      Bin = list_to_binary(List),
+                      {NCont, Bin}
+              end.
+
+          %% Each log record is a tuple: {LogTime, LogData}
+          format({LogTime, LogData}, Time) when LogTime > Time ->
+              io_lib:format("time: ~p data: ~p~n", [LogTime, LogData]);
+          format(_LogRecord, _Time) ->
+              [].
+
+          This function can be used as follows  to  transfer  all
+          log records stored after 1997-11-01:
+
+          log:transfer("cave.ericsson.se", "mbj", "secret!", "my_log.txt",
+                       {my_log, f, [{1997,11,01}]}
+
+SEE ALSO
+     disk_log(3), eva(3), file(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   4
+
+
+
+
+
+
+log(3)              ERLANG MODULE DEFINITION               log(3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   5
+
+
+
+
+
+

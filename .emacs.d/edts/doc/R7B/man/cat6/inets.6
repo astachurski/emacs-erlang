@@ -1,0 +1,66 @@
+
+
+
+inets(6)          ERLANG APPLICATION DEFINITION          inets(6)
+
+
+
+APPLICATION
+     inets - Inets
+
+DESCRIPTION
+     Inets is a  container  for  Internet  clients  and  servers.
+     Currently,  an HTTP server and an FTP client has been incor-
+     porated in Inets. The HTTP server is an efficient  implemen-
+     tation  of   HTTP  1.0 as defined in  RFC 1945, namely a Web
+     server.
+
+
+Configuration
+     It is possible to start a number of Web servers in an embed-
+     ded  system  using  the  _s_e_r_v_i_c_e_s  config  parameter from an
+     application config file. A minimal application  config  file
+     (from  now  on  referred to as _i_n_e_t_s._c_o_n_f) starting two HTTP
+     servers typically looks as follows:
+
+     [{inets,
+       [{services,[{httpd,"/var/tmp/server_root/conf/8888.conf"},
+                   {httpd,"/var/tmp/server_root/conf/8080.conf"}]}]}].
+
+     A server config file is specified for each HTTP server to be
+     started.  The  config file syntax and semantics is described
+     in httpd(3).
+
+     _i_n_e_t_s._c_o_n_f can be tested by copying the example server  root
+     to  a  specific  installation  directory,  as  described  in
+     httpd(3). The example below  shows  a  manual  start  of  an
+     Erlang  node,  using  _i_n_e_t_s._c_o_n_f,  and the start of two HTTP
+     servers listening listen on ports 8888 and 8080.
+
+     $erl -config ./inets
+     Erlang (BEAM) emulator version 4.9
+
+     Eshell V4.9  (abort with ^G)
+     1>application:start(inets)
+     {ok,<0.24.0>}
+
+SEE ALSO
+     httpd(3)
+
+AUTHOR
+     Joakim Grebeno  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+

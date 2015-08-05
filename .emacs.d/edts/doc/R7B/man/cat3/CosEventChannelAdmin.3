@@ -1,0 +1,198 @@
+
+
+
+CosEventChannelAdmin(3E)RLANG MODULE DEFINITICOoNsEventChannelAdmin(3)
+
+
+
+MODULE
+     CosEventChannelAdmin -  The CosEventChannelAdmin  defines  a
+     set if event service interfaces that enables decoupled asyn-
+     chronous communication between objects and  implements  gen-
+     eric  (untyped)  version of the OMG COSS standard event ser-
+     vice.
+
+DESCRIPTION
+     The event service defines two roles for  objects:  the  sup-
+     plier  role  and  the  consumer role. Suppliers supply event
+     data to the event channel and consumers receive  event  data
+     from the channel. Suppliers do not need to know the identity
+     of the consumers, and vice versa.  Consumers  and  suppliers
+     are  connected  to  the event channel via proxies, which are
+     managed by ConsumerAdmin and SupplierAdmin objects.
+
+     There are four general models of communication. These are:
+
+       * The canonical push model. It  allows  the  suppliers  of
+         events  to initiate the transfer of event data to consu-
+         mers. Event channels play the role of  _N_o_t_i_f_i_e_r.  Active
+         suppliers use event channel to push data to passive con-
+         sumers registered with the event channel.
+
+       * The canonical pull model. It allows consumers to request
+         events  from  suppliers. Event channels play the role of
+         _P_r_o_c_u_r_e since they procure events on  behalf  of  consu-
+         mers.  Active  consumers  can  explicitly pull data from
+         passive suppliers via the event channels.
+
+       * The hybrid push/pull model. It allows consumers  request
+         events  queued at a channel by suppliers. Event channels
+         play the role of _Q_u_e_u_e. Active consumers explicitly pull
+         data  deposited  by active suppliers via the event chan-
+         nels.
+
+       * The hybrid pull/push model. It  allows  the  channel  to
+         pull  events  from suppliers and push them to consumers.
+         Event channels  play  the  role  of  _I_n_t_e_l_l_i_g_e_n_t  _a_g_e_n_t.
+         Active  event  channels  can pull data from passive sup-
+         pliers to push it to passive consumers.
+
+     To get access to the record definitions for the  structuress
+     use: -_i_n_c_l_u_d_e__l_i_b("_c_o_s_E_v_e_n_t/_s_r_c/_C_o_s_E_v_e_n_t_C_h_a_n_n_e_l_A_d_m_i_n._h_r_l")..
+
+     There are seven different interfaces supported in  the  ser-
+     vice:
+
+       * ProxyPushConsumer
+
+       * ProxyPullSupplier
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                1
+
+
+
+
+
+
+CosEventChannelAdmin(3E)RLANG MODULE DEFINITICOoNsEventChannelAdmin(3)
+
+
+
+       * ProxyPullConsumer
+
+       * ProxyPushSupplier
+
+       * ConsumerAdmin
+
+       * SupplierAdmin
+
+       * EventChannel
+
+     IDL specification for CosEventChannelAdmin:
+
+     #ifndef _COSEVENTCHANELADMIN_IDL
+     #define _COSEVENTCHANELADMIN_IDL
+
+     #include "CosEventComm.idl"
+
+     #pragma prefix "omg.org"
+
+     module CosEventChannelAdmin
+     {
+       exception AlreadyConnected{};
+       exception TypeError{};
+
+       interface ProxyPushConsumer: CosEventComm::PushConsumer
+       {
+         void connect_push_supplier(in CosEventComm::
+                                    PushSupplier push_supplier)
+                                    raises (AlreadyConnected);
+       };
+
+       interface ProxyPullSupplier: CosEventComm::PullSupplier
+       {
+         void connect_pull_consumer(in CosEventComm::
+                                    PullConsumer pull_consumer)
+                                    raises (AlreadyConnected);
+       };
+
+       interface ProxyPullConsumer: CosEventComm::PullConsumer
+       {
+         void connect_pull_supplier(in CosEventComm::
+                                    PullSupplier pull_supplier)
+                                    raises (AlreadyConnected, TypeError);
+       };
+
+       interface ProxyPushSupplier: CosEventComm::PushSupplier
+       {
+         void connect_push_consumer(in CosEventComm::
+                                    PushConsumer push_consumer)
+                                    raises (AlreadyConnected, TypeError);
+       };
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                2
+
+
+
+
+
+
+CosEventChannelAdmin(3E)RLANG MODULE DEFINITICOoNsEventChannelAdmin(3)
+
+
+
+       interface ConsumerAdmin
+       {
+         ProxyPushSupplier obtain_push_supplier();
+         ProxyPullSupplier obtain_pull_supplier();
+       };
+
+       interface SupplierAdmin
+       {
+         ProxyPushConsumer obtain_push_consumer();
+         ProxyPullConsumer obtain_pull_consumer();
+       };
+
+       interface EventChannel
+       {
+         ConsumerAdmin for_consumers();
+         SupplierAdmin for_suppliers();
+         void destroy();
+       };
+
+     };
+
+     #endif
+
+
+AUTHOR
+     Helen Airiyan - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                3
+
+
+

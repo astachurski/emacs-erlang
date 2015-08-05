@@ -1,0 +1,34 @@
+.TH shell_default 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+shell_default \- Customizing the Erlang Environment
+.SH DESCRIPTION
+.LP
+The functions in \fIshell_default\fR are called when no module name is given in a shell command\&. 
+.LP
+Consider the following shell dialogue:
+
+.nf
+1 >lists:reverse("abc")\&.
+"cab"
+2 >c(foo)\&.
+{ok, foo}
+.fi
+.LP
+In command one, the module \fIlists\fR is called\&. In command two, no module name is specified\&. The shell searches the modules \fIuser_default\fR followed by \fIshell_default\fR for the function \fIfoo/1\fR\&. 
+.LP
+\fIshell_default\fR is intended for "system wide" customizations to the shell\&. \fIuser-default\fR is intended for "local" or individual user customizations\&. 
+
+.SH Hint
+.LP
+To add your own commands to the shell, create a module called\fIuser_default\fR and add the commands you want\&. Then add the following line as the \fIfirst\fR line in your \fI\&.erlang\fR file in your home directory\&. 
+
+.nf
+code:load_abs("$PATH/user_default")\&.
+.fi
+.LP
+\fI$PATH\fR is the directory where your \fIuser_default\fR module can be found\&. 
+.SH AUTHORS
+.nf
+Joe Armstrong - support@erlang.ericsson.se
+Robert Virding - support@erlang.ericsson.se
+.fi

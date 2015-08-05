@@ -1,0 +1,66 @@
+
+
+
+queue(3)            ERLANG MODULE DEFINITION             queue(3)
+
+
+
+MODULE
+     queue - Abstract Data Type for FIFO Queues
+
+DESCRIPTION
+     This module implements FIFO queues in an efficient manner.
+
+
+EXPORTS
+     new() -> Queue
+
+          Types
+               Queue = queue()
+
+          Returns an empty queue.
+
+     in(Item, Q1) -> Q2
+
+          Types
+               Item = term()
+               Q1 = Q2 = queue()
+
+          Inserts _I_t_e_m into the queue _Q_1. Returns a new queue _Q_2.
+
+     out(Q) -> Result
+
+          Types
+               Result = {{value, Item}, Q1} | {empty, Q1}
+               Q = Q1 = queue()
+
+          Removes the oldest element from the  queue  _Q.  Returns
+          the  tuple  {{_v_a_l_u_e, _I_t_e_m}, _Q_1}, where _I_t_e_m is the ele-
+          ment removed and _Q_1 is an identifier for the new queue.
+          If _Q is empty, the tuple {_e_m_p_t_y, _Q} is returned.
+
+     to_list(Q) -> list()
+
+          Types
+               Q = queue()
+
+          Returns a list of the elements in the queue,  with  the
+          oldest element first.
+
+AUTHOR
+     Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+

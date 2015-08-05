@@ -1,0 +1,396 @@
+
+
+
+string(3)           ERLANG MODULE DEFINITION            string(3)
+
+
+
+MODULE
+     string - String Processing Functions
+
+DESCRIPTION
+     This module contains functions for string processing.
+
+
+EXPORTS
+     len(String) -> Length
+
+          Types
+               String = string()
+               Length = integer()
+
+          Returns the number of characters in the string.
+
+     equal(String1, String2) -> bool()
+
+          Types
+               String1 = String2 = string()
+
+          Tests whether two strings are equal.  Returns  _t_r_u_e  if
+          they are, otherwise _f_a_l_s_e.
+
+     concat(String1, String2) -> String3
+
+          Types
+               String1 = String2 = String3 = string()
+
+          Concatenates two strings to form a new string.  Returns
+          the new string.
+
+     chr(String, Character) -> Index
+     rchr(String, Character) -> Index
+
+          Types
+               String = string()
+               Character = char()
+               Index = integer()
+
+          Returns the index of the first/last occurrence of _C_h_a_r_-
+          _a_c_t_e_r  in  _S_t_r_i_n_g.  _0 is returned if _C_h_a_r_a_c_t_e_r does not
+          occur.
+
+     str(String, SubString) -> Index
+     rstr(String, SubString) -> Index
+
+          Types
+               String = SubString = string()
+               Index = integer()
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+string(3)           ERLANG MODULE DEFINITION            string(3)
+
+
+
+          Returns the position where the first/last occurence  of
+          _S_u_b_S_t_r_i_n_g  begins in _S_t_r_i_n_g. _0 is returned if _S_u_b_S_t_r_i_n_g
+          does not exist in _S_t_r_i_n_g. For example:
+
+          > string:str(" Hello Hello World World ", "Hello World").
+          8
+
+     span(String, Chars) -> Length
+     cspan(String, Chars) -> Length
+
+          Types
+               String = Chars = string()
+               Length = integer()
+
+          Returns the length of the maximum  initial  segment  of
+          String, which consists entirely of characters from (not
+          from) Chars.
+
+          For example:
+
+          > string:span("\t    abcdef", " \t").
+          5
+          > string:cspan("\t    abcdef", " \t").
+          0
+
+     substr(String, Start) -> SubString
+     substr(String, Start, Length) -> Substring
+
+          Types
+               String = SubString = string()
+               Start = Length = integer()
+
+          Returns a substring of _S_t_r_i_n_g, starting at the position
+          _S_t_a_r_t, and ending at the end of the string or at length
+          _L_e_n_g_t_h.
+
+          For example:
+
+          > substr("Hello World", 4, 5).
+          "lo Wo"
+
+     tokens(String, SeperatorList) -> Tokens
+
+          Types
+               String = SeperatorList = string()
+               Tokens = [string()]
+
+          Returns a list of tokens in _S_t_r_i_n_g,  separated  by  the
+          characters in _S_e_p_e_r_a_t_o_r_L_i_s_t.
+
+          For example:
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+string(3)           ERLANG MODULE DEFINITION            string(3)
+
+
+
+          > tokens("abc defxxghix jkl", "x ").
+          ["abc", "def", "ghi", "jkl"]
+
+     chars(Character, Number) -> String
+     chars(Character, Number, Tail) -> String
+
+          Types
+               Character = char()
+               Number = integer()
+               String = string()
+
+          Returns a string consisting  of  _N_u_m_b_e_r  of  characters
+          _C_h_a_r_a_c_t_e_r.  Optionally,  the  string  can  end with the
+          string _T_a_i_l.
+
+     copies(String, Number) -> Copies
+
+          Types
+               String = Copies = string()
+               Number = integer()
+
+          Returns a  string  containing  _S_t_r_i_n_g  repeated  _N_u_m_b_e_r
+          times.
+
+     words(String) -> Count
+     words(String, Character) -> Count
+
+          Types
+               String = string()
+               Character = char()
+               Count = integer()
+
+          Returns the number of words  in  _S_t_r_i_n_g,  separated  by
+          blanks or _C_h_a_r_a_c_t_e_r.
+
+          For example:
+
+          > words(" Hello old boy!", $o).
+          4
+
+     sub_word(String, Number) -> Word
+     sub_word(String, Number, Character) -> Word
+
+          Types
+               String = Word = string()
+               Character = char()
+               Number = integer()
+
+          Returns the word in position _N_u_m_b_e_r  of  _S_t_r_i_n_g.  Words
+          are separated by blanks or _C_h_a_r_a_c_t_e_rs.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+string(3)           ERLANG MODULE DEFINITION            string(3)
+
+
+
+          For example:
+
+          > string:sub_word(" Hello old boy !",3,$o).
+          "ld b"
+
+     strip(String) -> Stripped
+     strip(String, Direction) -> Stripped
+     strip(String, Direction, Character) -> Stripped
+
+          Types
+               String = Stripped = string()
+               Direction = left | right | both
+               Character = char()
+
+          Returns a string, where leading and/or trailing  blanks
+          or  a  number of _C_h_a_r_a_c_t_e_r have been removed. _D_i_r_e_c_t_i_o_n
+          can be _l_e_f_t, _r_i_g_h_t, or _b_o_t_h and  indicates  from  which
+          direction  blanks  are  to  be  removed.  The  function
+          _s_t_r_i_p/_1 is equivalent to _s_t_r_i_p(_S_t_r_i_n_g, _b_o_t_h).
+
+          For example:
+
+          > string:strip("...Hello.....", both, $.).
+          "Hello"
+
+     left(String, Number) -> Left
+     left(String, Number, Character) -> Left
+
+          Types
+               String = Left = string()
+               Character = char
+               Number = integer()
+
+          Returns the _S_t_r_i_n_g with the length adjusted  in  accor-
+          dance  with  _N_u_m_b_e_r.  The  left margin is fixed. If the
+          _l_e_n_g_t_h(_S_t_r_i_n_g) < _N_u_m_b_e_r, _S_t_r_i_n_g is padded  with  blanks
+          or _C_h_a_r_a_c_t_e_rs.
+
+          For example:
+
+          > string:left("Hello",10,$.).
+          "Hello....."
+
+     right(String, Number) -> Right
+     right(String, Number, Character) -> Right
+
+          Types
+               String = Right = string()
+               Character = char
+               Number = integer()
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+string(3)           ERLANG MODULE DEFINITION            string(3)
+
+
+
+          Returns the _S_t_r_i_n_g with the length adjusted  in  accor-
+          dance  with  _N_u_m_b_e_r.  The right margin is fixed. If the
+          length of (_S_t_r_i_n_g) <  _N_u_m_b_e_r,  _S_t_r_i_n_g  is  padded  with
+          blanks or _C_h_a_r_a_c_t_e_rs.
+
+          For example:
+
+          > string:right("Hello", 10, $.).
+          ".....Hello"
+
+     centre(String, Number) -> Centered
+     centre(String, Number, Character) -> Centered
+
+          Types
+               String = Centered = string()
+               Character = char
+               Number = integer()
+
+          Returns a string, where _S_t_r_i_n_g is centred in the string
+          and  surrounded  by blanks or characters. The resulting
+          string will have the length _N_u_m_b_e_r.
+
+     sub_string(String, Start) -> SubString
+     sub_string(String, Start, Stop) -> SubString
+
+          Types
+               String = SubString = string()
+               Start = Stop = integer()
+
+          Returns a substring of _S_t_r_i_n_g, starting at the position
+          _S_t_a_r_t to the end of the string, or to and including the
+          _S_t_o_p position.
+
+          For example:
+
+          sub_string("Hello World", 4, 8).
+          "lo Wo"
+
+Notes
+     Some of the general string functions  may  seem  to  overlap
+     each  other. The reason for this is that this string package
+     is the combination of two earlier packages and all the func-
+     tions of both packages have been retained.
+
+     The regular expression functions have been  moved  to  their
+     own  module  _r_e_g_e_x_p (see regexp). The old entry points still
+     exist for backwards compatibility, but will be removed in  a
+     future  release  so  that  users  are  encouraged to use the
+     module _r_e_g_e_x_p.
+
+  Note:
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+string(3)           ERLANG MODULE DEFINITION            string(3)
+
+
+
+     Any undocumented functions in _s_t_r_i_n_g should not be used.
+
+
+AUTHORS
+     Robert Virding - support@erlang.ericsson.se
+     Torbjorn Tornkvist - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+

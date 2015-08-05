@@ -1,0 +1,132 @@
+
+
+
+pman(3)             ERLANG MODULE DEFINITION              pman(3)
+
+
+
+MODULE
+     pman - A graphical interface for inspecting  running  Erlang
+     processes.
+
+DESCRIPTION
+     The process manager Pman is a tool that provides functional-
+     ity  for  inspecting  the  state  of running processes in an
+     Erlang runtime system.
+
+     The user interface provides two main views:
+
+       * a node overview showing all  running  processes  on  the
+         selected node
+
+       * a process trace window for following  the  execution  of
+         one or more selected processes.
+
+     Pman operates either locally or in a distributed Erlang sys-
+     tem.
+
+     Refer to the Pman User's Guide for a detailed description of
+     the functionality.
+
+
+EXPORTS
+     start() -> Pid
+     start(LIModuleExcluded) -> Pid
+
+          Types
+               Pid = pid()
+               LIModuleExcluded = [atom()]
+
+          _s_t_a_r_t/_0 starts the  process  manager  with  the  user`s
+          saved settings, if there are any.
+
+           _s_t_a_r_t/_1 also starts  the  process  manager,  with  the
+          difference  that it will not show any processes execut-
+          ing code in any of the modules  listed  in  _L_I_M_o_d_u_l_e_E_x_-
+          _c_l_u_d_e_d
+
+           _s_t_a_r_t/_0 and _s_t_a_r_t/_1 return the Pid of Pmans main  win-
+          dow process if the start-up succeeds within 20 seconds,
+          otherwise  it  will   fail   with   the   EXIT   reason
+          {_s_t_a_r_t_u_p__t_i_m_e_o_u_t, _p_m_a_n}.
+
+     start_notimeout() -> Pid
+     start_notimeout(LIModuleExcluded) -> Pid
+
+          Types
+               Pid = pid()
+               LIModuleExcluded = [atom()]
+
+
+
+
+Ericsson Utvecklings ABLast change: pman  2.4                    1
+
+
+
+
+
+
+pman(3)             ERLANG MODULE DEFINITION              pman(3)
+
+
+
+          _s_t_a_r_t__n_o_t_i_m_e_o_u_t/_0 starts the process manager  with  the
+          user's saved settings, if there are any.
+
+          _s_t_a_r_t__n_o_t_i_m_e_o_u_t/_1 also starts the process manager, with
+          the difference that it will not show any processes exe-
+          cuting code in any of the modules listed in _L_I_M_o_d_u_l_e_E_x_-
+          _c_l_u_d_e_d.
+
+          _s_t_a_r_t__n_o_t_i_m_e_o_u_t/_0 and _s_t_a_r_t__n_o_t_i_m_e_o_u_t/_1 return the  Pid
+          of Pmans main window process. It will hang indefinitely
+          waiting for successful start-up.
+
+     proc(Process) -> Pid
+     proc(A,B,C) -> Pid
+
+          Types
+               Pid = pid()
+               Process = pid() | atom()
+               A, B, C = integer()
+
+          _p_r_o_c/_1 and _p_r_o_c/_3 both open  a  trace  window  for  the
+          specified  process.  They are convenience functions for
+          bypassing the process overview window in the  graphical
+          user   interface.   _P_r_o_c_e_s_s   can  either  be  an  atom
+          representing a registered process, or a PID.
+
+          _p_r_o_c/_3 is merely  a  convenience  function  that  takes
+          three  integers  as  arguments,  representing the three
+          parts of the PID. (To  avoid  having  to  use  the  BIF
+          _l_i_s_t__t_o__p_i_d/_1).
+
+          The functions return the PID of the process controlling
+          the  trace  output  window.  If there is a problem they
+          will fail with the EXIT reason _u_n_d_e_f_i_n_e_d.
+
+See Also
+     Pman in User's Guide.
+
+AUTHORS
+     Francesco Cesarini - support@erlang.ericsson.se
+     Catrin Hansson - support@erlang.ericsson.se
+     Peter Olin - support@erlang.ericsson.se
+     Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: pman  2.4                    2
+
+
+

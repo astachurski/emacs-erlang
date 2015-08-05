@@ -1,0 +1,63 @@
+.TH random 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+random \- Pseudo random number generation
+.SH DESCRIPTION
+.LP
+Random number generator\&. The method is attributed to B\&.A\&. Wichmann and I\&.D\&.Hill, in \&'An efficient and portable pseudo-random number generator\&', Journal of Applied Statistics\&. AS183\&. 1982\&. Also Byte March 1987\&. 
+.LP
+The current algorithm is a modification of the version attributed to Richard A O\&'Keefe in the standard Prolog library\&.
+
+.SH EXPORTS
+.LP
+.B
+seed() -> ran()
+.br
+.RS
+.LP
+Seeds random number generation with default (fixed) values\&. 
+.RE
+.LP
+.B
+seed(A1, A2, A3) -> ran()
+.br
+.RS
+.TP
+Types
+A1 = A2 = A3 = int()
+.br
+.RE
+.RS
+.LP
+Seeds random number generation with integer values\&. 
+.RE
+.LP
+.B
+uniform() -> float()
+.br
+.RS
+.LP
+Returns a random float uniformly distributed between \fI0\&.0\fR and \fI1\&.0\fR\&. 
+.RE
+.LP
+.B
+uniform(N) -> int()
+.br
+.RS
+.TP
+Types
+N = int()
+.br
+.RE
+.RS
+.LP
+Given an integer \fIN >= 1\fR, \fIuniform(N)\fR returns a random integer uniformly distributed between \fI1\fR and \fIN\fR\&. 
+.RE
+.SH Note
+.LP
+Uses the process dictionary variable \fIrandom_seed\fR to remember the current seed\&. 
+.LP
+Before a process calls \fIuniform/0\fR or \fIuniform/1\fR for the first time, it must call one of the seeding functions\&. 
+.SH AUTHOR
+.nf
+Joe Armstrong - support@erlang.ericsson.se
+.fi

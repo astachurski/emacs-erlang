@@ -1,0 +1,858 @@
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+MODULE
+     inet - Access to TCP/IP protocols.
+
+DESCRIPTION
+     Inet provides access to TCP/IP protocols.
+
+     Some functions returns a _h_o_s_t_e_n_t record. Use  this  line  in
+     your module
+     -_i_n_c_l_u_d_e__l_i_b("_k_e_r_n_e_l/_i_n_c_l_u_d_e/_i_n_e_t._h_r_l").
+      to include the record definition.
+
+       :
+
+       _h__a_d_d_r__l_i_s_t:
+           List of addresses for this host
+
+       _h__a_d_d_r_t_y_p_e:
+           Type of address: _i_n_e_t or _i_n_e_t_6
+
+       _h__a_l_i_a_s_e_s:
+           List of aliases (additional names for host)
+
+       _h__l_e_n_g_t_h:
+           Length of address in bytes
+
+       _h__n_a_m_e:
+           Official name for host
+
+     Addresses as inputs to functions can be either a string or a
+     tuple.  For  instance,  the  IP address 150.236.20.73 can be
+     passed   to   _g_e_t_h_o_s_t_b_y_a_d_d_r/_1   either   as    the    string
+     "150.236.20.73"   or  as  the  tuple  {_1_5_0,  _2_3_6,  _2_0,  _7_3}.
+     Addresses returned by any function in the _i_n_e_t  module  will
+     be a tuple.
+
+     Hostnames may be specified as either atoms or a strings.
+
+     Where an address family is required, valid values  are  _i_n_e_t
+     (standard IPv4 addresses) or _i_n_e_t_6 (IPv6).
+
+
+EXPORTS
+     format_error(Tag)
+
+          Types
+               Tag = atom()
+
+          Returns a diagnostic  error  string.  See  the  section
+          below  for  possible  _T_a_g  values and the corresponding
+          strings.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+     gethostbyaddr(Address) -> {ok, Hostent} | {error, Reason}
+
+          Types
+               Address = address()
+               Hostent = hostent()
+
+          Returns a _h_o_s_t_e_n_t record given an address.
+
+     gethostbyname(Name) -> {ok, Hostent} | {error, Reason}
+
+          Types
+               Hostname = hostname()
+               Hostent = hostent()
+
+          Returns a _h_o_s_t_e_n_t record given a hostname.
+
+     gethostbyname(Name, Family) -> {ok, Hostent} | {error,  Rea-
+     son}
+
+          Types
+               Hostname = hostname()
+               Family = family()
+               Hostent = hostent()
+
+          Returns a _h_o_s_t_e_n_t record given a  hostname,  restricted
+          to the given address family.
+
+     gethostname() -> {ok, Name} | {error, Reason}
+
+          Types
+               Hostname = hostname()
+
+          Returns the local hostname. Will never fail.
+
+     sockname(Socket) -> {ok, {IP, Port}} | {error, Reason}
+
+          Types
+               Socket = socket()
+               Address = address()
+               Port = integer()
+
+          Returns the local address and port number for a socket.
+
+     peername(Socket) -> {ok, {Address, Port}} | {error, Reason}
+
+          Types
+               Socket = socket()
+               Address = address()
+               Port = integer()
+
+          Returns the address and port for the  other  end  of  a
+          connection.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+     port(Socket) -> {ok, Number}
+
+          Types
+               Socket = socket()
+               Number = integer()
+
+          Returns the local port number for a socket.
+
+     close(Socket) -> ok
+
+          Types
+               Socket = socket()
+
+          Closes a socket of any type.
+
+     getaddr(IP,inet) -> {ok,{A1,A2,A3,A4}} | {error, Reason}
+
+          Types
+               IP = {A1, A2, A3, A4} | string() | atom()
+               A1 = A2 = A3 = A4 = integer()
+               Reason = term()
+
+          Returns the IP-address as a tuple with integers for  _I_P
+          which can be an IP-address a single hostname or a fully
+          qualified hostname. At present only IPv4 adresses  (the
+          _i_n_e_t  argument)  is  supported,  but  the  function  is
+          prepared to support IPv6 (_i_n_e_t_6) in a near future.
+
+     setopts(Socket, Options) -> ok | {error, Reason}
+
+          Types
+               Socket = term()
+               Options = list()
+
+          Sets one or more options for a  socket.  The  following
+          options are available:
+
+            {_a_c_t_i_v_e, _B_o_o_l_e_a_n}:
+                If the  active  option  is  _t_r_u_e,  which  is  the
+                default, everything received from the socket will
+                be sent as messages to the receiving process.  If
+                the active option is set to _f_a_l_s_e (passive mode),
+                the process must explicitly receive incoming data
+                by   calling   _g_e_n__t_c_p:_r_e_c_v/_N  or  _g_e_n__u_d_p:_r_e_c_v/_N
+                (depending on the type of socket). Note:  Passive
+                mode  provides  flow control; the other side will
+                not be able send faster  than  the  receiver  can
+                read.  Active  mode  provides  no flow control; a
+                fast sender could easily  overflow  the  receiver
+                with  incoming  messages. Use active mode only if
+                your high-level protocol provides  its  own  flow
+                control  (for  instance,  acknowledging  received
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+                messages) or the  amount  of  data  exchanged  is
+                small.
+
+            {_b_r_o_a_d_c_a_s_t, _B_o_o_l_e_a_n}:
+                Enable/disable  permission  to  send  broadcasts.
+                (UDP)
+
+            {_d_o_n_t_r_o_u_t_e, _t_r_u_e|_f_a_l_s_e}:
+                Use {_d_o_n_t_r_o_u_t_e, _t_r_u_e} to  enable/disable  routing
+                bypass for outgoing messages.
+
+            {_h_e_a_d_e_r, _S_i_z_e}:
+                This option is  only  meaningful  if  the  _b_i_n_a_r_y
+                option was specified when the socket was created.
+                If the _h_e_a_d_e_r option is specified, the first Size
+                number  bytes  of  data  received from the socket
+                will be elements of a list, and the rest  of  the
+                data  will  be  a binary given as the tail of the
+                same  list.  If  for  example  _S_i_z_e=2  the   data
+                received will match [_B_y_t_e_1, _B_y_t_e_2|_B_i_n_a_r_y].
+
+            {_k_e_e_p_a_l_i_v_e, _B_o_o_l_e_a_n}:
+                (TCP/IP sockets) Enables periodic transmission on
+                a  connected  socket, when no other data is being
+                exchanged. If the other end does not respond, the
+                connection is considered broken and an error mes-
+                sage will be sent  to  the  controlling  process.
+                Default disabled.
+
+            {_n_o_d_e_l_a_y, _B_o_o_l_e_a_n}:
+                If Boolean is _t_r_u_e,  the  _T_C_P__N_O_D_E_L_A_Y  option  is
+                turned  on  for the socket, which means that even
+                small amounts of data will be  sent  immediately.
+                (TCP/IP sockets)
+
+            {_p_a_c_k_e_t, _P_a_c_k_e_t_T_y_p_e}:
+                (TCP/IP sockets) Defines the type of  packets  to
+                use for a socket. The following values are valid:
+
+                  _r_a_w | _0:
+                      No packaging is done.
+
+                  _1 | _2 | _4:
+                      Packets consist of a header specifying  the
+                      number  of bytes in the packet, followed by
+                      that number of bytes. The length of  header
+                      can  be  one, two, or four bytes; the order
+                      of  the  bytes  is  big-endian.  Each  send
+                      operation will generate the header, and the
+                      header will be stripped off on each receive
+                      operation.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+                  _a_s_n_1 | _c_d_r | _s_u_n_r_m | _f_c_g_i | _t_p_k_t | _l_i_n_e:
+                      These packet  types  only  have  effect  on
+                      receiving. When sending a packet, it is the
+                      responsibility of the application to supply
+                      a  correct  header.  On receiving, however,
+                      there will be one message sent to the  con-
+                      trolling  process  for each complete packet
+                      received, and,  similarily,  each  call  to
+                      _g_e_n__t_c_p:_r_e_c_v/_N returns one complete packet.
+                      The header is _n_o_t stripped off.
+
+                      The meanings of the  packet  types  are  as
+                      follows:
+                      _a_s_n_1 - ASN.1 BER,
+                      _s_u_n_r_m - Sun's RPC encoding,
+                      _c_d_r - Corba (GIOP 1.1),
+                      _f_c_g_i - Fast CGI,
+                      _t_p_k_t - TPKT format [RFC1006],
+                      _l_i_n_e - Line mode, a packet is a  line  ter-
+                      minated with newline, lines longer than the
+                      receive buffer are truncated.
+
+            {_r_e_c_b_u_f, _I_n_t_e_g_e_r}:
+                Gives the size of the receive buffer to  use  for
+                the socket.
+
+            {_r_e_u_s_e_a_d_d_r, _B_o_o_l_e_a_n}:
+                Allows or disallows local reuse of port  numbers.
+                By default, reuse is disallowed.
+
+            {_s_n_d_b_u_f, _I_n_t_e_g_e_r}:
+                Gives the size of the send buffer to use for  the
+                socket.
+
+ERRORS
+     The possible error reasons and the corresponding  diagnostic
+     strings returned by _f_o_r_m_a_t__e_r_r_o_r/_1 are as follows:
+
+       :
+
+       _e_2_b_i_g:
+           argument list too long
+
+       _e_a_c_c_e_s:
+           permission denied
+
+       _e_a_d_d_r_i_n_u_s_e:
+           address already in use
+
+       _e_a_d_d_r_n_o_t_a_v_a_i_l:
+           cannot assign requested address
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  5
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+       _e_a_d_v:
+           advertise error
+
+       _e_a_f_n_o_s_u_p_p_o_r_t:
+           address family not supported by protocol family
+
+       _e_a_g_a_i_n:
+           resource temporarily unavailable
+
+       _e_a_l_i_g_n:
+           EALIGN
+
+       _e_a_l_r_e_a_d_y:
+           operation already in progress
+
+       _e_b_a_d_e:
+           bad exchange descriptor
+
+       _e_b_a_d_f:
+           bad file number
+
+       _e_b_a_d_f_d:
+           file descriptor in bad state
+
+       _e_b_a_d_m_s_g:
+           not a data message
+
+       _e_b_a_d_r:
+           bad request descriptor
+
+       _e_b_a_d_r_p_c:
+           RPC structure is bad
+
+       _e_b_a_d_r_q_c:
+           bad request code
+
+       _e_b_a_d_s_l_t:
+           invalid slot
+
+       _e_b_f_o_n_t:
+           bad font file format
+
+       _e_b_u_s_y:
+           file busy
+
+       _e_c_h_i_l_d:
+           no children
+
+       _e_c_h_r_n_g:
+           channel number out of range
+
+       _e_c_o_m_m:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  6
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+           communication error on send
+
+       _e_c_o_n_n_a_b_o_r_t_e_d:
+           software caused connection abort
+
+       _e_c_o_n_n_r_e_f_u_s_e_d:
+           connection refused
+
+       _e_c_o_n_n_r_e_s_e_t:
+           connection reset by peer
+
+       _e_d_e_a_d_l_k:
+           resource deadlock avoided
+
+       _e_d_e_a_d_l_o_c_k:
+           resource deadlock avoided
+
+       _e_d_e_s_t_a_d_d_r_r_e_q:
+           destination address required
+
+       _e_d_i_r_t_y:
+           mounting a dirty fs w/o force
+
+       _e_d_o_m:
+           math argument out of range
+
+       _e_d_o_t_d_o_t:
+           cross mount point
+
+       _e_d_q_u_o_t:
+           disk quota exceeded
+
+       _e_d_u_p_p_k_g:
+           duplicate package name
+
+       _e_e_x_i_s_t:
+           file already exists
+
+       _e_f_a_u_l_t:
+           bad address in system call argument
+
+       _e_f_b_i_g:
+           file too large
+
+       _e_h_o_s_t_d_o_w_n:
+           host is down
+
+       _e_h_o_s_t_u_n_r_e_a_c_h:
+           host is unreachable
+
+       _e_i_d_r_m:
+           identifier removed
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  7
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+       _e_i_n_i_t:
+           initialization error
+
+       _e_i_n_p_r_o_g_r_e_s_s:
+           operation now in progress
+
+       _e_i_n_t_r:
+           interrupted system call
+
+       _e_i_n_v_a_l:
+           invalid argument
+
+       _e_i_o:
+           I/O error
+
+       _e_i_s_c_o_n_n:
+           socket is already connected
+
+       _e_i_s_d_i_r:
+           illegal operation on a directory
+
+       _e_i_s_n_a_m:
+           is a named file
+
+       _e_l_2_h_l_t:
+           level 2 halted
+
+       _e_l_2_n_s_y_n_c:
+           level 2 not synchronized
+
+       _e_l_3_h_l_t:
+           level 3 halted
+
+       _e_l_3_r_s_t:
+           level 3 reset
+
+       _e_l_b_i_n:
+           ELBIN
+
+       _e_l_i_b_a_c_c:
+           cannot access a needed shared library
+
+       _e_l_i_b_b_a_d:
+           accessing a corrupted shared library
+
+       _e_l_i_b_e_x_e_c:
+           cannot exec a shared library directly
+
+       _e_l_i_b_m_a_x:
+           attempting to link in more shared libraries than  sys-
+           tem limit
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  8
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+       _e_l_i_b_s_c_n:
+           .lib section in a.out corrupted
+
+       _e_l_n_r_n_g:
+           link number out of range
+
+       _e_l_o_o_p:
+           too many levels of symbolic links
+
+       _e_m_f_i_l_e:
+           too many open files
+
+       _e_m_l_i_n_k:
+           too many links
+
+       _e_m_s_g_s_i_z_e:
+           message too long
+
+       _e_m_u_l_t_i_h_o_p:
+           multihop attempted
+
+       _e_n_a_m_e_t_o_o_l_o_n_g:
+           file name too long
+
+       _e_n_a_v_a_i_l:
+           not available
+
+       _e_n_e_t:
+           ENET
+
+       _e_n_e_t_d_o_w_n:
+           network is down
+
+       _e_n_e_t_r_e_s_e_t:
+           network dropped connection on reset
+
+       _e_n_e_t_u_n_r_e_a_c_h:
+           network is unreachable
+
+       _e_n_f_i_l_e:
+           file table overflow
+
+       _e_n_o_a_n_o:
+           anode table overflow
+
+       _e_n_o_b_u_f_s:
+           no buffer space available
+
+       _e_n_o_c_s_i:
+           no CSI structure available
+
+       _e_n_o_d_a_t_a:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  9
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+           no data available
+
+       _e_n_o_d_e_v:
+           no such device
+
+       _e_n_o_e_n_t:
+           no such file or directory
+
+       _e_n_o_e_x_e_c:
+           exec format error
+
+       _e_n_o_l_c_k:
+           no locks available
+
+       _e_n_o_l_i_n_k:
+           link has be severed
+
+       _e_n_o_m_e_m:
+           not enough memory
+
+       _e_n_o_m_s_g:
+           no message of desired type
+
+       _e_n_o_n_e_t:
+           machine is not on the network
+
+       _e_n_o_p_k_g:
+           package not installed
+
+       _e_n_o_p_r_o_t_o_o_p_t:
+           bad proocol option
+
+       _e_n_o_s_p_c:
+           no space left on device
+
+       _e_n_o_s_r:
+           out of stream resources or not a stream device
+
+       _e_n_o_s_y_m:
+           unresolved symbol name
+
+       _e_n_o_s_y_s:
+           function not implemented
+
+       _e_n_o_t_b_l_k:
+           block device required
+
+       _e_n_o_t_c_o_n_n:
+           socket is not connected
+
+       _e_n_o_t_d_i_r:
+           not a directory
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 10
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+       _e_n_o_t_e_m_p_t_y:
+           directory not empty
+
+       _e_n_o_t_n_a_m:
+           not a named file
+
+       _e_n_o_t_s_o_c_k:
+           socket operation on non-socket
+
+       _e_n_o_t_s_u_p:
+           operation not supported
+
+       _e_n_o_t_t_y:
+           inappropriate device for ioctl
+
+       _e_n_o_t_u_n_i_q:
+           name not unique on network
+
+       _e_n_x_i_o:
+           no such device or address
+
+       _e_o_p_n_o_t_s_u_p_p:
+           operation not supported on socket
+
+       _e_p_e_r_m:
+           not owner
+
+       _e_p_f_n_o_s_u_p_p_o_r_t:
+           protocol family not supported
+
+       _e_p_i_p_e:
+           broken pipe
+
+       _e_p_r_o_c_l_i_m:
+           too many processes
+
+       _e_p_r_o_c_u_n_a_v_a_i_l:
+           bad procedure for program
+
+       _e_p_r_o_g_m_i_s_m_a_t_c_h:
+           program version wrong
+
+       _e_p_r_o_g_u_n_a_v_a_i_l:
+           RPC program not available
+
+       _e_p_r_o_t_o:
+           protocol error
+
+       _e_p_r_o_t_o_n_o_s_u_p_p_o_r_t:
+           protocol not supported
+
+       _e_p_r_o_t_o_t_y_p_e:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 11
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+           protocol wrong type for socket
+
+       _e_r_a_n_g_e:
+           math result unrepresentable
+
+       _e_r_e_f_u_s_e_d:
+           EREFUSED
+
+       _e_r_e_m_c_h_g:
+           remote address changed
+
+       _e_r_e_m_d_e_v:
+           remote device
+
+       _e_r_e_m_o_t_e:
+           pathname hit remote file system
+
+       _e_r_e_m_o_t_e_i_o:
+           remote i/o error
+
+       _e_r_e_m_o_t_e_r_e_l_e_a_s_e:
+           EREMOTERELEASE
+
+       _e_r_o_f_s:
+           read-only file system
+
+       _e_r_p_c_m_i_s_m_a_t_c_h:
+           RPC version is wrong
+
+       _e_r_r_e_m_o_t_e:
+           object is remote
+
+       _e_s_h_u_t_d_o_w_n:
+           cannot send after socket shutdown
+
+       _e_s_o_c_k_t_n_o_s_u_p_p_o_r_t:
+           socket type not supported
+
+       _e_s_p_i_p_e:
+           invalid seek
+
+       _e_s_r_c_h:
+           no such process
+
+       _e_s_r_m_n_t:
+           srmount error
+
+       _e_s_t_a_l_e:
+           stale remote file handle
+
+       _e_s_u_c_c_e_s_s:
+           Error 0
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 12
+
+
+
+
+
+
+inet(3)             ERLANG MODULE DEFINITION              inet(3)
+
+
+
+       _e_t_i_m_e:
+           timer expired
+
+       _e_t_i_m_e_d_o_u_t:
+           connection timed out
+
+       _e_t_o_o_m_a_n_y_r_e_f_s:
+           too many references
+
+       _e_t_x_t_b_s_y:
+           text file or pseudo-device busy
+
+       _e_u_c_l_e_a_n:
+           structure needs cleaning
+
+       _e_u_n_a_t_c_h:
+           protocol driver not attached
+
+       _e_u_s_e_r_s:
+           too many users
+
+       _e_v_e_r_s_i_o_n:
+           version mismatch
+
+       _e_w_o_u_l_d_b_l_o_c_k:
+           operation would block
+
+       _e_x_d_e_v:
+           cross-domain link
+
+       _e_x_f_u_l_l:
+           message tables full
+
+       _n_x_d_o_m_a_i_n:
+           the hostname or domain name could not be found
+
+AUTHOR
+     tony@erix.ericsson.se - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 13
+
+
+

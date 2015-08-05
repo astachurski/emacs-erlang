@@ -1,0 +1,132 @@
+
+
+
+eva_log_snmp(3)     ERLANG MODULE DEFINITION      eva_log_snmp(3)
+
+
+
+MODULE
+     eva_log_snmp  - Implements an SNMP Interface to EVA log
+
+DESCRIPTION
+     This module implements an SNMP interface to EVA LOG. The MIB
+     implemented  by  this adaptation is OTP-EVA-LOG-MIB. The MIB
+     is located in the directory _m_i_b_s in the distribution.
+
+
+EXPORTS
+     create_tables(Nodes) -> void()
+
+          Types
+               Nodes = [node()]
+
+          This function creates the necessary Mnesia  tables  for
+          the  eva  log  SNMP  implementation. _N_o_d_e_s is a list of
+          nodes where the tables should be replicated. This  list
+          of nodes should specify the same nodes where the appli-
+          cation EVA can be run  distributed,  so  that  EVA  can
+          always have local access to the tables.
+
+          This function should be called once when installing the
+          EVA application in the system.
+
+     start_link(LogDir, MaxSize) -> {ok, Pid} | {error, Reason}
+
+          Types
+               LogDir = string()
+               MaxDirSize = integer()
+
+          Starts the EVA LOG SNMP implementation.  This  function
+          can  be  used  to  include the service in a supervisor.
+          Normally, functions in the supervisor  _e_v_a__s_u_p  can  be
+          used instead.
+
+          _L_o_g_D_i_r is a directory where all  manager  created  logs
+          are stored. The directory must exist.
+
+          _M_a_x_D_i_r_S_i_z_e is the maximum total space the logs  manager
+          created logs are allowed to use.
+
+          The function _c_r_e_a_t_e__t_a_b_l_e_s/_1 must be called before  the
+          server is started.
+
+Instrumentation Functions for the OTP-EVA-LOG-MIB
+     In some cases, other adaptations may need access to the SNMP
+     specific  data  in  EVA LOG. To do this, the instrumentation
+     functions for the SNMP objects can be used. These instrumen-
+     tation  functions  takes the arguments and return the values
+     defined in the application _s_n_m_p.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   1
+
+
+
+
+
+
+eva_log_snmp(3)     ERLANG MODULE DEFINITION      eva_log_snmp(3)
+
+
+
+EXPORTS
+     log_discr_table(Op, RowIndex, Cols) -> InstrumRet
+
+          Instrumentation  function  for   _l_o_g_D_i_s_c_r_i_m_i_n_a_t_o_r_T_a_b_l_e.
+          This  function  assumes  that  access  checks  are made
+          according to the MIB. It may  crash  if,  for  example,
+          _l_o_g_D_i_s_c_r_R_o_w_S_t_a_t_u_s is set no _n_o_t_R_e_a_d_y.
+
+     log_table(Op, RowIndex, Cols) -> InstrumRet
+
+          Instrumentation function for  _l_o_g_T_a_b_l_e.  This  function
+          assumes  that  access  checks are made according to the
+          MIB. It may crash if,  for  example,  _l_o_g_O_p_e_r_S_t_a_t_u_s  is
+          set.
+
+     log_total_max_allowed(get) -> InstrumRet
+
+          Instrumentation function for _l_o_g_T_o_t_a_l_M_a_x_A_l_l_o_w_e_d_S_i_z_e.
+
+     log_total_max_size(get) -> InstrumRet
+
+          Instrumentation function for _l_o_g_T_o_t_a_l_M_a_x_S_i_z_e.
+
+SEE ALSO
+     eva_log(3), eva_sup(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   2
+
+
+

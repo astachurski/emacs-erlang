@@ -1,0 +1,198 @@
+
+
+
+rb(3)               ERLANG MODULE DEFINITION                rb(3)
+
+
+
+MODULE
+     rb - The Report Browser Tool
+
+DESCRIPTION
+     The Report Browser (RB) tool makes it possible to browse and
+     format  error  reports  written  by the error logger handler
+     _l_o_g__m_f__h.
+
+
+EXPORTS
+     grep(RegExp)
+
+          Types
+               RegExp = string()
+
+          All reports containing the  regular  expression  _R_e_g_E_x_p
+          are printed.
+
+          _R_e_g_E_x_p is a string containing the  regular  expression.
+          Refer  to  the  module  _r_e_g_e_x_p  in the STDLIB reference
+          manual for a definition of valid  regular  expressions.
+          They  are  essentially  the  same  as  the UNIX command
+          _e_g_r_e_p.
+
+     h()
+     help()
+
+          Prints the on-line help information.
+
+     list()
+     list(Type)
+
+          Types
+               Type = type()
+               type() = crash_report | supervisor_report |  error
+               | progress
+
+          This  function  lists  all  reports   loaded   in   the
+          _r_b__s_e_r_v_e_r.  Each  report  is given a unique number that
+          can be used as a reference to the report in the  _s_h_o_w/_1
+          function.
+
+          If no _T_y_p_e is given, all reports are listed.
+
+     rescan()
+     rescan(Options)
+
+          Types
+               Options = [opt()]
+
+          Rescans the report directory. _O_p_t_i_o_n_s is  the  same  as
+          for _s_t_a_r_t().
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    1
+
+
+
+
+
+
+rb(3)               ERLANG MODULE DEFINITION                rb(3)
+
+
+
+     show()
+     show(Report)
+
+          Types
+               Report = int() | type()
+
+          If a type argument is given, all loaded reports of this
+          type  are printed. If an integer argument is given, the
+          report with this reference number  is  printed.  If  no
+          argument is given, all reports are shown.
+
+     start()
+     start(Options)
+
+          Types
+               Options = [opt()]
+               opt()  =  {start_log,  FileName}  |   {max,   Max-
+               NoOfReports}  |  {report_dir,  DirString} | {type,
+               ReportType}
+               FileName = string() | standard_io
+               MaxNoOfReports = int() | all
+               DirString = string()
+               ReportType = type() | [type()] | all
+
+          The function _s_t_a_r_t/_1  starts  the  _r_b__s_e_r_v_e_r  with  the
+          specified  options,  while  _s_t_a_r_t/_0 starts with default
+          options. The _r_b__s_e_r_v_e_r must be started  before  reports
+          can  be  browsed.  When  the  _r_b__s_e_r_v_e_r is started, the
+          files in the specified directory are scanned. The other
+          functions assume that the server has started.
+
+          {_s_t_a_r_t__l_o_g,  _F_i_l_e_N_a_m_e}  starts  logging  to  file.  All
+          reports  will be printed to the named file. The default
+          is _s_t_a_n_d_a_r_d__i_o.
+
+          {_m_a_x, _M_a_x_N_o_O_f_R_e_p_o_r_t_s}. Controls how  many  reports  the
+          _r_b__s_e_r_v_e_r  should read on start-up. This option is use-
+          ful as the directory may  contain  20.000  reports.  If
+          this option is given, the _M_a_x_N_o_O_f_R_e_p_o_r_t_s latest reports
+          will be read. The default is 'all'.
+
+          {_r_e_p_o_r_t__d_i_r, _D_i_r_S_t_r_i_n_g}. Defines  the  directory  where
+          the  error log files are located. The default is {_s_a_s_l,
+          _e_r_r_o_r__l_o_g_g_e_r__m_f__d_i_r}.
+
+          {_t_y_p_e, _R_e_p_o_r_t_T_y_p_e}. Controls what kind of  reports  the
+          _r_b__s_e_r_v_e_r should read on start-up. _R_e_p_o_r_t_T_y_p_e is a sup-
+          ported type, 'all', or a list of supported  types.  The
+          default is 'all'.
+
+     start_log(FileName)
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    2
+
+
+
+
+
+
+rb(3)               ERLANG MODULE DEFINITION                rb(3)
+
+
+
+          Types
+               FileName = string()
+
+          Redirects all report output from the  RB  tool  to  the
+          specified file.
+
+     stop()
+
+          Stops the _r_b__s_e_r_v_e_r.
+
+     stop_log()
+
+          Closes the log file. The output from the RB  tool  will
+          be directed to _s_t_a_n_d_a_r_d__i_o.
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    3
+
+
+

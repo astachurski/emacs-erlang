@@ -1,0 +1,66 @@
+
+
+
+CosTimerEvent_TimerEveEnRtLSAeNrGviMcOeD(CU3oL)sETDiEmFeIrNEIvTeInOtN_TimerEventService(3)
+
+
+
+MODULE
+     CosTimerEvent_TimerEventService -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_T_i_m_e/_i_n_c_l_u_d_e/*._h_r_l").
+
+
+EXPORTS
+     register(TimerEventService, CosEventCommPushConsumer,  Data)
+     -> TimerEventHandler
+
+          Types
+               TimerEventService  =  CosEventCommPushConsumer   =
+               TimerEventHandler = #objref
+               Data = #any
+
+          This operation  will  create  a  new  _T_i_m_e_r_E_v_e_n_t_H_a_n_d_l_e_r
+          object   which   will   push   given   _D_a_t_a   to  given
+          _C_o_s_E_v_e_n_t_C_o_m_m_P_u_s_h_C_o_n_s_u_m_e_r after the timer have been set.
+
+     unregister(TimerEventService, TimerEventHandler) -> ok
+
+          Types
+               TimerEventService = TimerEventHandler = #objref
+
+          This    operation    will    terminate    the     given
+          TimerEventHandler.
+
+     event_time(TimerEventService, TimerEvent) -> UTO
+
+          Types
+               TimerEventService = #objref
+               TimerEvent   =    #'CosTimerEvent_TimerEvent'{utc,
+               event_data}
+               utc =
+               event_data = #any}
+               UTO = #objref
+
+          This operation returns a UTO  containing  the  time  at
+          which the associated event was triggered.
+
+AUTHOR
+     Niclas Eklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLaAsBt change: cosTime  1.0.1                  1
+
+
+

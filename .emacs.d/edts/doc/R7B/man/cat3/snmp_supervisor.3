@@ -1,0 +1,132 @@
+
+
+
+snmp_supervisor(3)  ERLANG MODULE DEFINITION   snmp_supervisor(3)
+
+
+
+MODULE
+     snmp_supervisor - A supervisor for the SNMP Processes
+
+DESCRIPTION
+     The _s_n_m_p__s_u_p_e_r_v_i_s_o_r is the supervisor for the SNMP  applica-
+     tion.  There  is  always one supervisor at each node with an
+     SNMP agent (master agent or subagent).
+
+
+EXPORTS
+     start_sub()
+     start_sub(Opts) -> {ok, pid()} |  {error,  {already_started,
+     pid()}} | {error, Reason}
+
+          Types
+               Opts = [opt()]
+               opt() = {priority, Prio}
+
+          Starts a supervisor for the SNMP agent system without a
+          master  agent.  The supervisor starts all involved SNMP
+          processes, but no agent processes. Subagents should  be
+          started by calling _s_t_a_r_t__s_u_b_a_g_e_n_t/_3.
+
+          _P_r_i_o is an Erlang priority. All SNMP processes use this
+          priority.  Default is the same as default in the Erlang
+          runtime system.
+
+     start_master(DbDir,ConfDir)
+     start_master(DbDir,ConfDir,Opts) -> {ok,  pid()}  |  {error,
+     {already_started, pid()}} | {error, Reason}
+
+          Types
+               DbDir = string()
+               ConfDir = string()
+               Opts = [opt()]
+               opt() = {mibs, Mibs}  |  {net_if,  NetIfModule}  |
+               {priority, Prio} | {name, Name}
+               Mibs = [MibName]
+               MibName = [string()]
+               NetfModule = atom()
+               Name = {local, atom()} | {global, atom()}
+
+          Starts a supervisor for  the  SNMP  agent  system.  The
+          supervisor  starts all involved SNMP processes, includ-
+          ing the master agent. Subagents should  be  started  by
+          calling _s_t_a_r_t__s_u_b_a_g_e_n_t/_3.
+
+          _D_b_D_i_r is a string including a trailing directory delim-
+          iter,  which points to the directory where the database
+          files sre stored.
+
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   1
+
+
+
+
+
+
+snmp_supervisor(3)  ERLANG MODULE DEFINITION   snmp_supervisor(3)
+
+
+
+          _C_o_n_f_D_i_r is a string including a trailing directory del-
+          imiter,  which points to the directory where the confi-
+          guration file is found.
+
+          If the STANDARD-MIB is not specified in the _M_i_b_s  list,
+          it  is  loaded  from  the configuration directory (i.e.
+          with the ._c_o_n_f files).
+
+          If no _N_e_t_I_f_M_o_d_u_l_e_s is specified,  the  default  net  if
+          implementation is used (_s_n_m_p__n_e_t__i_f).
+
+          _P_r_i_o is an Erlang priority. All SNMP processes use this
+          priority.  Default is the same as default in the Erlang
+          runtime system.
+
+          If    no    _O_p_t_s    is    given,    [{_n_a_m_e,     {_l_o_c_a_l,
+          _s_n_m_p__m_a_s_t_e_r__a_g_e_n_t}}] is default.
+
+     start_subagent(ParentAgent,Subtree,Mibs) ->  {ok,  pid()}  |
+     {error, Reason}
+
+          Types
+               ParentAgent = pid()
+               SubTree = oid()
+               Mibs = [MibName]
+               MibName = [string()]
+
+          Starts a subagent on the node  where  the  function  is
+          called. The _s_n_m_p__s_u_p_e_r_v_i_s_o_r must be running.
+
+          If the supervisor is not running,  the  function  fails
+          with the reason _b_a_d_a_r_g.
+
+     stop_subagent(SubAgent) -> ok | no_such_child
+
+          Types
+               SubAgent = pid()
+
+          Stops the subagent on the node where  the  function  is
+          called. The _s_n_m_p__s_u_p_e_r_v_i_s_o_r must be running.
+
+          If the supervisor is not running,  the  function  fails
+          with the reason _b_a_d_a_r_g.
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Klas Eriksson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   2
+
+
+

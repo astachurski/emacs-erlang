@@ -1,0 +1,198 @@
+
+
+
+sets(3)             ERLANG MODULE DEFINITION              sets(3)
+
+
+
+MODULE
+     sets - Functions for Manipulating Sets as Ordered Lists
+
+DESCRIPTION
+     Sets are collections of elements with no duplicate elements.
+     The representation of a set is not defined.
+
+
+EXPORTS
+     new() -> Set
+
+          Types
+               Set = set()
+
+          Returns a new empty ordered set.
+
+     is_set(Set) -> bool()
+
+          Types
+               Set = term()
+
+          Returns _t_r_u_e if _S_e_t is an ordered set of elements, oth-
+          erwise _f_a_l_s_e.
+
+     size(Set) -> int()
+
+          Types
+               Set = term()
+
+          Returns the number of elements in _S_e_t.
+
+     to_list(Set) -> List
+
+          Types
+               Set = set()
+               List = [term()]
+
+          Returns the elements of _S_e_t as a list.
+
+     from_list(List) -> Set
+
+          Types
+               List = [term()]
+               Set = set()
+
+          Returns an ordered set of the elements in _L_i_s_t.
+
+     is_element(Element, Set) -> bool()
+
+          Types
+               Element = term()
+               Set = set()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+sets(3)             ERLANG MODULE DEFINITION              sets(3)
+
+
+
+          Returns _t_r_u_e if _E_l_e_m_e_n_t is an element of _S_e_t, otherwise
+          _f_a_l_s_e.
+
+     add_element(Element, Set1) -> Set2
+
+          Types
+               Element = term()
+               Set1 = Set2 = set()
+
+          Returns a new ordered set formed from _S_e_t_1 with _E_l_e_m_e_n_t
+          inserted.
+
+     del_element(Element, Set1) -> Set2
+
+          Types
+               Element = term()
+               Set1 = Set2 = set()
+
+          Returns _S_e_t_1, but with _E_l_e_m_e_n_t removed.
+
+     union(Set1, Set2) -> Set3
+
+          Types
+               Set1 = Set2 = Set3 = set()
+
+          Returns the merged (union) set of _S_e_t_1 and _S_e_t_2.
+
+     union(SetList) -> Set
+
+          Types
+               SetList = [set()]
+               Set = set()
+
+          Returns the merged (union) set of the list of sets.
+
+     intersection(Set1, Set2) -> Set3
+
+          Types
+               Set1 = Set2 = Set3 = set()
+
+          Returns the intersection of _S_e_t_1 and _S_e_t_2.
+
+     intersection(SetList) -> Set
+
+          Types
+               SetList = [set()]
+               Set = set()
+
+          Returns the intersection of the list of sets.
+
+     subtract(Set1, Set2) -> Set3
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+sets(3)             ERLANG MODULE DEFINITION              sets(3)
+
+
+
+          Types
+               Set1 = Set2 = Set3 = set()
+
+          Returns only the elements of _S_e_t_1 which  are  not  also
+          elements of _S_e_t_2.
+
+     is_subset(Set1, Set2) -> bool()
+
+          Types
+               Set1 = Set2 = set()
+
+          Returns _t_r_u_e when every  element  of  _S_e_t1  is  also  a
+          member of _S_e_t_2, otherwise _f_a_l_s_e.
+
+     fold(Function, Acc0, Set) -> Acc1
+
+          Types
+               Function = fun (E, AccIn) -> AccOut
+               Acc0 = Acc1 = AccIn = AccOut = term()
+               Set = set()
+
+          Fold _F_u_n_c_t_i_o_n over every element in _S_e_t  returning  the
+          final value of the accumulator.
+
+     filter(Pred, Set1) -> Set2
+
+          Types
+               Pred = fun (E) -> bool()
+               Set1 = Set2 = set()
+
+          Filter elements in _S_e_t_1 with boolean function _F_u_n.
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+

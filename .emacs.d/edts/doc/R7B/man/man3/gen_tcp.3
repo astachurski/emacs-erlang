@@ -1,0 +1,248 @@
+.TH gen_tcp 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+gen_tcp \- Interface to TCP/IP sockets
+.SH DESCRIPTION
+.LP
+The \fIgen_tcp\fR module provides functions for communicating with sockets using the TCP/IP protocol\&. 
+.LP
+The available options are described in the setopts/2 function in the \fIinet\fR manual page\&. 
+.LP
+The possible \fI{error, Reason}\fR results are described in the inet manual page\&. 
+.LP
+The following code fragment provides a simple example of a client connecting to a server at port 5678, transferring a binary and closing the connection\&. 
+
+.nf
+client() ->
+    SomeHostInNet = "localhost" % to make it runnable on one machine
+    {ok, Sock} = gen_tcp:connect(SomeHostInNet, 5678, 
+                                 [binary, {packet, 0}]),
+    ok = gen_tcp:send(Sock, "Some Data"),
+    ok = gen_tcp:close(Sock)\&.
+.fi
+.LP
+At the other end a server is listening on port 5678, accepts the connection and receives the binary\&. 
+
+.nf
+server() ->
+    {ok, LSock} = gen_tcp:listen(5678, [binary, {packet, 0}, 
+                                        {active, false}]),
+    {ok, Sock} = gen_tcp:accept(LSock),
+    {ok, Bin} = do_recv(Sock, []),
+    ok = gen_tcp:close(Sock),
+    Bin\&.
+
+do_recv(Sock, Bs) ->
+    case gen_tcp:recv(Sock, 0) of
+        {ok, B} ->
+            do_recv(Sock, [Bs, B]);
+        {error, closed} ->
+            {ok, list_to_binary(Bs)}
+    end\&.
+.fi
+.LP
+
+
+.SH EXPORTS
+.LP
+.B
+accept(ListenSocket) -> {ok, Socket} | {error, Reason}
+.br
+.B
+accept(ListenSocket, Timeout) -> {ok, Socket} | {error, Reason}
+.br
+.RS
+.TP
+Types
+ListenSocket = socket()
+.br
+Socket = socket()
+.br
+Timeout = integer()
+.br
+Reason = atom()
+.br
+.RE
+.RS
+.LP
+Accepts an incoming connection request on a listen socket\&. \fISocket\fR must be a socket returned from \fIlisten/1\fR\&. If no \fITimeout\fR argument is specified, or it is \fIinfinity\fR, the \fIaccept\fR function will not return until a connection has been established or the \fIListenSocket\fR has been closed\&. If accept returns because the \fIListenSocket\fR has been closed \fI{error, closed}\fR is returned\&. If \fITimeout\fR is specified and no connection is accepted within the given time, \fIaccept\fR will return \fI{error, timeout}\fR\&. 
+.LP
+Packets can be sent to the returned socket using the \fIsend/2\fR function\&. Packets sent from the peer will be delivered as messages 
+
+.nf
+        {tcp, Socket, Data}
+.fi
+.LP
+unless \fI{active, false}\fR was specified in the option list for the listen socket, in which case packets should be retrieved by calling \fIrecv/2\fR\&. 
+.RE
+.LP
+.B
+close(Socket) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = socket()
+.br
+Reason = atom()
+.br
+.RE
+.RS
+.LP
+Closes an TCP socket\&. 
+.RE
+.LP
+.B
+connect(Address, Port, Options) -> {ok, Socket} | {error, Reason} 
+.br
+.B
+connect(Address, Port, Options, Timeout) -> {ok, Socket} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Address = string() | atom() | ip_address()
+.br
+Port = Timeout = integer()
+.br
+Options = list()
+.br
+Socket = socket()
+.br
+Reason = atom()
+.br
+.RE
+.RS
+.LP
+Connects to a server on TCP port \fIPort\fR on the host with IP address \fIAddress\fR\&. The \fIAddress\fR argument can be either a hostname, or an IP address\&.
+.LP
+The available options are:
+.RS 2
+.TP 4
+.B
+\fIlist\fR:
+Received \fIPacket\fR is delivered as a list\&.
+.TP 4
+.B
+\fIbinary\fR:
+Received \fIPacket\fR is delivered as a binary\&.
+.TP 4
+.B
+common \fIinet\fR options:
+The common \fIinet\fR options available are described in the setopts/2 function in the \fIinet\fR manual page\&.
+.RE
+.LP
+Packets can be sent to the returned socket using the \fIsend/2\fR function\&. Packets sent from the peer will be delivered as messages 
+
+.nf
+        {tcp, Socket, Data}
+.fi
+.LP
+If the socket was closed the following message is delivered: 
+
+.nf
+        {tcp_closed, Socket}
+.fi
+.LP
+If an error occurred on the socket the following message is delivered: 
+
+.nf
+        {tcp_error, Socket, Reason}
+.fi
+.LP
+unless the socket is in passive mode, in which case packets are retrieved by calling \fIrecv/2\fR\&. 
+.LP
+The optional \fITimeout\fR parameter specifies a timeout in milliseconds\&. The default value is \fIinfinity\fR\&. 
+.RE
+.LP
+.B
+controlling_process(Socket, NewOwner) -> ok | {error, eperm}
+.br
+.RS
+.TP
+Types
+Socket = socket()
+.br
+NewOwner = pid()
+.br
+.RE
+.RS
+.LP
+Assigns a new controlling process to \fISocket\fR\&. The controlling process is the process which will receive messages from the socket\&. If called by any other process than the current owner \fI{error, eperm}\fR will be returned\&. 
+.RE
+.LP
+.B
+listen(Port, Options) -> {ok, Socket} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Port = integer()
+.br
+Options = list()
+.br
+Socket = socket()
+.br
+Reason = atom()
+.br
+.RE
+.RS
+.LP
+Sets up socket to listen on the port \fIPort\fR on the local host\&. 
+.LP
+If the port number is zero, the \fIlisten\fR function picks an available port number (use \fIinet:port/1\fR to retrieve it); otherwise, the specified port number is used\&. 
+.LP
+The available options are described in the setopts/2 function in the \fIinet\fR manual page\&. Additionally, the option \fI{backlog, B}\fR can be given, where B is an integer >= 0\&. The backlog value defaults to 5\&. The backlog value defines the maximum length the queue of pending connections may grow to\&. 
+.LP
+The returned socket can only be used in calls to \fIaccept\fR\&. 
+.RE
+.LP
+.B
+recv(Socket, Length) -> {ok, Packet} | {error, Reason}
+.br
+.B
+recv(Socket, Length, Timeout)
+.br
+.RS
+.TP
+Types
+Socket = socket()
+.br
+Length = integer()
+.br
+Packet = list() | binary()
+.br
+Timeout = integer()
+.br
+Reason = atom()
+.br
+.RE
+.RS
+.LP
+This function receives a packet from a socket in passive mode\&. A closed socket is indicated by a return value of \fI{error, closed}\fR\&. 
+.LP
+The \fILength\fR argument is only meaningful when the socket is in \fIraw\fR mode and denotes number of bytes to read\&. If \fILength\fR = 0 all available bytes are returned\&. 
+.LP
+The optional \fITimeout\fR parameter specifies a timeout in milliseconds\&. The default value is \fIinfinity\fR\&. 
+.RE
+.LP
+.B
+send(Socket, Packet) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = socket()
+.br
+Packet = list() | binary()
+.br
+Reason = atom()
+.br
+.RE
+.RS
+.LP
+Sends a packet on a socket\&. 
+.RE
+.SH AUTHOR
+.nf
+tony@erix\&.ericsson\&.se - support@erlang.ericsson.se
+.fi

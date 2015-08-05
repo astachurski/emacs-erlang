@@ -1,0 +1,198 @@
+
+
+
+wrap_log_reader(3)  ERLANG MODULE DEFINITION   wrap_log_reader(3)
+
+
+
+MODULE
+     wrap_log_reader - A function to  read  internally  formatted
+     wrap disk logs
+
+DESCRIPTION
+     _w_r_a_p__l_o_g__r_e_a_d_e_r is a function to read  internally  formatted
+     wrap  disk  logs, refer to disk_log(3). _w_r_a_p__l_o_g__r_e_a_d_e_r does
+     not interfere with disk_log activities; there is  however  a
+     known  bug  in  this  version  of  the  _w_r_a_p__l_o_g__r_e_a_d_e_r, see
+     chapter _b_u_g_s below.
+
+     A wrap disk log file consists of several files, called index
+     files.  A log file can be opened and closed. It is also pos-
+     sible to open just one index file  separately.  If  an  non-
+     existent  or  a  non-internally formatted file is opened, an
+     error message is  returned.  If  the  file  is  corrupt,  no
+     attempt  to  repair  it will be done but an error message is
+     returned.
+
+     If a log is configured to be distributed, there is a  possi-
+     bility   that  all  items  are  not  loggen  on  all  nodes.
+     _w_r_a_p__l_o_g__r_e_a_d_e_r does only read the log on the  called  node,
+     it  is entirely up to the user to be sure that all items are
+     read.
+
+
+EXPORTS
+     chunk(Continuation)
+     chunk(Continuation, N) ->  {Continuation2,  Terms}  |  {Con-
+     tinuation2,   Terms,  Badbytes}  |  {Continuation2,  eof}  |
+     {error, Reason}
+
+          Types
+               Continuation = continuation()
+               N = int() > 0 | infinity
+               Continuation2 = continuation()
+               Terms= [term()]
+               Badbytes = integer()
+
+          This function makes it possible to efficiently read the
+          terms  which  have been appended to a log. It minimises
+          disk I/O by reading large 8K chunks from the file.
+
+          The first time _c_h_u_n_k is called an initial  continuation
+          returned from the _o_p_e_n/_1, _o_p_e_n/_2 must be provided.
+
+          When _c_h_u_n_k/_3 is called, _N controls the  maximum  number
+          of  terms  that  are  read  from the log in each chunk.
+          Default is _i_n_f_i_n_i_t_y, which means  that  all  the  terms
+          contained  in  the  8K  chunk  are read. If less than _N
+          terms are returned, this does not necessarily mean that
+          end of file is reached.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+wrap_log_reader(3)  ERLANG MODULE DEFINITION   wrap_log_reader(3)
+
+
+
+          The _c_h_u_n_k  function  returns  a  tuple  {_C_o_n_t_i_n_u_a_t_i_o_n_2,
+          _T_e_r_m_s},  where  _T_e_r_m_s  is  a list of terms found in the
+          log. _C_o_n_t_i_n_u_a_t_i_o_n_2 is yet  another  continuation  which
+          must  be  passed on into any subsequent calls to _c_h_u_n_k.
+          With a series of calls to _c_h_u_n_k it is then possible  to
+          extract all terms from a log.
+
+          The _c_h_u_n_k  function  returns  a  tuple  {_C_o_n_t_i_n_u_a_t_i_o_n_2,
+          _T_e_r_m_s, _B_a_d_b_y_t_e_s} if the log is opened in read only mode
+          and the read chunk is corrupt. _B_a_d_b_y_t_e_s  indicates  the
+          number  of  non-Erlang  terms  found in the chunk. Note
+          also that the log is not repaired.
+
+          _c_h_u_n_k returns {_C_o_n_t_i_n_u_a_t_i_o_n_2, _e_o_f} when the end of  the
+          log is reached, and {_e_r_r_o_r, _R_e_a_s_o_n} if an error occurs.
+
+          The returned continuation may or may not  be  valid  in
+          the  next  call  to  _c_h_u_n_k. This is because the log may
+          wrap and delete the file into  which  the  continuation
+          points.  To make sure this does not happen, the log can
+          be blocked during the search.
+
+     close(Continuation) -> ok
+
+          Types
+               Continuation = continuation()
+
+          This function closes a log file properly.
+
+     open(Filename) -> OpenRet
+     open(Filename, N) -> OpenRet
+
+          Types
+               File = string() | atom()
+               N = integer()
+               OpenRet = {ok, Continuation} | {error, Reason}
+               Continuation = continuation()
+
+          _F_i_l_e_n_a_m_e specifies the name of the file which is to  be
+          read.
+
+          _N specifies the index of the file which is to be  read.
+          If  _N  is omitted the whole wrap log file will be read;
+          if it is specified only the specified index  file  will
+          be read.
+
+          The _o_p_e_n function returns  {_o_k,  _C_o_n_t_i_n_u_a_t_i_o_n}  if  the
+          log/index  file  was successfully opened. The _C_o_n_t_i_n_u_a_-
+          _t_i_o_n is to be used when chunking or closing the file.
+
+          The function returns {_e_r_r_o_r, _R_e_a_s_o_n} for all errors.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+wrap_log_reader(3)  ERLANG MODULE DEFINITION   wrap_log_reader(3)
+
+
+
+Bugs
+     This version of the _w_r_a_p__l_o_g__r_e_a_d_e_r does not detect  if  the
+     _d_i_s_k__l_o_g   wraps   to   a   new   index   file   between   a
+     _w_r_a_p__l_o_g__r_e_a_d_e_r:_o_p_e_n and the first _w_r_a_p__l_o_g__r_e_a_d_e_r:_c_h_u_n_k. In
+     this case the chuck will actually read the last logged items
+     in the log file, because the opened index file was truncated
+     by the _d_i_s_k__l_o_g.
+
+See Also
+     disk_log(3)
+
+AUTHOR
+     Esko Vierumaki - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+

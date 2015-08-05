@@ -1,0 +1,523 @@
+.TH mod_auth 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mod_auth \- User authentication using text files, dets or mnesia database\&. 
+.SH DESCRIPTION
+.LP
+This module provides for basic user authentication using textual files, dets databases aswell as mnesia databases\&. The following config directives are supported: 
+.RS 2
+.TP 2
+*
+<Directory>
+.TP 2
+*
+AuthDBType
+.TP 2
+*
+AuthAccessPassword
+.TP 2
+*
+AuthUserFile
+.TP 2
+*
+AuthGroupFile
+.TP 2
+*
+AuthName
+.TP 2
+*
+allow
+.TP 2
+*
+deny
+.TP 2
+*
+require
+.RE
+.LP
+The Directory config directive is central to be able to restrict access to certain areas of the server\&. Please read about the Directory config directive\&. 
+
+.SH DIRECTIVE: "Directory"
+.LP
+\fISyntax:\fR \fI<Directory\fR regexp-filename\fI>\fR
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_auth(3)
+.br
+ \fIRelated:\fR allow, deny, AuthAccessPassword AuthGroupFile, AuthUserFile, AuthName, require 
+.LP
+\fI<Directory>\fR and </Directory> are used to enclose a group of directives which applies only to the named directory and sub-directories of that directory\&. \fIregexp-filename\fR is an extended regular expression (See \fIregexp(3)\fR)\&. For example: 
+
+.nf
+<Directory /usr/local/httpd[12]/htdocs>
+     AuthAccessPassword sOmEpAsSwOrD
+     AuthDBType plain
+     AuthName My Secret Garden
+     AuthUserFile /var/tmp/server_root/auth/user
+     AuthUserFile /var/tmp/server_root/auth/group
+     require user ragnar edward
+     require group group1
+     allow from 123\&.145\&.244\&.5
+</Directory>
+.fi
+.LP
+If multiple directory sections match the directory (or its parents), then the directives are applied with the shortest match first\&. For example if you have one directory section for \fIgarden/\fR and one for \fIgarden/flowers\fR, the \fIgarden/\fR section matches first\&. 
+.SH DIRECTIVE: "AuthDBType"
+.LP
+\fISyntax:\fR \fIAuthDBType\fR plain | dets | mnesia
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_auth(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR allow, deny, AuthAccessPassword, AuthName, AuthUserFile, AuthUserFile, require 
+.LP
+\fIAuthDBType\fR sets the type of authentication database that is used for this directory\&. 
+.SS Note:
+.LP
+Only the \fIdets\fR and \fImnesia\fR storage methods allow writing of dynamic user data\&. \fIplain\fR is a read only method\&. 
+
+.SS Note:
+.LP
+If you use the \fImnesia\fR storage method, you need to create the mnesia tables \fIhttpd_user\fR and \fIhttpd_group\fR yourself prior to starting the server\&. 
+
+.SS Warning:
+.LP
+For security reasons, make sure that the mnesia tables are stored outside the document tree of the Web server\&. If it is placed in the directory which it protects, clients will be able to download them\&. 
+
+.SH DIRECTIVE: "AuthUserFile"
+.LP
+\fISyntax:\fR \fIAuthUserFile\fR filename
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_auth(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR allow, deny, AuthDBType, AuthAccessPassword, AuthGroupFile, AuthName, require 
+.LP
+\fIAuthUserFile\fR sets the name of a file which contains the list of users and passwords for user authentication\&. \fIfilename\fR can be either absolute or relative to the \fIServerRoot\fR\&. 
+.LP
+If using the \fIplain\fR storage method, this file is a plain text file, where each line contains a user name followed by a colon, followed by the \fInon-encrypted\fR password\&. The behavior is undefined if user names are duplicated\&. For example: 
+
+.nf
+ragnar:s7Xxv7
+edward:wwjau8
+.fi
+.LP
+If using the \fIdets\fR storage method, the user database is maintained by \fIdets\fR and \fIshould not\fR be edited by hand\&. Use the API in this module to create / edit the user database\&. 
+.LP
+This directive is ignored if using the \fImnesia\fR storage method\&. 
+.SS Warning:
+.LP
+For security reasons, make sure that the \fIAuthUserFile\fR is stored outside the document tree of the Web server\&. If it is placed in the directory which it protects, clients will be able to download it\&. 
+
+.SH DIRECTIVE: "AuthGroupFile"
+.LP
+\fISyntax:\fR \fIAuthGroupFile\fR filename
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_auth(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR allow, deny, AuthName, AuthUserFile, AuthDBType, AuthAccessPassword, require 
+.LP
+\fIAuthGroupFile\fR sets the name of a file which contains the list of user groups for user authentication\&. \fIfilename\fR can be either absolute or relative to the \fIServerRoot\fR\&. 
+.LP
+If you use the \fIplain\fR storage method, the group file is a plain text file, where each line contains a group name followed by a colon, followed by the member user names separated by spaces\&. For example: 
+
+.nf
+group1: bob joe ante
+.fi
+.LP
+If using the \fIdets\fR storage method, the group database is maintained by \fIdets\fR and \fIshould not\fR be edited by hand\&. Use the API in this module to create / edit the group database\&. 
+.LP
+This directive is ignored if using the \fImnesia\fR storage method\&. 
+.SS Warning:
+.LP
+For security reasons, make sure that the \fIAuthGroupFile\fR is stored outside the document tree of the Web server\&. If it is placed in the directory which it protects, clients will be able to download it\&. 
+
+.SH DIRECTIVE: "AuthName"
+.LP
+\fISyntax:\fR \fIAuthName\fR auth-domain
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_auth(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR allow, deny, AuthGroupFile, AuthUserFile, AuthDBType, AuthAccessPassword, require 
+.LP
+\fIAuthName\fR sets the name of the authorization realm (\fIauth-domain\fR) for a directory\&. This string informs the client about which user name and password to use\&. 
+.SH DIRECTIVE: "AuthAccessPassword"
+.LP
+\fISyntax:\fR \fIAuthAccessPassword\fR password
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_auth(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR allow, deny, AuthGroupFile, AuthUserFile, AuthDBType, AuthName, require 
+.LP
+\fIAuthAccessPassword\fR sets the password required for API calls\&. All API calls to mod_auth require this password to be specified or they will fail with the error reason \fInot_authorized\fR\&. 
+.SH DIRECTIVE: "allow"
+.LP
+\fISyntax:\fR \fIallow from\fR host host \&.\&.\&.
+.br
+ \fIDefault:\fR \fIallow from all\fR
+.br
+ \fIModule:\fR mod_auth(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR AuthAccessPassword, deny, AuthGroupFile, AuthGroupFile, AuthName, AuthDBType require 
+.LP
+\fIallow\fR defines a set of hosts which should be granted access to a given directory\&. \fIhost\fR is one of the following: 
+.RS 2
+.TP 4
+.B
+\fIall\fR:
+All hosts are allowed access\&.
+.TP 4
+.B
+A regular expression (Read \fIregexp(3)\fR):
+All hosts having a numerical IP address matching the specific regular expression are allowed access\&.
+.RE
+.LP
+For example: 
+
+.nf
+allow from 123\&.34\&.56\&.11 150\&.100\&.23
+.fi
+.LP
+The host 123\&.34\&.56\&.11 and all machines on the 150\&.100\&.23 subnet are allowed access\&. 
+.SH DIRECTIVE: "deny"
+.LP
+\fISyntax:\fR \fIdeny from\fR host host \&.\&.\&.
+.br
+ \fIDefault:\fR \fIdeny from all\fR
+.br
+ \fIModule:\fR mod_auth(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR allow, AuthGroupFile, AuthGroupFile, AuthName, AuthDBType, AuthAccessPassword, require 
+.LP
+\fIdeny\fR defines a set of hosts which should not be granted access to a given directory\&. \fIhost\fR is one of the following: 
+.RS 2
+.TP 4
+.B
+\fIall\fR:
+All hosts are denied access\&.
+.TP 4
+.B
+A regular expression (Read \fIregexp(3)\fR):
+All hosts having a numerical IP address matching the specific regular expression are denied access\&.
+.RE
+.LP
+For example: 
+
+.nf
+deny from 123\&.34\&.56\&.11 150\&.100\&.23
+.fi
+.LP
+The host 123\&.34\&.56\&.11 and all machines on the 150\&.100\&.23 subnet are denied access\&. 
+.SH DIRECTIVE: "require"
+.LP
+\fISyntax:\fR \fIrequire\fR entity-name entity entity \&.\&.\&.
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_auth(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR allow, deny, AuthGroupFile, AuthUserFile, AuthName, AuthDBType, AuthAccessPassword 
+.LP
+\fIrequire\fR defines users which should be granted access to a given directory using a secret password\&. The allowed syntaxes are: 
+.RS 2
+.TP 4
+.B
+\fIrequire user user-name user-name \&.\&.\&.\fR:
+Only the named users can access the directory\&.
+.TP 4
+.B
+\fIrequire group group-name group-name \&.\&.\&.\fR:
+Only users in the named groups can access the directory\&.
+.RE
+.SH EWSAPI MODULE INTERACTION
+.LP
+Uses the following EWSAPI interaction data, if available: 
+.RS 2
+.TP 4
+.B
+\fI{real_name, {Path, AfterPath}}\fR:
+as defined in mod_alias(3)\&.
+.RE
+.LP
+Exports the following EWSAPI interaction data, if possible: 
+.RS 2
+.TP 4
+.B
+\fI{remote_user, User}\fR:
+The user name with which the user has authenticated himself\&.
+.RE
+.LP
+Uses the following exported EWSAPI functions: 
+.RS 2
+.TP 2
+*
+mod_alias:path/3
+.RE
+.SH EXPORTS
+.LP
+.B
+add_user(UserName, Password, UserData, Port, Dir) -> true | {error, Reason}
+.br
+.B
+add_user(UserName, Password, UserData, Address, Port, Dir) -> true | {error, Reason}
+.br
+.RS
+.TP
+Types
+UserName = string()
+.br
+Password = string()
+.br
+UserData = term()
+.br
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+\fIadd_user/5\fR and \fIadd_user/5\fR adds a user to the user database\&. If the operation is succesful, this function returns \fItrue\fR\&. If an error occurs, \fI{error, Reason}\fR is returned\&. 
+.RE
+.LP
+.B
+delete_user(UserName, Port, Dir) -> true | {error, Reason}
+.br
+.B
+delete_user(UserName, Address, Port, Dir) -> true | {error, Reason}
+.br
+.RS
+.TP
+Types
+UserName = string()
+.br
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+\fIdelete_user/3\fR and \fIdelete_user/3\fR deletes a user from the user database\&. If the operation is succesful, this function returns \fItrue\fR\&. If an error occurs, \fI{error, Reason}\fR is returned\&. 
+.RE
+.LP
+.B
+get_user(UserName, Port, Dir) -> {ok, #httpd_user} | {error, Reason}
+.br
+.B
+get_user(UserName, Address, Port, Dir) -> {ok, #httpd_user} | {error, Reason}
+.br
+.RS
+.TP
+Types
+UserName = string()
+.br
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+\fIget_user/3\fR and \fIget_user/3\fR returns a \fIhttpd_user\fR record containing the userdata for a specific user\&. If the user cannot be found, \fI{error, Reason}\fR is returned\&. 
+.RE
+.LP
+.B
+list_users(Port, Dir) -> {ok, Users}
+.br
+.B
+list_users(Address, Port, Dir) -> {ok, Users}
+.br
+.RS
+.TP
+Types
+UserName = string()
+.br
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Users = list()
+.br
+.RE
+.RS
+.LP
+\fIlist_users/2\fR and \fIlist_users/2\fR returns a list of users in the user database for a specific \fIPort/Dir\fR\&. 
+.RE
+.LP
+.B
+add_group_member(GroupName, UserName, Port, Dir) -> true | {error, Reason}
+.br
+.B
+add_group_member(GroupName, UserName, Address, Port, Dir) -> true | {error, Reason}
+.br
+.RS
+.TP
+Types
+GroupName = string()
+.br
+UserName = string()
+.br
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+\fIadd_group_member/4\fR and \fIadd_group_member/4\fR adds a user to a group\&. If the group does not exist, it is created and the user is added to the group\&. Upon successful operation, this function returns \fItrue\fR 
+.RE
+.LP
+.B
+delete_group_member(GroupName, UserName, Port, Dir) -> true | {error, Reason}
+.br
+.B
+delete_group_member(GroupName, UserName, Address, Port, Dir) -> true | {error, Reason}
+.br
+.RS
+.TP
+Types
+GroupName = string()
+.br
+UserName = string()
+.br
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+\fIdelete_group_member/4\fR and \fIdelete_group_member/4\fR adds a user to a group\&. If the group or the user does not exist, this function returns an error, otherwise it returns \fItrue\fR\&. 
+.RE
+.LP
+.B
+list_group_members(GroupName, Port, Dir) -> {ok, Users} | {error, Reason}
+.br
+.B
+list_group_members(GroupName, Address, Port, Dir) -> {ok, Users} | {error, Reason}
+.br
+.RS
+.TP
+Types
+GroupName = string()
+.br
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Users = list()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+\fIlist_group_members/3\fR and \fIlist_group_members/3\fR lists the members of a specified group\&. If the group does not exist or there is an error, \fI{error, Reason}\fR is returned\&. 
+.RE
+.LP
+.B
+list_groups(Port, Dir) -> {ok, Groups} | {error, Reason}
+.br
+.B
+list_groups(Address, Port, Dir) -> {ok, Groups} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Groups = list()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+\fIlist_groups/2\fR and \fIlist_groups/2\fR lists all the groups available\&. If there is an error, \fI{error, Reason}\fR is returned\&. 
+.RE
+.LP
+.B
+delete_group(GroupName, Port, Dir) -> true | {error, Reason}
+.br
+.B
+delete_group(GroupName, Address, Port, Dir) -> true | {error, Reason}
+.br
+.RS
+.TP
+Types
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+GroupName = string()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+\fIdelete_group/3\fR and \fIdelete_group/3\fR deletes the group specified and returns \fItrue\fR\&. If there is an error, \fI{error, Reason}\fR is returned\&. 
+.RE
+.SH SEE ALSO
+.LP
+httpd(3), mod_alias(3), 
+.SH AUTHORS
+.nf
+Mattias Nilsson  - support@erlang.ericsson.se
+Original implementation: Joakim Grebeno  - support@erlang.ericsson.se
+.fi

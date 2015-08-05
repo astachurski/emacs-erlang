@@ -1,0 +1,48 @@
+.TH config 4 "kernel  2.6.1" "Ericsson Utvecklings AB" "FILES"
+.SH NAME
+config \- Configuration file
+.SH DESCRIPTION
+.LP
+A \fIconfiguration file\fR contains values for configuration parameters for the applications in the system\&. The command \fIerl -config Name\fR tells the system to use data in the system configuration file \fIName\&.config\fR to override the arguments contained in the application resource files for the set of applications used by this system\&. 
+.LP
+An application should call application:get_env(ApplName, Parameter) to retrieve the values for the configuration parameters\&. 
+.LP
+The parameters can also be overridden from the command line: 
+
+.nf
+       erl -ApplName Par1 Val1 Par2 Val2 \&.\&.\&.
+.fi
+.SS Note:
+.LP
+Each term should be an Erlang term\&. However, in the Unix shell, the term must be enclosed in single quotation marks\&. For example: \&'{file, "a\&.log"}\&'\&. 
+
+
+.SH FILE SYNTAX
+.LP
+The configuration file is called \fIName\&.config\fR where \fIName\fR is the name of the application\&. 
+.LP
+The file has the following syntax: 
+
+.nf
+[{AppName, [{Par, Val}]}]\&.
+.fi
+.LP
+There is one tuple for each application\&. The second element in each tuple is a list of configuration parameters and their values\&. 
+.RS 2
+.TP 2
+*
+\fIAppName = atom()\fR is the name of the application\&. 
+.TP 2
+*
+\fIPar = atom()\fR is the name of a configuration parameter\&. 
+.TP 2
+*
+\fIVal = term()\fR is the value of the configuration parameter\&. 
+.RE
+.SH SEE ALSO
+.LP
+application(3), systools(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

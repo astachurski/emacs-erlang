@@ -1,0 +1,142 @@
+.TH gen_udp 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+gen_udp \- Interface to UDP\&.
+.SH DESCRIPTION
+.LP
+The \fIgen_udp\fR module is an interface to User Datagram Protocol (UDP)\&.
+.LP
+The possible \fI{error, Reason}\fR results are described in the inet manual page\&. 
+
+.SH EXPORTS
+.LP
+.B
+close(Socket) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = Reason = term()
+.br
+.RE
+.RS
+.LP
+Removes the \fISocket\fR created with \fIopen/1\fR or \fIopen/2\fR\&. 
+.RE
+.LP
+.B
+controlling_process(Socket,NewOwner) ->
+.br
+.RS
+.TP
+Types
+Socket = term()
+.br
+NewOwner = pid()
+.br
+.RE
+.RS
+.LP
+The process associated with a Socket is changed to \fINewOwner\fR\&. The \fINewOwner\fR will receive all subsequent data\&. 
+.RE
+.LP
+.B
+open(Port) -> {ok, Socket } | { error, Reason }
+.br
+.B
+open(Port,Options) -> {ok, Socket } | { error, Reason }
+.br
+.RS
+.TP
+Types
+Port = integer(0\&.\&.65535)
+.br
+Options = list()
+.br
+Socket = term()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Associates a UDP port number (\fIPort\fR) with the calling process\&. It returns\fI{ok, Socket}\fR, or \fI{error, Reason}\fR\&. The returned \fISocket\fR is used to send packets from this port with the \fIsend/4\fR function\&. \fIOptions\fR is a list of options associated with this port\&.
+.LP
+When UDP packets arrive at the opened \fIPort\fR they will be delivered as messages of the type \fI{udp, Socket, IP, InPortNo, Packet}\fR 
+.LP
+\fIIP\fR and \fIInPortNo\fR define the address from which \fIPacket\fR came\&. \fIPacket\fR is a list of bytes if the option \fIlist\fR was specified\&. \fIPacket\fR is a binary if the option \fIbinary\fR was specified\&.
+.LP
+The available options are:
+.RS 2
+.TP 4
+.B
+\fIlist\fR:
+Received \fIPacket\fR is delivered as a list\&.
+.TP 4
+.B
+\fIbinary\fR:
+Received \fIPacket\fR is delivered as a binary\&.
+.TP 4
+.B
+common \fIinet\fR options:
+The common \fIinet\fR options available are described in the setopts/2 function in the \fIinet\fR manual page\&.
+.RE
+.LP
+If you set Port to 0, the underlying Operating System assigns a free UDP port\&. (You can find out which port by calling \fIinet:port(Socket)\fR\&.)
+.LP
+If any of the following functions are called with a \fISocket\fR that was not opened by the calling process, they will return \fI{error, not_owner}\fR\&. The ownership of a \fISocket\fR can be transferred to another process with \fIcontrolling_process/2\fR\&. 
+.RE
+.LP
+.B
+recv(Socket, Length) -> {ok,{Address, Port, Packet}} | {error, Reason}
+.br
+.B
+recv(Socket, Length, Timeout)
+.br
+.RS
+.TP
+Types
+Socket = socket()
+.br
+Address = { integer(), integer(), integer(), integer()}
+.br
+Port = integer(0\&.\&.65535)
+.br
+Length = integer()
+.br
+Packet = list() | binary()
+.br
+Timeout = integer()
+.br
+Reason = atom()
+.br
+.RE
+.RS
+.LP
+This function receives a packet from a socket in passive mode\&. 
+.LP
+The optional \fITimeout\fR parameter specifies a timeout in milliseconds\&. The default value is \fIinfinity\fR\&. 
+.RE
+.LP
+.B
+send(S,Address,Port,Packet) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Address = { integer(), integer(), integer(), integer()} | atom() | string() 
+.br
+Port = integer(0\&.\&.65535)
+.br
+Packet = [byte()] | binary()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Sends \fIPacket\fR to the specified address (address, port)\&. It returns \fIok\fR, or \fI{error, Reason}\fR\&. \fIAddress\fR can be an IP address expressed as a tuple, for example \fI{192, 0, 0, 1}\fR\&. It can also be a host name expressed as an atom or a string, for example \&'somehost\&.some\&.domain\&'\&. \fIPort\fR is an integer, and \fIPacket\fR is either a list of bytes or a binary\&. 
+.RE
+.SH AUTHOR
+.nf
+tony@erix\&.ericsson\&.se - support@erlang.ericsson.se
+.fi

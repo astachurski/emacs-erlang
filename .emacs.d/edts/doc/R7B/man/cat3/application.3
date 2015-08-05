@@ -1,0 +1,594 @@
+
+
+
+application(3)      ERLANG MODULE DEFINITION       application(3)
+
+
+
+MODULE
+     application - Functions for controlling applications
+
+DESCRIPTION
+     This module contains functions for controlling  applications
+     (eg.  starting  and stopping applications), and functions to
+     access information about any application, (eg. configuration
+     parameters)
+
+     All applications are started by  the  _a_p_p_l_i_c_a_t_i_o_n__c_o_n_t_r_o_l_l_e_r
+     process. Each application has an _a_p_p_l_i_c_a_t_i_o_n__m_a_s_t_e_r process.
+     This process monitors the application  and  reports  to  the
+     application controller if the application terminates.
+
+     An application can be started locally or distributed. A dis-
+     tributed  application  is  started  on  one of several nodes
+     while a local application is always started on  the  current
+     node.
+
+     The local applications are  controlled  by  the  application
+     controller.  The  distributed applications are controlled by
+     another process, called  the  distributed  application  con-
+     troller (_d_i_s_t__a_c). The distributed application controller on
+     different nodes monitor each other.  Therefore,  if  a  node
+     goes down, the distributed applications on that node will be
+     automatically re-started on one of the remaining nodes.
+
+     The distributed application controller  is  not  started  by
+     default.  Systems that use distributed applications must set
+     the configuration parameter _s_t_a_r_t__d_i_s_t__a_c in _k_e_r_n_e_l.
+
+
+EXPORTS
+     get_all_env()
+     get_all_env(Application) -> Env
+
+          Types
+               Application = atom()
+               Env = [{Key, Value}]
+               Key = atom()
+               Value = term()
+
+          Retrieves the values of the application's configuration
+          parameters.  If  _A_p_p_l_i_c_a_t_i_o_n is not specified, then the
+          configuration parameters for the application which exe-
+          cutes the call are returned.
+
+     get_all_key()
+     get_all_key(Application) -> {ok, Keys} | undefined
+
+          Types
+               Application = atom()
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+application(3)      ERLANG MODULE DEFINITION       application(3)
+
+
+
+               Keys = [{Key, Value}]
+               Key = atom()
+               Value = term()
+
+          Retrieves all the keys from the application's  resource
+          file, _A_p_p_l_i_c_a_t_i_o_n._a_p_p. If _A_p_p_l_i_c_a_t_i_o_n is not specified,
+          then the keys for the application  which  executes  the
+          call are returned.
+
+     get_application()
+     get_application(Pid | Module) -> {ok, Application}  |  unde-
+     fined
+
+          Types
+               Pid = pid()
+               Module = atom()
+               Application = atom()
+
+          Retrieves the name of the application where the process
+          _P_i_d  executes. If _P_i_d is not specified, _s_e_l_f() is used.
+          If an atom is given the name of the  application  which
+          contains the module will be returned, or _u_n_d_e_f_i_n_e_d.
+
+     get_env(Key)
+     get_env(Application, Key) -> {ok, Value} | undefined
+
+          Types
+               Application = atom()
+               Key = atom()
+               Value = term()
+
+          Retrieves the value of an  application's  configuration
+          parameter. If _A_p_p_l_i_c_a_t_i_o_n is not specified, the parame-
+          ter for the application  which  executes  the  call  is
+          retrieved.
+
+     get_key(Key)
+     get_key(Application, Key) -> {ok, Value} | undefined
+
+          Types
+               Application = atom()
+               Key = atom()
+               Value = term()
+
+          Retrieves the key from the application's resource file,
+          _A_p_p_l_i_c_a_t_i_o_n._a_p_p.  If _A_p_p_l_i_c_a_t_i_o_n is not specified, then
+          the key for the application which executes the call  is
+          returned.
+
+          If _K_e_y is a valid key (see app(4)) for which  no  value
+          is  defined, {_o_k, _u_n_d_e_f_i_n_e_d} is return. If _K_e_y is not a
+          valid key, _u_n_d_e_f_i_n_e_d is always returned.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+application(3)      ERLANG MODULE DEFINITION       application(3)
+
+
+
+     load(Application)
+     load(Application, DistNodes) -> ok | {error, Reason}
+
+          Types
+               Application = atom() | appl_descr()
+               DistNodes = {Name, Nodes} | {Name, Time, Nodes}  |
+               default
+               appl_descr() = {application, Name, [appl_opt()]}
+               Name = atom()
+               Time = integer() > 0
+               Nodes = [node() | {node(), ..., node()}]
+               appl_opt()  =  {description,  string()}  |   {vsn,
+               vsn()}    |   {modules,   [{atom(),   vsn()}]}   |
+               {registered, [atom()]} | {applications,  [atom()]}
+               |  {env,  [{atom(),  term()}]}  |{mod, {Mod, Star-
+               tArgs}}
+               vsn() = string()
+
+          If the name of the application is given,  the  applica-
+          tion  controller searches the current path (the same as
+          the code path) for a file called _A_p_p_l_i_c_a_t_i_o_n._a_p_p.
+          _N_o_t_e: This file must contain the _a_p_p_l__d_e_s_c_r()  (written
+          in plain text, with a dot and space after the term).
+
+          _d_e_s_c_r_i_p_t_i_o_n and _v_e_r_s_i_o_n - Contains information about an
+          application   that   can   be   retrieved   by  calling
+          _a_p_p_l_i_c_a_t_i_o_n:_l_o_a_d_e_d__a_p_p_l_i_c_a_t_i_o_n_s/_0.
+
+          _m_o_d_u_l_e_s -  Lists  the  modules  that  this  application
+          introduces.
+
+          _r_e_g_i_s_t_e_r_e_d is a list of the registered names that  this
+          application uses for its own processes.
+
+          _a_p_p_l_i_c_a_t_i_o_n_s - Lists of other applications that must be
+          started before this one.
+
+          _e_n_v is a list of configuration parameters.  _N_o_t_e:   The
+          definitions  in this list may be altered by definitions
+          in the system configuration file, specified by the com-
+          mand  line  argument  -_c_o_n_f_i_g. They can also be altered
+          directly from the command line,  by  giving  -_N_a_m_e  _P_a_r
+          _V_a_l_u_e.
+
+          _m_o_d   is   the   application    call    back    module.
+          _M_o_d:_s_t_a_r_t(_S_t_a_r_t_T_y_p_e,  _S_t_a_r_t_A_r_g_s)  is  called  when  the
+          application is started. Refer to the call back function
+          _s_t_a_r_t/_2.
+
+          The _D_i_s_t_N_o_d_e_s parameter will override the value of  the
+          application  in the Kernel configuration parameter _d_i_s_-
+          _t_r_i_b_u_t_e_d. The data structure specifies a list of  nodes
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+application(3)      ERLANG MODULE DEFINITION       application(3)
+
+
+
+          where  the  application  _N_a_m_e may execute. If the nodes
+          are specified in a tuple, the order of where  to  start
+          the  application  will  be undefined. If a node crashes
+          and _T_i_m_e has been specified, then the application  con-
+          troller will wait for _T_i_m_e milliseconds before attempt-
+          ing to restart the application on another node. If _T_i_m_e
+          is  not specified, it will default to 0. If a node goes
+          down, the application will be restarted immediately  on
+          another node. If _D_i_s_t_N_o_d_e_s is _d_e_f_a_u_l_t, the value in the
+          configuration parameter _d_i_s_t_r_i_b_u_t_e_d will be used.
+
+     loaded_applications() -> [{Name, Description, Version}]
+
+          Types
+               Name = atom()
+               Description = string()
+               Version = string()
+
+          This function returns a list of applications which  are
+          loaded  in  the  system. _D_e_s_c_r_i_p_t_i_o_n and _V_e_r_s_i_o_n are as
+          defined in the application specification.
+
+     permit(Application, Bool) -> ok | {error, Reason}
+
+          Types
+               Name = atom()
+               Bool = bool()
+
+          This function changes an  application's  permission  to
+          run  on the node, or vice versa. If the permission of a
+          locally running application is set to _f_a_l_s_e, the appli-
+          cation  will  be stopped. When the permission is set to
+          _t_r_u_e, the local application will  be  started.  If  the
+          permission of a running, distributed application is set
+          to _f_a_l_s_e, the application will be moved to another node
+          where it may run, if a node is available.
+
+          The application must be loaded before the permit  func-
+          tion can be called.
+
+          This function does not return until the application  is
+          either   started,  stopped  or  successfully  moved  to
+          another node. However, in some cases  where  permission
+          is  set  to _t_r_u_e the function may return _o_k even though
+          the application itself has not started.  This  is  true
+          when  an application cannot start because it has depen-
+          dencies  on  applications  which  have  not  yet   been
+          started. When these applications are started the depen-
+          dent application will also be started.
+
+          By default, all applications are loaded with permission
+          _t_r_u_e  on all nodes. The permission is configurable with
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+
+
+
+
+application(3)      ERLANG MODULE DEFINITION       application(3)
+
+
+
+          the parameter _p_e_r_m_i_s_s_i_o_n_s in _k_e_r_n_e_l.
+
+     start(Application)
+     start(Application, Type) -> ok | {error, Reason}
+
+          Types
+               Application = atom()
+               Type = permanent | transient | temporary
+
+          This function starts and application. If  the  applica-
+          tion  is  not  loaded,  the application controller will
+          first     try     to      load      it,      as      if
+          _a_p_p_l_i_c_a_t_i_o_n:_l_o_a_d(_A_p_p_l_i_c_a_t_i_o_n) was called.
+
+          The _T_y_p_e specifies  what  happens  if  the  application
+          dies.
+
+            * If a permanent application dies, all other applica-
+              tions are also terminated.
+
+            * If a transient application dies normally,  this  is
+              reported  and no other applications are terminated.
+              If a transient  application  dies  abnormally,  all
+              other applications are also terminated.
+
+            * If a temporary application dies  this  is  reported
+              and  no  other applications are terminated. In this
+              way, an application can run in test  mode,  without
+              disturbing the other applications.
+
+          Default value for _T_y_p_e is _t_e_m_p_o_r_a_r_y.
+
+     start_type() -> normal | local | {takeover, node()} | {fail-
+     over, node()}
+
+          This function returns the  type  of  application  start
+          which is executing.
+
+          _n_o_r_m_a_l is returned when an application is starting  and
+          the below circumstances have not occurred.
+
+          _l_o_c_a_l is returned if a supervised process restarts  due
+          to  abnormal exit or if no start is running at the time
+          of request.
+
+          {_t_a_k_e_o_v_e_r, _N_o_d_e} is  returned  if  the  application  is
+          requested  to move to another node either due to a call
+          to _t_a_k_e_o_v_e_r/_2 or when a node with  higher  priority  to
+          run the application is restarted.
+
+          {_f_a_i_l_o_v_e_r, _N_o_d_e} is returned if the application is res-
+          tarted  due  to the _N_o_d_e crashing where the application
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  5
+
+
+
+
+
+
+application(3)      ERLANG MODULE DEFINITION       application(3)
+
+
+
+          was previously executing.
+
+     stop(Application) -> ok
+
+          Types
+               Application = atom()
+
+          This function  stops  a  running  application.  If  the
+          application was distributed, no other node will restart
+          it. All processes in  the  application  tree  are  ter-
+          minated,  and  also  all  processes with the same group
+          leader as the application.
+
+     takeover(Application, Type) -> {ok, Pid} | {error, Reason}
+
+          Types
+               Application = atom()
+               Type = permanent | transient | temporary
+
+          This function moves  a  distributed  application  which
+          executes  on another node _N_o_d_e to the current node. The
+          application is started by calling  _M_o_d:_s_t_a_r_t({_t_a_k_e_o_v_e_r,
+          _N_o_d_e},  _S_t_a_r_t_A_r_g_s) before the application is stopped on
+          the other node. This  makes  it  possible  to  transfer
+          application  specific  data  from  a  currently running
+          application to a new node. When the  application  start
+          function returns, the application on a _N_o_d_e is stopped.
+          This means that two instances of the application may be
+          running  on two different nodes at one time. If this is
+          not acceptable, parts of the  application  on  the  old
+          node  (_N_o_d_e)  may be shut down when the new node starts
+          the application. _N_o_t_e: that the  old  application  must
+          not  be  stopped entirely (i.e. _a_p_p_l_i_c_a_t_i_o_n:_s_t_o_p/_1 must
+          not be called on the old node).  The  main  supervisor,
+          must still be alive.
+
+     which_applications() -> [{Name, Description, Version}]
+
+          Types
+               Name = atom()
+               Description = string()
+               Version = string()
+
+          Returns a list of the applications which are running in
+          the  system.  _D_e_s_c_r_i_p_t_i_o_n and _V_e_r_s_i_o_n are as defined in
+          the application specification.
+
+Call back Module
+     The following functions are  exported  from  an  _a_p_p_l_i_c_a_t_i_o_n
+     call back module.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  6
+
+
+
+
+
+
+application(3)      ERLANG MODULE DEFINITION       application(3)
+
+
+
+EXPORTS
+     Module:config_change(Changed, New, Removed) -> ok
+
+          Types
+               Changed = [{Parameter, NewValue}]
+               New = [{Parameter, Value}]
+               Removed = [Parameter]
+               Parameter = atom()
+               NewValue = term()
+               Value = term()
+
+          After an installation of  a  new  release  all  started
+          applications on a node are notified of the changed, new
+          and removed  configuration  parameters.  The  unchanged
+          configuration parameters are not affected and therefore
+          the function is not evaluated  for  applications  which
+          have unchanged configuration parameters between the old
+          and new releases.
+
+     Module:start(Type, ModuleStartArgs) -> {ok, Pid} | {ok, Pid,
+     State} | {error, Reason}
+
+          Types
+               Type = normal | {takeover,  node()}  |  {failover,
+               node()}
+               ModuleStartArgs = term()
+               Pid = pid()
+               State = state()
+
+          This function starts a primary  application.  Normally,
+          this function starts the main supervisor of the primary
+          application.
+
+          If _T_y_p_e is {_t_a_k_e_o_v_e_r, _N_o_d_e}, it is a distributed appli-
+          cation which is running on the _N_o_d_e. If the application
+          does not have  the  start-phases  key  defined  in  the
+          application's  resource  file,  the application will be
+          stopped by the application controller after  this  call
+          returns  (see  _s_t_a_r_t-_p_h_a_s_e/_3) This makes it possible to
+          transfer the internal state from the  running  applica-
+          tion  to  the one to be started. This function must not
+          stop the application on _N_o_d_e,  but  it  may  shut  down
+          parts  of  it.  For  example,  instead  of stopping the
+          application, the main supervisor may terminate all  its
+          children.
+
+          If _T_y_p_e is {_f_a_i_l_o_v_e_r, _N_o_d_e}, the  application  will  be
+          restarted due to a crash of the node where the applica-
+          tion was previously executing.
+           {_f_a_i_l_o_v_e_r, _n_o_d_e()} is valid only if  the  _s_t_a_r_t__p_h_a_s_e_s
+          key  is defined in the applications resource file. Oth-
+          erwise the type is set to _n_o_r_m_a_l at failover.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  7
+
+
+
+
+
+
+application(3)      ERLANG MODULE DEFINITION       application(3)
+
+
+
+          The  _M_o_d_u_l_e_S_t_a_r_t_A_r_g_s  parameter  is  specified  in  the
+          application  resource  file  (._a_p_p),  as {_m_o_d, {_M_o_d_u_l_e,
+          _M_o_d_u_l_e_S_t_a_r_t_A_r_g_s}}.
+
+          _S_t_a_t_e is any term. It is passed to  _M_o_d_u_l_e:_p_r_e_p__s_t_o_p/_1.
+          If no _S_t_a_t_e is returned, [] is used.
+
+     Module:start_phase(Phase,  Type,  PhaseStartArgs)  ->  ok  |
+     {error, Reason}
+
+          Types
+               Phase = atom()
+               Type = normal | {takeover,  node()}  |  {failover,
+               node()}
+               PhaseStartArgs = term()
+               Pid = pid()
+               State = state()
+
+          This function starts a application in the phase  _P_h_a_s_e.
+          It  is called by default only for a primary application
+          and not for the included applications, refer to  User's
+          Guide chapter 'Design Principles' regarding incorporat-
+          ing included applications.
+
+          The  _P_h_a_s_e_S_t_a_r_t_A_r_g_s  parameter  is  specified  in   the
+          application's  resource  file (._a_p_p), as {_s_t_a_r_t__p_h_a_s_e_s,
+          [{_P_h_a_s_e,  _P_h_a_s_e_S_t_a_r_t_A_r_g_s}]},  the   _M_o_d_u_l_e   as   {_m_o_d,
+          {_M_o_d_u_l_e, _M_o_d_u_l_e_S_t_a_r_t_A_r_g_s}}.
+
+          This call back function is only valid for  applications
+          with  a defined _s_t_a_r_t__p_h_a_s_e_s key. This function will be
+          called once per _P_h_a_s_e.
+
+          If _T_y_p_e is {_t_a_k_e_o_v_e_r, _N_o_d_e}, it is a distributed appli-
+          cation  which  runs on the _N_o_d_e. When this call returns
+          for the last start phase, the application on _N_o_d_e  will
+          be stopped by the application controller. This makes it
+          possible to transfer the internal state from  the  run-
+          ning  application. When designing the start phase func-
+          tion it is  imperative  that  the  application  is  not
+          allowed  to terminate the application on _n_o_d_e. However,
+          it possible to partially shut it down for eg. the  main
+          supervisor  may  terminate  all the application's chil-
+          dren.
+
+          If _T_y_p_e is {_f_a_i_l_o_v_e_r, _N_o_d_e}, due to a crash of the node
+          where  the  application  was  previously executing, the
+          application will restart.
+
+     Module:prep_stop(State) -> NewState
+
+          Types
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  8
+
+
+
+
+
+
+application(3)      ERLANG MODULE DEFINITION       application(3)
+
+
+
+               State = state()
+               NewState = state()
+
+          See _M_o_d_u_l_e:_s_t_o_p/_1. This function  is  called  when  the
+          application  is  about  to  be stopped, before shutting
+          down the processes of the application.
+
+          _S_t_a_t_e is the state that was returned from  _M_o_d:_s_t_a_r_t/_2,
+          or [] if no state was returned. _N_e_w_S_t_a_t_e will be passed
+          to _M_o_d_u_l_e:_s_t_o_p/_1.
+
+          If _M_o_d_u_l_e:_p_r_e_p__s_t_o_p/_1 isn't defined, _N_e_w_S_t_a_t_e  will  be
+          identical to _S_t_a_t_e.
+
+     Module:stop(State) -> void()
+
+          Types
+               State = state()
+
+          This  function  is  called  when  the  application  has
+          stopped,  either because it crashed, or because someone
+          called  _a_p_p_l_i_c_a_t_i_o_n:_s_t_o_p.  It  cleans  up   after   the
+          _M_o_d_u_l_e:_s_t_a_r_t/_2 function.
+
+          Before _M_o_d:_s_t_o_p/_1 is called, _M_o_d:_p_r_e_p__s_t_o_p/_1 will  have
+          been  called. _S_t_a_t_e is the state that was returned from
+          _M_o_d:_p_r_e_p__s_t_o_p/_1.
+
+See Also
+     kernel(3)
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Esko Vierumaki - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  9
+
+
+

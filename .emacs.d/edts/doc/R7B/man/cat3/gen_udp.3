@@ -1,0 +1,198 @@
+
+
+
+gen_udp(3)          ERLANG MODULE DEFINITION           gen_udp(3)
+
+
+
+MODULE
+     gen_udp - Interface to UDP.
+
+DESCRIPTION
+     The _g_e_n__u_d_p module is an interface to User Datagram Protocol
+     (UDP).
+
+     The possible {_e_r_r_o_r, _R_e_a_s_o_n} results are  described  in  the
+     inet manual page.
+
+
+EXPORTS
+     close(Socket) -> ok | {error, Reason}
+
+          Types
+               Socket = Reason = term()
+
+          Removes the _S_o_c_k_e_t created with _o_p_e_n/_1 or _o_p_e_n/_2.
+
+     controlling_process(Socket,NewOwner) ->
+
+          Types
+               Socket = term()
+               NewOwner = pid()
+
+          The process associated with  a  Socket  is  changed  to
+          _N_e_w_O_w_n_e_r.  The  _N_e_w_O_w_n_e_r  will  receive  all subsequent
+          data.
+
+     open(Port) -> {ok, Socket } | { error, Reason }
+     open(Port,Options) -> {ok, Socket } | { error, Reason }
+
+          Types
+               Port = integer(0..65535)
+               Options = list()
+               Socket = term()
+               Reason = term()
+
+          Associates a UDP port number (_P_o_r_t)  with  the  calling
+          process.  It  returns{_o_k,  _S_o_c_k_e_t}, or {_e_r_r_o_r, _R_e_a_s_o_n}.
+          The returned _S_o_c_k_e_t is used to send packets  from  this
+          port  with  the  _s_e_n_d/_4  function. _O_p_t_i_o_n_s is a list of
+          options associated with this port.
+
+          When UDP packets arrive at the opened _P_o_r_t they will be
+          delivered  as  messages  of  the type {_u_d_p, _S_o_c_k_e_t, _I_P,
+          _I_n_P_o_r_t_N_o, _P_a_c_k_e_t}
+
+          _I_P and _I_n_P_o_r_t_N_o define the address  from  which  _P_a_c_k_e_t
+          came.  _P_a_c_k_e_t is a list of bytes if the option _l_i_s_t was
+          specified. _P_a_c_k_e_t is a binary if the option _b_i_n_a_r_y  was
+          specified.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+gen_udp(3)          ERLANG MODULE DEFINITION           gen_udp(3)
+
+
+
+          The available options are:
+
+            _l_i_s_t:
+                Received _P_a_c_k_e_t is delivered as a list.
+
+            _b_i_n_a_r_y:
+                Received _P_a_c_k_e_t is delivered as a binary.
+
+            common _i_n_e_t options:
+                The common _i_n_e_t options available  are  described
+                in  the  setopts/2  function  in  the _i_n_e_t manual
+                page.
+
+          If you set Port to 0, the underlying  Operating  System
+          assigns  a  free UDP port. (You can find out which port
+          by calling _i_n_e_t:_p_o_r_t(_S_o_c_k_e_t).)
+
+          If any of the following functions  are  called  with  a
+          _S_o_c_k_e_t that was not opened by the calling process, they
+          will return {_e_r_r_o_r,  _n_o_t__o_w_n_e_r}.  The  ownership  of  a
+          _S_o_c_k_e_t  can  be  transferred  to  another  process with
+          _c_o_n_t_r_o_l_l_i_n_g__p_r_o_c_e_s_s/_2.
+
+     recv(Socket,  Length)  ->  {ok,{Address,  Port,  Packet}}  |
+     {error, Reason}
+     recv(Socket, Length, Timeout)
+
+          Types
+               Socket = socket()
+               Address  =  {  integer(),  integer(),   integer(),
+               integer()}
+               Port = integer(0..65535)
+               Length = integer()
+               Packet = list() | binary()
+               Timeout = integer()
+               Reason = atom()
+
+          This function receives a packet from a socket  in  pas-
+          sive mode.
+
+          The optional _T_i_m_e_o_u_t parameter specifies a  timeout  in
+          milliseconds. The default value is _i_n_f_i_n_i_t_y.
+
+     send(S,Address,Port,Packet) -> ok | {error, Reason}
+
+          Types
+               Address  =  {  integer(),  integer(),   integer(),
+               integer()} | atom() | string()
+               Port = integer(0..65535)
+               Packet = [byte()] | binary()
+               Reason = term()
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+gen_udp(3)          ERLANG MODULE DEFINITION           gen_udp(3)
+
+
+
+          Sends _P_a_c_k_e_t to the specified address (address,  port).
+          It returns _o_k, or {_e_r_r_o_r, _R_e_a_s_o_n}. _A_d_d_r_e_s_s can be an IP
+          address expressed as a tuple, for example {_1_9_2,  _0,  _0,
+          _1}.  It can also be a host name expressed as an atom or
+          a string, for example 'somehost.some.domain'.  _P_o_r_t  is
+          an  integer,  and _P_a_c_k_e_t is either a list of bytes or a
+          binary.
+
+AUTHOR
+     tony@erix.ericsson.se - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+

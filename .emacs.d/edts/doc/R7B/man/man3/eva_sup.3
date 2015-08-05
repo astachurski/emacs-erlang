@@ -1,0 +1,127 @@
+.TH eva_sup 3 "eva  2.0.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+eva_sup  \- A Supervisor for the EVA Application
+.SH DESCRIPTION
+.LP
+This module provides a supervisor for the entire EVA application\&. An application can use this supervisor, or write its own, using the \fIstart_link\fR functions of the individual services\&. 
+.LP
+The supervisor can be configured to start the different EVA services independently, such as the basic \fIeva_server\fR and \fIeva_log\fR functionality, and to start the SNMP implementations of the respective service\&. For each possible combination of services, there is a corresponding start function, for example \fIstart_link_log/1\fR which starts the basic eva server and the log functionality\&. 
+.LP
+Before the services can be used, the Mnesia tables involved must be created\&. For each combination of services, there is a corresponding function which creates the tables\&. Each such function takes a list of nodes as its argument\&. This list of nodes defines to which nodes the Mnesia tables will be replicated\&. These nodes should be the same nodes as where the application where EVA is included can run distributed\&. This is as per the \fIkernel\fR configuration parameter \fIdistributed\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+create_tables(Nodes) -> void()
+.br
+.RS
+.TP
+Types
+Nodes = [node()]
+.br
+.RE
+.RS
+.LP
+Creates the Mnesia tables for the basic EVA service (\fIeva_server\fR) only\&. 
+.RE
+.LP
+.B
+create_tables_log(Nodes) -> void()
+.br
+.RS
+.TP
+Types
+Nodes = [node()]
+.br
+.RE
+.RS
+.LP
+Creates the Mnesia tables for the basic EVA service (\fIeva_server\fR) and EVA log service (\fIeva_log\fR)\&. 
+.RE
+.LP
+.B
+create_tables_log_snmp(Nodes) -> void()
+.br
+.RS
+.TP
+Types
+Nodes = [node()]
+.br
+.RE
+.RS
+.LP
+Creates the Mnesia tables for the basic EVA service (\fIeva_server\fR), EVA log service (\fIeva_log\fR), and for the SNMP implementation of these (\fIeva_snmp_adaptation\fR and \fIeva_log_snmp\fR)\&. 
+.RE
+.LP
+.B
+create_tables_snmp(Nodes) -> void()
+.br
+.RS
+.TP
+Types
+Nodes = [node()]
+.br
+.RE
+.RS
+.LP
+Creates the Mnesia tables for the basic EVA service (\fIeva_server\fR), and for the SNMP implementation of this service (\fIeva_snmp_adaptation\fR)\&. 
+.RE
+.LP
+.B
+start_link() -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.LP
+Starts the supervisor and the basic EVA service (\fIeva_server\fR) only\&. 
+.RE
+.LP
+.B
+start_link_log(DefaultLog) -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.TP
+Types
+DefaultLog = string() | false
+.br
+.RE
+.RS
+.LP
+Starts the supervisor, the basic EVA service (\fIeva_server\fR) and EVA log service (\fIeva_log\fR)\&. 
+.LP
+\fIDefaultLog\fR is passed to \fIeva_log:start_link(DefaultLog)\fR\&. 
+.RE
+.LP
+.B
+start_link_log_snmp(DefaultLog, LogDir, MaxDirSize) -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.TP
+Types
+DefaultLog = string() | false
+.br
+LogDir = string()
+.br
+MaxDirSize = integer()
+.br
+.RE
+.RS
+.LP
+Starts the supervisor, the basic EVA service (\fIeva_server\fR), EVA log service (\fIeva_log\fR) and the SNMP implementations of these (\fIeva_snmp_adaptation\fR and \fIeva_log_snmp\fR)\&. 
+.LP
+\fIDefaultLog\fR is passed to \fIeva_log:start_link(DefaultLog)\fR, \fILogDir\fR and \fIMaxDirSize\fR to \fIeva_log_snmp:start_link(LogDir, MaxDirSize)\fR\&. 
+.RE
+.LP
+.B
+start_link_snmp() -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.LP
+Starts the supervisor, the basic EVA service (\fIeva_server\fR) and the SNMP implementation of this service (\fIeva_snmp_adaptation\fR)\&. 
+.RE
+.SH SEE ALSO
+.LP
+eva_log(3), eva_server(3), eva_log_snmp(3), eva_snmp_adaptation(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,498 @@
+.TH gen_server 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+gen_server \- A Generic Client-Server Behaviour
+.SH DESCRIPTION
+.LP
+This module provides a standard way of writing Client-Server applications\&. All servers written as generic servers share a common set of interface functions\&. The generic parts of the server contain functions for debugging, handling the termination of the parent, and presentation of illustrative error information if something goes wrong with the server\&. 
+.LP
+The idea is that the implementation specific parts of a client-server is in one module, called the callback module\&. The callback module contains the client interface functions which use the server access functions described below\&. The callback module also contains the server callback functions, for example \fIhandle_call/3\fR\&. Whenever the generic part of the server receives a message - sent through a server access function, for example - the corresponding callback function is called\&. 
+.LP
+The relationship between the generic interface functions (and received messages) and the callback functions can be illustrated as follows: 
+
+.nf
+Callback module               gen_server
+----------------               ----------
+gen_server:start      ----->   start a new server
+Module:init/1         <----- 
+                               looping
+
+gen_server:call       ----->          
+Module:handle_call/3  <-----
+
+gen_server:cast       ----->          
+Module:handle_cast/2  <-----
+
+gen_server:multi_call ----->          
+Module:handle_call/3  <-----
+
+gen_server:abcast     ----->          
+Module:handle_cast/2  <-----
+
+Module:handle_info/2  <-----  other message
+                              received\&.
+
+Module:terminate/2    <-----  clean up before
+                              termination\&.
+.fi
+.LP
+If the server wants to trap exit signals, this must be explicitly initiated in the callback module\&. 
+.LP
+An instance of the \fIgen_server\fR behaviour can be debugged using the module \fIsys\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+start(Module, Args, Options) -> ServerRet
+.br
+.B
+start(ServerName, Module, Args, Options) -> ServerRet
+.br
+.B
+start_link(Module, Args, Options) -> ServerRet
+.br
+.B
+start_link(ServerName, Module, Args, Options) -> ServerRet
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+ServerName = {local, atom()} | {global, atom()}
+.br
+Args = term()
+.br
+Options = [Opt]
+.br
+Opt = {debug, [Dbg]} | {timeout, Time}
+.br
+Dbg = trace | log | statistics | {log_to_file, FileName} | {install, {Func, FuncState}}
+.br
+ServerRet = {ok, Pid} | ignore | {error, Reason}
+.br
+Pid = pid()
+.br
+Reason = {already_started, Pid} | term()
+.br
+.RE
+.RS
+.LP
+Starts a new server\&. If the server is started without \fIServerName\fR, it can only be called using the returned \fIPid\fR identifier\&. If started with \fIServerName\fR, the name is registered locally or globally\&. 
+.LP
+\fIModule\fR is the name of the callback module\&. 
+.LP
+A server started with \fIstart/3\fR or \fIstart/4\fR does not care about the parent, which means that the parent is not handled explicitly in the generic process part\&. If started in this manner, these functions \fImust not\fR be used if the server is a worker in a supervision tree\&. 
+.LP
+A server started with \fIstart_link/3\fR or \fIstart_link/4\fR is initially linked to the caller, the parent, and it will terminate whenever the parent process terminates, and with the same reason as the parent\&. If the server traps exits, the \fIterminate/2\fR callback function is called in order to clean up before the termination\&. If started in this manner, these functions \fIshould\fR be used if the server is a worker in a supervision tree\&. 
+.LP
+\fITime\fR specifies how long time, in milliseconds, the server is allowed to spend initializing\&. 
+.LP
+The function \fIModule:init(Args)\fR is called in the new process in order to initialize the server (see below)\&. 
+.LP
+Refer to the \fIsys\fR module for more information about the \fIDbg\fR options\&. 
+.RE
+.LP
+.B
+call(ServerRef, Request) -> Reply
+.br
+.B
+call(ServerRef, Request, Timeout) -> Reply
+.br
+.RS
+.TP
+Types
+ServerRef = Name | {Name, Node} | {global, Name} | Pid
+.br
+Name = atom()
+.br
+Node = atom()
+.br
+Request = term()
+.br
+Timeout = int() > 0 | infinity
+.br
+Reply = term()
+.br
+.RE
+.RS
+.LP
+A request is sent to the \fIServerRef\fR server\&. The request can be any term, but the term must be recognized by the server\&. The request is handled by the server (in the \fIModule:handle_call/2\fR function) and the client is suspended while waiting for the response\&. \fITimeout\fR should be set to some reasonable value in milliseconds\&. The special value \fIinfinity\fR can be used if the user has no idea how long the request is supposed to take\&. The default value is \fI5000\fR if \fITimeout\fR is not specified\&. 
+.LP
+If \fITimeout\fR has an integer value and no response has been delivered within \fITimeout\fR milliseconds, then the client terminates with reason \fI{timeout, {gen_server, call, [ServerRef, Request, Timeout]}}\fR\&. 
+.LP
+If the server should crash during the request and the client is linked to the server and the client is trapping exits, (phew) the exit message is read out from the clients receive queue and then this function call fails with the exit reason that was read\&. This is a remnant from when monitors did not exist and links was the only way to supervise the request, and the behaviour may change in a future release\&. In this release, unfortuneately, under certain circumstances (e\&.g\&. \fIServerRef = {Name, Node}\fR, \fINode\fR crashes during call) the exit message cannot be read out\&. Note that if the server crashes in between calls, the client must take care of the exit message anyway\&. 
+.RE
+.LP
+.B
+cast(ServerRef, Request) -> ok
+.br
+.RS
+.TP
+Types
+ServerRef = Name | {Name, Node} | {global, Name} | Pid
+.br
+Name = atom()
+.br
+Node = atom()
+.br
+Request = term()
+.br
+.RE
+.RS
+.LP
+A request is sent to the server\&. As no response will be delivered, the client making the cast is not suspended until the request has been handled by the server\&. This function returns \fIok\fR immediately and ignores non-existing servers\&. 
+.RE
+.LP
+.B
+multi_call(DistRef, Request) -> DistRep
+.br
+.B
+multi_call(Nodes, DistRef, Request) -> DistRep
+.br
+.B
+multi_call(Nodes, DistRef, Request, Timeout) -> DistRep
+.br
+.RS
+.TP
+Types
+Nodes = [Node]
+.br
+Node = atom()
+.br
+DistRef = atom()
+.br
+DistRep = {[{Node, Reply}], [Node]}
+.br
+Request = term()
+.br
+Timeout = int() >= 0 | infinity
+.br
+Reply = term()
+.br
+.RE
+.RS
+.LP
+Sends a request to the locally registered server \fIDistRef\fR at every known node (or \fINodes\fR)\&. This function returns a list of replies which are tagged with the corresponding node name, and a list of bad nodes\&. \fIReply\fR is the value returned by a server\&. A node is marked bad if the server at a specific node, or the node itself, does not exist\&. 
+.LP
+The request is sent to the \fIDistRef\fR server at all nodes before the replies are collected\&. This ensures that the request is handled in parallel on all nodes\&. 
+.SS Warning:
+.LP
+If one of the nodes is of an older Erlang release, and its server is not started when the requests are sent, but starts within 2 s after, this function waits the whole \fITimeout\fR, which may be infinity\&. 
+.LP
+This problem does not exist if all nodes are of the current release\&. 
+
+.LP
+If \fITimeout\fR is given, each node not replying within that time is regarded as bad\&. 
+.LP
+This function does \fInot\fR read out any exit messages like \fIcall/2, 3\fR does\&. 
+.LP
+The previously undocumented functions \fIsafe_multi_call/2\&.\&.4\fR have now been removed since \fImulti_call/2\&.\&.4\fR is now safe, except for against old nodes as mentioned in the warning above\&. 
+.RE
+.LP
+.B
+abcast(DistRef, Request) -> abcast
+.br
+.B
+abcast(Nodes, DistRef, Request) -> abcast
+.br
+.RS
+.TP
+Types
+Nodes = [Node]
+.br
+Node = atom()
+.br
+DistRef = atom()
+.br
+Request = term()
+.br
+.RE
+.RS
+.LP
+Broadcasts the request asynchronously to the locally registered server \fIDistRef\fR on every known node (or \fINodes\fR)\&. This function returns immediately and ignores non-existing servers or nodes\&. 
+.RE
+.LP
+.B
+reply(To, Reply) -> true
+.br
+.RS
+.TP
+Types
+To = {pid(), Tag}
+.br
+Tag = term()
+.br
+.RE
+.RS
+.LP
+This function can be used by a server to make an explicit reply, if a reply cannot be returned immediately as the return value of \fIModule:handle_call/3\fR\&. \fITo\fR has the same value as the \fIFrom\fR argument in \fIModule:handle_call/3\fR\&. 
+.RE
+.SH Callback Functions
+.LP
+The following functions should be exported from a \fIgen_server\fR callback module\&. 
+.SH EXPORTS
+.LP
+.B
+Module:init(Args) -> {ok, State} | {ok, State, Timeout} | ignore | {stop, StopReason}
+.br
+.RS
+.TP
+Types
+Args = term()
+.br
+State = term()
+.br
+Timeout = int() >= 0 | infinity
+.br
+StopReason = term()
+.br
+.RE
+.RS
+.LP
+Whenever a new server is started, \fIinit/1\fR is the first function called in the specified callback module\&. To ensure a synchronized start-up procedure, the \fIgen_server:start\fR function will not return before the \fIinit/1\fR function has returned\&. 
+.LP
+The \fIArgs\fR argument supplied to the \fIinit/1\fR function is the same as the \fIArgs\fR parameter supplied to the \fIgen_server:start\fR functions\&. 
+.LP
+The purpose of the \fIinit/1\fR function is to initialize the server and the internal state of the server\&. A server which holds an external resource typically opens the associated port and keeps the port identity in the internal state\&. 
+.LP
+If the server wants to trap exits, this has to be expressed explicitly in the init function with \fIprocess_flag(trap_exit, true)\fR\&. 
+.LP
+The representation of the server \fIState\fR is an implementation specific detail which must be decided by the designer of the server\&. \fIState\fR will be visible as an argument to all callback functions\&. To change something in \fIState\fR, a new value is returned from the callback function using the return values (terms) described below\&. 
+.LP
+If the initializing procedure fails, the reason is supplied as \fIStopReason\fR with the \fI{stop, StopReason}\fR return value\&. 
+.LP
+After the server has been successfully initialized, the generic part of the server enters the main loop and waits for requests\&. A \fITimeout\fR time can be specified if the server is only allowed to wait for a certain time for the next event\&. If the timeout time elapses, the special \fItimeout\fR message should be handled in the \fIModule:handle_info/2\fR callback function\&. \fITimeout\fR is specified in milliseconds\&. 
+.LP
+This function can return \fIignore\fR in order to inform the parent, especially if it is a supervisor, that the server, as an example, did not start in accordance with the configuration data\&. 
+.RE
+.LP
+.B
+Module:handle_call(Request, From, State) -> CallReply
+.br
+.RS
+.TP
+Types
+Request = term()
+.br
+From = {pid(), Tag}
+.br
+Tag = term()
+.br
+CallReply = {reply, Reply, State} | {reply, Reply, State, Timeout} | {noreply, State} | {noreply, State, Timeout} | {stop, StopReason, Reply, State} | {stop, StopReason, State}
+.br
+Timeout = int() >= 0 | infinity
+.br
+StopReason = normal | shutdown | term()
+.br
+.RE
+.RS
+.LP
+Whenever a client function has called one of the interface functions \fIgen_server:call\fR or \fIgen_server:multi_call\fR, the server handles the request in this callback function\&. 
+.LP
+\fIRequest\fR is the same as the term supplied with the above client call\&. The server decides if the client should be sent a reply directly (\fI{reply, \&.\&.\&.}\fR), indirectly (\fI{noreply, \&.\&.\&.}\fR), or if the server has to terminate (\fI{stop, \&.\&.\&.}\fR) as a result of the request\&. If \fI{noreply, \&.\&.\&.}\fR is returned, a reply is sent to the client using the \fIreply/2\fR function\&. 
+.LP
+If \fIStopReason\fR is something other than \fInormal\fR or \fIshutdown\fR, the server is assumed to have terminated with a runtime error\&. In this case, a lot of information is reported about the failure\&. The atom \fInormal\fR causes a normal termination of the server, while \fIshutdown\fR causes an abnormal, but faultless, termination\&. 
+.LP
+If the server decided to terminate \fI{stop, StopReason [, \&.\&.\&.]}\fR, the \fIModule:terminate/2\fR function is called\&. All code which handles the clean up before the server terminates should be located in the \fIterminate\fR function\&. The server will terminate due to \fIStopReason\fR\&. 
+.LP
+As described above ( see \fIinit/1\fR), a timeout can be specified to take some specific action if no more requests are received within \fITimeout\fR milliseconds\&. 
+.RE
+.LP
+.B
+Module:handle_cast(Request, State) -> Return
+.br
+.RS
+.TP
+Types
+Request = term()
+.br
+State = term()
+.br
+Return = {noreply, State} | {noreply, State, Timeout} | {stop, StopReason, State}
+.br
+Timeout = int() >= 0 | infinity
+.br
+StopReason = normal | shutdown | term()
+.br
+.RE
+.RS
+.LP
+Whenever a client function has called one of the interface functions \fIgen_server:cast\fR or \fIgen_server:abcast\fR, the server handles the request in this callback function\&. No reply will ever be sent to the client, but the server can decide to terminate\&. \fIStopReason\fR is as described for \fIhandle_call/3\fR\&. 
+.RE
+.LP
+.B
+Module:handle_info(Info, State) -> Return
+.br
+.RS
+.TP
+Types
+Info = term()
+.br
+State = term()
+.br
+Return = {noreply, State} | {noreply, State, Timeout} | {stop, StopReason, State}
+.br
+Timeout = int() >= 0 | infinity
+.br
+StopReason = normal | shutdown | term()
+.br
+.RE
+.RS
+.LP
+This callback function handles received messages other than \fIcall\fR and \fIcast\fR\&. Typical messages which are handled by this function include: 
+.RS 2
+.TP 4
+.B
+\fI{\&'EXIT\&', Pid, Reason}\fR:
+If the process traps exit signals, the corresponding messages are handled here\&. 
+.TP 4
+.B
+\fI{nodedown, Node}\fR:
+If another Erlang node is monitored, the corresponding \fInodedown\fR message is handled here\&. 
+.TP 4
+.B
+\fItimeout\fR:
+If \fITimeout\fR milliseconds has elapsed since the last handled event, this message should be handled\&. 
+.TP 4
+.B
+\fIMsg\fR:
+All other messages which are sent to the server using \fIServer ! Msg\fR are also handled here\&.
+.RE
+.SS Note:
+.LP
+Communication with the server should always go through the interface functions described above\&.
+
+.LP
+The \fIReturn\fR value is the same as for \fIhandle_cast/2\fR\&. \fIStopReason\fR is as described for \fIhandle_call/3\fR\&. 
+.RE
+.LP
+.B
+Module:terminate(Reason, State) -> ok
+.br
+.RS
+.TP
+Types
+Reason = term()
+.br
+State = term()
+.br
+.RE
+.RS
+.LP
+This callback function is called whenever the server is about to terminate\&. Either one of the above callback functions have returned \fI{stop, StopReason, \&.\&.\&.}\fR, in which case \fIReason\fR is equal to \fIStopReason\fR; or some other fault has been caught\&. \fIReason\fR is any term which describes the termination reason\&. If the server traps exits, the \fIterminate\fR function is called if the server\&'s parent (normally a supervisor) dies or orders the server to die\&. If the server does not trap exits, it dies immediately if the parent dies\&. 
+.LP
+With this function, the server can clean up before the process terminates\&. It can, for example, de-allocate external resources\&. 
+.LP
+The termination reason cannot be changed here\&. The server will terminate due to\fIReason\fR regardless of what was returned from this function\&. 
+.RE
+.LP
+.B
+Module:code_change(OldVsn, State, Extra) -> {ok, NewState}
+.br
+.RS
+.TP
+Types
+OldVsn = undefined | term()
+.br
+State = term()
+.br
+Extra = term()
+.br
+NewState = term()
+.br
+.RE
+.RS
+.LP
+This function is called when a code change is performed, which implies that the internal data structures of the server has changed\&. This function is supposed to convert the old state to the new one\&. \fIOldVsn\fR is the \fIvsn\fR attribute of the old version of the module\&. If no such attribute was defined, the atom \fIundefined\fR is sent\&. \fIExtra\fR is an optional term which is typically defined in the release upgrade script\&. 
+.RE
+.SH System Events
+.LP
+The \fIgen_server\fR behaviour generates the following system events, handled by the \fIsys\fR module: 
+.RS 2
+.TP 2
+*
+\fI{in, Msg}\fR when a message is received\&. 
+.TP 2
+*
+\fI{out, Msg, To, State}\fR when a message is sent\&. 
+.TP 2
+*
+\fI{noreply, State}\fR when no reply is delivered\&. 
+.RE
+.SH Example
+.LP
+The following example implements a simple queue server\&. The server has four interface functions: 
+.RS 2
+.TP 2
+*
+\fIstart/0\fR which starts the queue server\&. 
+.TP 2
+*
+\fIstop/0\fR which stops the queue server\&. 
+.TP 2
+*
+\fIin/1\fR which inserts an item last in the queue\&. 
+.TP 2
+*
+\fIout/0\fR which removes the oldest item from the queue\&. 
+.RE
+.LP
+The queue server is not linked to the parent process and the server does not handle the termination of the parent process explicitly\&. 
+
+.nf
+-module(queue_serv)\&.
+-behaviour(gen_server)\&.
+
+%% External exports
+-export([start/0, in/1, out/0, stop/0])\&.
+
+%% gen_server callbacks
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2,
+         terminate/2])\&.
+
+start() ->  gen_server:start({local, queue_serv}, 
+                             queue_serv, [], [])\&.
+
+in(Item) -> gen_server:call(queue_serv, {in, Item})\&.
+
+out() -> gen_server:call(queue_serv, out)\&.
+
+stop() -> gen_server:call(queue_serv, stop)\&.
+
+%% Callback functions\&.
+init([]) ->
+    {ok, {[],[]}}\&.
+
+handle_call({in, X}, _From, {In, Out}) ->
+    {reply, ok, {[X|In], Out}};
+handle_call(out, _From, Queue) ->
+    {Reply, NewQueue} = out(Queue),
+    {reply, Reply, NewQueue};
+handle_call(stop, _From, Queue) ->
+    {stop, normal, ok, Queue}\&.
+
+handle_cast(_, State) ->
+    {noreply, State}\&.
+
+handle_info(_, State) ->
+    {noreply, State}\&.
+
+terminate(Reason, State) ->
+    ok\&.
+
+%% Internal functions
+out({In, [H|Out]}) ->
+    {{value, H}, {In, Out}};
+out({[], []}) ->
+    {empty, {[],[]}};
+out({In, _}) ->
+    out({[], lists:reverse(In)})\&.
+.fi
+.SH See Also
+.LP
+sys(3) 
+.SH AUTHORS
+.nf
+Magnus Froberg - support@erlang.ericsson.se
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

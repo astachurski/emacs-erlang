@@ -1,0 +1,594 @@
+
+
+
+tk(3)               ERLANG MODULE DEFINITION                tk(3)
+
+
+
+MODULE
+     tk -  Tk toolkit interface
+
+DESCRIPTION
+     This module implements the actual interface to tk.
+
+
+EXPORTS
+     start()
+     start(Options)
+
+          Start the etk server, possible options are
+
+            * {_w_i_t_h_d_r_a_w_n, _B_o_o_l}
+
+            *  {_n_a_m_e, _N_a_m_e}
+
+            *  {_d_i_s_p_l_a_y, _D_i_s_p_l_a_y}
+
+            *  {_d_r_i_v_e_r, "_e_t_k__d_r_v"}
+
+              Will start the etk interface as a linked in  driver
+              for improved performance.
+
+     stop()
+
+          Stops the etk server and terminates all windows.
+
+     wlink(Path)
+     wlink(Pid, Path)
+
+          Links the calling process to the widget _P_a_t_h
+
+     wunlink(Path)
+     wunlink(Pid, Path)
+
+          Unlinks the calling process from the widget _P_a_t_h
+
+     join(Path, Node, MasterPath)
+
+          Join a distributed widget group
+
+     leave(W)
+
+          Leave a distributed widget group.
+
+     button(Path, Options)
+
+          Create a button, for  all  options  see,  button.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/button.n.html>
+
+
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    1
+
+
+
+
+
+
+tk(3)               ERLANG MODULE DEFINITION                tk(3)
+
+
+
+          Example:
+
+          Self= self(),
+          Quit = etk:button(Top,[{text,"quit"},{anchor,w},
+                                 {command, fun() -> exit(Self, die) end}]),
+
+     canvas(Path, Options)
+
+          Create a canvas, for  all  options  see,  canvas.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/canvas.n.html>
+
+          Example:
+
+          Canvas = etk:canvas(Top, []),
+
+     checkbutton(Path, Options)
+
+          Create   a   checkbutton,   for   all   options    see,
+          checkbutton.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/checkbutton.n.html>
+
+          Example:
+
+          Cb = etk:checkbutton(Top, [{text,"Bold"},{anchor,"w"}]),
+
+     entry(Path, Options)
+
+          Create an entry,  for  all  options  see,  entry.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/entry.n.html>
+
+          Example:
+
+          E = etk:entry(Top, [{relief sunken}, {font, Font}])
+
+     frame(Path, Options)
+
+          Create a  frame,  for  all  options  see,  frame.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/frame.n.html>
+
+          Example:
+
+          Frame = etk:frame(Top, [{width,"15m"},{height,"10m"}]),
+
+     label(Path, Options)
+
+          Create a  label,  for  all  options  see,  label.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/label.n.html>
+
+          Example:
+
+          L =  etk:label(Top, [{text, "Label #3"}, {background, green}]),
+
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    2
+
+
+
+
+
+
+tk(3)               ERLANG MODULE DEFINITION                tk(3)
+
+
+
+     listbox(Path, Options)
+
+          Create a listbox, for all options  see,  listbox.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/listbox.n.html>
+
+          Example:
+
+          ListBox = etk:listbox(Top, []),
+
+     menu(Path, Options)
+
+          Create  a  menu,  for  all  options  see,   menu.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/menu.n.html>
+
+     menubutton(Path, Options)
+
+          Create   a   menubutton,   for   all    options    see,
+          menubutton.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/menubutton.n.html>
+
+     message(Path, Options)
+
+          Create  a  message  widget,  for   all   options   see,
+          message.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/message.n.html>
+
+     radiobutton(Path, Options)
+
+          Create   a   radiobutton,   for   all   options    see,
+          radiobutton.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/radiobutton.n.html>
+
+     scale(Path, Options)
+
+          Create  a  scale   widget,   for   all   options   see,
+          scale.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/scale.n.html>
+
+          Example:
+
+          Scale = etk:scale(Top,
+                            [{label,"Flow"},{from,-1000},{to,1000},
+                             {command, fun(S) ->
+                                         io:format("Scale = ~w~n", [S])
+                                       end}]),
+
+     scrollbar(Path, Options)
+
+          Create  a  scrollbar  widget,  for  all  options   see,
+          scrollbar.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/scrollbar.n.html>
+
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    3
+
+
+
+
+
+
+tk(3)               ERLANG MODULE DEFINITION                tk(3)
+
+
+
+          Example:
+
+
+
+     text(Path, Options)
+
+          Create a text widget, for all options see,  text.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/text.n.html>
+
+          Example:
+
+
+
+     toplevel(Path, Options)
+
+          Create  a  toplevel  widget,  for  all   options   see,
+          toplevel.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/toplevel.n.html>
+
+          Example:
+
+
+
+     bell()
+     bell(Window)
+
+          Ring the bell
+
+     bindtags(Win)
+     bindtags(Win, Options)
+
+          Bind tags in window according to Options
+
+          Example:
+
+
+
+     destroy(Win)
+
+          Destroy a window.
+
+     focus(Win)
+
+          Set the current focus to Win.
+
+     lower(Win)
+     lower(Win, Other)
+
+          Lower window.
+
+     raise(Win)
+     raise(Win, Other)
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    4
+
+
+
+
+
+
+tk(3)               ERLANG MODULE DEFINITION                tk(3)
+
+
+
+          Raise window.
+
+     bind(Win)
+
+          Return a list of events that are bound to Win.
+
+          Example:
+
+
+
+     bind(Win, Event)
+
+          Return a a Fun if a Fun is bound to the event _E_v_e_n_t  or
+          _n_i_l  of  nothing is bound to trigger on the event _E_v_e_n_t
+          in Win.
+
+     bind(Win, Event, Template, Fun)
+
+          Set the function _F_u_n to evaluate on the event _E_v_e_n_t  in
+          the       window.       See       also      bind.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/bind.n.html>
+
+          Example:
+
+
+
+     unbind(Win, Event)
+
+          Unbind the function the is bound to an event.
+
+     unbind(Win, Event)
+
+          Unbind the function the is bound to an event.
+
+     bind_tag(Win, Tag)
+
+          Return a list of the events bound to tag.
+
+     bind_tag(Win, Tag, Event)
+
+          Return the Fun that is bound to Tag and Event,  or  _n_i_l
+          of nothing is bound.
+
+     bind_tag(Win, Tag, Event, Template, Fun)
+
+          Bind _F_u_n to _T_a_g  and  _E_v_e_n_t  See  also  bindtags.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/bindtags.n.html>
+
+          Example:
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    5
+
+
+
+
+
+
+tk(3)               ERLANG MODULE DEFINITION                tk(3)
+
+
+
+     unbind_tag(Win, Tag, Event)
+
+          Unbind the _F_u_n associated with _T_a_g and _E_v_e_n_t
+
+     bind_ctag(Win, Tag)
+
+          Return a list of the events bound to canvas tag.
+
+     bind_ctag(Win, Tag, Event)
+
+          Return the Fun that is bound to canvas widget  Tag  and
+          Event, or _n_i_l of nothing is bound.
+
+     bind_ctag(Win, Tag, Event, Template, Fun)
+
+          Bind _F_u_n to canvas widget _T_a_g and _E_v_e_n_t
+
+          Example:
+
+
+
+     unbind_ctag(Win, Tag, Event)
+
+          Unbind the _F_u_n associated with canvas  widget  _T_a_g  and
+          _E_v_e_n_t
+
+     pack(Wslist)
+     pack(Window, Options)
+
+          Invoke    the    packer.    See    also     pack.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/pack.n.html>
+
+          Example:
+
+
+
+     place(Wslist)
+     place(Window, Options)
+
+          Invoke    the    placer.    See    also    place.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/place.n.html>
+
+     grid(Wslist)
+     grid(Window, Options)
+
+          Invoke the grid geometry manager. See also  grid.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/grid.n.html>
+
+          Example:
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    6
+
+
+
+
+
+
+tk(3)               ERLANG MODULE DEFINITION                tk(3)
+
+
+
+     tk(Opt)
+     tk(Opt, Arg)
+
+          Other  commands,  i.e.  "appname"  See  also  tk.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/tk.n.html>
+
+     wm(Opts)
+     wm(Win, Opts)
+
+          The     wm     command,     See     also      wm.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/wm.n.html>
+
+          Example:
+
+
+
+     update()
+     update(Flag)
+
+          The update command.
+
+     selection(Opts)
+     rselection(Opts)
+
+          The  (raw)  selection  command.  See   selection.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/selection.n.html>
+
+          Raw means that no type interpretation is  done  on  the
+          data at all, this is necessary for certain data such as
+          "1.2" which otherwise is interpreted as a float.
+
+     clipboard(Opts)
+
+          The    clipboard    command.    See    clipboard.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/clipboard.n.html>
+
+     grab(Opts)
+
+          The      grab      command.       See       grab.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/grab.n.html>
+
+     option(Opts)
+
+          The     option     command.      See      option.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/option.n.html>
+          as well as the general  options  page  GetOption.3.html
+          <http://dev.scriptics.com/man/tcl7.6/TkLib/GetOption.3.html>
+
+          Example:
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    7
+
+
+
+
+
+
+tk(3)               ERLANG MODULE DEFINITION                tk(3)
+
+
+
+     image(Opts)
+
+          The      image      command.      See      image.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/image.n.html>
+
+          Example:
+
+
+
+     winfo(Opts)
+
+          Return  window-related  information.  See  winfo.n.html
+          <http://dev.scriptics.com/man/tcl7.6/TkCmd/winfo.n.html>
+
+          Example:
+
+
+
+     cmd(W, Opts)
+
+          The widget command.
+
+          Example:
+
+
+
+     rcmd(W, Opts)
+
+          The raw widget command.
+
+     setvar(Var, Value)
+
+          Set variable _V_a_r to value _V_a_l_u_e.
+
+     getvar(Var, Value)
+
+          Set balue of variable _V_a_r.
+
+     parentof(W)
+
+          Shortcut for _w_i_n_f_o([_p_a_r_e_n_t, _W]).
+
+     toplevelof(W)
+
+          Shortcut for _w_i_n_f_o([_t_o_p_l_e_v_e_l, _W]).
+
+     childrenof(W)
+
+          Shortcut for _w_i_n_f_o([_c_h_i_l_d_r_e_n, _W]).
+
+     classof(W)
+
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    8
+
+
+
+
+
+
+tk(3)               ERLANG MODULE DEFINITION                tk(3)
+
+
+
+          Shortcut for _w_i_n_f_o([_c_l_a_s_s, _W]).
+
+     cget(W, Opt)
+
+          Invokes the command "cget" on the widget _W
+
+          Example:
+
+
+
+     rcget(W, Opt)
+
+          Invokes the "raw" command "cget" on the widget _W
+
+     configure(W, Opts)
+
+          Invokes the command "configure" on the widget _W
+
+          Example:
+
+
+
+     tkStrictMotif()
+     tkStrictMotif(Bool)
+
+          Queries respective sets the property "strictMotif"
+
+AUTHOR
+     Tony Rogvall - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    9
+
+
+

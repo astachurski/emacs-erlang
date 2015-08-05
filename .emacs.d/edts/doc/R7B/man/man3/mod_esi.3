@@ -1,0 +1,173 @@
+.TH mod_esi 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mod_esi \- Efficient Erlang Scripting\&. 
+.SH DESCRIPTION
+.LP
+The Erlang Scripting Interface (ESI) provides a tight and efficient interface to the execution of Erlang functions\&. Erlang functions can be executed with two alternative schemes, \fIeval\fR and \fIerl\fR\&. Both of these schemes can utilize the functionality in an Erlang node efficiently\&. 
+.LP
+Even though the server supports CGI-1\&.1 the use of the Erlang Scripting Interface (ESI) is encouraged for reasons of efficiency\&. CGI is resource intensive because of its design\&. CGI requires the server to fork a new OS process for each executable it needs to start\&. 
+.LP
+An Erlang function can be written and executed as a CGI script by using \fIerl_call(3)\fR in the erl_interface library, for example\&. The cost is a forked OS process, as described above\&. This is a waste of resources, at least when the Web server itself is written in Erlang (as in this case)\&. 
+.LP
+The following config directives are described: 
+.RS 2
+.TP 2
+*
+ErlScripAlias
+.TP 2
+*
+EvalScriptAlias
+.RE
+
+.SH ERL SCHEME
+.LP
+The \fIerl\fR scheme is designed to mimic plain CGI, but without the extra overhead\&. An URL which calls an Erlang \fIerl\fR function has the following syntax (regular expression): 
+
+.nf
+http://your\&.server\&.org/***/Mod[:/]Func(?QueryString|/PathInfo)
+.fi
+.LP
+The module (\fIMod\fR) referred to must be found in the code path, and it must define a function (\fIFunc\fR) with an arity of two, i\&.e\&. \fIFunc(Env, Input)\fR\&. \fIEnv\fR contains information about the connecting client (see below), and \fIInput\fR the \fIQueryString\fR or \fIPathInfo\fR as defined in the CGI specification <http://hoohoo\&.ncsa\&.uiuc\&.edu/cgi/>\&. \fI***\fR above depends on how the ErlScriptAlias config directive has been used\&. Data returned from the function must furthermore take the form as specified in the CGI specification <http://hoohoo\&.ncsa\&.uiuc\&.edu/cgi/>\&. 
+.LP
+Take a look at \fIhttpd_example\&.erl\fR in the code release($INETS/src) for a clarifying example\&. Start an example server as described in httpd:start/0 and test the following from a browser (The server name for your example server \fIwill\fR differ!): 
+.RS 2
+.TP 4
+.B
+\fIhttp://your\&.server\&.org:8888/cgi-bin/erl/httpd_example/get\fR:
+and a call will be made to \fIhttpd_example:get/2\fR and two input fields and a Submit button will promptly be shown in the browser\&. Enter text into the input fields and click on the Submit button\&. Something like this will promptly be shown in the browser: 
+.RS 4
+
+.nf
+Environment:
+[{query_string,"input1=blaha&input2=blaha"},
+ {server_software,"eddie/2\&.2"},
+ {server_name,"localhost"},
+ {gateway_interface,"CGI/1\&.1"},
+ {server_protocol,"HTTP/1\&.0"},
+ {server_port,8080},
+ {request_method,"GET"},
+ {remote_addr,"127\&.0\&.0\&.1"},
+ {script_name,"/cgi-bin/erl/httpd_example:get?input1=blaha&
+                                              input2=blaha"},
+ {http_accept_charset,"iso-8859-1,*,utf-8"},
+ {http_accept_language,"en"},
+ {http_accept,"image/gif, image/x-xbitmap, image/jpeg, 
+                                           image/pjpeg, */*"},
+ {http_host,"localhost:8080"},
+ {http_user_agent,"Mozilla/4\&.03 [en] (X11; I; 
+                                      Linux 2\&.0\&.30 i586)"},
+ {http_connection,"Keep-Alive"}, {http_referer,
+      "http://localhost:8080/cgi-bin/erl/httpd_example/get"}]
+Input:
+ input1=blaha&input2=blaha
+Parsed Input:
+ [{"input1","blaha"},{"input2","blaha"}]
+.fi
+.RE
+.TP 4
+.B
+\fIhttp://your\&.server\&.org:8888/cgi-bin/erl/httpd_example:post\fR:
+A call will be made to \fIhttpd_example:post/2\fR\&. The same thing will happen as in the example above but the HTTP POST method will be used instead of the HTTP GET method\&. 
+.TP 4
+.B
+\fIhttp://your\&.server\&.org:8888/cgi-bin/erl/httpd_example:yahoo\fR:
+A call will be made to to \fIhttpd_example:yahoo/2\fR and the Yahoo! <http://www\&.yahoo\&.com> site will promptly be shown in your browser\&. 
+.RE
+.SS Note:
+.LP
+httpd:parse_query/1 is used to generate the \fIParsed Input: \&.\&.\&.\fR data in the example above\&. 
+.LP
+If a client closes the connection prematurely a message will be sent to the function, that is either \fI{tcp_closed, _}\fR or \fI{_, {socket_closed, _}}\fR\&. 
+
+.SH EVAL SCHEME
+.SS Warning:
+.LP
+The \fIeval\fR scheme can seriously threaten the integrity of the Erlang node housing a Web server, for example:
+
+.nf
+http://your\&.server\&.org/eval?httpd_example:
+       print(atom_to_list(apply(erlang,halt,[])))
+.fi
+.LP
+which effectively will close down the Erlang node, that is use the \fIerl\fR scheme instead until this security breach has been fixed\&. 
+
+.LP
+The \fIeval\fR scheme is straight-forward and does not mimic the behavior of plain CGI\&. An URL which calls an Erlang \fIeval\fR function has the following syntax: 
+
+.nf
+http://your\&.server\&.org/***/Mod:Func(Arg1,\&.\&.\&.,ArgN)
+.fi
+.LP
+The module (\fIMod\fR) referred to must be found in the code path, and data returned by the function (\fIFunc\fR) is passed back to the client\&. \fI***\fR depends on how the EvalScriptAlias config directive has been used\&. Data returned from the function must furthermore take the form as specified in the CGI specification <http://hoohoo\&.ncsa\&.uiuc\&.edu/cgi/>\&. 
+.LP
+Take a look at \fIhttpd_example\&.erl\fR in the code release($INETS/src) for an example\&. Start an example server as described in httpd:start/0 and test the following from a browser (The server name for your example server \fIwill\fR differ!): 
+.RS 2
+.TP 4
+.B
+\fIhttp://your\&.server\&.org:8888/eval?httpd_example:print("Hi!")\fR:
+and a call will be made to \fIhttpd_example:print/1\fR and \fI"Hi!"\fR will promptly be shown in your browser\&. 
+.RE
+.SH DIRECTIVE: "ErlScriptAlias"
+.LP
+\fISyntax:\fR \fIErlScriptAlias\fR url-path allowed-module allowed-module \&.\&.\&.
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_esi(3) 
+.LP
+\fIErlScriptAlias\fR marks all URLs matching \fIurl-path\fR as erl scheme scripts\&. A matching URL is mapped into a specific module and function\&. The module must be one of the \fIallowed-module\fR:s\&. For example: 
+
+.nf
+ErlScriptAlias /cgi-bin/hit_me httpd_example md4
+.fi
+.LP
+and a request to \fIhttp://your\&.server\&.org/cgi-bin/hit_me/httpd_example:yahoo\fR would refer to \fIhttpd_example:yahoo/2\fR\&. Refer to the Erl Scheme description above\&. 
+.SH DIRECTIVE: "EvalScriptAlias"
+.LP
+\fISyntax:\fR \fIEvalScriptAlias\fR url-path allowed-module allowed-module \&.\&.\&.
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_esi(3) 
+.LP
+\fIEvalScriptAlias\fR marks all URLs matching \fIurl-path\fR as eval scheme scripts\&. A matching URL is mapped into a specific module and function\&. The module must be one of the \fIallowed-module\fR:s\&. For example: 
+
+.nf
+EvalScriptAlias /cgi-bin/hit_me_to httpd_example md5
+.fi
+.LP
+and a request to \fIhttp://your\&.server\&.org/cgi-bin/hit_me_to/httpd_example:print("Hi!")\fR would refer to \fIhttpd_example:print/1\fR\&. Refer to the Eval Scheme description above\&. 
+.SH EWSAPI MODULE INTERACTION
+.LP
+Uses the following EWSAPI interaction data, if available: 
+.RS 2
+.TP 4
+.B
+\fI{remote_user, RemoteUser}\fR:
+as defined in mod_auth(3)\&.
+.RE
+.LP
+Exports the following EWSAPI interaction data, if possible: 
+.RS 2
+.TP 4
+.B
+\fI{mime_type, MimeType}\fR:
+The file suffix of the incoming URL mapped into a \fIMimeType\fR as defined in the Mime Type Settings section of \fIhttpd_core(3)\fR\&.
+.RE
+.LP
+Uses the following EWSAPI functions: 
+.RS 2
+.TP 2
+*
+mod_alias:real_name/3
+.TP 2
+*
+mod_cgi:status_code/1
+.RE
+.SH SEE ALSO
+.LP
+httpd(3), mod_alias(3), mod_auth(3), mod_security(3), mod_cgi(3) 
+.SH AUTHOR
+.nf
+Joakim Grebeno  - support@erlang.ericsson.se
+.fi

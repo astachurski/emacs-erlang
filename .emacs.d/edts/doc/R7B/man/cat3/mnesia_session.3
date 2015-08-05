@@ -1,0 +1,132 @@
+
+
+
+mnesia_session(3)   ERLANG MODULE DEFINITION    mnesia_session(3)
+
+
+
+MODULE
+     mnesia_session - Mnesia_Session
+
+DESCRIPTION
+     Mnesia is written in Erlang and  intended  to  be  used  for
+     Erlang applications.
+
+     The Mnesia_Session application enables access to the  Mnesia
+     DBMS   from   foreign   programming  languages  (i.e.  other
+     languages than  Erlang).  The  Mnesia_Session  interface  is
+     defined  in  IDL (an Interface Definition Language standard-
+     ized by OMG (the Object Management Group)).
+
+     This module is automatically generated from the IDL specifi-
+     cation  _m_n_e_s_i_a__s_e_s_s_i_o_n._i_d_l  and  is  documented  in  the IDL
+     specification.
+
+
+Configuration parameters
+     Mnesia_Session reads the following application configuration
+     parameters:
+
+       * -_m_n_e_s_i_a__s_e_s_s_i_o_n _c_o_r_b_a__c_o_n_n_e_c_t_o_r__n_a_m_e _N_a_m_e. This  parame-
+         ter  controls  which initial name Mnesia Corba Connector
+         is  bound.  This  parameter  is  only  used   when   the
+         _e_n_a_b_l_e__c_o_r_b_a  is  set  to true. The name is validated by
+         using _l_n_a_m_e:_c_h_e_c_k__n_a_m_e(_N_a_m_e). See the _O_r_b_e_r  application
+         for      details.      The      default      name     is
+         {'_C_o_s_N_a_m_i_n_g__N_a_m_e_C_o_m_p_o_n_e_n_t',
+         "_I_D_L:_C_o_s_N_a_m_i_n_g/_N_a_m_e_C_o_m_p_o_n_e_n_t:_1._0",
+         "_m_n_e_s_i_a__c_o_r_b_a__c_o_n_n_e_c_t_o_r", []}.
+
+       * -_m_n_e_s_i_a__s_e_s_s_i_o_n _d_e_b_u_g _L_e_v_e_l Controls the debug level  of
+         Mnesia_Session. Possible values are:
+
+           _n_o_n_e:
+               No trace outputs at all. This is the default.
+
+           _v_e_r_b_o_s_e:
+               Activates tracing of important debug events.
+
+           _d_e_b_u_g:
+               Activates all events  at  the  verbose  level  and
+               traces of all debug events.
+
+           _t_r_a_c_e:
+               Activates all debug events both verbose and  debug
+               as  well  as  trace  events  that provide internal
+               printouts.
+               This level is only intended for debugging of small
+               toy  systems  since  many large events may be gen-
+               erated.
+
+
+
+Ericsson UtveckliLnagsst AcBhange: mnesia_session  1.1.3              1
+
+
+
+
+
+
+mnesia_session(3)   ERLANG MODULE DEFINITION    mnesia_session(3)
+
+
+
+       * -_m_n_e_s_i_a__s_e_s_s_i_o_n _e_n_a_b_l_e__c_o_r_b_a _t_r_u_e  |  _f_a_l_s_e.  This  flag
+         enables  Mnesia_Session  to  access Mnesia via CORBA. If
+         CORBA access is enabled, the application Orber  must  be
+         started in order to start Mnesia Session. The default is
+         _f_a_l_s_e.
+
+     First the SASL application parameters are checked, then  the
+     command  line  flags  are  checked, and finally, the default
+     value is chosen.
+
+See Also
+     mnesia(3), orber(3), application(3)
+
+AUTHORS
+      Dan Gudmundsson - support@erlang.ericsson.se
+      Hakan Mattsson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtveckliLnagsst AcBhange: mnesia_session  1.1.3              2
+
+
+

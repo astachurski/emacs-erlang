@@ -1,0 +1,132 @@
+
+
+
+pg(3)               ERLANG MODULE DEFINITION                pg(3)
+
+
+
+MODULE
+     pg - Distributed, Named Process Groups
+
+DESCRIPTION
+     This (experimental) module implements process groups. A pro-
+     cess group is a group of processes that can be accessed by a
+     common name. For example, a group named _f_o_o_b_a_r can include a
+     set  of  processes  as members of this group and they can be
+     located on different nodes.
+
+     When messages are sent to the named group,  all  members  of
+     the  group receive the message. The messages are serialized.
+     If the process _P_1 sends the message _M_1  to  the  group,  and
+     process _P_2 simultaneously sends message _M_2, then all members
+     of the group receive the two messages in the same order.  If
+     members of a group terminate, they are automatically removed
+     from the group.
+
+     This module is not complete. The module is inspired  by  the
+     ISIS system and the causal order protocol of the ISIS system
+     should also be implemented. At the moment, all messages  are
+     serialized by sending them through a group master process.
+
+
+EXPORTS
+     create(PgName)
+
+          Creates an empty group  named  _P_g_N_a_m_e  on  the  current
+          node.
+
+     create(PgName, Node)
+
+          Creates an epmty group on the node _N_o_d_e.
+
+     join(PgName, Pid)
+
+          Joins the Pid _P_i_d to the process group _P_g_N_a_m_e.
+
+     send(Pgname, Message)
+
+          Sends the tuple {_p_g__m_e_s_s_a_g_e, _F_r_o_m, _P_g_N_a_m_e, _M_e_s_s_a_g_e}  to
+          all members of the process group.
+
+     esend(PgName, Mess)
+
+          Sends the tuple {_p_g__m_e_s_s_a_g_e, _F_r_o_m, _P_g_N_a_m_e, _M_e_s_s_a_g_e}  to
+          all  members  of  the process group, except the current
+          node.
+
+     members(PgName)
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+pg(3)               ERLANG MODULE DEFINITION                pg(3)
+
+
+
+          Returns a list of the current members  in  the  process
+          group.
+
+AUTHOR
+      Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+

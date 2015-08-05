@@ -1,0 +1,396 @@
+
+
+
+httpd_util(3)       ERLANG MODULE DEFINITION        httpd_util(3)
+
+
+
+MODULE
+     httpd_util - Miscellaneous utility functions to be used when
+     implementing EWSAPI modules.
+
+DESCRIPTION
+     This module provides the EWSAPI module programmer with  mis-
+     cellaneous utility functions.
+
+  Warning:
+     The current implementation of EWSAPI  is  under  review  and
+     feedback is welcomed.
+
+
+
+EXPORTS
+     decode_base64(Base64String) -> ASCIIString
+
+          Types
+               Base64String = ASCIIString = string()
+
+          _d_e_c_o_d_e__b_a_s_e_6_4/_1  converts  _B_a_s_e_6_4_S_t_r_i_n_g  to  the  plain
+          ascii   string  (_A_S_C_I_I_S_t_r_i_n_g).  The  string  "_B_A_D!"  is
+          returned if _B_a_s_e_6_4_S_t_r_i_n_g is not  base64  encoded.  Read
+          more about base64 encoding in RFC 1521.
+
+     decode_hex(HexValue) -> DecValue
+
+          Types
+               HexValue = DecValue = string()
+
+          Converts  the  hexadecimal  value  _H_e_x_V_a_l_u_e  into   its
+          decimal equivalent (_D_e_c_V_a_l_u_e).
+
+     day(NthDayOfWeek) -> DayOfWeek
+
+          Types
+               NthDayOfWeek = 1-7
+               DayOfWeek = string()
+
+          _d_a_y/_1 converts the day of the week (_N_t_h_D_a_y_O_f_W_e_e_k) as an
+          integer (1-7) to an abbreviated string, that is:
+
+          1 = "Mon", 2 = "Tue", ..., 7 = "Sat".
+
+     encode_base64(ASCIIString) -> Base64String
+
+          Types
+               ASCIIString = string()
+               Base64String = string()
+
+          _e_n_c_o_d_e__b_a_s_e_6_4 encodes a plain ascii string to a  Base64
+          encoded  string.  See  RFC  1521  for  a description of
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+httpd_util(3)       ERLANG MODULE DEFINITION        httpd_util(3)
+
+
+
+          Base64 encoding.
+
+     header(StatusCode,Date)
+     header(StatusCode,MimeType,Date) -> HTTPHeader
+
+          Types
+               StatusCode = integer()
+               Date = rfc1123_date()
+               MimeType = string()
+
+          _h_e_a_d_e_r returns a HTTP 1.0 header string. The _S_t_a_t_u_s_C_o_d_e
+          is  one of the status codes defined in RFC 1945 and the
+          _D_a_t_e   string   is    RFC    1123    compliant.    (See
+          rfc1123_date/0).
+
+     flatlength(NestedList) -> Size
+
+          Types
+               NestedList = list()
+               Size = integer()
+
+          _f_l_a_t_l_e_n_g_t_h/_1 computes the size of the  possibly  nested
+          list _N_e_s_t_e_d_L_i_s_t. Which may contain binaries.
+
+     key1search(TupleList,Key)
+     key1search(TupleList,Key,Undefined) -> Result
+
+          Types
+               TupleList = [tuple()]
+               Key = term()
+               Result = term() | undefined | Undefined
+               Undefined = term()
+
+          _k_e_y_1_s_e_a_r_c_h searches the _T_u_p_l_e_L_i_s_t  for  a  tuple  whose
+          first  element  is  _K_e_y. _k_e_y_1_s_e_a_r_c_h/_2 returns _u_n_d_e_f_i_n_e_d
+          and _k_e_y_1_s_e_a_r_c_h/_3  returns  _U_n_d_e_f_i_n_e_d  if  no  tuple  is
+          found.
+
+     lookup(ETSTable,Key) -> Result
+     lookup(ETSTable,Key,Undefined) -> Result
+
+          Types
+               ETSTable = ets_table()
+               Key = term()
+               Result = term() | undefined | Undefined
+               Undefined = term()
+
+          _l_o_o_k_u_p extracts {_K_e_y, _V_a_l_u_e} tuples from  _E_T_S_T_a_b_l_e  and
+          returns  the  _V_a_l_u_e associated with _K_e_y. If _E_T_S_T_a_b_l_e is
+          of type _b_a_g only the first _V_a_l_u_e associated with _K_e_y is
+          returned.   _l_o_o_k_u_p/_2  returns  _u_n_d_e_f_i_n_e_d  and  _l_o_o_k_u_p/_3
+          returns _U_n_d_e_f_i_n_e_d if no _V_a_l_u_e is found.
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+
+
+
+
+httpd_util(3)       ERLANG MODULE DEFINITION        httpd_util(3)
+
+
+
+     lookup_mime(ConfigDB,Suffix)
+     lookup_mime(ConfigDB,Suffix,Undefined) -> MimeType
+
+          Types
+               ConfigDB = ets_table()
+               Suffix = string()
+               MimeType = string() | undefined | Undefined
+               Undefined = term()
+
+          _l_o_o_k_u_p__m_i_m_e returns the mime  type  associated  with  a
+          specific  file  suffix  as  specified in the _m_i_m_e._t_y_p_e_s
+          file        (located        in        the        config
+          directory($SERVER_ROOT/conf/mime.types)).
+
+     lookup_mime_default(ConfigDB,Suffix)
+     lookup_mime_default(ConfigDB,Suffix,Undefined) -> MimeType
+
+          Types
+               ConfigDB = ets_table()
+               Suffix = string()
+               MimeType = string() | undefined | Undefined
+               Undefined = term()
+
+          _l_o_o_k_u_p__m_i_m_e__d_e_f_a_u_l_t returns the  mime  type  associated
+          with  a  specific  file  suffix  as  specified  in  the
+          _m_i_m_e._t_y_p_e_s    file    (located    in     the     config
+          directory($SERVER_ROOT/conf/mime.types)).     If     no
+          appropriate association  can  be  found  the  value  of
+          DefaultType is returned.
+
+     message(StatusCode,PhraseArgs,ConfigDB) -> Message
+
+          Types
+               StatusCode = 301 | 400 | 403 | 404 | 500 |  501  |
+               504
+               PhraseArgs = term()
+               ConfigDB = ets_table
+               Message = string()
+
+          _m_e_s_s_a_g_e/_3 returns an informative HTTP 1.0 status string
+          in   HTML.   Each   _S_t_a_t_u_s_C_o_d_e   requires   a  specific
+          _P_h_r_a_s_e_A_r_g_s:
+
+            _3_0_1:
+                _s_t_r_i_n_g(): A URL  pointing  at  the  new  document
+                position.
+
+            _4_0_0 | _4_0_1 | _5_0_0:
+                _n_o_n_e (No _P_h_r_a_s_e_A_r_g_s)
+
+            _4_0_3 | _4_0_4:
+                _s_t_r_i_n_g(): A _R_e_q_u_e_s_t-_U_R_I as described in RFC 1945.
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   3
+
+
+
+
+
+
+httpd_util(3)       ERLANG MODULE DEFINITION        httpd_util(3)
+
+
+
+            _5_0_1:
+                {_M_e_t_h_o_d,  _R_e_q_u_e_s_t_U_R_I,  _H_T_T_P_V_e_r_s_i_o_n}:   The   HTTP
+                _M_e_t_h_o_d,  _R_e_q_u_e_s_t-_U_R_I  and _H_T_T_P-_V_e_r_s_i_o_n as defined
+                in RFC 1945.
+
+            _5_0_4:
+                _s_t_r_i_n_g(): A string describing why the service was
+                unavailable.
+
+     month(NthMonth) -> Month
+
+          Types
+               NthMonth = 1-12
+               Month = string()
+
+          _m_o_n_t_h/_1 converts the month _N_t_h_M_o_n_t_h as an  integer  (1-
+          12) to an abbreviated string, that is:
+
+          1 = "Jan", 2 = "Feb", ..., 12 = "Dec".
+
+     multi_lookup(ETSTable,Key) -> Result
+
+          Types
+               ETSTable = ets_table()
+               Key = term()
+               Result = [term()]
+
+          _m_u_l_t_i__l_o_o_k_u_p extracts all {_K_e_y, _V_a_l_u_e} tuples  from  an
+          _E_T_S_T_a_b_l_e and returns _a_l_l _V_a_l_u_e_s associated with the _K_e_y
+          in a list.
+
+     reason_phrase(StatusCode) -> Description
+
+          Types
+               StatusCode = 200 | 201 | 204 | 301 | 302 |  304  |
+               400 | 401 | 403 | 404 | 500 | 501 | 502 | 504
+               Description = string()
+
+          _r_e_a_s_o_n__p_h_r_a_s_e returns the _D_e_s_c_r_i_p_t_i_o_n of  an  HTTP  1.0
+          _S_t_a_t_u_s_C_o_d_e,   for  example  200  is  "OK"  and  201  is
+          "Created". Read RFC 1945 for further information.
+
+     rfc1123_date() -> RFC1123Date
+
+          Types
+               RFC1123Date = string()
+
+          _r_f_c_1_1_2_3__d_a_t_e/_0 returns the current  date  in  RFC  1123
+          format.
+
+     split(String,RegExp,N) -> SplitRes
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   4
+
+
+
+
+
+
+httpd_util(3)       ERLANG MODULE DEFINITION        httpd_util(3)
+
+
+
+          Types
+               String = RegExp = string()
+               SplitRes = {ok, FieldList} | {error, errordesc()}
+               Fieldlist = [string()]
+               N = integer
+
+          _s_p_l_i_t/_3 splits the _S_t_r_i_n_g in _N chunks using the _R_e_g_E_x_p.
+          _s_p_l_i_t/_3  is  is  equivalent  to _r_e_g_e_x_p:_s_p_l_i_t/_2 with one
+          exception, that is _N  defines  the  number  of  maximum
+          number of fields in the _F_i_e_l_d_L_i_s_t.
+
+     split_script_path(RequestLine) -> Splitted
+
+          Types
+               RequestLine = string()
+               Splitted = not_a_script | {Path, PathInfo,  Query-
+               String}
+               Path = QueryString = PathInfo = string()
+
+          _s_p_l_i_t__s_c_r_i_p_t__p_a_t_h/_1 is equivalent to _s_p_l_i_t__p_a_t_h/_1  with
+          one  exception.  If  the longest possible path is not a
+          regular, accessible and executable file _n_o_t__a__s_c_r_i_p_t is
+          returned.
+
+     split_path(RequestLine) -> {Path,QueryStringOrPathInfo}
+
+          Types
+               RequestLine  =  Path  =  QueryStringOrPathInfo   =
+               string()
+
+          _s_p_l_i_t__p_a_t_h/_1 splits the _R_e_q_u_e_s_t_L_i_n_e in a file reference
+          (_P_a_t_h) and a _Q_u_e_r_y_S_t_r_i_n_g or a _P_a_t_h_I_n_f_o string as speci-
+          fied in RFC 1945. A _Q_u_e_r_y_S_t_r_i_n_g is  isolated  from  the
+          _P_a_t_h with a question mark (?) and _P_a_t_h_I_n_f_o with a slash
+          (/). In the case of a  _Q_u_e_r_y_S_t_r_i_n_g,  everything  before
+          the  ? is a _P_a_t_h and everything after a _Q_u_e_r_y_S_t_r_i_n_g. In
+          the case of a _P_a_t_h_I_n_f_o the _R_e_q_u_e_s_t_L_i_n_e is scanned  from
+          left-to-right  on  the  hunt  for longest possible _P_a_t_h
+          being a file or a directory. Everything after the long-
+          est  possible  _P_a_t_h,  isolated with a /, is regarded as
+          _P_a_t_h_I_n_f_o.  The  resulting   _P_a_t_h   is   decoded   using
+          _d_e_c_o_d_e__h_e_x/_1 before delivery.
+
+     suffix(FileName) -> Suffix
+
+          Types
+               FileName = Suffix = string()
+
+          _s_u_f_f_i_x/_1 is equivalent to _f_i_l_e_n_a_m_e:_e_x_t_e_n_s_i_o_n/_1 with one
+          exception, that is _S_u_f_f_i_x is returned without a leading
+          dot (.).
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   5
+
+
+
+
+
+
+httpd_util(3)       ERLANG MODULE DEFINITION        httpd_util(3)
+
+
+
+     to_lower(String) -> ConvertedString
+
+          Types
+               String = ConvertedString = string()
+
+          _t_o__l_o_w_e_r/_1 converts upper-case letters to lower-case.
+
+     to_upper(String) -> ConvertedString
+
+          Types
+               String = ConvertedString = string()
+
+          _t_o__u_p_p_e_r/_1 converts lower-case letters to upper-case.
+
+SEE ALSO
+     httpd(3)
+
+AUTHORS
+     Joakim Grebeno  - support@erlang.ericsson.se
+     Mattias Nilsson  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   6
+
+
+

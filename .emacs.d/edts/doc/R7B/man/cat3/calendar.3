@@ -1,0 +1,396 @@
+
+
+
+calendar(3)         ERLANG MODULE DEFINITION          calendar(3)
+
+
+
+MODULE
+     calendar - Local and universal time,  day-of-the-week,  date
+     and time conversions
+
+DESCRIPTION
+     This module provides  computation  of  local  and  universal
+     time,  day-of-the-week,  and  several  time conversion func-
+     tions.
+
+     Time is local when it is adjusted  in  accordance  with  the
+     current  time  zone  and  daylight saving. Time is universal
+     when it reflects the time at  longitude  zero,  without  any
+     adjustment  for  daylight saving. Universal Coordinated Time
+     (UTC) time is also called Greenwich Mean Time (GMT).
+
+     The time functions _l_o_c_a_l__t_i_m_e/_0  and  _u_n_i_v_e_r_s_a_l__t_i_m_e/_0  pro-
+     vided  in  this module both return date and time. The reason
+     for this is that separate functions for date  and  time  may
+     result  in  a date/time combination which is displaced by 24
+     hours. This happens if one of the functions is called before
+     midnight,  and  the  other after midnight. This problem also
+     applies to the Erlang BIFs _d_a_t_e/_0 and _t_i_m_e/_0, and their  use
+     is  strongly  discouraged  if  a reliable date/time stamp is
+     required.
+
+     All dates conform to the Gregorian calendar.  This  calendar
+     was  introduced by Pope Gregory XIII in 1582 and was used in
+     all Catholic countries from this year. Protestant  parts  of
+     Germany and the Netherlands adopted it in 1698, England fol-
+     lowed in 1752, and Russia in 1918 (the October revolution of
+     1917  took  place  in  November  according  to the Gregorian
+     calendar).
+
+     The Gregorian calendar in this module is  extended  back  to
+     year  0.  For a given date, the _g_r_e_g_o_r_i_a_n _d_a_y_s is the number
+     of days up to and including the date  specified.  Similarly,
+     the  _g_r_e_g_o_r_i_a_n _s_e_c_o_n_d_s for a given date and time, is the the
+     number of seconds up to and including the specified date and
+     time.
+
+     For computing differences between epochs in  time,  use  the
+     functions  counting gregorian days or seconds. If epochs are
+     given as local time, they must  be  converted  to  universal
+     time,  in order to get the correct value of the elapsed time
+     between epochs. Use of  the  function  _t_i_m_e__d_i_f_f_e_r_e_n_c_e/_2  is
+     discouraged.
+
+
+EXPORTS
+     date_to_gregorian_days(Year, Month, Day) -> Days
+     date_to_gregorian_days(Date) -> Days
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+calendar(3)         ERLANG MODULE DEFINITION          calendar(3)
+
+
+
+          Types
+               Date = {Year, Month, Day}
+               Year = Month = Day = Days = int()
+
+          This function computes the  number  of  gregorian  days
+          starting with year 0 and ending at the given date.
+
+     datetime_to_gregorian_seconds(DateTime) -> Days
+
+          Types
+               DateTime = {date(), time()}
+               date() = {Year, Month, Day}
+               time() = {Hour, Minute, Second}
+               Year = Month = Day = Hour = Minute = Second = Days
+               = int()
+
+          This function computes the number of gregorian  seconds
+          starting  with  year 0 and ending at the given date and
+          time.
+
+     day_of_the_week(Date) -> DayNumber
+     day_of_the_week(Year, Month, Day) -> DayNumber
+
+          Types
+               Date = {Year, Month, Day}
+               Year = Month = Day = DayNumber = int()
+
+          This function computes the day of the week given  _Y_e_a_r,
+          _M_o_n_t_h  and _D_a_y. The return value denotes the day of the
+          week as follows:
+
+          Monday = 1, Tuesday = 2, ..., Sunday = 7
+
+          _Y_e_a_r cannot be abbreviated and a value  of  93  denotes
+          the  year 93, and not the year 1993. _M_o_n_t_h is the month
+          number with January = 1. _D_a_y is an integer in the range
+          1 and the number of days in the month _M_o_n_t_h of the year
+          _Y_e_a_r.
+
+     gregorian_days_to_date(Days) -> Date
+
+          Types
+               Date = {Year, Month, Day}
+               Year = Month = Day = Days = int()
+
+          This function computes the date  given  the  number  of
+          gregorian days.
+
+     gregorian_seconds_to_datetime(Secs) -> DateTime
+
+          Types
+               DateTime = {date(), time()}
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+calendar(3)         ERLANG MODULE DEFINITION          calendar(3)
+
+
+
+               date() = {Year, Month, Day}
+               time() = {Hour, Minute, Second}
+               Year = Month = Day = Hour = Minute = Second = Days
+               = int()
+
+          This function computes the date and time from the given
+          number of gregorian seconds.
+
+     is_leap_year(Year) -> bool()
+
+          Types
+               Year = int()
+
+          This function checks if a year is a leap year.
+
+     last_day_of_the_month(Year, Month) -> int()
+
+          Types
+               Year = Month = int()
+
+          This function computes the number of days in a month.
+
+     local_time() -> {Date, Time}
+
+          Types
+               Date = {Year, Month, Day}
+               Time = {Hour, Minute, Second}
+               Year = Month = Day = Hour  =  Minute  =  Second  =
+               int()
+
+          This function returns the local time  reported  by  the
+          underlying operating system.
+
+     local_time_to_universal_time({Date, Time}) -> {Date, Time}
+
+          Types
+               Date = {Year, Month, Day}
+               Time = {Hour, Minute, Second}
+               Year = Month = Day = Hour  =  Minute  =  Second  =
+               int()
+
+          This function converts from  local  time  to  Universal
+          Coordinated Time (UTC). _D_a_t_e must refer to a local date
+          after Jan 1, 1970.
+
+     now_to_local_time(Now) -> {Date, Time}
+
+          Types
+               Now = {MegaSecs, Secs, MicroSecs}
+               Date = {Year, Month, Day}
+               Time = {Hour, Minute, Second}
+               MegaSecs = Secs = MilliSecs = int()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+calendar(3)         ERLANG MODULE DEFINITION          calendar(3)
+
+
+
+               Year = Month = Day = Hour  =  Minute  =  Second  =
+               int()
+
+          This function returns local  date  and  time  converted
+          from the return value from _e_r_l_a_n_g:_n_o_w().
+
+     now_to_universal_time(Now) -> {Date, Time}
+     now_to_datetime(Now) -> {Date, Time}
+
+          Types
+               Now = {MegaSecs, Secs, MicroSecs}
+               Date = {Year, Month, Day}
+               Time = {Hour, Minute, Second}
+               MegaSecs = Secs = MilliSecs = int()
+               Year = Month = Day = Hour  =  Minute  =  Second  =
+               int()
+
+          This function returns Universal Coordinated Time  (UTC)
+          converted from the return value from _e_r_l_a_n_g:_n_o_w().
+
+     seconds_to_daystime(Secs) -> {Days, Time}
+
+          Types
+               Time() = {Hour, Minute, Second}
+               Hour = Minute = Second = Days = int()
+
+          This function transforms a given number of seconds into
+          days,  hours,  minutes,  and  seconds. The _T_i_m_e part is
+          always non-negative, but _D_a_y_s is negative if the  argu-
+          ment _S_e_c_s is.
+
+     seconds_to_time(Secs) -> Time
+
+          Types
+               Time() = {Hour, Minute, Second}
+               Hour = Minute = Second = Secs = int()
+
+          This function computes the time from the  given  number
+          of  seconds.  _S_e_c_s  must  be  less  than  the number of
+          seconds per day.
+
+     time_difference(T1, T2) -> Tdiff
+
+          Types
+               T1 = T2 = {Date, Time}
+               Tdiff = {Day, {Hour, Minute, Second}}
+               Date = {Year, Month, Day}
+               Time = {Hour, Minute, Second}
+               Year = Month = Day = Hour  =  Minute  =  Second  =
+               int()
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+calendar(3)         ERLANG MODULE DEFINITION          calendar(3)
+
+
+
+          This function returns the difference between two {_D_a_t_e,
+          _T_i_m_e}  structures.  _T_2  should  refer to an epoch later
+          than _T_1.
+
+          This function is obsolete. Use the conversion functions
+          for gregorian days and seconds instead.
+
+     time_to_seconds(Time) -> Secs
+
+          Types
+               Time() = {Hour, Minute, Second}
+               Hour = Minute = Second = Secs = int()
+
+          This function computes the number of seconds since mid-
+          night up to the specified time.
+
+     universal_time() -> {Date, Time}
+
+          Types
+               Date = {Year, Month, Day}
+               Time = {Hour, Minute, Second}
+               Year = Month = Day = Hour  =  Minute  =  Second  =
+               int()
+
+          This function returns the  Universal  Coordinated  Time
+          (UTC)  reported  by  the  underlying  operating system.
+          Local time is returned if universal time is not  avail-
+          able.
+
+     universal_time_to_local_time({Date, Time}) -> {Date, Time}
+
+          Types
+               Date = {Year, Month, Day}
+               Time = {Hour, Minute, Second}
+               Year = Month = Day = Hour  =  Minute  =  Second  =
+               int()
+
+          This function converts from Universal Coordinated  Time
+          (UTC)  to  local  time. _D_a_t_e must refer to a date after
+          Jan 1, 1970.
+
+     valid_date(Date) -> bool()
+     valid_date(Year, Month, Day) -> bool()
+
+          Types
+               Date = {Year, Month, Day}
+               Year = Month = Day = int()
+
+          This function checks if a date is a valid.
+
+Leap Years
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+calendar(3)         ERLANG MODULE DEFINITION          calendar(3)
+
+
+
+     The notion that every fourth year is a leap year is not com-
+     pletely true. By the Gregorian rule, a year Y is a leap year
+     if either of the following rules is valid:
+
+       * Y is divisible by 4, but not by 100; or
+
+       * Y is divisible by 400.
+
+     Accordingly, 1996 is a leap year, 1900 is not, but 2000 is.
+
+Date and Time Source
+     Local time is obtained  from  the  Erlang  BIF  _l_o_c_a_l_t_i_m_e/_0.
+     Universal time is computed from the BIF _u_n_i_v_e_r_s_a_l_t_i_m_e/_0.
+
+     The following facts apply:
+
+       * there are 86400 seconds in a day
+
+       * there are 365 days in an ordinary year
+
+       * there are 366 days in a leap year
+
+       * there are 1461 days in a 4 year period
+
+       * there are 36524 days in a 100 year period
+
+       * there are 146097 days in a 400 year period
+
+       * there are 719528 days between Jan 1, 0 and Jan 1, 1970.
+
+AUTHOR
+     Peter Hogfeldt - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+

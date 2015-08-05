@@ -1,0 +1,330 @@
+
+
+
+mod_security(3)     ERLANG MODULE DEFINITION      mod_security(3)
+
+
+
+MODULE
+     mod_security - Security Audit and Trailing Functionality
+
+DESCRIPTION
+     This module serves as a filter  for  authenticated  requests
+     handled  in  mod_auth.  It  provides possibility to restrict
+     users from access for a specified amount  of  time  if  they
+     fail to authenticate several times. It logs failed authenti-
+     cation as well as blocking of users, and  it  also  calls  a
+     configurable call-back module when the events occur.
+
+     There is also an API to manually  block,  unblock  and  list
+     blocked users or users, who have been authenticated within a
+     configurable amount of time.
+
+     This module understands the following  configuration  direc-
+     tives:
+
+       * <Directory>
+
+       * SecurityDataFile
+
+       * SecurityMaxRetries
+
+       * SecurityBlockTime
+
+       * SecurityFailExpireTime
+
+       * SecurityAuthTimeout
+
+       * SecurityCallbackModule
+
+
+DIRECTIVE: SecurityDataFile
+     _S_y_n_t_a_x: _S_e_c_u_r_i_t_y_D_a_t_a_F_i_l_e filename
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_security(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:  SecurityMaxRetries,  SecurityBlockTime,   Securi-
+     tyFailExpireTime,  SecurityAuthTimeout,  SecurityCallbackMo-
+     dule
+
+     _S_e_c_u_r_i_t_y_D_a_t_a_F_i_l_e sets the name of the security modules for a
+     directory.  The  filename can be either absolute or relative
+     to the _S_e_r_v_e_r_R_o_o_t. This file is  used  to  store  persistent
+     data for the mod_security module.
+
+  Note:
+     Several directories can have the same _S_e_c_u_r_i_t_y_D_a_t_a_F_i_l_e.
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+mod_security(3)     ERLANG MODULE DEFINITION      mod_security(3)
+
+
+
+DIRECTIVE: SecurityMaxRetries
+     _S_y_n_t_a_x: _S_e_c_u_r_i_t_y_M_a_x_R_e_t_r_i_e_s integer() | infinity
+      _D_e_f_a_u_l_t: 3
+      _M_o_d_u_l_e: mod_security(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:   SecurityDataFile,   SecurityBlockTime,   Securi-
+     tyFailExpireTime,  SecurityAuthTimeout,  SecurityCallbackMo-
+     dule
+
+     _S_e_c_u_r_i_t_y_M_a_x_R_e_t_r_i_e_s specifies the maximum number of tries  to
+     authenticate  a user has before he is blocked out. If a user
+     successfully authenticates  when  he  is  blocked,  he  will
+     receive a 403 (Forbidden) response from the server.
+
+  Note:
+     For security reasons, failed authentications  made  by  this
+     user  will  return a message 401 (Unauthorized), even if the
+     user is blocked.
+
+
+DIRECTIVE: SecurityBlockTime
+     _S_y_n_t_a_x: _S_e_c_u_r_i_t_y_B_l_o_c_k_T_i_m_e integer() | infinity
+      _D_e_f_a_u_l_t: 60
+      _M_o_d_u_l_e: mod_security(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:  SecurityDataFile,   SecurityMaxRetries,   Securi-
+     tyFailExpireTime,  SecurityAuthTimeout,  SecurityCallbackMo-
+     dule
+
+     _S_e_c_u_r_i_t_y_B_l_o_c_k_T_i_m_e specifies the number of minutes a user  is
+     blocked. After this amount of time, he automatically regains
+     access.
+
+DIRECTIVE: SecurityFailExpireTime
+     _S_y_n_t_a_x: _S_e_c_u_r_i_t_y_F_a_i_l_E_x_p_i_r_e_T_i_m_e integer() | infinity
+      _D_e_f_a_u_l_t: 30
+      _M_o_d_u_l_e: mod_security(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:  SecurityDataFile,   SecurityMaxRetries,   Securi-
+     tyFailExpireTime,  SecurityAuthTimeout,  SecurityCallbackMo-
+     dule
+
+     _S_e_c_u_r_i_t_y_F_a_i_l_E_x_p_i_r_e_T_i_m_e specifies the  number  of  minutes  a
+     failed  user authentication is remembered. If a user authen-
+     ticates after this  amount  of  time,  his  previous  failed
+     authentications are forgotten.
+
+DIRECTIVE: SecurityAuthTimeout
+     _S_y_n_t_a_x: _S_e_c_u_r_i_t_y_A_u_t_h_T_i_m_e_o_u_t integer() | infinity
+      _D_e_f_a_u_l_t: 30
+      _M_o_d_u_l_e: mod_security(3)
+      _C_o_n_t_e_x_t: <Directory>
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+
+
+
+
+mod_security(3)     ERLANG MODULE DEFINITION      mod_security(3)
+
+
+
+      _R_e_l_a_t_e_d:  SecurityDataFile,   SecurityMaxRetries,   Securi-
+     tyFailExpireTime,  SecurityFailExpireTime, SecurityCallback-
+     Module
+
+     _S_e_c_u_r_i_t_y_A_u_t_h_T_i_m_e_o_u_t specifies the number of seconds  a  suc-
+     cessful  user  authentication is remembered. After this time
+     has passed, the authentication will no longer be reported by
+     the list_auth_users function.
+
+DIRECTIVE: SecurityCallbackModule
+     _S_y_n_t_a_x: _S_e_c_u_r_i_t_y_C_a_l_l_b_a_c_k_M_o_d_u_l_e atom()
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_security(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:  SecurityDataFile,   SecurityMaxRetries,   Securi-
+     tyFailExpireTime,    SecurityFailExpireTime,   SecurityAuth-
+     Timeout
+
+     _S_e_c_u_r_i_t_y_C_a_l_l_b_a_c_k_M_o_d_u_l_e specifies  the  name  of  a  callback
+     module.  This  module only has one export, event/4, which is
+     called whenever a security event occurs. Read  the  callback
+     module documentation to find out more.
+
+EXPORTS
+     list_auth_users(Port) -> Users | []
+     list_auth_users(Address, Port) -> Users | []
+     list_auth_users(Port, Dir) -> Users | []
+     list_auth_users(Address, Port, Dir) -> Users | []
+
+          Types
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Users = list() = [string()]
+
+          _l_i_s_t__a_u_t_h__u_s_e_r_s/_1,        _l_i_s_t__a_u_t_h__u_s_e_r_s/_2         and
+          _l_i_s_t__a_u_t_h__u_s_e_r_s/_3  returns  a  list  of  users that are
+          currently authenticated. Authentications are stored for
+          SecurityAuthTimeout seconds, and are then discarded.
+
+     list_blocked_users(Port) -> Users | []
+     list_blocked_users(Address, Port) -> Users | []
+     list_blocked_users(Port, Dir) -> Users | []
+     list_blocked_users(Address, Port, Dir) -> Users | []
+
+          Types
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Users = list() = [string()]
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   3
+
+
+
+
+
+
+mod_security(3)     ERLANG MODULE DEFINITION      mod_security(3)
+
+
+
+          _l_i_s_t__b_l_o_c_k_e_d__u_s_e_r_s/_1,     _l_i_s_t__b_l_o_c_k_e_d__u_s_e_r_s/_2      and
+          _l_i_s_t__b_l_o_c_k_e_d__u_s_e_r_s/_3  returns  a list of users that are
+          currently blocked from access.
+
+     block_user(User, Port, Dir, Seconds) -> true | {error,  Rea-
+     son}
+     block_user(User, Address, Port,  Dir,  Seconds)  ->  true  |
+     {error, Reason}
+
+          Types
+               User = string()
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Seconds = integer() | infinity
+               Reason = no_such_directory
+
+          _b_l_o_c_k__u_s_e_r/_4 and _b_l_o_c_k__u_s_e_r/_5 blocks the user _U_s_e_r from
+          the directory _D_i_r for a specified amount of time.
+
+     unblock_user(User, Port) -> true | {error, Reason}
+     unblock_user(User, Address, Port) -> true | {error, Reason}
+     unblock_user(User, Port, Dir) -> true | {error, Reason}
+     unblock_user(User, Address, Port, Dir)  ->  true  |  {error,
+     Reason}
+
+          Types
+               User = string()
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Reason = term()
+
+          _u_n_b_l_o_c_k__u_s_e_r/_2,   _u_n_b_l_o_c_k__u_s_e_r/_3   and   _u_n_b_l_o_c_k__u_s_e_r/_4
+          removes  the  user  _U_s_e_r from the list of blocked users
+          for the Port (and Dir) specified.
+
+The SecurityCallbackModule
+     The SecurityCallbackModule is a user written module that can
+     receive  events  from  the  mod_security EWSAPI module. This
+     module  only  exports  one  function,  event/4,   which   is
+     described below.
+
+EXPORTS
+     event(What, Port, Dir, Data) -> ignored
+     event(What, Address, Port, Dir, Data) -> ignored
+
+          Types
+               What = atom()
+               Port = integer()
+               Address =  {A,  B,  C,  D}  |  string()  <v>Dir  =
+               string()
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   4
+
+
+
+
+
+
+mod_security(3)     ERLANG MODULE DEFINITION      mod_security(3)
+
+
+
+               What = [Info]
+               Info = {Name, Value}
+
+          _e_v_e_n_t/_4 or _e_v_e_n_t/_4 is called whenever an  event  occurs
+          in the mod_security EWSAPI module (_e_v_e_n_t/_4 is called if
+          Address is undefined and _e_v_e_n_t/_5 otherwise).  The  _W_h_a_t
+          argument specifies the type of event that has occurred,
+          and should be one of the following  reasons;  _a_u_t_h__f_a_i_l
+          (a  failed  user authentication), _u_s_e_r__b_l_o_c_k (a user is
+          being blocked from access) or _u_s_e_r__u_n_b_l_o_c_k (a  user  is
+          being removed from the block list).
+
+  Note:
+     Note that the _u_s_e_r__u_n_b_l_o_c_k event is  not  triggered  when  a
+     user  is  removed  from  the block list explicitly using the
+     _u_n_b_l_o_c_k__u_s_e_r function.
+
+
+AUTHOR
+     Mattias Nilsson  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   5
+
+
+

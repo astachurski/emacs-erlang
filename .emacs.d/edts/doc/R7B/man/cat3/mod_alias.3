@@ -1,0 +1,264 @@
+
+
+
+mod_alias(3)        ERLANG MODULE DEFINITION         mod_alias(3)
+
+
+
+MODULE
+     mod_alias - This module creates aliases and redirections.
+
+DESCRIPTION
+     This module makes it possible to map different parts of  the
+     host  file system into the document tree. The following con-
+     fig directives are described:
+
+       * Alias
+
+       * DirectoryIndex
+
+       * ScriptAlias
+
+
+DIRECTIVE: Alias
+     _S_y_n_t_a_x: _A_l_i_a_s url-path directory-filename
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_alias(3)
+
+     The Alias directive allows documents to  be  stored  in  the
+     local file system instead of the DocumentRoot location. URLs
+     with a path that begins with _u_r_l-_p_a_t_h  is  mapped  to  local
+     files that begins with _d_i_r_e_c_t_o_r_y-_f_i_l_e_n_a_m_e, for example:
+
+     Alias /image /ftp/pub/image
+
+     and an access to _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g/_i_m_a_g_e/_f_o_o._g_i_f  would
+     refer to the file /_f_t_p/_p_u_b/_i_m_a_g_e/_f_o_o._g_i_f.
+
+DIRECTIVE: DirectoryIndex
+     _S_y_n_t_a_x: _D_i_r_e_c_t_o_r_y_I_n_d_e_x file file ...
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_alias(3)
+
+     _D_i_r_e_c_t_o_r_y_I_n_d_e_x specifies a list of resources to look for  if
+     a  client  requests  a directory using a / at the end of the
+     directory name. _f_i_l_e depicts the  name  of  a  file  in  the
+     directory.  Several  files  may  be given, in which case the
+     server will return the first it finds, for example:
+
+     DirectoryIndex index.html
+
+     and  access  to  _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g/_d_o_c_s/  would  return
+     _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g/_d_o_c_s/_i_n_d_e_x._h_t_m_l if it existed.
+
+DIRECTIVE: ScriptAlias
+     _S_y_n_t_a_x: _S_c_r_i_p_t_A_l_i_a_s url-path directory-filename
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_alias(3)
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+mod_alias(3)        ERLANG MODULE DEFINITION         mod_alias(3)
+
+
+
+     The ScriptAlias directive has the same behavior as the Alias
+     directive, except that it also marks the target directory as
+     containing CGI scripts. URLs  with  a  path  beginning  with
+     _u_r_l-_p_a_t_h  are  mapped  to  scripts beginning with _d_i_r_e_c_t_o_r_y-
+     _f_i_l_e_n_a_m_e, for example:
+
+     ScriptAlias /cgi-bin/ /web/cgi-bin/
+
+     and an access  to  _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g/_c_g_i-_b_i_n/_f_o_o  would
+     cause the server to run the script /_w_e_b/_c_g_i-_b_i_n/_f_o_o.
+
+EWSAPI MODULE INTERACTION
+     Exports the following EWSAPI interaction data, if possible:
+
+       {_r_e_a_l__n_a_m_e, {_P_a_t_h, _A_f_t_e_r_P_a_t_h}}:
+           _P_a_t_h    and    _A_f_t_e_r_P_a_t_h    is    as    defined     in
+           httpd_util:split_path/1  with one exception - _P_a_t_h has
+           been run through default_index/2.
+
+     Uses the following exported EWSAPI functions:
+
+       * mod_alias:default_index/2
+
+       * mod_alias:path/3
+
+       * mod_alias:real_name/3
+
+     This module furthermore exports a batch of functions  to  be
+     used by other EWSAPI modules:
+
+EXPORTS
+     default_index(ConfigDB,Path) -> NewPath
+
+          Types
+               ConfigDB = config_db()
+               Path = NewPath = string()
+
+          If _P_a_t_h is  a  directory,  _d_e_f_a_u_l_t__i_n_d_e_x/_2,  it  starts
+          searching  for resources or files that are specified in
+          the config directive DirectoryIndex. If an  appropriate
+          resource or file is found, it is appended to the end of
+          _P_a_t_h and then returned. _P_a_t_h is returned unaltered,  if
+          no  appropriate  file  is  found,  or  if _P_a_t_h is not a
+          directory. _c_o_n_f_i_g__d_b() is the server config file in ETS
+          table format as described in httpd(3).
+
+     path(Data,ConfigDB,RequestURI) -> Path
+
+          Types
+               Data = interaction_data()
+               ConfigDB = config_db()
+               RequestURI = Path = string()
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+
+
+
+
+mod_alias(3)        ERLANG MODULE DEFINITION         mod_alias(3)
+
+
+
+          _p_a_t_h/_3 returns the actual file _P_a_t_h in  the  _R_e_q_u_e_s_t_U_R_I
+          (See  RFC  1945).  If  the interaction data {_r_e_a_l__n_a_m_e,
+          {_P_a_t_h, _A_f_t_e_r_P_a_t_h}} has been exported  by  mod_alias(3);
+          _P_a_t_h  is  returned.  If  no  interaction  data has been
+          exported, ServerRoot is used to generate a  file  _P_a_t_h.
+          _c_o_n_f_i_g__d_b()  and  _i_n_t_e_r_a_c_t_i_o_n__d_a_t_a()  are as defined in
+          httpd(3).
+
+     real_name(ConfigDB,RequestURI,Aliases) -> Ret
+
+          Types
+               ConfigDB = config_db()
+               RequestURI = string()
+               Aliases = [{FakeName, RealName}]
+               Ret = {ShortPath, Path, AfterPath}
+               ShortPath = Path = AfterPath = string()
+
+          _r_e_a_l__n_a_m_e/_3 traverses _A_l_i_a_s_e_s, typically extracted from
+          _C_o_n_f_i_g_D_B, and matches each _F_a_k_e_N_a_m_e with _R_e_q_u_e_s_t_U_R_I. If
+          a match is found _F_a_k_e_N_a_m_e is replaced with _R_e_a_l_N_a_m_e  in
+          the  match. The resulting path is split into two parts,
+          that  is  _S_h_o_r_t_P_a_t_h  and  _A_f_t_e_r_P_a_t_h   as   defined   in
+          httpd_util:split_path/1.  _P_a_t_h is generated from _S_h_o_r_t_-
+          _P_a_t_h, that is  the  result  from  default_index/2  with
+          _S_h_o_r_t_P_a_t_h  as  an  argument.  _c_o_n_f_i_g__d_b() is the server
+          config  file  in  ETS  table  format  as  described  in
+          httpd(3).
+
+     real_script_name(ConfigDB,RequestURI,ScriptAliases) -> Ret
+
+          Types
+               ConfigDB = config_db()
+               RequestURI = string()
+               ScriptAliases = [{FakeName, RealName}]
+               Ret = {ShortPath, AfterPath} | not_a_script
+               ShortPath = AfterPath = string()
+
+          _r_e_a_l__n_a_m_e/_3    traverses    _S_c_r_i_p_t_A_l_i_a_s_e_s,    typically
+          extracted from _C_o_n_f_i_g_D_B, and matches each _F_a_k_e_N_a_m_e with
+          _R_e_q_u_e_s_t_U_R_I. If a match is found  _F_a_k_e_N_a_m_e  is  replaced
+          with  _R_e_a_l_N_a_m_e  in the match. If the resulting match is
+          not an executable script _n_o_t__a__s_c_r_i_p_t is  returned.  If
+          it  is  a  script  the  resulting script path is in two
+          parts, that is _S_h_o_r_t_P_a_t_h and _A_f_t_e_r_P_a_t_h  as  defined  in
+          httpd_util:split_script_path/1.   _c_o_n_f_i_g__d_b()   is  the
+          server config file in ETS table format as described  in
+          httpd(3).
+
+SEE ALSO
+     httpd(3)
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   3
+
+
+
+
+
+
+mod_alias(3)        ERLANG MODULE DEFINITION         mod_alias(3)
+
+
+
+AUTHOR
+     Joakim Grebeno  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   4
+
+
+

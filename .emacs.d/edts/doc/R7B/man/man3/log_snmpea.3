@@ -1,0 +1,22 @@
+.TH log_snmpea 3 "eva  2.0.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+log_snmpea \- SNMP instrumentation functions for the OTP-SNMPEA-LOG-MIB
+.SH DESCRIPTION
+.LP
+This module contains the instrumentation functions for the OTP-SNMPEA-LOG-MIB\&. 
+.LP
+In some cases other adaptations may need access to the SNMP specific data in EVA\&. To do this, the instrumentation functions for the SNMP objects can be used\&. These instrumentation functions takes the arguments and return the values defined in the application \fIsnmp\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+snmpeaLogDiscriminator(Op,Val)
+.br
+.RS
+.LP
+Instrumentation function for the \fIsnmpeaLogDiscriminator\fR variable\&. 
+.RE
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

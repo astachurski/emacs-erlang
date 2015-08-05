@@ -1,0 +1,660 @@
+
+
+
+gen_server(3)       ERLANG MODULE DEFINITION        gen_server(3)
+
+
+
+MODULE
+     gen_server - A Generic Client-Server Behaviour
+
+DESCRIPTION
+     This module provides a standard way of writing Client-Server
+     applications. All servers written as generic servers share a
+     common set of interface functions. The generic parts of  the
+     server  contain functions for debugging, handling the termi-
+     nation of the parent, and presentation of illustrative error
+     information if something goes wrong with the server.
+
+     The idea is that the  implementation  specific  parts  of  a
+     client-server  is in one module, called the callback module.
+     The callback module contains the client interface  functions
+     which  use  the server access functions described below. The
+     callback module also contains the server callback functions,
+     for  example _h_a_n_d_l_e__c_a_l_l/_3. Whenever the generic part of the
+     server receives a message - sent  through  a  server  access
+     function,  for example - the corresponding callback function
+     is called.
+
+     The relationship between  the  generic  interface  functions
+     (and  received  messages)  and the callback functions can be
+     illustrated as follows:
+
+     Callback module               gen_server
+     ----------------               ----------
+     gen_server:start      ----->   start a new server
+     Module:init/1         <-----
+                                    looping
+
+     gen_server:call       ----->
+     Module:handle_call/3  <-----
+
+     gen_server:cast       ----->
+     Module:handle_cast/2  <-----
+
+     gen_server:multi_call ----->
+     Module:handle_call/3  <-----
+
+     gen_server:abcast     ----->
+     Module:handle_cast/2  <-----
+
+     Module:handle_info/2  <-----  other message
+                                   received.
+
+     Module:terminate/2    <-----  clean up before
+                                   termination.
+
+     If the server wants to  trap  exit  signals,  this  must  be
+     explicitly initiated in the callback module.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+gen_server(3)       ERLANG MODULE DEFINITION        gen_server(3)
+
+
+
+     An instance of the  _g_e_n__s_e_r_v_e_r  behaviour  can  be  debugged
+     using the module _s_y_s.
+
+
+EXPORTS
+     start(Module, Args, Options) -> ServerRet
+     start(ServerName, Module, Args, Options) -> ServerRet
+     start_link(Module, Args, Options) -> ServerRet
+     start_link(ServerName, Module, Args, Options) -> ServerRet
+
+          Types
+               Module = atom()
+               ServerName = {local, atom()} | {global, atom()}
+               Args = term()
+               Options = [Opt]
+               Opt = {debug, [Dbg]} | {timeout, Time}
+               Dbg = trace | log  |  statistics  |  {log_to_file,
+               FileName} | {install, {Func, FuncState}}
+               ServerRet = {ok, Pid} | ignore | {error, Reason}
+               Pid = pid()
+               Reason = {already_started, Pid} | term()
+
+          Starts a new server. If the server is  started  without
+          _S_e_r_v_e_r_N_a_m_e,  it  can  only be called using the returned
+          _P_i_d identifier. If started with _S_e_r_v_e_r_N_a_m_e, the name is
+          registered locally or globally.
+
+          _M_o_d_u_l_e is the name of the callback module.
+
+          A server started with _s_t_a_r_t/_3 or _s_t_a_r_t/_4 does not  care
+          about  the  parent,  which means that the parent is not
+          handled explicitly in  the  generic  process  part.  If
+          started  in  this  manner,  these functions _m_u_s_t _n_o_t be
+          used if the server is a worker in a supervision tree.
+
+          A server started with _s_t_a_r_t__l_i_n_k/_3 or  _s_t_a_r_t__l_i_n_k/_4  is
+          initially linked to the caller, the parent, and it will
+          terminate whenever the parent process  terminates,  and
+          with the same reason as the parent. If the server traps
+          exits, the _t_e_r_m_i_n_a_t_e/_2 callback function is  called  in
+          order to clean up before the termination. If started in
+          this manner, these functions  _s_h_o_u_l_d  be  used  if  the
+          server is a worker in a supervision tree.
+
+          _T_i_m_e specifies how  long  time,  in  milliseconds,  the
+          server is allowed to spend initializing.
+
+          The function _M_o_d_u_l_e:_i_n_i_t(_A_r_g_s) is  called  in  the  new
+          process in order to initialize the server (see below).
+
+          Refer to the _s_y_s module for more information about  the
+          _D_b_g options.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+gen_server(3)       ERLANG MODULE DEFINITION        gen_server(3)
+
+
+
+     call(ServerRef, Request) -> Reply
+     call(ServerRef, Request, Timeout) -> Reply
+
+          Types
+               ServerRef = Name | {Name, Node} | {global, Name} |
+               Pid
+               Name = atom()
+               Node = atom()
+               Request = term()
+               Timeout = int() > 0 | infinity
+               Reply = term()
+
+          A request is sent to the _S_e_r_v_e_r_R_e_f server. The  request
+          can be any term, but the term must be recognized by the
+          server. The request is handled by the  server  (in  the
+          _M_o_d_u_l_e:_h_a_n_d_l_e__c_a_l_l/_2   function)   and  the  client  is
+          suspended  while  waiting  for  the  response.  _T_i_m_e_o_u_t
+          should be set to some reasonable value in milliseconds.
+          The special value _i_n_f_i_n_i_t_y can be used if the user  has
+          no  idea  how long the request is supposed to take. The
+          default value is _5_0_0_0 if _T_i_m_e_o_u_t is not specified.
+
+          If _T_i_m_e_o_u_t has an integer value  and  no  response  has
+          been  delivered  within  _T_i_m_e_o_u_t milliseconds, then the
+          client terminates with  reason  {_t_i_m_e_o_u_t,  {_g_e_n__s_e_r_v_e_r,
+          _c_a_l_l, [_S_e_r_v_e_r_R_e_f, _R_e_q_u_e_s_t, _T_i_m_e_o_u_t]}}.
+
+          If the server should crash during the request  and  the
+          client  is linked to the server and the client is trap-
+          ping exits, (phew) the exit message is  read  out  from
+          the  clients  receive queue and then this function call
+          fails with the exit reason that was  read.  This  is  a
+          remnant  from when monitors did not exist and links was
+          the  only  way  to  supervise  the  request,  and   the
+          behaviour  may  change  in  a  future  release. In this
+          release, unfortuneately,  under  certain  circumstances
+          (e.g.  _S_e_r_v_e_r_R_e_f  =  {_N_a_m_e,  _N_o_d_e}, _N_o_d_e crashes during
+          call) the exit message cannot be read out. Note that if
+          the  server  crashes  in between calls, the client must
+          take care of the exit message anyway.
+
+     cast(ServerRef, Request) -> ok
+
+          Types
+               ServerRef = Name | {Name, Node} | {global, Name} |
+               Pid
+               Name = atom()
+               Node = atom()
+               Request = term()
+
+          A request is sent to the server. As no response will be
+          delivered,  the client making the cast is not suspended
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+gen_server(3)       ERLANG MODULE DEFINITION        gen_server(3)
+
+
+
+          until the request has been handled by the server.  This
+          function   returns  _o_k  immediately  and  ignores  non-
+          existing servers.
+
+     multi_call(DistRef, Request) -> DistRep
+     multi_call(Nodes, DistRef, Request) -> DistRep
+     multi_call(Nodes, DistRef, Request, Timeout) -> DistRep
+
+          Types
+               Nodes = [Node]
+               Node = atom()
+               DistRef = atom()
+               DistRep = {[{Node, Reply}], [Node]}
+               Request = term()
+               Timeout = int() >= 0 | infinity
+               Reply = term()
+
+          Sends a request to the locally registered  server  _D_i_s_-
+          _t_R_e_f  at  every  known  node  (or _N_o_d_e_s). This function
+          returns a list of replies which  are  tagged  with  the
+          corresponding node name, and a list of bad nodes. _R_e_p_l_y
+          is the value returned by a server. A node is marked bad
+          if  the  server at a specific node, or the node itself,
+          does not exist.
+
+          The request is sent to the _D_i_s_t_R_e_f server at all  nodes
+          before the replies are collected. This ensures that the
+          request is handled in parallel on all nodes.
+
+  Warning:
+     If one of the nodes is of an older Erlang release,  and  its
+     server is not started when the requests are sent, but starts
+     within 2 s after, this function  waits  the  whole  _T_i_m_e_o_u_t,
+     which may be infinity.
+
+     This problem does not exist if all nodes are of the  current
+     release.
+
+
+     If _T_i_m_e_o_u_t is given, each node not replying within that time
+     is regarded as bad.
+
+     This function does _n_o_t  read  out  any  exit  messages  like
+     _c_a_l_l/_2, _3 does.
+
+     The previously undocumented  functions  _s_a_f_e__m_u_l_t_i__c_a_l_l/_2.._4
+     have  now  been  removed  since _m_u_l_t_i__c_a_l_l/_2.._4 is now safe,
+     except for against old nodes as  mentioned  in  the  warning
+     above.
+
+     abcast(DistRef, Request) -> abcast
+     abcast(Nodes, DistRef, Request) -> abcast
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+gen_server(3)       ERLANG MODULE DEFINITION        gen_server(3)
+
+
+
+          Types
+               Nodes = [Node]
+               Node = atom()
+               DistRef = atom()
+               Request = term()
+
+          Broadcasts the request asynchronously  to  the  locally
+          registered  server  _D_i_s_t_R_e_f  on  every  known  node (or
+          _N_o_d_e_s). This function returns immediately  and  ignores
+          non-existing servers or nodes.
+
+     reply(To, Reply) -> true
+
+          Types
+               To = {pid(), Tag}
+               Tag = term()
+
+          This function can be used by a server to make an expli-
+          cit reply, if a reply cannot be returned immediately as
+          the return value of _M_o_d_u_l_e:_h_a_n_d_l_e__c_a_l_l/_3.  _T_o  has  the
+          same     value     as     the    _F_r_o_m    argument    in
+          _M_o_d_u_l_e:_h_a_n_d_l_e__c_a_l_l/_3.
+
+Callback Functions
+     The following functions should be exported from a _g_e_n__s_e_r_v_e_r
+     callback module.
+
+EXPORTS
+     Module:init(Args) -> {ok, State} | {ok,  State,  Timeout}  |
+     ignore | {stop, StopReason}
+
+          Types
+               Args = term()
+               State = term()
+               Timeout = int() >= 0 | infinity
+               StopReason = term()
+
+          Whenever a new server is started, _i_n_i_t/_1 is  the  first
+          function  called  in  the specified callback module. To
+          ensure   a   synchronized   start-up   procedure,   the
+          _g_e_n__s_e_r_v_e_r:_s_t_a_r_t  function  will  not return before the
+          _i_n_i_t/_1 function has returned.
+
+          The _A_r_g_s argument supplied to the  _i_n_i_t/_1  function  is
+          the   same  as  the  _A_r_g_s  parameter  supplied  to  the
+          _g_e_n__s_e_r_v_e_r:_s_t_a_r_t functions.
+
+          The purpose of the _i_n_i_t/_1 function is to initialize the
+          server  and  the internal state of the server. A server
+          which holds an external resource  typically  opens  the
+          associated  port  and  keeps  the  port identity in the
+          internal state.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+gen_server(3)       ERLANG MODULE DEFINITION        gen_server(3)
+
+
+
+          If the server wants to  trap  exits,  this  has  to  be
+          expressed   explicitly   in   the  init  function  with
+          _p_r_o_c_e_s_s__f_l_a_g(_t_r_a_p__e_x_i_t, _t_r_u_e).
+
+          The representation of the server _S_t_a_t_e is an  implemen-
+          tation  specific  detail  which  must be decided by the
+          designer of the server. _S_t_a_t_e will  be  visible  as  an
+          argument to all callback functions. To change something
+          in _S_t_a_t_e, a new value is  returned  from  the  callback
+          function  using  the  return  values  (terms) described
+          below.
+
+          If the initializing procedure fails, the reason is sup-
+          plied  as _S_t_o_p_R_e_a_s_o_n with the {_s_t_o_p, _S_t_o_p_R_e_a_s_o_n} return
+          value.
+
+          After the server has been successfully initialized, the
+          generic  part  of  the  server enters the main loop and
+          waits for requests. A _T_i_m_e_o_u_t time can be specified  if
+          the  server  is only allowed to wait for a certain time
+          for the next event. If the timeout  time  elapses,  the
+          special  _t_i_m_e_o_u_t  message  should  be  handled  in  the
+          _M_o_d_u_l_e:_h_a_n_d_l_e__i_n_f_o/_2  callback  function.  _T_i_m_e_o_u_t   is
+          specified in milliseconds.
+
+          This function can return _i_g_n_o_r_e in order to inform  the
+          parent,  especially  if  it  is  a supervisor, that the
+          server, as an example, did not start in accordance with
+          the configuration data.
+
+     Module:handle_call(Request, From, State) -> CallReply
+
+          Types
+               Request = term()
+               From = {pid(), Tag}
+               Tag = term()
+               CallReply = {reply, Reply, State} | {reply, Reply,
+               State,  Timeout}  |  {noreply,  State} | {noreply,
+               State, Timeout} | {stop, StopReason, Reply, State}
+               | {stop, StopReason, State}
+               Timeout = int() >= 0 | infinity
+               StopReason = normal | shutdown | term()
+
+          Whenever a client function has called one of the inter-
+          face         functions        _g_e_n__s_e_r_v_e_r:_c_a_l_l        or
+          _g_e_n__s_e_r_v_e_r:_m_u_l_t_i__c_a_l_l, the server handles  the  request
+          in this callback function.
+
+          _R_e_q_u_e_s_t is the same as the term supplied with the above
+          client call. The server decides if the client should be
+          sent  a  reply  directly  ({_r_e_p_l_y,  ...}),   indirectly
+          ({_n_o_r_e_p_l_y,  ...}),  or  if  the server has to terminate
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+
+
+
+
+gen_server(3)       ERLANG MODULE DEFINITION        gen_server(3)
+
+
+
+          ({_s_t_o_p, ...}) as a result of the request. If  {_n_o_r_e_p_l_y,
+          ...}  is  returned, a reply is sent to the client using
+          the _r_e_p_l_y/_2 function.
+
+          If _S_t_o_p_R_e_a_s_o_n is something other than _n_o_r_m_a_l  or  _s_h_u_t_-
+          _d_o_w_n,  the  server is assumed to have terminated with a
+          runtime error. In this case, a lot  of  information  is
+          reported  about  the  failure. The atom _n_o_r_m_a_l causes a
+          normal termination of the server, while _s_h_u_t_d_o_w_n causes
+          an abnormal, but faultless, termination.
+
+          If the server decided to terminate {_s_t_o_p, _S_t_o_p_R_e_a_s_o_n [,
+          ...]},  the  _M_o_d_u_l_e:_t_e_r_m_i_n_a_t_e/_2 function is called. All
+          code which handles the clean up before the server  ter-
+          minates  should  be  located in the _t_e_r_m_i_n_a_t_e function.
+          The server will terminate due to _S_t_o_p_R_e_a_s_o_n.
+
+          As described above ( see  _i_n_i_t/_1),  a  timeout  can  be
+          specified  to  take  some  specific  action  if no more
+          requests are received within _T_i_m_e_o_u_t milliseconds.
+
+     Module:handle_cast(Request, State) -> Return
+
+          Types
+               Request = term()
+               State = term()
+               Return  =  {noreply,  State}  |  {noreply,  State,
+               Timeout} | {stop, StopReason, State}
+               Timeout = int() >= 0 | infinity
+               StopReason = normal | shutdown | term()
+
+          Whenever a client function has called one of the inter-
+          face  functions  _g_e_n__s_e_r_v_e_r:_c_a_s_t  or _g_e_n__s_e_r_v_e_r:_a_b_c_a_s_t,
+          the server handles the request in this  callback  func-
+          tion. No reply will ever be sent to the client, but the
+          server  can  decide  to  terminate.  _S_t_o_p_R_e_a_s_o_n  is  as
+          described for _h_a_n_d_l_e__c_a_l_l/_3.
+
+     Module:handle_info(Info, State) -> Return
+
+          Types
+               Info = term()
+               State = term()
+               Return  =  {noreply,  State}  |  {noreply,  State,
+               Timeout} | {stop, StopReason, State}
+               Timeout = int() >= 0 | infinity
+               StopReason = normal | shutdown | term()
+
+          This callback function handles received messages  other
+          than  _c_a_l_l and _c_a_s_t. Typical messages which are handled
+          by this function include:
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  7
+
+
+
+
+
+
+gen_server(3)       ERLANG MODULE DEFINITION        gen_server(3)
+
+
+
+            {'_E_X_I_T', _P_i_d, _R_e_a_s_o_n}:
+                If  the   process   traps   exit   signals,   the
+                corresponding messages are handled here.
+
+            {_n_o_d_e_d_o_w_n, _N_o_d_e}:
+                If  another  Erlang  node   is   monitored,   the
+                corresponding _n_o_d_e_d_o_w_n message is handled here.
+
+            _t_i_m_e_o_u_t:
+                If _T_i_m_e_o_u_t milliseconds  has  elapsed  since  the
+                last  handled  event, this message should be han-
+                dled.
+
+            _M_s_g:
+                All other messages which are sent to  the  server
+                using _S_e_r_v_e_r ! _M_s_g are also handled here.
+
+  Note:
+     Communication with the server should always go  through  the
+     interface functions described above.
+
+
+     The _R_e_t_u_r_n value is the same as for _h_a_n_d_l_e__c_a_s_t/_2.  _S_t_o_p_R_e_a_-
+     _s_o_n is as described for _h_a_n_d_l_e__c_a_l_l/_3.
+
+     Module:terminate(Reason, State) -> ok
+
+          Types
+               Reason = term()
+               State = term()
+
+          This callback function is called whenever the server is
+          about  to  terminate.  Either one of the above callback
+          functions have returned  {_s_t_o_p,  _S_t_o_p_R_e_a_s_o_n,  ...},  in
+          which case _R_e_a_s_o_n is equal to _S_t_o_p_R_e_a_s_o_n; or some other
+          fault  has  been  caught.  _R_e_a_s_o_n  is  any  term  which
+          describes  the  termination reason. If the server traps
+          exits, the _t_e_r_m_i_n_a_t_e function is called if the server's
+          parent  (normally  a  supervisor)  dies  or  orders the
+          server to die. If the server does not  trap  exits,  it
+          dies immediately if the parent dies.
+
+          With this function, the server can clean up before  the
+          process  terminates.  It  can, for example, de-allocate
+          external resources.
+
+          The termination reason  cannot  be  changed  here.  The
+          server  will  terminate due to_R_e_a_s_o_n regardless of what
+          was returned from this function.
+
+     Module:code_change(OldVsn, State, Extra) -> {ok, NewState}
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  8
+
+
+
+
+
+
+gen_server(3)       ERLANG MODULE DEFINITION        gen_server(3)
+
+
+
+          Types
+               OldVsn = undefined | term()
+               State = term()
+               Extra = term()
+               NewState = term()
+
+          This function is called when  a  code  change  is  per-
+          formed, which implies that the internal data structures
+          of the server has changed. This function is supposed to
+          convert the old state to the new one. _O_l_d_V_s_n is the _v_s_n
+          attribute of the old version of the module. If no  such
+          attribute  was  defined,  the  atom  _u_n_d_e_f_i_n_e_d is sent.
+          _E_x_t_r_a is an optional term which is typically defined in
+          the release upgrade script.
+
+System Events
+     The _g_e_n__s_e_r_v_e_r  behaviour  generates  the  following  system
+     events, handled by the _s_y_s module:
+
+       * {_i_n, _M_s_g} when a message is received.
+
+       * {_o_u_t, _M_s_g, _T_o, _S_t_a_t_e} when a message is sent.
+
+       * {_n_o_r_e_p_l_y, _S_t_a_t_e} when no reply is delivered.
+
+Example
+     The following example implements a simple queue server.  The
+     server has four interface functions:
+
+       * _s_t_a_r_t/_0 which starts the queue server.
+
+       * _s_t_o_p/_0 which stops the queue server.
+
+       * _i_n/_1 which inserts an item last in the queue.
+
+       * _o_u_t/_0 which removes the oldest item from the queue.
+
+     The queue server is not linked to the parent process and the
+     server does not handle the termination of the parent process
+     explicitly.
+
+     -module(queue_serv).
+     -behaviour(gen_server).
+
+     %% External exports
+     -export([start/0, in/1, out/0, stop/0]).
+
+     %% gen_server callbacks
+     -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
+              terminate/2]).
+
+     start() ->  gen_server:start({local, queue_serv},
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  9
+
+
+
+
+
+
+gen_server(3)       ERLANG MODULE DEFINITION        gen_server(3)
+
+
+
+                                  queue_serv, [], []).
+
+     in(Item) -> gen_server:call(queue_serv, {in, Item}).
+
+     out() -> gen_server:call(queue_serv, out).
+
+     stop() -> gen_server:call(queue_serv, stop).
+
+     %% Callback functions.
+     init([]) ->
+         {ok, {[],[]}}.
+
+     handle_call({in, X}, _From, {In, Out}) ->
+         {reply, ok, {[X|In], Out}};
+     handle_call(out, _From, Queue) ->
+         {Reply, NewQueue} = out(Queue),
+         {reply, Reply, NewQueue};
+     handle_call(stop, _From, Queue) ->
+         {stop, normal, ok, Queue}.
+
+     handle_cast(_, State) ->
+         {noreply, State}.
+
+     handle_info(_, State) ->
+         {noreply, State}.
+
+     terminate(Reason, State) ->
+         ok.
+
+     %% Internal functions
+     out({In, [H|Out]}) ->
+         {{value, H}, {In, Out}};
+     out({[], []}) ->
+         {empty, {[],[]}};
+     out({In, _}) ->
+         out({[], lists:reverse(In)}).
+
+See Also
+     sys(3)
+
+AUTHORS
+     Magnus Froberg - support@erlang.ericsson.se
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                 10
+
+
+

@@ -1,0 +1,244 @@
+.TH exref 3 "tools  1.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+exref \- Cross Reference Tool
+.SH DESCRIPTION
+.SS Note:
+.LP
+The \fIexref\fR tool has some limitations and is no longer supported\&. Please consider using the new cross reference tool xref\&. 
+
+.LP
+The \fIexref\fR tool is an incremental cross reference server which builds a cross reference graph for all modules loaded into it\&. Information which can be derived from the cross reference graph includes use graphs and module dependencies\&. The call graph is represented as a directed graph (see digraph(3))\&. A function vertex is represented as: 
+
+.nf
+      {{Mod, Fun, Arity}, {Type, File, Line}}
+.fi
+.LP
+In this code: 
+
+.nf
+      Type = local | exported | {exported, compiler} |
+             {local, compiler} | {void(), record}
+.fi
+.LP
+A call edge is represented as: 
+
+.nf
+      {EdgeId, {Mod1, Fun1, Arity1}, {Mod2, Fun2, Arity2}, Line}\&.
+.fi
+
+.SH EXPORTS
+.LP
+.B
+start()-> {ok, Pid} | {error, {already_started, Pid}}
+.br
+.RS
+.LP
+Starts the \fIexref\fR server\&. The \fIexref\fR server must be started before any other functions in module \fIexref\fR can be used\&. 
+.RE
+.LP
+.B
+stop() -> stopped
+.br
+.RS
+.LP
+Stops the \fIexref\fR server\&. 
+.RE
+.LP
+.B
+module(Module) -> true
+.br
+.RS
+.LP
+This is a short form for calling \fImodule(Module, [search, verbose])\fR (see below)\&. 
+.RE
+.LP
+.B
+module(Module, Options) -> true
+.br
+.RS
+.TP
+Types
+Module = atom() | [atom()]
+.br
+Options = [Option]
+.br
+Option = search | verbose | auto | warnings | recursive | no_libs
+.br
+.RE
+.RS
+.LP
+Loads the module \fIModule\fR into the cross reference graph\&. \fIModule\fR can also be a list of modules\&. \fIOptions\fR is a list with the following possible options: 
+.RS 2
+.TP 4
+.B
+\fIsearch\fR:
+Searches for source file in code path and replaces the path \fIX/ebin\fR with the path \fIX/src\fR\&. 
+.TP 4
+.B
+\fIverbose\fR:
+Creates an output of module names during loading\&. 
+.TP 4
+.B
+\fIauto\fR:
+Automatically loads all referenced modules into the cross reference graph, with the exception of modules specified with the \fIexcludes/1\fR function\&. See also the \fIno_libs\fR option\&. 
+.TP 4
+.B
+\fIrecursive\fR:
+Recursively includes all files in a directory\&. See also the \fIno_libs\fR option\&. 
+.TP 4
+.B
+\fIwarnings\fR:
+Emits warnings about the application and the spawning of variables\&. The reason for this is that \fIapply\fR, with variable modules or functions, leads to an incomplete call graph\&. The \fIapply\fR call will be inserted into the call graph instead of the actual call\&. The same applies to spawn\&. 
+.TP 4
+.B
+\fIno_libs\fR:
+Used together with the options \fIauto\fR and \fIrecursive\fR, this options prevents modules in the standard libraries from being loaded into the cross reference graph\&. 
+.RE
+.RE
+.LP
+.B
+directory(Directory)
+.br
+.B
+directory(Directory, Options)
+.br
+.RS
+.LP
+Loads all modules found in the directory \fIDirectory\fR into the cross reference graph\&. Options are the same as for \fImodule/2\fR\&. The function \fIdirectory/1\fR is equivalent to \fIdirectory(Directory, [verbose])\fR\&. 
+.RE
+.LP
+.B
+directory_module(Directory, Module)
+.br
+.B
+directory_module(Directory, Module, Options)
+.br
+.RS
+.LP
+Loads the module \fIModule\fR located in the directory \fIDirectory\fR\&. \fIModule\fR can also be a list of modules\&. Options are the same as for \fImodule/2\fR\&. The function \fIdirectory_module/2\fR is equivalent to \fIdirectory_module(Directory, Module, [verbose])\fR\&. 
+.RE
+.LP
+.B
+delete_module(Module)
+.br
+.RS
+.LP
+Deletes the module \fIModule\fR from the cross reference graph\&. \fIModule\fR can also be a list of modules\&. 
+.RE
+.LP
+.B
+excludes(Modules)
+.br
+.RS
+.LP
+Appends the modules of the \fIModules\fR list to the list of modules which are excluded from the cross reference graph\&. 
+.RE
+.LP
+.B
+includes(Dirs)
+.br
+.RS
+.LP
+Appends the directories of the \fIDirs\fR list to the include search path for Erlang include files (see epp(3))\&. 
+.RE
+.LP
+.B
+defs(Defs)
+.br
+.RS
+.LP
+Appends the definitions in the \fIDefs\fR list to the definition list used by \fIepp\fR (see epp(3))\&. 
+.RE
+.LP
+.B
+analyse(Type [,Arg]) -> Result
+.br
+.RS
+.LP
+Performs various analyses of the cross reference graph and returns an Erlang term with a format that depends on the \fIType\fR of analyse\&. Some analyse types can have an optional argument \fIArg\fR\&. The result can be formatted to a textual printout with \fIpretty/1\fR\&. The available \fIType\fR and \fIArg\fR combinations are: 
+.RS 2
+.TP 4
+.B
+\fIcall\fR:
+Emits the calls from the functions, for all functions in the graph\&. 
+.TP 4
+.B
+\fIcall, Module\fR:
+Emits the calls for all functions in the module \fIModule\fR, 
+.TP 4
+.B
+\fIcall, Function\fR:
+Emits the calls from the function \fIFunction\fR, which has the format \fI{Mod, Fun, Arity}\fR\&. 
+.TP 4
+.B
+\fIuse\fR:
+Emits the use of functions, for all functions in the graph\&. 
+.TP 4
+.B
+\fIuse, Module\fR:
+Emits the use of functions, for all functions of the module \fIModule\fR\&. 
+.TP 4
+.B
+\fIuse, Function\fR:
+Emits the use of the function \fIFunction\fR, which has the format \fI{Mod, Fun, Arity}\fR\&. 
+.TP 4
+.B
+\fImodule_call\fR:
+Emits the module dependency graph\&. For example, if module \fIM1\fR has calls to \fIM2\fR, this analysis emits \fIM1: M2 \&.\&.\&.\fR 
+.TP 4
+.B
+\fImodule_use\fR:
+Emits a module graph which is the reverse of the module dependency graph\&. For example, if module \fIM1\fR is called by modules \fIM2\fR and \fIM3\fR, the analysis emits \fIM1: M2 M3\fR\&. 
+.TP 4
+.B
+\fIexports_not_called\fR:
+Reports all exported functions which are not used\&. This means that all entry points to a program can be found, also exported functions that should be local\&. 
+.TP 4
+.B
+\fIlocals_not_called\fR:
+Reports all local functions which are used\&. These functions can be removed without the program being affected\&. 
+.TP 4
+.B
+\fIundefined_functions\fR:
+Reports all function calls which are calls to functions outside the cross reference graph\&. The library functions and Erlang BIFs are never considered undefined\&. 
+.TP 4
+.B
+\fIrecursive_modules\fR:
+Reports modules that are (partially) recursively defined, which means that they contain function calls outside the module which in turn call the functions in that module\&. 
+.TP 4
+.B
+\fIuser_defined, {Mod, Fun}\fR:
+Calls user-defined analysis\&. The reason for user-defined analysis being attached in this way is that the call graph cannot easily be copied to other processes\&. It should be performed within the \fIexref\fR server process\&. 
+.RS 4
+.LP
+The function definition must be as follows for user supplied analysis: 
+
+.nf
+              my_analysis(G) ->
+                 io:format("MY ANALYSIS \&.\&.\&. ~n", Args),
+                 \&.\&.\&.
+.fi
+.LP
+
+.LP
+\fIG\fR is the cross reference graph as described above\&. The return value from a user-defined analysis is ignored\&. 
+.RE
+.RE
+.RE
+.LP
+.B
+pretty(AnalyseResult) -> ok
+.br
+.RS
+.LP
+This function pretty-prints a verbose textual representation of \fIAnalyseResult\fR which must be the output from \fIanalyse(Type[, Arg])\fR\&. The result from a user-defined analysis cannot be used as input to this function\&. 
+.RE
+.SH See Also
+.LP
+digraph(3), xref(3) 
+.SH AUTHORS
+.nf
+Joakim Hirsch (modifications) - support@erlang.ericsson.se
+Kenneth Lundin (modifications) - support@erlang.ericsson.se
+Tony Rogvall (originally) - support@erlang.ericsson.se
+.fi

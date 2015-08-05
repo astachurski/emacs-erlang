@@ -1,0 +1,132 @@
+
+
+
+snmp_target_mib(3)  ERLANG MODULE DEFINITION   snmp_target_mib(3)
+
+
+
+MODULE
+     snmp_target_mib  -  Instrumentation  Functions   for   SNMP-
+     TARGET-MIB
+
+DESCRIPTION
+     The module _s_n_m_p__t_a_r_g_e_t__m_i_b  implements  the  instrumentation
+     functions  for the SNMP-TARGET-MIB, and functions for confi-
+     guring the database.
+
+     The configuration files are described  in  the  SNMP  User's
+     Manual.
+
+
+EXPORTS
+     configure(ConfDir) -> void()
+
+          Types
+               ConfDir = string()
+
+          This function is called from the supervisor  at  system
+          start-up.
+
+          Inserts all data in the configuration  files  into  the
+          database  and  destroys  all  old rows with StorageType
+          _v_o_l_a_t_i_l_e. The rows created from the configuration  file
+          will have StorageType _n_o_n_V_o_l_a_t_i_l_e.
+
+          All _s_n_m_p counters are set to zero.
+
+          If an error is found in the configuration file,  it  is
+          reported  using  the  function _s_n_m_p__e_r_r_o_r:_c_o_n_f_i_g__e_r_r/_2,
+          and   the    function    fails    with    the    reason
+          _c_o_n_f_i_g_u_r_a_t_i_o_n__e_r_r_o_r.
+
+          _C_o_n_f_D_i_r is a string which points to the directory where
+          the configuration files are found.
+
+          The configuration files read are: _t_a_r_g_e_t__a_d_d_r._c_o_n_f  and
+          _t_a_r_g_e_t__p_a_r_a_m_s._c_o_n_f.
+
+     reconfigure(ConfDir) -> void()
+
+          Types
+               ConfDir = string()
+
+          Inserts all data in the configuration  files  into  the
+          database  and destroys all old data, including the rows
+          with StorageType _n_o_n_V_o_l_a_t_i_l_e. The rows created from the
+          configuration file will have StorageType _n_o_n_V_o_l_a_t_i_l_e.
+
+          Thus, the data in the SNMP-TARGET-MIB, after this func-
+          tion   has   been   called,   is   the  data  from  the
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   1
+
+
+
+
+
+
+snmp_target_mib(3)  ERLANG MODULE DEFINITION   snmp_target_mib(3)
+
+
+
+          configuration files.
+
+          All _s_n_m_p counters are set to zero.
+
+          If an error is found in the configuration file,  it  is
+          reported  using  the  function _s_n_m_p__e_r_r_o_r:_c_o_n_f_i_g__e_r_r/_2,
+          and   the    function    fails    with    the    reason
+          _c_o_n_f_i_g_u_r_a_t_i_o_n__e_r_r_o_r.
+
+          _C_o_n_f_D_i_r is a string which points to the directory where
+          the configuration files are found.
+
+          The configuration files read are: _t_a_r_g_e_t__a_d_d_r._c_o_n_f  and
+          _t_a_r_g_e_t__p_a_r_a_m_s._c_o_n_f.
+
+     set_target_engine_id(TargetAddrName, EngineId) -> boolean()
+
+          Types
+               TargetAddrName = string()
+               EngineId = string()
+
+          Changes the enigne id for  a  target  in  the  _s_n_m_p_T_a_r_-
+          _g_e_t_A_d_d_r_T_a_b_l_e.  If  notifications  are  sent  as  Inform
+          requests to a target, its engine id must be set.
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   2
+
+
+

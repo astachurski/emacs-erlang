@@ -1,0 +1,330 @@
+
+
+
+global(3)           ERLANG MODULE DEFINITION            global(3)
+
+
+
+MODULE
+     global - A Global Name Registration Facility
+
+DESCRIPTION
+     This documentation describes the Global  module  which  con-
+     sists of the following functionalities:
+      _1. Registration of global names
+      _2. Global locks
+      _3. Monitoring nodes
+      _4. Maintenance of the fully connected network
+
+     These services are controlled via the process  _g_l_o_b_a_l  which
+     exists on every node. _g_l_o_b_a_l is started automatically when a
+     node is started.
+
+     The ability to globally register names is a central  concept
+     in  the  programming  of distributed Erlang systems. In this
+     module, the equivalent of the _r_e_g_i_s_t_e_r/_2 and _w_h_e_r_e_i_s/_1  BIFs
+     are  implemented,  but  for  a  network  of  Erlang nodes. A
+     registered name is an alias for a process identity  _P_i_d. The
+     system  monitors globally registered Pids. If a process ter-
+     minates, the name will also be globally unregistered.
+
+     The registered names  are  stored  in  replica  global  name
+     tables  on  every  node.  There is no central storage point.
+     Thus, the translation of a name to a Pid is extremely  quick
+     because  it is never a network operation. When any action in
+     taken which results in a change to the global name table all
+     tables on other nodes are automatically updated.
+
+     Global locks have lock identities and are set on a  specific
+     resource.  For  instance,  the specified resource could be a
+     Pid of a process. When a global lock is set  access  to  the
+     locked resource is denied for all other resources other than
+     the lock requester.
+
+     Both the registration and lock functionalities  are  atomic.
+     All  nodes involved in these actions will have the same view
+     of the information.
+
+     The server also performs the critical task  of  continuously
+     monitoring  changes  in  node configuration, if a node which
+     runs a globally registered process goes down, the name  will
+     be  globally  unregistered.  The server will also maintain a
+     fully connected network. For example, if node _N_1 connects to
+     node  _N_2  (which  is  already  connected  to _N_3), the _g_l_o_b_a_l
+     server on _N_1 then _N_3 will make sure that also _N_1 and _N_3  are
+     connected.  If  this  is  not desired, the command line flag
+     -_c_o_n_n_e_c_t__a_l_l _f_a_l_s_e must be passed to _i_n_i_t at boot  time.  In
+     this  case,  the  name  registration facility cannot be used
+     (but the lock mechanism will still work.)
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+global(3)           ERLANG MODULE DEFINITION            global(3)
+
+
+
+EXPORTS
+     del_lock(Id)
+     del_lock(Id, Nodes) -> void()
+
+          Types
+               Id = {ResourceId, LockRequesterId}
+               ResourceId = term()
+               LockRequesterId = term()
+               Nodes = [node()]
+
+          Deletes the lock _I_d synchronously.
+
+     notify_all_name(Name, Pid1, Pid2) -> none
+
+          This function can be used as a name resolving  function
+          for _r_e_g_i_s_t_e_r__n_a_m_e/_3 and _r_e__r_e_g_i_s_t_e_r__n_a_m_e/_3. It unregis-
+          ters    both    Pids,    and    sends    the    message
+          {_g_l_o_b_a_l__n_a_m_e__c_o_n_f_l_i_c_t,    _N_a_m_e,   _O_t_h_e_r_P_i_d}   to   both
+          processes.
+
+     random_exit_name(Name, Pid1, Pid2) -> Pid1 | Pid2
+
+          This function can be used as a name resolving  function
+          for _r_e_g_i_s_t_e_r__n_a_m_e/_3 and _r_e__r_e_g_i_s_t_e_r__n_a_m_e/_3. It randomly
+          chooses one of the Pids for registration and kills  the
+          other one.
+
+     random_notify_name(Name, Pid1, Pid2) -> Pid1 | Pid2
+
+          This function can be used as a name resolving  function
+          for _r_e_g_i_s_t_e_r__n_a_m_e/_3 and _r_e__r_e_g_i_s_t_e_r__n_a_m_e/_3. It randomly
+          chooses one of the Pids for registration, and sends the
+          message {_g_l_o_b_a_l__n_a_m_e__c_o_n_f_l_i_c_t, _N_a_m_e} to the other Pid.
+
+     register_name(Name, Pid)
+     register_name(Name, Pid, Resolve) -> yes | no
+
+          Types
+               Name = term()
+               Pid = Pid()
+               Resolve = {M, F} where M:F(Name, Pid, Pid2) -> Pid
+               | Pid2 | none
+
+          Globally notifies all nodes of a new global name  in  a
+          network of Erlang nodes.
+
+          When new nodes are  added  to  the  network,  they  are
+          informed  of the globally registered names that already
+          exist. The network is also informed of any global names
+          in  newly  connected  nodes.  If  any  name clashes are
+          discovered, the _R_e_s_o_l_v_e function is called. Its purpose
+          is to decide which Pid is correct. This function blocks
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+global(3)           ERLANG MODULE DEFINITION            global(3)
+
+
+
+          the global name server during  its  execution.  If  the
+          function crashes, or returns anything other than one of
+          the Pids, the name is unregistered.  This  function  is
+          called once for each name clash.
+
+          There  are   three   pre-defined   resolve   functions,
+          _r_a_n_d_o_m__e_x_i_t__n_a_m_e,         _r_a_n_d_o_m__n_o_t_i_f_y__n_a_m_e        and
+          _n_o_t_i_f_y__a_l_l__n_a_m_e. If no  _R_e_s_o_l_v_e  function  is  defined,
+          _r_a_n_d_o_m__e_x_i_t__n_a_m_e  is  used.  This means that one of the
+          two registered processes will be  selected  as  correct
+          while the other is killed.
+
+          This function is  completely  synchronous.  This  means
+          that  when  this  function  returns, the name is either
+          registered on all nodes or none.
+
+          The function returns _y_e_s if successful, _n_o if it fails.
+          For  example,  _n_o  is returned if an attempt is made to
+          register a process with a name that is already in use.
+
+          If a process with a registered name dies, or  the  node
+          goes down, the name is unregistered on all nodes.
+
+     registered_names() -> [Name]
+
+          Types
+               Name = term()
+
+          Returns a lists of all globally registered names.
+
+     re_register_name(Name, Pid)
+     re_register_name(Name, Pid, Resolve) -> void()
+
+          Types
+               Name = term()
+               Pid = Pid()
+               Resolve = {M, F} where M:F(Name, Pid, Pid2) -> Pid
+               | Pid2 | none
+
+          Atomically changes the  registered  name  _N_a_m_e  on  all
+          nodes to refer to _P_i_d.
+
+          The _R_e_s_o_l_v_e  function  has  the  same  behavior  as  in
+          _r_e_g_i_s_t_e_r__n_a_m_e.
+
+     send(Name, Msg) -> Pid
+
+          Types
+               Name = term()
+               Msg = term()
+               Pid = Pid()
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+global(3)           ERLANG MODULE DEFINITION            global(3)
+
+
+
+          Sends the message _M_s_g to the globally  registered  pro-
+          cess  _N_a_m_e.  If _N_a_m_e is not a globally registered name,
+          the calling function will  exit  with  reason  {_b_a_d_a_r_g,
+          {_N_a_m_e, _M_s_g}}.
+
+     set_lock(Id)
+     set_lock(Id, Nodes)
+     set_lock(Id, Nodes, Retries) -> boolean()
+
+          Types
+               Id = {ResourceId, LockRequesterId}
+               ResourceId = term()
+               LockRequesterId = term()
+               Nodes = [node()]
+               Retries = int() > 0 | infinity
+
+          Sets a lock on the specified nodes (or on all nodes  if
+          none  are specified) on _R_e_s_o_u_r_c_e_I_d for _L_o_c_k_R_e_q_u_e_s_t_e_r_I_d.
+          If a lock already  exists  on  _R_e_s_o_u_r_c_e_I_d  for  another
+          requester  than  _L_o_c_k_R_e_q_u_e_s_t_e_r_I_d,  and  _R_e_t_r_i_e_s  is not
+          equal to 0, the process sleeps for a while and will try
+          to execute the action later. When _R_e_t_r_i_e_s attempts have
+          been  made,  _f_a_l_s_e  is  returned,  otherwise  _t_r_u_e.  If
+          _R_e_t_r_i_e_s   is  _i_n_f_i_n_i_t_y,  _t_r_u_e  is  eventually  returned
+          (unless the lock is never released).
+
+          If no value for _R_e_t_r_i_e_s is given, _i_n_f_i_n_i_t_y is used.
+
+          This function is completely synchronous.
+
+          If a process which holds a lock dies, or the node  goes
+          down, the locks held by the process are deleted.
+
+          _g_l_o_b_a_l keeps track of all processes  sharing  the  same
+          lock,  i.e.  if  two  processes  set the same lock both
+          processes must delete the lock.
+
+          This  function  does  not  address  the  problem  of  a
+          deadlock.  A  deadlock  can  never  occur  as  long  as
+          processes only lock one resource at a time. But if some
+          processes try to lock two or more resources, a deadlock
+          may occur. It is up to the application  to  detect  and
+          rectify a deadlock.
+
+     start()
+     start_link() -> {ok, Pid} | {error, Reason}
+
+          This function starts the global name server.  Normally,
+          the server is started automatically.
+
+     stop() -> void()
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+
+
+
+
+global(3)           ERLANG MODULE DEFINITION            global(3)
+
+
+
+          Stops the global name server.
+
+     sync() -> void()
+
+          Synchronizes the global  name  server  with  all  nodes
+          known  to  this  node.  These  are  the nodes which are
+          returned  from  _e_r_l_a_n_g:_n_o_d_e_s().  When   this   function
+          returns,  the  global  name  server will receive global
+          information from all nodes. This function can be called
+          when new nodes are added to the network.
+
+     trans(Id, Fun)
+     trans(Id, Fun, Nodes)
+     trans(Id, Fun, Nodes, Retries) -> Res | aborted
+
+          Types
+               Id = {ResourceId, LockRequesterId}
+               ResourceId = term()
+               LockRequesterId = term()
+               Fun = fun() | {M, F}
+               Nodes = [node()]
+               Retries = int() > 0 | infinity
+               Res = term()
+
+          Sets a lock on _I_d (using _s_e_t__l_o_c_k/_3). Evaluates  _R_e_s  =
+          _F_u_n()  if  successfully locked and returns _R_e_s. Returns
+          _a_b_o_r_t_e_d if the lock attempt failed. If _R_e_t_r_i_e_s  is  set
+          to _i_n_f_i_n_i_t_y, the transaction will not abort.
+
+          _i_n_f_i_n_i_t_y is the default setting and will be used if  no
+          value is given for _R_e_t_r_i_e_s.
+
+     unregister_name(Name) -> void()
+
+          Types
+               Name = term()
+
+          Globally removes _N_a_m_e from the network of Erlang nodes.
+
+     whereis_name(Name) -> Pid() | undefined
+
+          Types
+               Name = term()
+
+          Returns either an atom _u_n_d_e_f_i_n_e_d, or  a  Pid  which  is
+          globally associated with _N_a_m_e.
+
+AUTHORS
+     Claes Wikstrom - support@erlang.ericsson.se
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  5
+
+
+

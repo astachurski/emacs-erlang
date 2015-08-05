@@ -1,0 +1,156 @@
+.TH snmp_local_db 3 "snmp  3.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+snmp_local_db \- The SNMP built-in database
+.SH DESCRIPTION
+.LP
+The module \fIsnmp_local_db\fR contains functions for implementing tables (and variables) using the SNMP built-in database\&. The database exists in two instances, one volatile and one persistent\&. The volatile database is implemented with ets\&. The persistent database is implemented with a module, pets (Persistent ets (Erlang Term Store)), that keeps an ets database in memory for speed, and on disk for persistent storage\&. At start-up, the ets database is initialized from disk\&. All readings from the database go to the ets\&. Writings go also to the ets, and a note is made in a log file\&. When the database is closed, the entire ets database is dumped, and the log file is cleared\&. If a crash occurs, the log file will always contain the latest changes\&. At start-up, the dumped ets is read, and then the database is recovered using the log file\&. It is also possible to manually dump the database, in which case the entire ets is dumped, and the log file is cleared\&. 
+.LP
+There are three scaling problems with this database\&. 
+.RS 2
+.TP 2
+*
+If the database is never dumped, there are a lot of modifications to the database and the log file will grow rapidly\&. This can be solved by regularly dumping the database\&.
+.TP 2
+*
+The second problem occurs if the database is large, dumping the entire database may take some considerable time and it may slow down the system\&.
+.TP 2
+*
+The third problem is that insertions and deletions are inefficient for large tables\&.
+.RE
+.LP
+All these problems are best solved by using Mnesia instead\&. 
+.LP
+The following functions describe the interface to \fIsnmp_local_db\fR\&. Each function has a Mnesia equivalent\&. The argument \fINameDb\fR is a tuple \fI{Name, Db}\fR where \fIName\fR is the symbolic name of the managed object (as defined in the MIB), and \fIDb\fR is either \fIvolatile\fR or \fIpersistent\fR\&. \fImnesia\fR is not possible since all these functions are \fIsnmp_local_db\fR specific\&. 
+
+.SH Common data types
+.LP
+In the functions defined below, the following types are used: 
+.RS 2
+.TP 2
+*
+\fINameDb = {Name, Db}\fR 
+.TP 2
+*
+\fIName = atom(), Db = volatile | persistent\fR 
+.TP 2
+*
+\fIRowIndex = [int()]\fR 
+.TP 2
+*
+\fICols = [Col] | [{Col, Value}], Col = int(), Value = term()\fR 
+.RE
+.LP
+where \fIRowIndex\fR denotes the last part of the OID, that specifies the index of the row in tha table\&. \fICols\fR is a list of column numbers in case of a get operation, and a list of column numbers and values in case of a set operation\&. 
+.SH EXPORTS
+.LP
+.B
+dump() -> ok | {error, Reason}
+.br
+.RS
+.LP
+This function can be used to dump the database at any time\&. The entire ets database is dumped to disk, and the log file is cleared\&. This might be useful if the log file grows rapidly\&. Returns \fI{error, Reason}\fR if a file system error occured\&. 
+.RE
+.LP
+.B
+match(NameDb,Pattern)
+.br
+.RS
+.LP
+Performs an ets matching on the table\&. See Stdlib documentation, module ets, for a description of \fIPattern\fR and the return values\&. 
+.RE
+.LP
+.B
+print()
+.br
+.B
+print(TableName)
+.br
+.B
+print(TableName, Db)
+.br
+.RS
+.TP
+Types
+TableName = atom()
+.br
+.RE
+.RS
+.LP
+Prints the contents of the database on screen\&. This is useful for debugging since the \fISTANDARD-MIB\fR and \fIOTP-SNMPEA-MIB\fR (and maybe your own MIBs) are stored in \fIsnmp_local_db\fR\&. 
+.LP
+\fITableName\fR is an atom for a table in the database\&. When no name is supplied, the whole database is shown\&. 
+.RE
+.LP
+.B
+table_create(NameDb) -> bool()
+.br
+.RS
+.LP
+Creates a table\&. If the table already exist, the old copy is destroyed\&. 
+.LP
+Returns \fIfalse\fR if the \fINameDb\fR argument is incorrectly specified, \fItrue\fR otherwise\&. 
+.RE
+.LP
+.B
+table_create_row(NameDb,RowIndex,Row) -> bool()
+.br
+.RS
+.TP
+Types
+Row = {Val1, Val2, \&.\&.\&., ValN}
+.br
+Val1 = Val2 = \&.\&.\&. = ValN = term()
+.br
+.RE
+.RS
+.LP
+Creates a row in a table\&. \fIRow\fR is a tuple with values for all columns, including the index columns\&. 
+.RE
+.LP
+.B
+table_delete(NameDb) -> void()
+.br
+.RS
+.LP
+Deletes a table\&. 
+.RE
+.LP
+.B
+table_delete_row(NameDb,RowIndex) -> bool()
+.br
+.RS
+.LP
+Deletes the row in the table\&. 
+.RE
+.LP
+.B
+table_exists(NameDb) -> bool()
+.br
+.RS
+.LP
+Checks if a table exists\&. 
+.RE
+.LP
+.B
+table_get_row(NameDb,RowIndex) -> Row | undefined
+.br
+.RS
+.TP
+Types
+Row = {Val1, Val2, \&.\&.\&., ValN}
+.br
+Val1 = Val2 = \&.\&.\&. = ValN = term()
+.br
+.RE
+.RS
+.LP
+\fIRow\fR is a tuple with values for all columns, including the index columns\&. 
+.RE
+.SH SEE ALSO
+.LP
+ets(3), snmp_generic(3)
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Klas Eriksson - support@erlang.ericsson.se
+.fi

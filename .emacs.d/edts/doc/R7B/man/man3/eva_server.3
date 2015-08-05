@@ -1,0 +1,41 @@
+.TH eva_server 3 "eva  2.0.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+eva_server  \- The Main Global Server in EVA
+.SH DESCRIPTION
+.LP
+This module implements the main global server in EVA\&. The client API towards this server is defined in the module \fIeva\fR\&. The functions in this module are used to start the service\&. 
+
+.SH EXPORTS
+.LP
+.B
+create_tables(Nodes) -> void()
+.br
+.RS
+.TP
+Types
+Nodes = [node()]
+.br
+.RE
+.RS
+.LP
+This function creates the Mnesia tables required for the \fIeva_server\fR\&. \fINodes\fR is a list of nodes where the tables should be replicated\&. This list of nodes should specify the same nodes where the application EVA can be run distributed, so that EVA always can have local access to the tables\&. 
+.LP
+This function should be called once when installing the EVA application in the system\&. 
+.RE
+.LP
+.B
+start_link() -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.LP
+Starts the eva server\&. This function can be used to include the server in a supervisor\&. Normally, functions in the supervisor \fIeva_sup\fR can be used instead\&. 
+.LP
+The function \fIcreate_tables/1\fR must have been called before the server is started\&. 
+.RE
+.SH SEE ALSO
+.LP
+eva(3), eva_sup(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

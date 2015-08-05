@@ -1,0 +1,59 @@
+.TH error_handler 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+error_handler \- Default System Error Handler
+.SH DESCRIPTION
+.LP
+The error handler module defines what happens when certain types of errors occur\&. 
+
+.SH EXPORTS
+.LP
+.B
+undefined_function(Module, Func, ArgList) -> term()
+.br
+.RS
+.TP
+Types
+Module = Func = atom()
+.br
+ArgList = [term()]
+.br
+.RE
+.RS
+.LP
+This function is evaluated if a call is made to \fIModule:Func(ArgList)\fR which is undefined\&. This function is evaluated inside the process making the original call\&. 
+.LP
+If \fIModule\fR is interpreted, the interpreter is invoked and the return value of the interpreted \fIFunc(ArgList)\fR call is returned\&. 
+.LP
+Otherwise, it returns, if possible, the value of \fIapply(Module, Func, ArgList)\fR after an attempt has been made to autoload \fIModule\fR\&. If this is not possible, the function calling \fIModule:Func(ArgList)\fR is exited\&. 
+.RE
+.LP
+.B
+undefined_lambda(Module, Fun, ArgList) -> term()
+.br
+.RS
+.TP
+Types
+Module = Func = atom()
+.br
+ArgList = [term()]
+.br
+.RE
+.RS
+.LP
+This function is evaluated if a call is made to \fIFun(ArgList)\fR when the module defining the \fIfun\fR is not loaded\&. This function is evaluated inside the process making the original call\&. 
+.LP
+If \fIModule\fR is interpreted, the interpreter is invoked and the return value of the interpreted \fIFun(ArgList)\fR call is returned\&. 
+.LP
+Otherwise, it returns, if possible, the value of \fIapply(Fun, ArgList)\fR after an attempt has been made to autoload \fIModule\fR\&. If this is not possible, the process calling the \fIfun\fR is exited\&. 
+.RE
+.SH Notes
+.LP
+The code in \fIerror_handler\fR is complex and should not be changed without fully understanding the interaction between the error handler, the \fIinit\fR process of the code server, and the I/O mechanism of the code\&. 
+.LP
+Changes in the code which may seem small can cause a deadlock as unforeseen consequences may occur\&. The use of \fIinput\fR is dangerous in this type of code\&. 
+.SH AUTHORS
+.nf
+Joe Armstrong - support@erlang.ericsson.se
+Robert Virding - support@erlang.ericsson.se
+Magnus Froberg - support@erlang.ericsson.se
+.fi

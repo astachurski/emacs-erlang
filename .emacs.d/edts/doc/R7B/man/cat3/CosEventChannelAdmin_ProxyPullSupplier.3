@@ -1,0 +1,132 @@
+
+
+
+CosEventChannelAdmin_PErRoLxCAyoNPsGuElvMleOSnDutUpCLphElainDenEreF(lI3AN)dITmIiOnN_ProxyPullSupplier(3)
+
+
+
+MODULE
+     CosEventChannelAdmin_ProxyPullSupplier -  This module imple-
+     ments  a ProxyPullSupplier interface which acts as a middle-
+     man between pull consumer and the event channel.
+
+DESCRIPTION
+     The ProxyPullSupplier interface defines the second step  for
+     connecting pull consumers to the event channel. A proxy sup-
+     plier is similar to a normal supplier, but includes an addi-
+     tional  method  for  connecting a consumer to the proxy sup-
+     plier.
+
+     There are a number of exceptions that can be  returned  from
+     functions in this interface.
+
+       * AlreadyConnected         is          defined          as
+         -_r_e_c_o_r_d('_A_l_r_e_a_d_y_C_o_n_n_e_c_t_e_d', {}).
+
+       * Disconnected is defined as -_r_e_c_o_r_d('_D_i_s_c_o_n_n_e_c_t_e_d', {}).
+
+     These exceptions are defined in the file _e_v_e_n_t__s_e_r_v_i_c_e._h_r_l.
+
+     Any object that possesses an object reference that  supports
+     the  ProxyPullSupplier  interface  can perform the following
+     operations:
+
+
+EXPORTS
+     connect_pull_consumer(Object, PullConsumer) -> Return
+
+          Types
+               Object = #objref
+               PullConsumer = #objref of PullConsumer type
+               Return = void
+
+          This operation  connects  PullConsumer  object  to  the
+          ProxyPullSupplier object. A nil object reference can be
+          passed to this operation. If so a channel cannot invoke
+          the disconnect_pull_consumer operation on the consumer;
+          the consumer  may  be  disconnected  from  the  channel
+          without  being  informed.  If  the ProxyPullSupplier is
+          already  connected  to   a   PullConsumer,   then   the
+          _A_l_r_e_a_d_y_C_o_n_n_e_c_t_e_d _e_x_c_e_p_t_i_o_n is raised.
+
+     disconnect_pull_supplier(Object) -> Return
+
+          Types
+               Object = #objref
+               Return = void
+
+          This operation disconnects proxy pull supplier from the
+          event  channel.  It sends a notification about the loss
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                1
+
+
+
+
+
+
+CosEventChannelAdmin_PErRoLxCAyoNPsGuElvMleOSnDutUpCLphElainDenEreF(lI3AN)dITmIiOnN_ProxyPullSupplier(3)
+
+
+
+          of the connection to the pull consumer attached to  it,
+          unless  nil  object reference was passed at the connec-
+          tion time.
+
+     pull(Object) -> Return
+
+          Types
+               Object = #objref
+               Return = any
+
+          This operation blocks until the event data is available
+          or the _D_i_s_c_o_n_n_e_c_t_e_d exception is raised. It returns the
+          event data to the consumer.
+
+     try_pull(Object) -> Return
+
+          Types
+               Object = #objref
+               Return = {any, bool()}
+
+          This operation does not block: if  the  event  data  is
+          available,  it returns the event data and sets the data
+          availability flag to true; otherwise it returns a  long
+          with  a  value  of  0 and sets the data availability to
+          false. If the  event  communication  has  already  been
+          disconnected, the _D_i_s_c_o_n_n_e_c_t_e_d exception is raised.
+
+AUTHOR
+     Helen Airiyan - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                2
+
+
+

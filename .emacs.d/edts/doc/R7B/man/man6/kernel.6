@@ -1,0 +1,297 @@
+.TH kernel 6 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG APPLICATION DEFINITION"
+.SH APPLICATION
+kernel \- The Kernel Application
+.SH DESCRIPTION
+.LP
+The Kernel application is the first application started, and it is one of two mandatory applications\&. The Kernel application contains the following services: 
+.RS 2
+.TP 2
+*
+\fIapplication_controller\fR 
+.TP 2
+*
+\fIauth\fR 
+.TP 2
+*
+\fIcode\fR 
+.TP 2
+*
+\fIdisk_log\fR 
+.TP 2
+*
+\fIerl_boot_server\fR 
+.TP 2
+*
+\fIerl_ddll\fR 
+.TP 2
+*
+\fIerror_logger\fR 
+.TP 2
+*
+\fIfile\fR 
+.TP 2
+*
+\fIglobal_group\fR 
+.TP 2
+*
+\fIglobal_name_server\fR 
+.TP 2
+*
+\fInet_kernel\fR 
+.TP 2
+*
+\fIos\fR 
+.TP 2
+*
+\fIrpc\fR 
+.TP 2
+*
+\fIpg2\fR 
+.TP 2
+*
+\fItimer\fR 
+.TP 2
+*
+\fIuser\fR 
+.RE
+.LP
+It is possible to synchronize a set of Erlang nodes\&. One can specify for a node to wait a specified amount of time for other nodes to become alive\&. 
+
+.SH Error Logger Event Handlers
+.LP
+Two error logger event handlers are defined in the Kernel application\&. These are described in \fIerror_logger(3)\fR\&. 
+.SH Configuration
+.LP
+The following configuration parameters are defined for the Kernel application\&. See application(3) for more information about configuration parameters\&. 
+.RS 2
+.TP 4
+.B
+\fIdistributed = [Distrib] <optional>\fR:
+Specifies which applications are distributed and on which nodes they may execute\&. In this parameter: 
+.RS 4
+.RS 2
+.TP 2
+*
+\fIDistrib = {ApplName, Nodes} | {ApplName, Time, Nodes}\fR 
+.TP 2
+*
+\fIApplName = atom()\fR 
+.TP 2
+*
+\fITime = integer() > 0\fR 
+.TP 2
+*
+\fINodes = [node() | {node(), \&.\&.\&., node()}]\fR 
+.RE
+.LP
+
+.LP
+These parameters are described in application(3)\&. 
+.RE
+.TP 4
+.B
+\fIdist_auto_connect = Value <optional>\fR:
+Specifies when nodes will be automatically connected\&. If this parameter is not specified, a node is always automatically connected, e\&.g when a message is to be sent to that node\&. \fIValue\fR is one of: 
+.RS 4
+.RS 2
+.TP 4
+.B
+\fInever\fR:
+Connections are never automatically connected, they must be explicitly connected\&. See net_kernel(3)\&. 
+.TP 4
+.B
+\fIonce\fR:
+Connections will be established automatically, but only once per node\&. If a node goes down, it must thereafter be explicitly connected\&. See net_kernel(3)\&. 
+.RE
+.RE
+.TP 4
+.B
+\fIpermissions = [Perm] <optional>\fR:
+Specifies the default permission for applications when they are started\&. In this parameter: 
+.RS 4
+.RS 2
+.TP 2
+*
+\fIPerm = {ApplName, Bool}\fR 
+.TP 2
+*
+\fIApplName = atom()\fR 
+.TP 2
+*
+\fIBool = boolean()\fR 
+.RE
+.RE
+.TP 4
+.B
+\fIerror_logger = Value <optional>\fR:
+\fIValue\fR is one of: 
+.RS 4
+.RS 2
+.TP 4
+.B
+\fItty\fR:
+All standard error reports are written to \fIstdio\fR\&. This is the default option\&. 
+.TP 4
+.B
+\fI{file, FileName}\fR:
+All standard error reports are written to the file \fIFileName\fR, where \fIFileName\fR is a string\&. 
+.TP 4
+.B
+\fIfalse\fR:
+No error logger handler is installed\&. 
+.RE
+.RE
+.TP 4
+.B
+\fIglobal_groups = [GroupName, [Node]] <optional>\fR:
+Specifies the groups of nodes which will have their own global name space\&. In this parameter: 
+.RS 4
+.RS 2
+.TP 2
+*
+\fIGroupName = atom()\fR 
+.TP 2
+*
+\fINode = atom()\fR 
+.RE
+.LP
+
+.LP
+These parameters are described in global_group(3)\&. 
+.RE
+.TP 4
+.B
+\fIinet_parse_error_log = LogMode <optional>\fR:
+\fILogMode\fR is one of: 
+.RS 4
+.RS 2
+.TP 4
+.B
+\fIsilent\fR:
+No \fIerror_logger\fR messages are generated when erroneous lines are found and skipped in the various configuration files\&. The default if the variable is not set is that erroneous lines are reported via the \fIerror_logger\fR\&. 
+.RE
+.LP
+
+.LP
+
+.RE
+.TP 4
+.B
+\fInet_ticktime = TickTime <optional>\fR:
+Specifies the \fInet_kernel\fR tick time\&. \fITickTime\fR is given in seconds\&. Once every \fITickTime / 4\fR second, all connected nodes are ticked (if anything else has been written to a node) and if nothing has been received from another node within the last four (4) tick times that node is considered to be down\&. This ensures that nodes which are not responding, for reasons such as hardware errors, are considered to be down\&. 
+.RS 4
+.LP
+The time \fIT\fR, in which a node that is not responding is detected, is calculated as: \fIMinT < T < MaxT\fR where 
+
+.nf
+MinT = TickTime - TickTime / 4
+MaxT = TickTime + TickTime / 4
+.fi
+.LP
+
+.LP
+\fITickTime\fR is by default 60 (seconds)\&. Thus, 45 < T < 75 seconds\&. 
+.LP
+\fINote:\fRAll communicating nodes should have the same \fITickTime\fR value specified\&. 
+.LP
+\fINote:\fR Normally, a terminating node is detected immediately\&.
+.RE
+.TP 4
+.B
+\fIsync_nodes_mandatory = [NodeName] <optional>\fR:
+Specifies which other nodes \fImust\fR be alive in order for this node to start properly\&. If some node in this list does not start within the specified time, this node will not start either\&. If this parameter is undefined, it defaults to the empty list\&.
+.RS 4
+.LP
+
+.RE
+.TP 4
+.B
+\fIsync_nodes_optional = [NodeName] <optional>\fR:
+Specifies which other nodes \fIcan\fR be alive in order for this node to start properly\&. If some node in this list does not start within the specified time, this node starts anyway\&. If this parameter is undefined, it defaults to the empty list\&.
+.RS 4
+.LP
+
+.RE
+.TP 4
+.B
+\fIsync_nodes_timeout = integer() | infinity <optional>\fR:
+Specifies the amount of time (in milliseconds) this node will wait for the mandatory and optional nodes to start\&. If this parameter is undefined, no node synchronization is performed\&. This option also makes sure that global is synchronized\&. 
+.TP 4
+.B
+\fIstart_ddll = true | false <optional>\fR:
+Starts the \fIddll_server\fR if the parameter is \fItrue\fR (see \fIerl_ddll(3)\fR)\&. This parameter should be set to true in an embedded system which uses this service\&. 
+.RS 4
+.LP
+The default value is \fIfalse\fR\&. 
+.RE
+.TP 4
+.B
+\fIstart_dist_ac = true | false <optional>\fR:
+Starts the \fIdist_ac\fR server if the parameter is \fItrue\fR (see \fIapplication(3)\fR)\&. This parameter should be set to true for systems that use distributed applications\&. 
+.RS 4
+.LP
+The default value is \fIfalse\fR\&. If this parameter is undefined, the server is started if the parameter \fIdistributed\fR is set\&. 
+.RE
+.TP 4
+.B
+\fIstart_boot_server = true | false <optional>\fR:
+Starts the \fIboot_server\fR if the parameter is \fItrue\fR (see \fIerl_boot_server(3)\fR)\&. This parameter should be set to true in an embedded system which uses this service\&. 
+.RS 4
+.LP
+The default value is \fIfalse\fR\&. 
+.RE
+.TP 4
+.B
+\fIboot_server_slaves = [SlaveIP] <optional>\fR:
+If the \fIstart_boot_server\fR configuration parameter is \fItrue\fR, this parameter can be used to initialize \fIboot_server\fR with a list of slave IP addresses\&. \fI SlaveIP = string() | atom | { integer(), integer(), integer(), integer()} \fR 
+.RS 4
+.LP
+where \fI0 <= integer() <=255\fR\&. 
+.LP
+Examples of \fISlaveIP\fR in atom, string and tuple form are:
+.br
+ \fI\&'150\&.236\&.16\&.70\&', "150, 236, 16, 70", {150, 236, 16, 70}\fR\&. 
+.LP
+The default value is \fI[]\fR\&. 
+.RE
+.TP 4
+.B
+\fIstart_disk_log = true | false <optional>\fR:
+Starts the \fIdisk_log_server\fR if the parameter is \fItrue\fR (see \fIdisk_log(3)\fR)\&. This parameter should be set to true in an embedded system which uses this service\&. 
+.RS 4
+.LP
+The default value is \fIfalse\fR\&. 
+.RE
+.TP 4
+.B
+\fIstart_pg2 = true | false <optional>\fR:
+Starts the \fIpg2\fR server (see \fIpg2(3)\fR) if the parameter is \fItrue\fR\&. This parameter should be set to true in an embedded system which uses this service\&. 
+.RS 4
+.LP
+The default value is \fIfalse\fR\&. 
+.RE
+.TP 4
+.B
+\fIstart_timer = true | false <optional>\fR:
+Starts the \fItimer_server\fR if the parameter is \fItrue\fR (see \fItimer(3)\fR)\&. This parameter should be set to true in an embedded system which uses this service\&. 
+.RS 4
+.LP
+The default value is \fIfalse\fR\&. 
+.RE
+.TP 4
+.B
+\fIkeep_zombies = integer() <optional>\fR:
+Sets the value of the system flag \fIkeep_zombies\fR\&. 
+.RS 4
+.LP
+The default value is \fI0\fR\&. 
+.RE
+.RE
+.SH See Also
+.LP
+application(3), auth(3), code(3), disk_log(3), erl_ddll(3), erl_boot_server(3), error_logger(3), file(3), global(3), global_group(3), net_kernel(3), pg2(3), rpc(3), timer(3), user(3) 
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Magnus Froberg - support@erlang.ericsson.se
+.fi

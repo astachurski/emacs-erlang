@@ -1,0 +1,264 @@
+
+
+
+erl_marshal(3)         C LIBRARY FUNCTIONS         erl_marshal(3)
+
+
+
+NAME
+     erl_marshal - Encoding and Decoding of Erlang terms
+
+DESCRIPTION
+     This module contains functions  for  encoding  Erlang  terms
+     into a sequence of bytes, and for decoding Erlang terms from
+     a sequence of bytes.
+
+
+EXPORTS
+     int erl_compare_ext(bufp1, bufp2)
+
+          Types
+               unsigned char *bufp1, *bufp2;
+
+          This function compares two encoded terms.
+
+          _b_u_f_p_1 is a buffer containing  an  encoded  Erlang  term
+          term1.
+
+          _b_u_f_p_2 is a buffer containing  an  encoded  Erlang  term
+          term2.
+
+          The function returns 0 if the terms are  equal,  -1  if
+          term1  is  less  than term2, or 1 if term2 is less than
+          term1.
+
+     ETERM *erl_decode(bufp)
+     ETERM *erl_decode_buf(bufpp)
+
+          Types
+               unsigned char *bufp;
+               unsigned char **bufpp;
+
+          _e_r_l__d_e_c_o_d_e() and _e_r_l__d_e_c_o_d_e__b_u_f() decode  the  contents
+          of  a  buffer and return the corresponding Erlang term.
+          _e_r_l__d_e_c_o_d_e__b_u_f() provides a simple mechanism for  deal-
+          ing  with several encoded terms stored consecutively in
+          the buffer.
+
+          _b_u_f_p is a pointer to a buffer containing  one  or  more
+          encoded Erlang terms.
+
+          _b_u_f_p_p is the address of a buffer  pointer.  The  buffer
+          contains  one  or  more  consecutively  encoded  Erlang
+          terms. Following a successful call to _e_r_l__d_e_c_o_d_e__b_u_f(),
+          _b_u_f_p_p  will  be  updated  so that it points to the next
+          encoded term.
+
+          _e_r_l__d_e_c_o_d_e() returns an Erlang  term  corresponding  to
+          the  contents  of  _b_u_f_p on success, or NULL on failure.
+          _e_r_l__d_e_c_o_d_e__b_u_f() returns an Erlang  term  corresponding
+
+
+
+Ericsson UtveckliLnagsst AcBhange: erl_interface  3.2.3               1
+
+
+
+
+
+
+erl_marshal(3)         C LIBRARY FUNCTIONS         erl_marshal(3)
+
+
+
+          to  the  first  of  the  consecutive terms in _b_u_f_p_p and
+          moves _b_u_f_p_p forward to point to the next  term  in  the
+          buffer. On failure, each of the functions returns NULL.
+
+     int erl_encode(term, bufp)
+     int erl_encode_buf(term, bufpp)
+
+          Types
+               ETERM *term;
+               unsigned char *bufp;
+               unsigned char **bufpp;
+
+          _e_r_l__e_n_c_o_d_e() and _e_r_l__e_n_c_o_d_e__b_u_f() encode  Erlang  terms
+          into  external  format  for  storage  or  transmission.
+          _e_r_l__e_n_c_o_d_e__b_u_f() provides a simple mechanism for encod-
+          ing several terms consecutively in the same buffer.
+
+          _t_e_r_m is an Erlang term to be encoded.
+
+          _b_u_f_p is a pointer to a buffer containing  one  or  more
+          encoded Erlang terms.
+
+          _b_u_f_p_p is a pointer to a pointer to a buffer  containing
+          one or more consecutively encoded Erlang terms. Follow-
+          ing a successful call to _e_r_l__e_n_c_o_d_e__b_u_f(),  _b_u_f_p_p  will
+          be  updated  so  that it points to the position for the
+          next encoded term.
+
+          These functions return 0 in success, or 1 if  _t_e_r_m  was
+          not a valid Erlang term.
+
+          Note that no bounds checking is done on the buffer.  It
+          is  the  caller's  responsibility to make sure that the
+          buffer is large enough to hold the encoded  terms.  You
+          can  either use a static buffer that is large enough to
+          hold the terms you expect to need in your  program,  or
+          use  _e_r_l__t_e_r_m__l_e_n() to determine the exact requirements
+          for a given term.
+
+          The following can help you estimate the buffer require-
+          ments  for a term. Note that this information is imple-
+          mentation specific, and may change in future  versions.
+          If you are unsure, use _e_r_l__t_e_r_m__l_e_n().
+
+          Erlang terms are encoded with a 1 byte tag that identi-
+          fies  the  type of object, a 2- or 4-byte length field,
+          and then the data itself. Specifically:
+
+            _T_u_p_l_e_s:
+                need 5 bytes, plus the space for each element.
+
+            _L_i_s_t_s:
+
+
+
+Ericsson UtveckliLnagsst AcBhange: erl_interface  3.2.3               2
+
+
+
+
+
+
+erl_marshal(3)         C LIBRARY FUNCTIONS         erl_marshal(3)
+
+
+
+                need 5 bytes, plus the space  for  each  element,
+                and  1  additonal  byte for the empty list at the
+                end.
+
+            _S_t_r_i_n_g_s _a_n_d _a_t_o_m_s:
+                need 3 bytes, plus 1 byte for each character (the
+                terminating   0  is  not  encoded).  Really  long
+                strings (more than 64k characters) are encoded as
+                lists. Atoms cannot contain more than 256 charac-
+                ters.
+
+            _I_n_t_e_g_e_r_s:
+                need 5 bytes.
+
+            _C_h_a_r_a_c_t_e_r_s:
+                (integers < 256) need 2 bytes.
+
+            _F_l_o_a_t_i_n_g _p_o_i_n_t _n_u_m_b_e_r_s:
+                need 32 bytes.
+
+            _P_i_d_s:
+                need 10 bytes, plus the space for the node  name,
+                which is an atom.
+
+            _P_o_r_t_s _a_n_d _R_e_f_s:
+                need 6 bytes, plus the space for the  node  name,
+                which is an atom.
+
+          The total space required will be the result  calculated
+          from  the information above, plus 1 additional byte for
+          a version identifier.
+
+     int erl_ext_size(bufp)
+
+          Types
+               unsigned char *bufp;
+
+          This function returns the  number  of  elements  in  an
+          encoded term.
+
+     char erl_ext_type(bufp)
+
+          Types
+               unsigned char *bufp;
+
+          This function identifies and returns the type of Erlang
+          term encoded in a buffer.
+
+     unsigned char *erl_peek_ext(bufp, pos)
+
+          Types
+               unsigned char *bufp;
+
+
+
+Ericsson UtveckliLnagsst AcBhange: erl_interface  3.2.3               3
+
+
+
+
+
+
+erl_marshal(3)         C LIBRARY FUNCTIONS         erl_marshal(3)
+
+
+
+               int pos;
+
+          This function is used for stepping  over  one  or  more
+          encoded  terms in a buffer, in order to directly access
+          a later term.
+
+          _b_u_f_p is a pointer to a buffer containing  one  or  more
+          encoded Erlang terms.
+
+          _p_o_s indicates how  many  terms  to  step  over  in  the
+          buffer.
+
+          The function returns a pointer to a sub-term  that  can
+          be  used  in a subsequent call to _e_r_l__d_e_c_o_d_e() in order
+          to retrieve the term at that position. If there  is  no
+          term,  or _p_o_s would exceed the size of the terms in the
+          buffer, NULL is returned.
+
+     int erl_term_len(t)
+
+          Types
+               ETERM *t;
+
+          This function determines the buffer space that would be
+          needed  by  _t  if  it were encoded into Erlang external
+          format by _e_r_l__e_n_c_o_d_e().
+
+          The size in bytes is returned.
+
+AUTHORS
+     T.Tornkvist - support@erlang.ericsson.se
+     Gordon Beaton - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtveckliLnagsst AcBhange: erl_interface  3.2.3               4
+
+
+

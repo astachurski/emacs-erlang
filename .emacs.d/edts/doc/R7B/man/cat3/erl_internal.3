@@ -1,0 +1,132 @@
+
+
+
+erl_internal(3)     ERLANG MODULE DEFINITION      erl_internal(3)
+
+
+
+MODULE
+     erl_internal - Internal Erlang Definitions
+
+DESCRIPTION
+     This module defines Erlang BIFs, guard tests and  operators.
+     This  module  is only of interest to programmers who manipu-
+     late Erlang code.
+
+
+EXPORTS
+     bif(Name, Arity) -> bool()
+
+          Types
+               Name = atom()
+               Arity = integer()
+
+          Returns _t_r_u_e if _N_a_m_e/_A_r_i_t_y is an Erlang  BIF  which  is
+          automatically  recognized  by  the  compiler, otherwise
+          _f_a_l_s_e.
+
+     guard_bif(Name, Arity) -> bool()
+
+          Types
+               Name = atom()
+               Arity = integer()
+
+          Returns _t_r_u_e if _N_a_m_e/_A_r_i_t_y is an Erlang  BIF  which  is
+          allowed in guards, otherwise _f_a_l_s_e.
+
+     type_test(Name, Arity) -> bool()
+
+          Types
+               Name = atom()
+               Arity = integer()
+
+          Returns _t_r_u_e if _N_a_m_e/_A_r_i_t_y is a valid Erlang type test,
+          otherwise _f_a_l_s_e.
+
+     arith_op(OpName, Arity) -> bool()
+
+          Types
+               OpName = atom()
+               Arity = integer()
+
+          Returns _t_r_u_e if _O_p_N_a_m_e/_A_r_i_t_y is an arithmetic operator,
+          otherwise _f_a_l_s_e.
+
+     bool_op(OpName, Arity) -> bool()
+
+          Types
+               OpName = atom()
+               Arity = integer()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+erl_internal(3)     ERLANG MODULE DEFINITION      erl_internal(3)
+
+
+
+          Returns _t_r_u_e if _O_p_N_a_m_e/_A_r_i_t_y  is  a  Boolean  operator,
+          otherwise _f_a_l_s_e.
+
+     comp_op(OpName, Arity) -> bool()
+
+          Types
+               OpName = atom()
+               Arity = integer()
+
+          Returns _t_r_u_e if _O_p_N_a_m_e/_A_r_i_t_y is a comparison  operator,
+          otherwise _f_a_l_s_e.
+
+     list_op(OpName, Arity) -> bool()
+
+          Types
+               OpName = atom()
+               Arity = integer()
+
+          Returns _t_r_u_e if _O_p_N_a_m_e/_A_r_i_t_y is a list operator, other-
+          wise _f_a_l_s_e.
+
+     send_op(OpName, Arity) -> bool()
+
+          Types
+               OpName = atom()
+               Arity = integer()
+
+          Returns _t_r_u_e if _O_p_N_a_m_e/_A_r_i_t_y is a send operator, other-
+          wise _f_a_l_s_e.
+
+     op_type(OpName, Arity) -> Type
+
+          Types
+               OpName = atom()
+               Arity = integer()
+               Type = arith | bool | comp | list | send
+
+          Returns the _T_y_p_e of operator that _O_p_N_a_m_e/_A_r_i_t_y  belongs
+          to,  or  generates a _f_u_n_c_t_i_o_n__c_l_a_u_s_e error if it is not
+          an operator at all.
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+

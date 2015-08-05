@@ -1,0 +1,198 @@
+
+
+
+lname(3)            ERLANG MODULE DEFINITION             lname(3)
+
+
+
+MODULE
+     lname -  Interface that supports the name pseudo-objects.
+
+DESCRIPTION
+     This interface is a part of the names library which is  used
+     to  hide  the representation of names. In orbers Erlang map-
+     ping the pseodo-object names and the real IDL names have the
+     same  representation  but  it  is desirable that the clients
+     uses the names library so they will not be dependent of  the
+     representation.  The  lname  interface  supports handling of
+     names e.g. adding and removing name components.
+
+     Note that the lname interface in orber does  not  contain  a
+     destroy  function because the Names are represented as stan-
+     dard Erlang lists and therefor will be removed by  the  gar-
+     bage collector when not in use.
+
+     The type _N_a_m_e_C_o_m_p_o_n_e_n_t used below is defined as:
+
+           -record('CosNaming_NameComponent', {id, kind=""}).
+
+     _i_d and _k_i_n_d are strings.
+
+     The record is defined in the file _C_o_s_N_a_m_i_n_g._h_r_l  and  it  is
+     included with:
+
+           -include_lib("orber/COSS/CosNaming/CosNaming.hrl").
+
+
+EXPORTS
+     create() -> Return
+
+          Types
+               Return = [NameComponent]
+
+          This function returns a new name.
+
+     insert_component(Name, N, NameComponent) -> Return
+
+          Types
+               Name = [NameComponent]
+               N = int()
+               Return = Name
+
+          This function returns a name where the  new  name  com-
+          ponent has been inserted as component _N in Name.
+
+     get_component(Name, N) -> Return
+
+          Types
+               Name = [NameComponent]
+               N = int()
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   1
+
+
+
+
+
+
+lname(3)            ERLANG MODULE DEFINITION             lname(3)
+
+
+
+               Return = NameComponent
+
+          This function returns the _N:_t_h name compnent in Name.
+
+     delete_component(Name, N) -> Return
+
+          Types
+               Name = [NameComponent]
+               N = int()
+               Return = Name
+
+          This function deletes the _N:_t_h name component from Name
+          and returns the new name.
+
+     num_components(Name) -> Return
+
+          Types
+               Name = [NameComponent]
+               Return = int()
+
+          This function returns a the number of  name  components
+          in Name.
+
+     equal(Name1, Name2) -> Return
+
+          Types
+               Name1 = Name2 = [NameComponent]
+               Return = bool()
+
+          This function returns true if the two names  are  equal
+          and false otherwise.
+
+     less_than(Name1, Name2) -> Return
+
+          Types
+               Name1 = Name2 = [NameComponent]
+               Return = bool()
+
+          This function returns true if  Name1  are  lesser  than
+          Name2 and false otherwise.
+
+     to_idl_form(Name) -> Return
+
+          Types
+               Name = [NameComponent]
+               Return = Name
+
+          This function just checks if Name is a correct IDL name
+          before  returning it because the name representation is
+          the same for pseudo and IDL names in orber.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   2
+
+
+
+
+
+
+lname(3)            ERLANG MODULE DEFINITION             lname(3)
+
+
+
+     from_idl_form(Name) -> Return
+
+          Types
+               Name = [NameComponent]
+               Return = Name
+
+          This function just returns the Name  because  the  name
+          representation  is the same for pseudo and IDL names in
+          orber.
+
+AUTHOR
+     Lars Thorsen - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   3
+
+
+

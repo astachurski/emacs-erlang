@@ -1,0 +1,113 @@
+.TH tags 3 "tools  1.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+tags \- Generate Emacs TAGS file from Erlang source files
+.SH DESCRIPTION
+.LP
+A \fITAGS\fR file is used by Emacs to find function and variable definitions in any source file in large projects\&. This module can generate a \fITAGS\fR file from Erlang source files\&. It recognises functions, records, and macro definitions\&.
+
+.SH EXPORTS
+.LP
+.B
+file(File [, Options])
+.br
+.RS
+.LP
+Create a \fITAGS\fR file for the file \fIFile\fR\&.
+.RE
+.LP
+.B
+files(FileList [, Options])
+.br
+.RS
+.LP
+Create a TAGS file for the files in the list \fIFileList\fR\&.
+.RE
+.LP
+.B
+dir(Dir [, Options])
+.br
+.RS
+.LP
+Create a TAGS file for all files in directory \fIDir\fR\&.
+.RE
+.LP
+.B
+dirs(DirList [, Options])
+.br
+.RS
+.LP
+Create a TAGS file for all files in any directory in \fIDirList\fR\&.
+.RE
+.LP
+.B
+subdir(Dir [, Options])
+.br
+.RS
+.LP
+Descend recursively down the directory \fIDir\fR and create a \fITAGS\fR file based on all files found\&.
+.RE
+.LP
+.B
+subdirs(DirList [, Options])
+.br
+.RS
+.LP
+Descend recursively down all the directories in \fIDirList\fR and create a \fITAGS\fR file based on all files found\&.
+.RE
+.LP
+.B
+root([Options])
+.br
+.RS
+.LP
+Create a \fITAGS\fR file covering all files in the Erlang distribution\&.
+.RE
+.SH OPTIONS
+.LP
+The functions above have an optional argument, \fIOptions\fR\&. It is a list which can contain the following elements:
+.RS 2
+.TP 2
+*
+\fI{outfile, NameOfTAGSFile}\fR Create a \fITAGS\fR file named \fINameOfTAGSFile\fR\&.
+.TP 2
+*
+\fI{outdir, NameOfDirectory}\fR Create a file named \fITAGS\fR in the directory \fINameOfDirectory\fR\&.
+.RE
+.LP
+The default behaviour is to create a file named \fITAGS\fR in the current directory\&.
+.SH Examples
+.RS 2
+.TP 2
+*
+\fItags:root([{outfile, "root\&.TAGS"}])\&.\fR 
+.br
+
+.RS 2
+.LP
+This command will create a file named \fIroot\&.TAGS\fR in the current directory\&. The file will contain references to all Erlang source files in the Erlang distribution\&.
+.RE
+.TP 2
+*
+\fItags:files(["foo\&.erl", "bar\&.erl", "baz\&.erl"], [{outdir, "\&.\&./projectdir"}])\&. \fR
+.br
+
+.RS 2
+.LP
+Here we create file named \fITAGS\fR placed it in the directory\fI\&.\&./projectdir\fR\&. The file contains information about the functions, records, and macro definitions of the three files\&.
+.LP
+
+.RE
+.RE
+.SH SEE ALSO
+.RS 2
+.TP 2
+*
+Richard M\&. Stallman\&. GNU Emacs Manual, chapter "Editing Programs", section "Tag Tables"\&. Free Software Foundation, 1995\&.
+.TP 2
+*
+Anders Lindgren\&. The Erlang editing mode for Emacs\&. Ericsson, 1998\&.
+.RE
+.SH AUTHOR
+.nf
+Anders Lindgren - support@erlang.ericsson.se
+.fi

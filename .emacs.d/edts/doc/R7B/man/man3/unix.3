@@ -1,0 +1,28 @@
+.TH unix 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+unix \- Calls to the UNIX Shell
+.SH DESCRIPTION
+.LP
+This module makes it possible to make calls to the UNIX shell\&. The shell used is \fI/bin/sh\fR, so the environment might be different to the one you commonly use\&. C shell expansions cannot be used\&. The module is extremely easy to use and there is only one function\&. 
+.LP
+Note that most UNIX commands produce a trailing new line\&.
+
+.SH EXPORTS
+.LP
+.B
+cmd(String) 
+.br
+.RS
+.LP
+Makes the call \fIString\fR to \fIsh\fR and returns the answer in a list of characters\&.
+.LP
+Example: (bizarre version of ls)
+
+.nf
+1> unix:cmd("for i in *; do echo $i; done")\&.
+.fi
+.RE
+.SH AUTHOR
+.nf
+ Claes Wikstrom - support@erlang.ericsson.se
+.fi

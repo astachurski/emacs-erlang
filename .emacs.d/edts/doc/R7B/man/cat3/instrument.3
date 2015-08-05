@@ -1,0 +1,264 @@
+
+
+
+instrument(3)       ERLANG MODULE DEFINITION        instrument(3)
+
+
+
+MODULE
+     instrument - Analysis and Utility Functions for Instrumenta-
+     tion
+
+DESCRIPTION
+     The module _i_n_s_t_r_u_m_e_n_t  contains  support  for  studying  the
+     resource  usage in an Erlang runtime system. Currently, only
+     the allocation of memory can be studied.
+
+  Note:
+     Note  that  this  whole  module  is  experimental,  and  the
+     representations  used as well as the functionality is likely
+     to change in the future.
+
+
+     Some of the functions in this module are only  available  in
+     Erlang  compiled  with  instrumentation; otherwise they exit
+     with _b_a_d_a_r_g. This is noted below for  the  individual  func-
+     tions.  To  start an Erlang runtime system with instrumenta-
+     tion, use the command-line option -_i_n_s_t_r to the _e_r_l command.
+
+     The basic object of study in the case of  memory  allocation
+     is  a  memory allocation list, which contains one descriptor
+     for each allocated memory block. Currently, a descriptor  is
+     a 4-tuple
+
+             {Type, Address, Size, Pid}
+
+     where _T_y_p_e indicates what the block is used for, _A_d_d_r_e_s_s  is
+     its  place  in memory, and _S_i_z_e is its size, in bytes._P_i_d is
+     either _u_n_d_e_f_i_n_e_d (if the block was allocated by the  runtime
+     system itself) or a tuple {_A, _B, _C} representing the process
+     which allocated the block, which corresponds to a  pid  with
+     the   user-visible   representation  <_A._B._C>  (the  function
+     _c:_p_i_d/_3 can be used to transform the numbers to a real pid).
+
+     Various details about memory allocation:
+
+     On Unix (for example, Solaris),  memory  for  a  process  is
+     allocated  linearly, usually from 0. The current size of the
+     process cannot be obtained from within Erlang,  but  can  be
+     seen  with  one  of the system statistics tools, e.g., _p_s or
+     _t_o_p. (There may be a hole  above  the  highest  used  memory
+     block;  in  that  case the functions in the_i_n_s_t_r_u_m_e_n_t module
+     cannot tell you about it; you have to compare the _H_i_g_h value
+     from  _m_e_m__l_i_m_i_t_s/_1  with  the value which the system reports
+     for Erlang.)
+
+     In the memory allocation list, certain small objects do  not
+     show  up  individually, since they are allocated from blocks
+     of 20 objects (called "fixalloc" blocks). The  blocks  them-
+     selves  do show up, but the amount of internal fragmentation
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   1
+
+
+
+
+
+
+instrument(3)       ERLANG MODULE DEFINITION        instrument(3)
+
+
+
+     in them currently cannot be observed.
+
+     Overhead for instrumentation: instrumented memory allocation
+     uses  28  bytes  extra for each block. The time overhead for
+     managing the list is negligible.
+
+
+EXPORTS
+     holes(AllocList) -> ok
+
+          Types
+               AllocList = [Desc]
+               Desc = {int(), int(), int(), pid_tuple()}
+               pid_tuple() = {int(), int(), int()}
+
+          Prints out the size  of  each  hole  (i.e.,  the  space
+          between  allocated  blocks)  on  the terminal. The list
+          must be sorted (see _s_o_r_t/_1).
+
+     mem_limits(AllocList) -> {Low, High}
+
+          Types
+               AllocList = [Desc]
+               Desc = {int(), int(), int(), pid_tuple()}
+               pid_tuple() = {int(), int(), int()}
+               Low = High = int()
+
+          returns a tuple {_L_o_w, _H_i_g_h} indicating the  lowest  and
+          highest  address  used.  The  list  must be sorted (see
+          _s_o_r_t/_1).
+
+     memory_data() -> AllocList
+
+          Types
+               AllocList = [Desc]
+               Desc = {int(), int(), int(), pid_tuple()}
+               pid_tuple() = {int(), int(), int()}
+
+          Returns the memory allocation list. Only  available  in
+          an  Erlang runtime system compiled for instrumentation.
+          Blocks execution of other processes while the  list  is
+          collected.
+
+     read_memory_data(File) -> {ok, AllocList} | {error, Reason}
+
+          Types
+               File = string()
+               AllocList = [Desc]
+               Desc = {int(), int(), int(), pid_tuple()}
+               pid_tuple() = {int(), int(), int()}
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   2
+
+
+
+
+
+
+instrument(3)       ERLANG MODULE DEFINITION        instrument(3)
+
+
+
+          Reads a memory allocation list from the file _F_i_l_e.  The
+          file    is    assumed   to   have   been   created   by
+          _s_t_o_r_e__m_e_m_o_r_y__d_a_t_a/_1. The error codes are  the  same  as
+          for _f_i_l_e:_c_o_n_s_u_l_t/_1.
+
+     sort(AllocList) -> AllocList
+
+          Types
+               AllocList = [Desc]
+               Desc = {int(), int(), int(), pid_tuple()}
+               pid_tuple() = {int(), int(), int()}
+
+          Sorts a memory allocation list so the addresses are  in
+          ascending  order.  The  list  arguments  to many of the
+          functions in this module must be sorted. No other func-
+          tion in this module returns a sorted list.
+
+     store_memory_data(File) -> ok
+
+          Types
+               File = string()
+
+          Stores the memory allocation list on the file _F_i_l_e. The
+          contents   of   the   file  can  later  be  read  using
+          _r_e_a_d__m_e_m_o_r_y__d_a_t_a/_1. Only available in an Erlang runtime
+          system  compiled  for instrumentation. Blocks execution
+          of other processes while the  list  is  collected  (the
+          time  to  write the data is around 0.1 ms/line on a Sun
+          Ultra 1).
+
+          Failure: _b_a_d_a_r_g if the file could not be written.
+
+     sum_blocks(AllocList) -> int()
+
+          Types
+               AllocList = [Desc]
+               Desc = {int(), int(), int(), pid_tuple()}
+               pid_tuple() = {int(), int(), int()}
+
+          Returns the total size of  the  memory  blocks  in  the
+          list. The list must be sorted (see _s_o_r_t/_1).
+
+     type_string(Type) -> string()
+
+          Types
+               Type = int()
+
+          Translates a memory block type number into  a  readable
+          string, which is a short description of the block type.
+
+          Failure: _b_a_d_a_r_g if the argument is not  a  valid  block
+          type number.
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   3
+
+
+
+
+
+
+instrument(3)       ERLANG MODULE DEFINITION        instrument(3)
+
+
+
+AUTHOR
+     Arndt Jonasson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   4
+
+
+

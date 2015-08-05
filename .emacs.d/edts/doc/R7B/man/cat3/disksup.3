@@ -1,0 +1,132 @@
+
+
+
+disksup(3)          ERLANG MODULE DEFINITION           disksup(3)
+
+
+
+MODULE
+     disksup - A Disk Supervisor Process.
+
+DESCRIPTION
+     _d_i_s_k_s_u_p is part of the _o_s__m_o_n application and all configura-
+     tion  parameters  are defined in the reference documentation
+     for the _o_s__m_o_n application.
+
+     _d_i_s_k_s_u_p is a process which  supervises  the  available  disk
+     space  in  the  system. Once every _d_i_s_k__s_p_a_c_e__c_h_e_c_k__i_n_t_e_r_v_a_l
+     minutes, the disks are checked and an alarm is generated for
+     each      disk      which     uses     more     than     the
+     _d_i_s_k__a_l_m_o_s_t__f_u_l_l__t_h_r_e_s_h_o_l_d of available space.
+
+       On UNIX:
+           All (locally) mounted disks are checked, including the
+           swap disk if it is present.
+
+       On WIN32:
+           All logical drives of type "FIXED_DISK" are checked.
+
+     The _d_i_s_k_s_u_p process defines one alarm which it  sends  using
+     _a_l_a_r_m__h_a_n_d_l_e_r:_s_e_t__a_l_a_r_m(_A_l_a_r_m). _A_l_a_r_m is defined as follows:
+
+       {{_d_i_s_k__a_l_m_o_s_t__f_u_l_l, _M_o_u_n_t_e_d_O_n}, []}:
+           This  alarm  is  sent  when  a  disk  uses  more  than
+           _d_i_s_k__a_l_m_o_s_t__f_u_l_l__t_h_r_e_s_h_o_l_d   of   its  available  disk
+           space, and it is cleared  automatically  when  _d_i_s_k_s_u_p
+           observes that the disk space is back to normal.
+
+
+EXPORTS
+     get_check_interval() -> Time
+
+          Types
+               Time = integer()
+
+          Time interval, in milliseconds, which defined how often
+          the disks are checked.
+
+     get_disk_data() -> [DiskData]
+
+          Types
+               DiskData = {Id, KByte, Capacity}
+               Id = string()
+               KByte = integer()
+               Capacity = integer()
+
+          Gets data for the system disks or partitions. _I_d  is  a
+          string  that identifies the disk or partition. _K_B_y_t_e is
+          the total size of the  disk  or  partition  in  kbytes.
+          _C_a_p_a_c_i_t_y is the percentage of disk space used.
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  1
+
+
+
+
+
+
+disksup(3)          ERLANG MODULE DEFINITION           disksup(3)
+
+
+
+     get_almost_full_threshold() -> integer()
+
+          Threshold as a percentage of the available disk  space.
+          It  specifies  how  much disk space can be used by each
+          disk or partition before an alarm is sent.
+
+See Also
+     alarm_handler(3), os_mon(3)
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Peter Hogfeldt - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  2
+
+
+

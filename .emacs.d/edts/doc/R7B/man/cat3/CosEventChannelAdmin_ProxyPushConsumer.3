@@ -1,0 +1,132 @@
+
+
+
+CosEventChannelAdmin_PErRoLxCAyoNPsGuEsvMheOCnDotUnCLshEuamnDenEreF(lI3AN)dITmIiOnN_ProxyPushConsumer(3)
+
+
+
+MODULE
+     CosEventChannelAdmin_ProxyPushConsumer -  This module imple-
+     ments  a ProxyPushConsumer interface which acts as a middle-
+     man between push supplier and the event channel.
+
+DESCRIPTION
+     The ProxyPushConsumer interface defines the second step  for
+     connecting push suppliers to the event channel. A proxy con-
+     sumer is similar to a normal consumer, but includes an addi-
+     tional  method for connecting a supplier to the proxy consu-
+     mer.
+
+     There are a number of exceptions that can be  returned  from
+     functions in this interface.
+
+       * AlreadyConnected         is          defined          as
+         -_r_e_c_o_r_d('_A_l_r_e_a_d_y_C_o_n_n_e_c_t_e_d', {}).
+
+       * Disconnected is defined as -_r_e_c_o_r_d('_D_i_s_c_o_n_n_e_c_t_e_d', {}).
+
+     These exceptions are defined in the file _e_v_e_n_t__s_e_r_v_i_c_e._h_r_l.
+
+     Any object that possesses an object reference that  supports
+     the  ProxyPushConsumer  interface  can perform the following
+     operations:
+
+
+EXPORTS
+     connect_push_supplier(Object, PushSupplier) -> Return
+
+          Types
+               Object = #objref
+               PushSupplier = #objref of PushSupplier type
+               Return = void
+
+          This operation  connects  PushSupplier  object  to  the
+          ProxyPushConsumer object. A nil object reference can be
+          passed to this operation. If so a channel cannot invoke
+          the disconnect_push_supplier operation on the supplier;
+          the supplier  may  be  disconnected  from  the  channel
+          without  being  informed.  If  the ProxyPushConsumer is
+          already  connected  to   a   PushSupplier,   then   the
+          _A_l_r_e_a_d_y_C_o_n_n_e_c_t_e_d _e_x_c_e_p_t_i_o_n is raised.
+
+     disconnect_push_consumer(Object) -> Return
+
+          Types
+               Object = #objref
+               Return = void
+
+          This operation disconnects proxy push consumer from the
+          event  channel.  Sends a notification about the loss of
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                1
+
+
+
+
+
+
+CosEventChannelAdmin_PErRoLxCAyoNPsGuEsvMheOCnDotUnCLshEuamnDenEreF(lI3AN)dITmIiOnN_ProxyPushConsumer(3)
+
+
+
+          the connection to the push  supplier  attached  to  it,
+          unless  nil  object reference was passed at the connec-
+          tion time.
+
+     push(Object, Data) -> Return
+
+          Types
+               Object = #objref
+               Data = any
+               Return = void
+
+          This operation sends event data to all connected consu-
+          mers  via the event channel. If the event communication
+          has already  been  disconnected,  the  _D_i_s_c_o_n_n_e_c_t_e_d  is
+          raised.
+
+AUTHOR
+     Helen Airiyan - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                2
+
+
+

@@ -1,0 +1,81 @@
+.TH app 4 "kernel  2.6.1" "Ericsson Utvecklings AB" "FILES"
+.SH NAME
+app \- Application resource file
+.SH DESCRIPTION
+.LP
+The \fIapplication resource file\fR specifies the resources an application uses, and how the application is started\&. There must always be one application resource file for each application in the system\&. 
+.LP
+This file is read when an application is loaded, or by the start script generating tools (\fIsystools\fR)\&. 
+
+.SH FILE SYNTAX
+.LP
+The application resource file is called \fIName\&.app\fR where \fIName\fR is the name of the application\&. The file should be located in the \fIebin\fR directory for the application\&. 
+.LP
+The \fI\&.app\fR file contains one single Erlang term, which is called an \fIapplication specification\fR\&. The file has the following syntax: 
+
+.nf
+{application, ApplName,
+  [{description,  String},
+   {vsn,          String},
+   {id,           String},
+   {modules,      [{Mod1,Vsn1}, Mod2, {Mod3,Vsn3} \&.\&., {ModN,VsnN}]},
+   {maxP,         Int | infinity},
+   {maxT,         Seconds | infinity},
+   {registered,   [Name1, Name2, \&.\&.\&.]},
+   {applications, [Appl1, Appl2, \&.\&., ApplN]},
+   {included_applications, [Appl1, Appl2, \&.\&., ApplN]},
+   {env,          [{Par1, Val1}, {Par2, Val2} \&.\&., {ParN, ValN}]},
+   {mod,          {Mod, StartArgs}},
+   {start_phases, [{Phase, PhaseArgs}]}]}\&.
+.fi
+.LP
+The keys have the following meanings: 
+.RS 2
+.TP 2
+*
+\fIName = atom()\fR is the name of the application\&. 
+.TP 2
+*
+\fIDescription = string()\fR is a textual description of the application\&. 
+.TP 2
+*
+\fIVsn = string()\fR is the version of the application\&. This string must be a valid filename\&. 
+.TP 2
+*
+\fIId = string()\fR is the product identification of the application\&. 
+.TP 2
+*
+\fIModules = [Mod1 | {Mod1, Vsn1}]\fR is a list of all the modules and their versions introduced by this application\&. A module can be listed without version, only the name of the module is stated\&. A module can only be defined in one application\&. 
+.TP 2
+*
+\fIMaxT = int() | infinity\fR is the maximum time that the application can run (or the atom \fIinfinity\fR)\&. The key \fImaxT\fR is optional and defaults to \fIinfinity\fR\&. 
+.TP 2
+*
+\fIRegistered = [atom()]\fR is a list of all the names of registered processes started in this application\&. 
+.TP 2
+*
+\fIapplications = [atom()]\fR is a list of applications which must be started before this application is started\&. Most applications have dependencies to the Kernel and STDLIB applications\&. 
+.TP 2
+*
+\fIincluded_applications = [atom()]\fR is a list of applications which are included by this application\&. An included application is loaded, but not started, by the \fIapplication_controller\fR\&. Processes implemented in an included application should be placed underneath a supervisor in the including application\&. This key is optional and defaults to \fI[]\fR\&. 
+.TP 2
+*
+\fIenv\fR is a list of the environment variables in the application\&. Each parameter \fIParX\fR is an atom, and the associated \fIValX\fR can be any term\&. The \fIenv\fR key is optional and defaults to an empty list\&. 
+.TP 2
+*
+\fImod\fR is the application callback module of the application behaviour\&. The application master starts the application by evaluating the function \fIMod:start(Type, StartArgs)\fR\&. When the application has stopped, by command or because it terminates, the application master calls \fIMod:stop(State)\fR to let the application clean up\&. If no \fIState\fR was returned from \fIMod:start/2\fR, \fIMod:stop([])\fR is called\&. 
+.RS 2
+.LP
+The \fImod\fR key should be omitted for applications which are code libraries, such as the application STDLIB\&. These applications have no dynamic behaviour of their own and should not have a start function\&. 
+.RE
+.TP 2
+*
+\fIstart_phases\fR is a list of start phases and the attached start arguments for the application\&. The application master starts the application by evaluating the function \fIMod:start_phase(Phase, Type, PhaseArgs)\fR for each defined start phase\&. \fIMod\fR is the same callback module as defined in the \fImod\fR key\&. Each parameter \fIPhase\fR is an atom, and the associated \fIPhaseArgs\fR is a list of any terms\&. The key \fIstart_phases\fR is optional, and the behaviour of the system is dependent if the key is defined or not, refer to application (3)\&.
+.RE
+.SH SEE ALSO
+.LP
+application(3), systools(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

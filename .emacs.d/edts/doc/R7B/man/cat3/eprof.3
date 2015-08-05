@@ -1,0 +1,132 @@
+
+
+
+eprof(3)            ERLANG MODULE DEFINITION             eprof(3)
+
+
+
+MODULE
+     eprof - Time Profiling Tool
+
+DESCRIPTION
+     This module is used to profile a program to find out how the
+     execution time is used.
+
+     In R7 the  _e_p_r_o_f  module  uses  the  new  local  call  trace
+     feature,  meaning  that you no longer need to specially com-
+     pile any of the modules. Eprof will  automatically  turn  on
+     local  trace  for  all  loaded modules (any for any that are
+     loaded when during a profile  session).  When  profiling  is
+     stopped,  Eprof  will disable local call trace for all func-
+     tions in all loaded modules.
+
+     The R7 version is faster than previous versions. But you can
+     still  expect  significant slowdowns, in most cases at least
+     100 percent.
+
+
+EXPORTS
+     start() -> {ok, Pid} | {error, {already_started, Pid}}
+
+     stop() -> stopped
+
+     profile(Rootset, Mod, Fun, Args)
+
+          This function evaluates the expression _s_p_a_w_n(_M_o_d,  _F_u_n,
+          _A_r_g_s)  and profiles the process which evaluates it. The
+          profiling is done for one function with a set of  argu-
+          ments in a certain root set of processes. All processes
+          which  are  created  by  that  function  are  profiled,
+          together  with its root set and all processes which are
+          created by processes in that root set.
+
+          The profiling is terminated  when  the  given  function
+          returns  a  value. The application must ensure that the
+          function is truly synchronized and that no work contin-
+          ues after the function has returned a value.
+
+          The root set is a list of Pids or atoms. If atoms, they
+          are assumed to be registered processes.
+
+     profile(Rootset) -> profiling | error
+
+          Sometimes, it is not possible to start  profiling  with
+          the help of a single function.
+
+          For example, if some external stimuli enters the Erlang
+          runtime system through a port, and the handling of this
+          stimuli is to be profiled until  a  response  goes  out
+          through  a  port,  it  may be appropriate to change the
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   1
+
+
+
+
+
+
+eprof(3)            ERLANG MODULE DEFINITION             eprof(3)
+
+
+
+          source code and insert an explicit call to  this  func-
+          tion.  The _p_r_o_f_i_l_e(_R_o_o_t_s_e_t) function starts the profil-
+          ing for processes included in _R_o_o_t_s_e_t.
+
+     stop_profiling()        ->        profiling_stopped        |
+     profiling_already_stopped
+
+          This function stops the collection of  statistics  per-
+          formed  by  the  _e_p_r_o_f  process. The _e_p_r_o_f process then
+          holds data which can be analysed at a later stage.
+
+     analyse() -> ok
+
+          When the profiling has ended  -  profiling  using  _p_r_o_-
+          _f_i_l_e/_4,  or  _p_r_o_f_i_l_e/_1 together with _s_t_o_p__p_r_o_f_i_l_i_n_g/_0 -
+          the _e_p_r_o_f process can print the data  collected  during
+          the  run.  The  printed  profiling  statistics show the
+          activity for each process.
+
+     total_analyse() -> ok
+
+          With this function, the total results of  profiling  is
+          printed  irrespective  which  process each function has
+          used.
+
+     log(File) -> ok
+
+          This function ensures that a copy of all printouts  are
+          sent to both _F_i_l_e and the screen.
+
+Notes
+     The actual supervision of execution times is in itself a CPU
+     intensive  activity.  A message is sent to the _e_p_r_o_f process
+     for every function call that is made by the profiled code.
+
+SEE ALSO
+     compile(3)
+
+AUTHOR
+     Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   2
+
+
+

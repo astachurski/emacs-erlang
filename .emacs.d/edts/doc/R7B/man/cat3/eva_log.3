@@ -1,0 +1,198 @@
+
+
+
+eva_log(3)          ERLANG MODULE DEFINITION           eva_log(3)
+
+
+
+MODULE
+     eva_log  - Log functionality for events and alarms in EVA
+
+DESCRIPTION
+     The EVA log service uses the generic Log Control service  to
+     implement log functionality for events and alarms defined in
+     EVA.
+
+     In the rest of this description, the term  _e_v_e_n_t  refers  to
+     both events and alarms as defined in EVA.
+
+     This log functionality supports logging of events from  EVA.
+     It uses the module _d_i_s_k__l_o_g for logging of events, using the
+     internal log  format  defined  by  _d_i_s_k__l_o_g.  There  can  be
+     several logs active at the same time. Each log uses a filter
+     function to decide whether an event should be stored in  the
+     log or not.
+
+     There are several ways to control whether an event should be
+     stored  in a log or not. First of all, _e_v_a__l_o_g checks if the
+     _l_o_g flag in _e_v_e_n_t_T_a_b_l_e is set (see _e_v_a(_3)). If it is set  to
+     _f_a_l_s_e, the event is not stored in any log, even if there are
+     logs that are configured to log the event. In this way, log-
+     ging of individual events can be turned on/off by a manager.
+     If the _l_o_g flag is  _t_r_u_e,  _e_v_a__l_o_g  checks  the  operational
+     status  of  the log. If it is _d_o_w_n, the event is not stored.
+     If it is _u_p, the associated filter function  is  called.  If
+     this  function  returns _t_r_u_e, the event is stored, otherwise
+     it is discarded. To summarize, all these conditions must  be
+     true for an event to be stored:
+
+       * The _l_o_g flag for the event is _t_r_u_e.
+
+       * The operational status for the log is _u_p.
+
+       * The filter function  for  the  log  returns  _t_r_u_e,  when
+         applied to the event.
+
+     There is a concept of a default log. The default log is used
+     to  log any event that has the _l_o_g flag in _e_v_e_n_t_T_a_b_l_e set to
+     _t_r_u_e, but no log is currently able to store  the  event  (or
+     there  is  no other log defined to log the event). The usage
+     of the default log is optional.
+
+
+EXPORTS
+     close(Name) -> ok
+
+          Types
+               Name = string()
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   1
+
+
+
+
+
+
+eva_log(3)          ERLANG MODULE DEFINITION           eva_log(3)
+
+
+
+          Closes an event log.
+
+     get_logs() -> [#eva_log]
+
+          Returns all event logs known  to  _e_v_a__l_o_g.  The  record
+          #_e_v_a__l_o_g is defined in the file _e_v_a__l_o_g._h_r_l.
+
+     open(Name, FilterFunction, WrapTime) -> ok | {error, Reason}
+
+          Types
+               Name = string()
+               FilterFunction = {M, F, A}
+               M = F = atom()
+               A = list()
+               WrapTime = integer()
+
+          Makes _e_v_a__l_o_g aware of the log _N_a_m_e. The log must be an
+          open _d_i_s_k__l_o_g log, with log format _i_n_t_e_r_n_a_l. This func-
+          tion will call  _l_o_g:_o_p_e_n(_N_a_m_e,  _e_v_a__l_o_g,  _W_r_a_p_T_i_m_e)  in
+          order  to  register  the log in the generic Log Control
+          service.
+
+          The _F_i_l_t_e_r_F_u_n_c_t_i_o_n is used when an  event  is  received
+          from  EVA.  It  is  then called as _M:_F(_E_v_e_n_t ++ _A), and
+          supposed to return _t_r_u_e if the event should  be  stored
+          in  the log. All other return values makes the event be
+          discarded. The filter function can be exchanged  during
+          runtime, by using _s_e_t__f_i_l_t_e_r/_2.
+
+     set_filter(Name, FilterFunction)
+
+          Types
+               Name = string()
+               FilterFunction = {M, F, A}
+               M = F = atom()
+               A = list()
+
+          Changes the filter function for the event log.
+
+     start_link()
+     start_link(DefaultLog) -> {ok, Pid} | {error, Reason}
+
+          Types
+               DefaultLog = {Name, WrapTime} | false
+               Name = string()
+               WrapTime = integer()
+
+          Starts the eva log service. This function can  be  used
+          to include the service in a supervisor. Normally, func-
+          tions in the supervisor _e_v_a__s_u_p can be used instead.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   2
+
+
+
+
+
+
+eva_log(3)          ERLANG MODULE DEFINITION           eva_log(3)
+
+
+
+          _D_e_f_a_u_l_t_L_o_g is either the name  and  wrap  time  of  the
+          default  log  to use, or _f_a_l_s_e. If it is not _f_a_l_s_e, the
+          log must have been created with _d_i_s_k__l_o_g, just  as  any
+          other  log (see _o_p_e_n/_3). The default log is used to log
+          any event that has the _l_o_g flag set to true in  _e_v_e_n_t_T_-
+          _a_b_l_e,  but no log has actually logged the event, either
+          because there was no such log, or the  log  had  opera-
+          tional status _d_o_w_n. If the _D_e_f_a_u_l_t_L_o_g argument is omit-
+          ted, it defaults to _f_a_l_s_e. If the default log is  used,
+          it  will  be made known to the generic Log Control ser-
+          vice as _l_o_g:_o_p_e_n(_N_a_m_e, _e_v_a__l_o_g, _W_r_a_p_T_i_m_e).
+
+SEE ALSO
+     disk_log(3), eva(3), eva_sup(3), file(3), log(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   3
+
+
+

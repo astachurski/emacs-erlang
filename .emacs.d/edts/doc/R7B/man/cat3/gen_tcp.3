@@ -1,0 +1,264 @@
+
+
+
+gen_tcp(3)          ERLANG MODULE DEFINITION           gen_tcp(3)
+
+
+
+MODULE
+     gen_tcp - Interface to TCP/IP sockets
+
+DESCRIPTION
+     The _g_e_n__t_c_p module provides functions for communicating with
+     sockets using the TCP/IP protocol.
+
+     The available options are described in the  setopts/2  func-
+     tion in the _i_n_e_t manual page.
+
+     The possible {_e_r_r_o_r, _R_e_a_s_o_n} results are  described  in  the
+     inet manual page.
+
+     The following code fragment provides a simple example  of  a
+     client  connecting  to a server at port 5678, transferring a
+     binary and closing the connection.
+
+     client() ->
+         SomeHostInNet = "localhost" % to make it runnable on one machine
+         {ok, Sock} = gen_tcp:connect(SomeHostInNet, 5678,
+                                      [binary, {packet, 0}]),
+         ok = gen_tcp:send(Sock, "Some Data"),
+         ok = gen_tcp:close(Sock).
+
+     At the other end a server is listening on port 5678, accepts
+     the connection and receives the binary.
+
+     server() ->
+         {ok, LSock} = gen_tcp:listen(5678, [binary, {packet, 0},
+                                             {active, false}]),
+         {ok, Sock} = gen_tcp:accept(LSock),
+         {ok, Bin} = do_recv(Sock, []),
+         ok = gen_tcp:close(Sock),
+         Bin.
+
+     do_recv(Sock, Bs) ->
+         case gen_tcp:recv(Sock, 0) of
+             {ok, B} ->
+                 do_recv(Sock, [Bs, B]);
+             {error, closed} ->
+                 {ok, list_to_binary(Bs)}
+         end.
+
+EXPORTS
+     accept(ListenSocket) -> {ok, Socket} | {error, Reason}
+     accept(ListenSocket, Timeout) -> {ok, Socket} | {error, Rea-
+     son}
+
+          Types
+               ListenSocket = socket()
+               Socket = socket()
+               Timeout = integer()
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+gen_tcp(3)          ERLANG MODULE DEFINITION           gen_tcp(3)
+
+
+
+               Reason = atom()
+
+          Accepts an incoming  connection  request  on  a  listen
+          socket. _S_o_c_k_e_t must be a socket returned from _l_i_s_t_e_n/_1.
+          If no _T_i_m_e_o_u_t argument is specified, or it is _i_n_f_i_n_i_t_y,
+          the  _a_c_c_e_p_t function will not return until a connection
+          has been  established  or  the  _L_i_s_t_e_n_S_o_c_k_e_t  has  been
+          closed.  If accept returns because the _L_i_s_t_e_n_S_o_c_k_e_t has
+          been closed {_e_r_r_o_r, _c_l_o_s_e_d} is returned. If _T_i_m_e_o_u_t  is
+          specified  and  no  connection  is  accepted within the
+          given time, _a_c_c_e_p_t will return {_e_r_r_o_r, _t_i_m_e_o_u_t}.
+
+          Packets can be sent to the returned  socket  using  the
+          _s_e_n_d/_2  function.  Packets  sent  from the peer will be
+          delivered as messages
+
+                  {tcp, Socket, Data}
+
+          unless {_a_c_t_i_v_e, _f_a_l_s_e} was specified in the option list
+          for  the listen socket, in which case packets should be
+          retrieved by calling _r_e_c_v/_2.
+
+     close(Socket) -> ok | {error, Reason}
+
+          Types
+               Socket = socket()
+               Reason = atom()
+
+          Closes an TCP socket.
+
+     connect(Address, Port, Options) -> {ok,  Socket}  |  {error,
+     Reason}
+     connect(Address, Port, Options, Timeout) -> {ok,  Socket}  |
+     {error, Reason}
+
+          Types
+               Address = string() | atom() | ip_address()
+               Port = Timeout = integer()
+               Options = list()
+               Socket = socket()
+               Reason = atom()
+
+          Connects to a server on TCP port _P_o_r_t on the host  with
+          IP  address _A_d_d_r_e_s_s. The _A_d_d_r_e_s_s argument can be either
+          a hostname, or an IP address.
+
+          The available options are:
+
+            _l_i_s_t:
+                Received _P_a_c_k_e_t is delivered as a list.
+
+            _b_i_n_a_r_y:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+gen_tcp(3)          ERLANG MODULE DEFINITION           gen_tcp(3)
+
+
+
+                Received _P_a_c_k_e_t is delivered as a binary.
+
+            common _i_n_e_t options:
+                The common _i_n_e_t options available  are  described
+                in  the  setopts/2  function  in  the _i_n_e_t manual
+                page.
+
+          Packets can be sent to the returned  socket  using  the
+          _s_e_n_d/_2  function.  Packets  sent  from the peer will be
+          delivered as messages
+
+                  {tcp, Socket, Data}
+
+          If the socket  was  closed  the  following  message  is
+          delivered:
+
+                  {tcp_closed, Socket}
+
+          If an error occurred on the socket the  following  mes-
+          sage is delivered:
+
+                  {tcp_error, Socket, Reason}
+
+          unless the socket is in passive  mode,  in  which  case
+          packets are retrieved by calling _r_e_c_v/_2.
+
+          The optional _T_i_m_e_o_u_t parameter specifies a  timeout  in
+          milliseconds. The default value is _i_n_f_i_n_i_t_y.
+
+     controlling_process(Socket, NewOwner) -> ok | {error, eperm}
+
+          Types
+               Socket = socket()
+               NewOwner = pid()
+
+          Assigns a new controlling process to _S_o_c_k_e_t.  The  con-
+          trolling process is the process which will receive mes-
+          sages from the socket. If called by any  other  process
+          than the current owner {_e_r_r_o_r, _e_p_e_r_m} will be returned.
+
+     listen(Port, Options) -> {ok, Socket} | {error, Reason}
+
+          Types
+               Port = integer()
+               Options = list()
+               Socket = socket()
+               Reason = atom()
+
+          Sets up socket to listen on the port _P_o_r_t on the  local
+          host.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+gen_tcp(3)          ERLANG MODULE DEFINITION           gen_tcp(3)
+
+
+
+          If the port number is zero, the _l_i_s_t_e_n  function  picks
+          an  available  port number (use _i_n_e_t:_p_o_r_t/_1 to retrieve
+          it); otherwise, the specified port number is used.
+
+          The available options are described  in  the  setopts/2
+          function  in  the  _i_n_e_t  manual page. Additionally, the
+          option {_b_a_c_k_l_o_g, _B} can be given, where B is an integer
+          >=  0.  The  backlog  value  defaults to 5. The backlog
+          value defines the maximum length the queue  of  pending
+          connections may grow to.
+
+          The returned socket  can  only  be  used  in  calls  to
+          _a_c_c_e_p_t.
+
+     recv(Socket, Length) -> {ok, Packet} | {error, Reason}
+     recv(Socket, Length, Timeout)
+
+          Types
+               Socket = socket()
+               Length = integer()
+               Packet = list() | binary()
+               Timeout = integer()
+               Reason = atom()
+
+          This function receives a packet from a socket  in  pas-
+          sive  mode.  A  closed  socket is indicated by a return
+          value of {_e_r_r_o_r, _c_l_o_s_e_d}.
+
+          The _L_e_n_g_t_h argument is only meaningful when the  socket
+          is  in _r_a_w mode and denotes number of bytes to read. If
+          _L_e_n_g_t_h = 0 all available bytes are returned.
+
+          The optional _T_i_m_e_o_u_t parameter specifies a  timeout  in
+          milliseconds. The default value is _i_n_f_i_n_i_t_y.
+
+     send(Socket, Packet) -> ok | {error, Reason}
+
+          Types
+               Socket = socket()
+               Packet = list() | binary()
+               Reason = atom()
+
+          Sends a packet on a socket.
+
+AUTHOR
+     tony@erix.ericsson.se - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+

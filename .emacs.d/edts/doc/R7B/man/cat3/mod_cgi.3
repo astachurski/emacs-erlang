@@ -1,0 +1,132 @@
+
+
+
+mod_cgi(3)          ERLANG MODULE DEFINITION           mod_cgi(3)
+
+
+
+MODULE
+     mod_cgi - Invoking of CGI scripts.
+
+DESCRIPTION
+     This module makes it possible to execute vanilla CGI (Common
+     Gateway  Interface)  scripts  in  the  server.  A  file that
+     matches the definition of a ScriptAlias config directive  is
+     treated  as  a  CGI  script. A CGI script is executed by the
+     server and its output is returned to the client.
+
+     Support for CGI-1.1 is implemented in  accordance  with  the
+     CGI-1.1 specification <http://hoohoo.ncsa.uiuc.edu/cgi/>.
+
+  Note:
+     CGI is currently available for Erlang/OTP running on a  UNIX
+     platform. These number of platforms will be increased.
+
+
+
+EWSAPI MODULE INTERACTION
+     Uses the following EWSAPI interaction data, if available:
+
+       {_n_e_w__r_e_q_u_e_s_t__u_r_i, _N_e_w_R_e_q_u_e_s_t_U_R_I}:
+           as defined in mod_actions(3).
+
+       {_r_e_m_o_t_e__u_s_e_r, _R_e_m_o_t_e_U_s_e_r}:
+           as defined in mod_auth(3).
+
+     Uses the following EWSAPI functions:
+
+       * mod_alias:real_name/3
+
+       * mod_alias:real_script_name/3
+
+       * mod_cgi:env/3
+
+       * mod_cgi:status_code:env/1
+
+     This module furthermore exports a batch of functions  to  be
+     used by other EWSAPI modules:
+
+EXPORTS
+     env(Info,Script,AfterScript) -> EnvString
+
+          Types
+               Info = mod_record()
+               Script = AfterScript = EnvString = string()
+
+  Note:
+     This function should only be used when implementing  CGI-1.1
+     functionality on UNIX platforms.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+mod_cgi(3)          ERLANG MODULE DEFINITION           mod_cgi(3)
+
+
+
+     _o_p_e_n__p_o_r_t/_2 is normally used to start and interact with  CGI
+     scripts.  _o_p_e_n__p_o_r_t/_2  takes  an  external program as input;
+     _e_n_v(_1) (GNU Shell Utility) is typically used in the case  of
+     a  CGI  script.  _e_n_v(_1) execute the CGI script in a modified
+     environment and  takes  the  CGI  script  and  a  string  of
+     environment variables as input. _e_n_v/_3 returns an appropriate
+     CGI-1.1 environment variable string to be used for this pur-
+     pose.  The  environment  variables  in  the string are those
+     defined       in       the       CGI-1.1       specification
+     <http://hoohoo.ncsa.uiuc.edu/cgi/>. _m_o_d__r_e_c_o_r_d() is a record
+     as defined in  the  EWSAPI  Module  Programming  section  of
+     _h_t_t_p_d(_3).
+
+     status_code(CGIOutput) -> {ok,StatusCode} | {error,Reason}
+
+          Types
+               CGIOutput = Reason = string()
+               StatusCode = integer()
+
+          Certain output from CGI scripts has a special  meaning,
+          as     described     in     the    CGI    specification
+          <http://hoohoo.ncsa.uiuc.edu/cgi/>,  for   example   if
+          "_L_o_c_a_t_i_o_n: _h_t_t_p://_w_w_w._y_a_h_o_o._c_o_m\_n\_n" is returned from a
+          CGI script the client gets automatically redirected  to
+          Yahoo!   <http://www.yahoo.com>,  using  the  HTTP  302
+          status code (RFC 1945).
+
+SEE ALSO
+     httpd(3),   mod_auth(3),   mod_security(3),    mod_alias(3),
+     mod_esi(3), mod_include(3)
+
+AUTHORS
+     Joakim Grebeno  - support@erlang.ericsson.se
+     Mattias Nilsson  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+

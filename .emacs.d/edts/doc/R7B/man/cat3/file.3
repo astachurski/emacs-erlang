@@ -1,0 +1,1386 @@
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+MODULE
+     file - File Interface Module
+
+DESCRIPTION
+     The module _f_i_l_e provides an interface to the file system.
+
+     Most functions have a name argument such as a file  name  or
+     directory name, which is either an atom, a string, or a deep
+     list of characters and atoms. A path is a list of  directory
+     names.  If  the functions are successful, they return _o_k, or
+     {_o_k, _V_a_l_u_e}.
+
+     If an error occurs, the return value has the format  {_e_r_r_o_r,
+     _R_e_a_s_o_n}.  _R_e_a_s_o_n  is  an  atom which is named from the Posix
+     error codes used in Unix, and in the  runtime  libraries  of
+     most  C  compilers.  In  the following descriptions of func-
+     tions, the most typical error codes are listed. By  matching
+     the  error  code,  applications can use this information for
+     error recovery. To produce  a  readable  error  string,  use
+     _f_o_r_m_a_t__e_r_r_o_r/_1.
+
+
+EXPORTS
+     change_group(Filename, Gid)
+
+          Change group of a file. See _w_r_i_t_e__f_i_l_e__i_n_f_o/_2.
+
+     change_owner(Filename, Uid)
+
+          Change owner of a file. See _w_r_i_t_e__f_i_l_e__i_n_f_o/_2.
+
+     change_owner(Filename, Uid, Gid)
+
+          Change   owner   and   group    of    a    file.    See
+          _w_r_i_t_e__f_i_l_e__i_n_f_o/_2.
+
+     change_time(Filename, Mtime)
+
+          Change the modification and access times of a file. See
+          _w_r_i_t_e__f_i_l_e__i_n_f_o/_2.
+
+     change_time(Filename, Mtime, Atime)
+
+          Change the modification and access times of a file. See
+          _w_r_i_t_e__f_i_l_e__i_n_f_o/_2.
+
+     close(IoDevice)
+
+          Closes the file referenced by _I_o_D_e_v_i_c_e. It returns _o_k.
+
+     consult(Filename)
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+          Opens file _F_i_l_e_n_a_m_e and reads all the Erlang  terms  in
+          it. Returns one of the following:
+
+            {_o_k, _T_e_r_m_L_i_s_t}:
+                The file was successfully read.
+
+            {_e_r_r_o_r, _A_t_o_m}:
+                An error occurred when opening the file or  read-
+                ing  it.  The _A_t_o_m is a Posix error code. See the
+                description of _o_p_e_n/_2 for a list of typical error
+                codes.
+
+            {_e_r_r_o_r, {_L_i_n_e, _M_o_d, _T_e_r_m}}:
+                An error occurred when  interpreting  the  Erlang
+                terms  in  the file. Use the _f_o_r_m_a_t__e_r_r_o_r/_1 func-
+                tion to convert the  three-element  tuple  to  an
+                English description of the error.
+
+     del_dir(DirName)
+
+          Tries to delete the directory  _D_i_r_N_a_m_e.  The  directory
+          must  be  empty before it can be deleted. Returns _o_k if
+          successful.
+
+          Typical error reasons are:
+
+            _e_a_c_c_e_s:
+                Missing  search  or  write  permissions  for  the
+                parent directories of _D_i_r_N_a_m_e.
+
+            _e_e_x_i_s_t:
+                The directory is not empty.
+
+            _e_n_o_e_n_t:
+                The directory does not exist.
+
+            _e_n_o_t_d_i_r:
+                A component of _D_i_r_N_a_m_e is  not  a  directory.  On
+                some platforms, _e_n_o_e_n_t is returned instead.
+
+            _e_i_n_v_a_l:
+                Attempt to delete the current directory. On  some
+                platforms, _e_a_c_c_e_s is returned instead.
+
+     delete(Filename)
+
+          Tries to delete the file _F_i_l_e_n_a_m_e. Returns _o_k  if  suc-
+          cessful.
+
+          Typical error reasons are:
+
+            _e_n_o_e_n_t:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+                The file does not exist.
+
+            _e_a_c_c_e_s:
+                Missing permission for the file  or  one  of  its
+                parents.
+
+            _e_p_e_r_m:
+                The file is a  directory  and  the  user  is  not
+                super-user.
+
+            _e_n_o_t_d_i_r:
+                A component of the file name is not a  directory.
+                On some platforms, _e_n_o_e_n_t is returned instead.
+
+     eval(Filename)
+
+          Opens the file _F_i_l_e_n_a_m_e and evaluates all  the  expres-
+          sion sequences in it. It returns one of the following:
+
+            _o_k: The file  was  read  and  evaluated.  The  actual
+                result  of  the  evaluation  is not returned; any
+                expression sequence in the file must be there for
+                its side effect.
+
+            {_e_r_r_o_r, _A_t_o_m}:
+                An error occurred when opening the file or  read-
+                ing  it.  The _A_t_o_m is a Posix error code. See the
+                description of _o_p_e_n/_2 for a list of typical error
+                codes.
+
+            {_e_r_r_o_r, {_L_i_n_e, _M_o_d, _T_e_r_m}}:
+                An error occurred when  interpreting  the  Erlang
+                terms  in  the file. Use the _f_o_r_m_a_t__e_r_r_o_r/_1 func-
+                tion to convert the  three-element  tuple  to  an
+                English description of the error.
+
+     file_info(Filename)
+
+  Note:
+     This function is obsolete. Use _r_e_a_d__f_i_l_e__i_n_f_o instead.
+
+
+     Retrieves information about a file. Returns  {_o_k,  _F_i_l_e_I_n_f_o}
+     if  successful,  otherwise  {_e_r_r_o_r,  _R_e_a_s_o_n}.  _F_i_l_e_I_n_f_o is a
+     tuple with the following fields:
+
+               {Size,Type,Access,AccessTime,ModifyTime,UnUsed1,UnUsed2}
+
+       _S_i_z_e:
+           The size of the file in bytes.
+
+       _T_y_p_e:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+           The type of file which is _d_e_v_i_c_e, _d_i_r_e_c_t_o_r_y,  _r_e_g_u_l_a_r,
+           or _o_t_h_e_r.
+
+       _A_c_c_e_s_s:
+           The current system access to the file, which is one of
+           the atoms _r_e_a_d, _w_r_i_t_e, _r_e_a_d__w_r_i_t_e, or _n_o_n_e.
+
+       _A_c_c_e_s_s_T_i_m_e:
+           The last time the file was read, shown in  the  format
+           {_Y_e_a_r, _M_o_n_t_h, _D_a_y, _H_o_u_r, _M_i_n_u_t_e, _S_e_c_o_n_d}.
+
+       _M_o_d_i_f_y_T_i_m_e:
+           The last time the file was written, shown in the  for-
+           mat {_Y_e_a_r, _M_o_n_t_h, _D_a_y, _H_o_u_r, _M_i_n_u_t_e, _S_e_c_o_n_d}.
+
+       _U_n_U_s_e_d_1, _U_n_U_s_e_d_2:
+           These fields are not used,  but  reserved  for  future
+           expansion. They probably contain _u_n_u_s_e_d.
+
+     Typical error reasons: Same as for _r_e_a_d__f_i_l_e__i_n_f_o/_1.
+
+     format_error(ErrorDescriptor)
+
+          Given the error reason returned by any function in this
+          module, it returns a descriptive string of the error in
+          English.
+
+     get_cwd()
+
+          Returns {_o_k, _C_u_r_D_i_r}, where _C_u_r_D_i_r (a  string)  is  the
+          current working directory of the file server.
+
+  Note:
+     In rare circumstances, this function can fail  on  Unix.  It
+     may  happen if read permission does not exist for the parent
+     directories of the current directory.
+
+
+     Typical error reasons are:
+
+       _e_a_c_c_e_s:
+           Missing read permission for one of the parents of  the
+           current directory.
+
+     get_cwd(Drive)
+
+          _D_r_i_v_e should be of  the  form  "_L_e_t_t_e_r:",  for  example
+          "c:".  Returns  {_o_k,  _C_u_r_D_i_r} or {_e_r_r_o_r, _R_e_a_s_o_n}, where
+          _C_u_r_D_i_r (a string) is the current working  directory  of
+          the drive specified.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+          This function returns  {_e_r_r_o_r,  _e_n_o_t_s_u_p}  on  platforms
+          which have no concept of current drive (Unix, for exam-
+          ple).
+
+          Typical error reasons are:
+
+            _e_n_o_t_s_u_p:
+                The operating system have no concept of drives.
+
+            _e_a_c_c_e_s:
+                The drive does not exist.
+
+            _e_i_n_v_a_l:
+                The format of _D_r_i_v_e is invalid.
+
+     list_dir(DirName)
+
+          Lists all  the  files  in  a  directory.  Returns  {_o_k,
+          _F_i_l_e_n_a_m_e_L_i_s_t}  if  successful.  Otherwise,  it  returns
+          {_e_r_r_o_r, _R_e_a_s_o_n}. _F_i_l_e_n_a_m_e_L_i_s_t is a list of the names of
+          all  the files in the directory. Each name is a string.
+          The names are not sorted.
+
+          Typical error reasons are:
+
+            _e_a_c_c_e_s:
+                Missing search or write permissions  for  _D_i_r_N_a_m_e
+                or one of its parent directories.
+
+            _e_n_o_e_n_t:
+                The directory does not exist.
+
+     make_dir(DirName)
+
+          Tries to create the directory _D_i_r_N_a_m_e.  Missing  parent
+          directories are NOT created. Returns _o_k if successful.
+
+          Typical error reasons are:
+
+            _e_a_c_c_e_s:
+                Missing  search  or  write  permissions  for  the
+                parent directories of _D_i_r_N_a_m_e.
+
+            _e_e_x_i_s_t:
+                There is already a file or directory  named  _D_i_r_-
+                _N_a_m_e.
+
+            _e_n_o_e_n_t:
+                A component of _D_i_r_N_a_m_e does not exist.
+
+            _e_n_o_s_p_c:
+                There is a no space left on the device.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  5
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+            _e_n_o_t_d_i_r:
+                A component of _D_i_r_N_a_m_e is  not  a  directory.  On
+                some platforms, _e_n_o_e_n_t is returned instead.
+
+     make_link(Existing, New)
+
+          Makes a hard link from _E_x_i_s_t_i_n_g to  _N_e_w,  on  platforms
+          that  support links (Unix). This function returns _o_k if
+          the link was successfully created, or {_e_r_r_o_r,  _R_e_a_s_o_n}.
+          On   platforms  that  do  not  support  links,  {_e_r_r_o_r,
+          _e_n_o_t_s_u_p} will be returned.
+
+          Typical error reasons:
+
+            _e_a_c_c_e_s:
+                Missing read or write permissions for the  parent
+                directories of _E_x_i_s_t_i_n_g or _N_e_w.
+
+            _e_e_x_i_s_t:
+                _n_e_w already exists.
+
+            _e_n_o_t_s_u_p:
+                Hard links are not supported on this platform.
+
+     make_symlink(Name1, Name2)
+
+          This function creates a symbolic link _N_a_m_e_2 to the file
+          or  directory _N_a_m_e_1, on platforms that support symbolic
+          links (most Unix systems). _N_a_m_e_1 need not  exist.  This
+          function  returns  _o_k  if  the  link  was  successfully
+          created, or {_e_r_r_o_r, _R_e_a_s_o_n}. On platforms that  do  not
+          support   symbolic  links,  {_e_r_r_o_r,  _e_n_o_t_s_u_p}  will  be
+          returned.
+
+          Typical error reasons:
+
+            _e_a_c_c_e_s:
+                Missing read or write permissions for the  parent
+                directories of _E_x_i_s_t_i_n_g or _N_e_w.
+
+            _e_e_x_i_s_t:
+                _n_e_w already exists.
+
+            _e_n_o_t_s_u_p:
+                Symbolic links are not supported  on  this  plat-
+                form.
+
+     open(Filename, ModeList)
+
+          Opens the file  _F_i_l_e_n_a_m_e  in  the  mode  determined  by
+          _M_o_d_e_L_i_s_t.  _M_o_d_e_L_i_s_t may contain one or more of the fol-
+          lowing items:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  6
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+            _r_e_a_d:
+                The file, which must exist, is opened  for  read-
+                ing.
+
+            _w_r_i_t_e:
+                The file is opened for writing. It is created  if
+                it  does  not  exist.  Otherwise, it is truncated
+                (unless combined with _r_e_a_d).
+
+            _a_p_p_e_n_d:
+                The file will be opened for writing, and it  will
+                be  created it does not exist. Every write opera-
+                tion to a file openeded  with  _a_p_p_e_n_d  will  take
+                place at the end of the file.
+
+            _r_a_w:
+                The _r_a_w option allows faster access  to  a  file,
+                because no Erlang process is needed to handle the
+                file. However, a file opened in this way has  the
+                following limitations:
+
+                  * The functions in  the  _i_o  module  cannot  be
+                    used, because they can only talk to an Erlang
+                    process. Instead, use the _r_e_a_d/_2 and  _w_r_i_t_e/_2
+                    functions.
+
+                  * Only the Erlang process which opened the file
+                    can use it.
+
+                  * A remote Erlang file server cannot  be  used;
+                    the computer on which the Erlang node is run-
+                    ning must have  access  to  the  file  system
+                    (directly or through NFS).
+
+            _b_i_n_a_r_y:
+                This option can only be used if the _r_a_w option is
+                specified  as  well.  When specified, read opera-
+                tions on the file using the _r_e_a_d/_2 function  will
+                return binaries rather than lists.
+
+          If both _r_e_a_d and  _w_r_i_t_e  are  specified,  the  file  is
+          created  if  it does not exists. It is not truncated if
+          it exists.
+
+          Returns:
+
+            {_o_k, _I_o_D_e_v_i_c_e}:
+                The file has been opened in the  requested  mode.
+                _I_o_D_e_v_i_c_e is a reference to the file.
+
+            {_e_r_r_o_r, _R_e_a_s_o_n}:
+                The file could not be opened.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  7
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+          A _f_i_l_e _d_e_s_c_r_i_p_t_o_r is the Pid of the process which  han-
+          dles  the  file. The file process is linked to the pro-
+          cess which originally opened the file. If  any  process
+          to  which  the  file  process is linked terminates, the
+          file will be closed by the file process and the process
+          itself will be terminated. The file descriptor returned
+          from this call can be used as an argument  to  the  I/O
+          functions (see _i_o).
+
+  Note:
+     In previous versions of _f_i_l_e, modes were given as on of  the
+     atoms  _r_e_a_d, _w_r_i_t_e, or _r_e_a_d__w_r_i_t_e instead of a list. This is
+     still allowed for reasons of  backwards  compatibility,  but
+     should  not  be used for new code. Also note that _r_e_a_d__w_r_i_t_e
+     is not allowed in a mode list.
+
+
+     Typical error reasons:
+
+       _e_n_o_e_n_t:
+           The file does not exist.
+
+       _e_a_c_c_e_s:
+           Missing permission for reading the file  or  searching
+           one of the parent directories.
+
+       _e_i_s_d_i_r:
+           The named file is a directory.
+
+       _e_n_o_t_d_i_r:
+           A component of the file name is not  a  directory.  On
+           some platforms, _e_n_o_e_n_t is returned instead.
+
+       _e_n_o_s_p_c:
+           There is a no space  left  on  the  device  (if  _w_r_i_t_e
+           access was specified).
+
+     path_consult(Path, Filename)
+
+          Searches the path _P_a_t_h  (a  list  of  directory  names)
+          until  the  file  _F_i_l_e_n_a_m_e  is found. If _F_i_l_e_n_a_m_e is an
+          absolute file name, _P_a_t_h is ignored. The file is opened
+          and  all the terms in it are read. The function returns
+          one of the following:
+
+            {_o_k, _T_e_r_m_L_i_s_t, _F_u_l_l_N_a_m_e}:
+                The file was successfully read. _F_u_l_l_N_a_m_e  is  the
+                full name of the file which was opened and read.
+
+            {_e_r_r_o_r, _e_n_o_e_n_t}:
+                The file could not be found in any of the  direc-
+                tories in _P_a_t_h.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  8
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+            {_e_r_r_o_r, _A_t_o_m}:
+                An error occurred when opening the file or  read-
+                ing  it.  The _A_t_o_m is a Posix error code. See the
+                description of _o_p_e_n/_2 for a list of typical error
+                codes.
+
+            {_e_r_r_o_r, {_L_i_n_e, _M_o_d, _T_e_r_m}}:
+                An error occurred when  interpreting  the  Erlang
+                terms  in  the file. Use the _f_o_r_m_a_t__e_r_r_o_r/_1 func-
+                tion to convert the  three-element  tuple  to  an
+                English description of the error.
+
+     path_eval(Path, Filename)
+
+          Searches the path _P_a_t_h  (a  list  of  directory  names)
+          until  the  file  _F_i_l_e_n_a_m_e  is found. If _F_i_l_e_n_a_m_e is an
+          absolute file name, _P_a_t_h is ignored. The file is opened
+          and  all  the expression sequences in it are evaluated.
+          The function returns one of the following:
+
+            {_o_k, _F_u_l_l_N_a_m_e}:
+                The file was read. _F_u_l_l_N_a_m_e is the full  name  of
+                the file which was opened and evaluated.
+
+            {_e_r_r_o_r, _e_n_o_e_n_t}:
+                The file could not be found in any of the  direc-
+                tories in _P_a_t_h.
+
+            {_e_r_r_o_r, _A_t_o_m}:
+                An error occurred when opening the file or  read-
+                ing  it.  The _A_t_o_m is a Posix error code. See the
+                description of _o_p_e_n/_2 for a list of typical error
+                codes.
+
+            {_e_r_r_o_r, {_L_i_n_e, _M_o_d, _T_e_r_m}}:
+                An error occurred when  interpreting  the  Erlang
+                terms  in  the file. Use the _f_o_r_m_a_t__e_r_r_o_r/_1 func-
+                tion to convert the  three-element  tuple  to  an
+                English description of the error.
+
+     path_open(Path, Filename, Mode)
+
+          Searches the path _P_a_t_h  (a  list  of  directory  names)
+          until  the  file  _F_i_l_e_n_a_m_e  is found. If _F_i_l_e_n_a_m_e is an
+          absolute file  name,  _P_a_t_h  is  ignored.  The  function
+          returns one of the following:
+
+            {_o_k, _I_o_D_e_v_i_c_e, _F_u_l_l_N_a_m_e}:
+                The file was opened in the requested mode. _I_o_D_e_v_-
+                _i_c_e  is  a  reference to the file and _F_u_l_l_N_a_m_e is
+                the full name of the file which was opened.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  9
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+            {_e_r_r_o_r, _e_n_o_e_n_t}:
+                _F_i_l_e_n_a_m_e was not found in the path.
+
+            {_e_r_r_o_r, _R_e_a_s_o_n}:
+                There was an error opening _F_i_l_e_n_a_m_e.
+
+     position(IoDevice, Location)
+
+          Sets the position of the file referenced by _I_o_D_e_v_i_c_e to
+          _L_o_c_a_t_i_o_n.   Returns   {_o_k,  _N_e_w_P_o_s_i_t_i_o_n}  (as  absolute
+          offset) if successful, otherwise {_e_r_r_o_r, _R_e_a_s_o_n}. _L_o_c_a_-
+          _t_i_o_n is one of the following:
+
+            {_b_o_f, _O_f_f_s_e_t}:
+                Absolute offset
+
+            {_c_u_r, _O_f_f_s_e_t}:
+                Offset from the current position
+
+            {_e_o_f, _O_f_f_s_e_t}:
+                Offset from the end of file
+
+            _I_n_t_e_g_e_r:
+                The same as {_b_o_f, _I_n_t_e_g_e_r}
+
+            _b_o_f || _c_u_r || _e_o_f:
+                The same as above with _O_f_f_s_e_t 0.
+
+          Typical error reasons are:
+
+            _e_i_n_v_a_l:
+                Either the _L_o_c_a_t_i_o_n was illegal, or it  evaluated
+                to  a  negative  offset in the file. Note that if
+                the resulting position is a  negative  value  you
+                will  get an error but after the call it is unde-
+                fined where the file position will be.
+
+     pread(IoDevice, Location, Number)
+
+          Combines _p_o_s_i_t_i_o_n/_2 and _r_e_a_d/_2 in one operation,  which
+          is  more  efficient than calling them one at a time. If
+          _I_o_D_e_v_i_c_e has been opened in raw mode, some restrictions
+          apply:  _L_o_c_a_t_i_o_n  is only allowed to be an integer; and
+          the current position of the file is undefined after the
+          operation.
+
+     pwrite(IoDevice, Location, Bytes)
+
+          Combines _p_o_s_i_t_i_o_n/_2 and _w_r_i_t_e/_2 in one operation, which
+          is  more  efficient than calling them one at a time. If
+          _I_o_D_e_v_i_c_e has been opened in raw mode, some restrictions
+          apply:  _L_o_c_a_t_i_o_n  is only allowed to be an integer; and
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 10
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+          the current position of the file is undefined after the
+          operation.
+
+     read(IoDevice, Number)
+
+          Reads _N_u_m_b_e_r bytes from the file described by _I_o_D_e_v_i_c_e.
+          This  function  is  the  only  way  to read from a file
+          opened in raw mode  (although  it  works  for  normally
+          opened files, too). Returns:
+
+            {_o_k, _L_i_s_t_O_r_B_i_n_a_r_y}:
+                If the file was opened in binary mode,  the  read
+                bytes  are  returned  in a binary, otherwise in a
+                list. The list or binary will be shorter than the
+                the  number  of bytes requested if the end of the
+                file is reached.
+
+            _e_o_f:
+                _e_o_f is returned if the _N_u_m_b_e_r  was  greater  than
+                zero  and end of file was reached before anything
+                at all could be read.
+
+            {_e_r_r_o_r, _R_e_a_s_o_n}:
+                A Posix error code will be returned if  an  error
+                occurred.
+
+                Typical error reasons:
+
+                  _e_b_a_d_f:
+                      The file is not opened for reading.
+
+     read_file(Filename)
+
+          Returns {_o_k, _B_i_n_a_r_y}, where _B_i_n_a_r_y  is  a  binary  data
+          object  that  contains  the  contents  of  _F_i_l_e_n_a_m_e, or
+          {_e_r_r_o_r, _R_e_a_s_o_n} if an error occurs.
+
+          Typical error reasons:
+
+            _e_n_o_e_n_t:
+                The file does not exist.
+
+            _e_a_c_c_e_s:
+                Missing permission for reading the file,  or  for
+                searching one of the parent directories.
+
+            _e_i_s_d_i_r:
+                The named file is a directory.
+
+            _e_n_o_t_d_i_r:
+                A component of the file name is not a  directory.
+                On some platforms, _e_n_o_e_n_t is returned instead.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 11
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+            _e_n_o_m_e_m:
+                There is not enough memory for  the  contents  of
+                the file.
+
+     read_file_info(Filename)
+
+          Retrieves  information  about  a  file.  Returns   {_o_k,
+          _F_i_l_e_I_n_f_o}  if  successful,  otherwise  {_e_r_r_o_r, _R_e_a_s_o_n}.
+          _F_i_l_e_I_n_f_o is a record. Its definition can  be  found  by
+          including _f_i_l_e._h_r_l from the kernel application:
+
+                    -include_lib("kernel/include/file.hrl").
+
+          The record contains the following fields.
+
+            _s_i_z_e:
+                Size of file in bytes.
+
+            _t_y_p_e:
+                The type of the file which can be _d_e_v_i_c_e,  _d_i_r_e_c_-
+                _t_o_r_y, _r_e_g_u_l_a_r, or _o_t_h_e_r.
+
+            _a_c_c_e_s_s:
+                The current system access to the file,  which  is
+                one  of  the  atoms  _r_e_a_d,  _w_r_i_t_e, _r_e_a_d__w_r_i_t_e, or
+                _n_o_n_e.
+
+            _a_t_i_m_e:
+                The last (local) time the file was read,  in  the
+                format   {{_Y_e_a_r,   _M_o_n_t_h,  _D_a_y},  {_H_o_u_r,  _M_i_n_u_t_e,
+                _S_e_c_o_n_d}}.
+
+            _m_t_i_m_e:
+                The last (local) time the file  was  written,  in
+                the  format  {{_Y_e_a_r,  _M_o_n_t_h, _D_a_y}, {_H_o_u_r, _M_i_n_u_t_e,
+                _S_e_c_o_n_d}}.
+
+            _c_t_i_m_e:
+                The interpreation of this time field  depends  on
+                the  operating  system.  On  Unix, it is the last
+                time the file or or the  inode  was  changed.  In
+                Windows,  it  is  the  create time. The format is
+                {{_Y_e_a_r, _M_o_n_t_h, _D_a_y}, {_H_o_u_r, _M_i_n_u_t_e, _S_e_c_o_n_d}}.
+
+            _m_o_d_e:
+                An integer which gives the file permissions as  a
+                sum of the following bit values:
+
+                  8#00400:
+                      read permission: owner
+
+                  8#00200:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 12
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+                      write permission: owner
+
+                  8#00100:
+                      execute permission: owner
+
+                  8#00040:
+                      read permission: group
+
+                  8#00020:
+                      write permission: group
+
+                  8#00010:
+                      execute permission: group
+
+                  8#00004:
+                      read permission: other
+
+                  8#00002:
+                      write permission: other
+
+                  8#00001:
+                      execute permission: other
+
+                  16#800:
+                      set user id on execution
+
+                  16#400:
+                      set group id on execution
+
+                On Unix platforms, other bits than  those  listed
+                above may be set.
+
+            _l_i_n_k_s:
+                Number of links to the file (this will always  be
+                1  for  file  systems  which  have  no concept of
+                links).
+
+            _m_a_j_o_r__d_e_v_i_c_e:
+                An integer which identifies the file system where
+                the file is located. In Windows, the number indi-
+                cates a drive as follows: 0 means A:, 1 means B:,
+                and so on.
+
+            _m_i_n_o_r__d_e_v_i_c_e:
+                Only valid for character devices on Unix. In  all
+                other cases, this field is zero.
+
+            _i_n_o_d_e:
+                An integer which gives the _i_n_o_d_e number. On  non-
+                Unix file systems, this field will be zero.
+
+            _u_i_d:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 13
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+                An integer which indicates the owner of the file.
+                Will be zero for non-Unix file systems.
+
+            _g_i_d:
+                An integer which gives the group that  the  owner
+                of the file belongs to. Will be zero for non-Unix
+                file systems.
+
+          Typical error reasons:
+
+            _e_a_c_c_e_s:
+                Missing search permission for one of  the  parent
+                directories of the file.
+
+            _e_n_o_e_n_t:
+                The file does not exist.
+
+            _e_n_o_t_d_i_r:
+                A component of the file name is not a  directory.
+                On some platforms, _e_n_o_e_n_t is returned instead.
+
+     read_link(Linkname)
+
+          This function returns {_o_k, _F_i_l_e_n_a_m_e} if _L_i_n_k_n_a_m_e refers
+          to  a  symbolic  link  or {_e_r_r_o_r, _R_e_a_s_o_n} otherwise. On
+          platforms that  do  not  support  symbolic  links,  the
+          return value will be {_e_r_r_o_r, _e_n_o_t_s_u_p}.
+
+          Typical error reasons:
+
+            _e_i_n_v_a_l:
+                _L_i_n_k_n_a_m_e does not refer to a symbolic link.
+
+            _e_n_o_e_n_t:
+                The file does not exist.
+
+            _e_n_o_t_s_u_p:
+                Symbolic links are not supported  on  this  plat-
+                form.
+
+     read_link_info(Filename)
+
+          This function works like _r_e_a_d__f_i_l_e__i_n_f_o/_1, except  that
+          if  _F_i_l_e_n_a_m_e  is a symbolic link, information about the
+          link will be returned in the _f_i_l_e__i_n_f_o record  and  the
+          _t_y_p_e  field  of  the  record will be set to _s_y_m_l_i_n_k. If
+          _F_i_l_e_n_a_m_e is not a symbolic link, this function  returns
+          exactly  the  same result as _r_e_a_d__f_i_l_e__i_n_f_o/_1. On plat-
+          forms that do not support symbolic link, this  function
+          is always equvivalent to _r_e_a_d__f_i_l_e__i_n_f_o/_1.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 14
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+     rename(Source, Destination)
+
+          Tries to rename the file _S_o_u_r_c_e to_D_e_s_t_i_n_a_t_i_o_n.  It  can
+          be  used to move files (and directories) between direc-
+          tories, but it is not sufficient to specify the  desti-
+          nation  only.  The  destination  file name must also be
+          specified. For example, if _b_a_r is a normal file and _f_o_o
+          and   _b_a_z  are  directories,  _r_e_n_a_m_e("_f_o_o/_b_a_r",  "_b_a_z")
+          returns  an  error,  but  _r_e_n_a_m_e("_f_o_o/_b_a_r",  "_b_a_z/_b_a_r")
+          succeeds. Returns _o_k if it is successful.
+
+  Note:
+     Renaming of open files is not allowed on most platforms (see
+     _e_a_c_c_e_s below).
+
+
+     Typical error reasons:
+
+       _e_a_c_c_e_s:
+           Missing read  or  write  permissions  for  the  parent
+           directories  of  _S_o_u_r_c_e  or _D_e_s_t_i_n_a_t_i_o_n. On some plat-
+           forms, this error is given if either _S_o_u_r_c_e or  _D_e_s_t_i_-
+           _n_a_t_i_o_n is open.
+
+       _e_e_x_i_s_t:
+           _D_e_s_t_i_n_a_t_i_o_n is not an empty directory. On  some  plat-
+           forms,  also given when _S_o_u_r_c_e and _D_e_s_t_i_n_a_t_i_o_n are not
+           of the same type.
+
+       _e_i_n_v_a_l:
+           _S_o_u_r_c_e is a root directory, or _D_e_s_t_i_n_a_t_i_o_n is  a  sub-
+           directory of _S_o_u_r_c_e.
+
+       _e_i_s_d_i_r:
+           _D_e_s_t_i_n_a_t_i_o_n is a directory, but _S_o_u_r_c_e is not.
+
+       _e_n_o_e_n_t:
+           _S_o_u_r_c_e does not exist.
+
+       _e_n_o_t_d_i_r:
+           _S_o_u_r_c_e is a directory, but _D_e_s_t_i_n_a_t_i_o_n is not.
+
+       _e_x_d_e_v:
+           _S_o_u_r_c_e and _D_e_s_t_i_n_a_t_i_o_n are on different file systems.
+
+     set_cwd(DirName)
+
+          Sets the current working directory of the  file  server
+          to _D_i_r_N_a_m_e. Returns _o_k if successful.
+
+          Typical error reasons are:
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 15
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+            _e_n_o_e_n_t:
+                The directory does not exist.
+
+            _e_n_o_t_d_i_r:
+                A component of _D_i_r_N_a_m_e is  not  a  directory.  On
+                some platforms, _e_n_o_e_n_t is returned.
+
+            _e_a_c_c_e_s:
+                Missing permission for the directory  or  one  of
+                its parents.
+
+     sync(IoDevice)
+
+          Makes sure that any buffers kept by the operating  sys-
+          tem  (not  by the Erlang runtime system) are written to
+          disk. On some platforms, this function  might  have  no
+          effect .
+
+     truncate(IoDevice)
+
+          Truncates  the  file  referenced  by  _I_o_D_e_v_i_c_e  at  the
+          current  position.  Returns _o_k if successful, otherwise
+          {_e_r_r_o_r, _R_e_a_s_o_n}.
+
+     write(IoDevice, Bytes)
+
+          Writes _B_y_t_e_s (possibly a deep list of characters, or  a
+          binary)  to  the file described by _I_o_D_e_v_i_c_e. This func-
+          tion is the only way to write to a file opened  in  raw
+          mode  (although  it  works  for  normally opened files,
+          too).
+
+          This function returns _o_k  if  successful,  and  {_e_r_r_o_r,
+          _R_e_a_s_o_n} otherwise.
+
+          Typical error reasons are:
+
+            _e_b_a_d_f:
+                The file is not opened for writing.
+
+            _e_n_o_s_p_c:
+                There is a no space left on the device.
+
+     write_file(Filename, Binary)
+
+          Writes the contents of the binary data object _B_i_n_a_r_y to
+          the  file  _F_i_l_e_n_a_m_e. The file is created if it does not
+          exist already. If it exists, the previous contents  are
+          overwritten. Returns _o_k, or {_e_r_r_o_r, _R_e_a_s_o_n}.
+
+          Typical error reasons are:
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 16
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+            _e_n_o_e_n_t:
+                A component of the file name does not exist.
+
+            _e_n_o_t_d_i_r:
+                A component of the file name is not a  directory.
+                On some platforms, _e_n_o_e_n_t is returned instead.
+
+            _e_n_o_s_p_c:
+                There is a no space left on the device.
+
+            _e_a_c_c_e_s:
+                Missing  permission  for  writing  the  file   or
+                searching one of the parent directories.
+
+            _e_i_s_d_i_r:
+                The named file is a directory.
+
+     write_file_info(Filename, FileInfo)
+
+          Change file information. Returns _o_k if successful, oth-
+          erwise  {_e_r_r_o_r,  _R_e_a_s_o_n}.  _F_i_l_e_I_n_f_o  is  a  record. Its
+          definition can be found by including _f_i_l_e._h_r_l from  the
+          kernel application:
+
+                    -include_lib("kernel/include/file.hrl").
+
+          The following fields are used from the record  if  they
+          are given.
+
+            _a_t_i_m_e:
+                The last (local) time the file was read,  in  the
+                format   {{_Y_e_a_r,   _M_o_n_t_h,  _D_a_y},  {_H_o_u_r,  _M_i_n_u_t_e,
+                _S_e_c_o_n_d}}.
+
+            _m_t_i_m_e:
+                The last (local) time the file  was  written,  in
+                the  format  {{_Y_e_a_r,  _M_o_n_t_h, _D_a_y}, {_H_o_u_r, _M_i_n_u_t_e,
+                _S_e_c_o_n_d}}.
+
+            _c_t_i_m_e:
+                On Unix, any value give for this  field  will  be
+                ignored  (the "ctime" for the file will be set to
+                the current time). On Windows, this field is  the
+                new creation time to set for the file. The format
+                is {{_Y_e_a_r, _M_o_n_t_h, _D_a_y}, {_H_o_u_r, _M_i_n_u_t_e, _S_e_c_o_n_d}}.
+
+            _m_o_d_e:
+                An integer which gives the file permissions as  a
+                sum of the following bit values:
+
+                  8#00400:
+                      read permission: owner
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 17
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+                  8#00200:
+                      write permission: owner
+
+                  8#00100:
+                      execute permission: owner
+
+                  8#00040:
+                      read permission: group
+
+                  8#00020:
+                      write permission: group
+
+                  8#00010:
+                      execute permission: group
+
+                  8#00004:
+                      read permission: other
+
+                  8#00002:
+                      write permission: other
+
+                  8#00001:
+                      execute permission: other
+
+                  16#800:
+                      set user id on execution
+
+                  16#400:
+                      set group id on execution
+
+                On Unix platforms, other bits than  those  listed
+                above may be set.
+
+            _u_i_d:
+                An integer which indicates the owner of the file.
+                Ignored for non-Unix file systems.
+
+            _g_i_d:
+                An integer which gives the group that  the  owner
+                of  the  file  belongs  to. Ignored non-Unix file
+                systems.
+
+          Typical error reasons:
+
+            _e_a_c_c_e_s:
+                Missing search permission for one of  the  parent
+                directories of the file.
+
+            _e_n_o_e_n_t:
+                The file does not exist.
+
+            _e_n_o_t_d_i_r:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 18
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+                A component of the file name is not a  directory.
+                On some platforms, _e_n_o_e_n_t is returned instead.
+
+POSIX Error Codes
+       eacces:
+           permission denied
+
+       eagain:
+           resource temporarily unavailable
+
+       ebadf:
+           bad file number
+
+       ebusy:
+           file busy
+
+       edquot:
+           disk quota exceeded
+
+       eexist:
+           file already exists
+
+       efault:
+           bad address in system call argument
+
+       efbig:
+           file too large
+
+       eintr:
+           interrupted system call
+
+       einval:
+           invalid argument
+
+       eio:
+           I/O error
+
+       eisdir:
+           illegal operation on a directory
+
+       eloop:
+           too many levels of symbolic links
+
+       emfile:
+           too many open files
+
+       emlink:
+           too many links
+
+       enametoolong:
+           file name too long
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 19
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+       enfile:
+           file table overflow
+
+       enodev:
+           no such device
+
+       enoent:
+           no such file or directory
+
+       enomem:
+           not enough memory
+
+       enospc:
+           no space left on device
+
+       enotblk:
+           block device required
+
+       enotdir:
+           not a directory
+
+       enotsup:
+           operation not supported
+
+       enxio:
+           no such device or address
+
+       eperm:
+           not owner
+
+       epipe:
+           broken pipe
+
+       erofs:
+           read-only file system
+
+       espipe:
+           invalid seek
+
+       esrch:
+           no such process
+
+       estale:
+           stale remote file handle
+
+       exdev:
+           cross-domain link
+
+Warnings
+     If an error occurs when accessing an open file with  the  _i_o
+     module,  the  process  which handles the file will exit. The
+     dead file process might hang if a process tries to access it
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 20
+
+
+
+
+
+
+file(3)             ERLANG MODULE DEFINITION              file(3)
+
+
+
+     later. This will be fixed in a future release.
+
+See Also
+     filename(3)
+
+AUTHORS
+     Robert Virding - support@erlang.ericsson.se
+     Claes Wikstrom - support@erlang.ericsson.se
+     Bjorn Gustavsson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 21
+
+
+

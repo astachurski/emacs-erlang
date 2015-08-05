@@ -1,0 +1,444 @@
+.TH application 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+application \- Functions for controlling applications
+.SH DESCRIPTION
+.LP
+This module contains functions for controlling applications (eg\&. starting and stopping applications), and functions to access information about any application, (eg\&. configuration parameters) 
+.LP
+All applications are started by the \fIapplication_controller\fR process\&. Each application has an \fIapplication_master\fR process\&. This process monitors the application and reports to the application controller if the application terminates\&. 
+.LP
+An application can be started locally or distributed\&. A distributed application is started on one of several nodes while a local application is always started on the current node\&. 
+.LP
+The local applications are controlled by the application controller\&. The distributed applications are controlled by another process, called the distributed application controller (\fIdist_ac\fR)\&. The distributed application controller on different nodes monitor each other\&. Therefore, if a node goes down, the distributed applications on that node will be automatically re-started on one of the remaining nodes\&. 
+.LP
+The distributed application controller is not started by default\&. Systems that use distributed applications must set the configuration parameter \fIstart_dist_ac\fR in \fIkernel\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+get_all_env()
+.br
+.B
+get_all_env(Application) -> Env
+.br
+.RS
+.TP
+Types
+Application = atom()
+.br
+Env = [{Key, Value}]
+.br
+Key = atom()
+.br
+Value = term()
+.br
+.RE
+.RS
+.LP
+Retrieves the values of the application\&'s configuration parameters\&. If \fIApplication\fR is not specified, then the configuration parameters for the application which executes the call are returned\&. 
+.RE
+.LP
+.B
+get_all_key()
+.br
+.B
+get_all_key(Application) -> {ok, Keys} | undefined 
+.br
+.RS
+.TP
+Types
+Application = atom()
+.br
+Keys = [{Key, Value}]
+.br
+Key = atom()
+.br
+Value = term()
+.br
+.RE
+.RS
+.LP
+Retrieves all the keys from the application\&'s resource file, \fIApplication\&.app\fR\&. If \fIApplication\fR is not specified, then the keys for the application which executes the call are returned\&. 
+.RE
+.LP
+.B
+get_application()
+.br
+.B
+get_application(Pid | Module) -> {ok, Application} | undefined
+.br
+.RS
+.TP
+Types
+Pid = pid()
+.br
+Module = atom()
+.br
+Application = atom()
+.br
+.RE
+.RS
+.LP
+Retrieves the name of the application where the process \fIPid\fR executes\&. If \fIPid\fR is not specified, \fIself()\fR is used\&. If an atom is given the name of the application which contains the module will be returned, or \fIundefined\fR\&. 
+.RE
+.LP
+.B
+get_env(Key)
+.br
+.B
+get_env(Application, Key) -> {ok, Value} | undefined
+.br
+.RS
+.TP
+Types
+Application = atom()
+.br
+Key = atom()
+.br
+Value = term()
+.br
+.RE
+.RS
+.LP
+Retrieves the value of an application\&'s configuration parameter\&. If \fIApplication\fR is not specified, the parameter for the application which executes the call is retrieved\&.
+.RE
+.LP
+.B
+get_key(Key)
+.br
+.B
+get_key(Application, Key) -> {ok, Value} | undefined
+.br
+.RS
+.TP
+Types
+Application = atom()
+.br
+Key = atom()
+.br
+Value = term()
+.br
+.RE
+.RS
+.LP
+Retrieves the key from the application\&'s resource file, \fIApplication\&.app\fR\&. If \fIApplication\fR is not specified, then the key for the application which executes the call is returned\&. 
+.LP
+If \fIKey\fR is a valid key (see app(4)) for which no value is defined, \fI{ok, undefined}\fR is return\&. If \fIKey\fR is not a valid key, \fIundefined\fR is always returned\&. 
+.RE
+.LP
+.B
+load(Application)
+.br
+.B
+load(Application, DistNodes) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Application = atom() | appl_descr()
+.br
+DistNodes = {Name, Nodes} | {Name, Time, Nodes} | default
+.br
+appl_descr() = {application, Name, [appl_opt()]}
+.br
+Name = atom()
+.br
+Time = integer() > 0
+.br
+Nodes = [node() | {node(), \&.\&.\&., node()}]
+.br
+appl_opt() = {description, string()} | {vsn, vsn()} | {modules, [{atom(), vsn()}]} | {registered, [atom()]} | {applications, [atom()]} | {env, [{atom(), term()}]} |{mod, {Mod, StartArgs}}
+.br
+vsn() = string()
+.br
+.RE
+.RS
+.LP
+If the name of the application is given, the application controller searches the current path (the same as the code path) for a file called \fIApplication\&.app\fR\&. 
+.br
+\fINote:\fR This file must contain the \fIappl_descr()\fR (written in plain text, with a dot and space after the term)\&. 
+.LP
+\fIdescription\fR and \fIversion\fR - Contains information about an application that can be retrieved by calling \fIapplication:loaded_applications/0\fR\&. 
+.LP
+\fImodules\fR - Lists the modules that this application introduces\&. 
+.LP
+\fIregistered\fR is a list of the registered names that this application uses for its own processes\&. 
+.LP
+\fIapplications\fR - Lists of other applications that must be started before this one\&. 
+.LP
+\fIenv\fR is a list of configuration parameters\&. \fINote: \fR The definitions in this list may be altered by definitions in the system configuration file, specified by the command line argument \fI-config\fR\&. They can also be altered directly from the command line, by giving \fI-Name Par Value\fR\&. 
+.LP
+\fImod\fR is the application call back module\&. \fIMod:start(StartType, StartArgs)\fR is called when the application is started\&. Refer to the call back function \fIstart/2\fR\&. 
+.LP
+The \fIDistNodes\fR parameter will override the value of the application in the Kernel configuration parameter \fIdistributed\fR\&. The data structure specifies a list of nodes where the application \fIName\fR may execute\&. If the nodes are specified in a tuple, the order of where to start the application will be undefined\&. If a node crashes and \fITime\fR has been specified, then the application controller will wait for \fITime\fR milliseconds before attempting to restart the application on another node\&. If \fITime\fR is not specified, it will default to 0\&. If a node goes down, the application will be restarted immediately on another node\&. If \fIDistNodes\fR is \fIdefault\fR, the value in the configuration parameter \fIdistributed\fR will be used\&. 
+.RE
+.LP
+.B
+loaded_applications() -> [{Name, Description, Version}]
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+Description = string()
+.br
+Version = string()
+.br
+.RE
+.RS
+.LP
+This function returns a list of applications which are loaded in the system\&. \fIDescription\fR and \fIVersion\fR are as defined in the application specification\&. 
+.RE
+.LP
+.B
+permit(Application, Bool) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+Bool = bool()
+.br
+.RE
+.RS
+.LP
+This function changes an application\&'s permission to run on the node, or vice versa\&. If the permission of a locally running application is set to \fIfalse\fR, the application will be stopped\&. When the permission is set to \fItrue\fR, the local application will be started\&. If the permission of a running, distributed application is set to \fIfalse\fR, the application will be moved to another node where it may run, if a node is available\&. 
+.LP
+The application must be loaded before the permit function can be called\&. 
+.LP
+This function does not return until the application is either started, stopped or successfully moved to another node\&. However, in some cases where permission is set to \fItrue\fR the function may return \fIok\fR even though the application itself has not started\&. This is true when an application cannot start because it has dependencies on applications which have not yet been started\&. When these applications are started the dependent application will also be started\&. 
+.LP
+By default, all applications are loaded with permission \fItrue\fR on all nodes\&. The permission is configurable with the parameter \fIpermissions\fR in \fIkernel\fR\&. 
+.RE
+.LP
+.B
+start(Application)
+.br
+.B
+start(Application, Type) -> ok | {error, Reason} 
+.br
+.RS
+.TP
+Types
+Application = atom()
+.br
+Type = permanent | transient | temporary
+.br
+.RE
+.RS
+.LP
+This function starts and application\&. If the application is not loaded, the application controller will first try to load it, as if \fIapplication:load(Application)\fR was called\&. 
+.LP
+The \fIType\fR specifies what happens if the application dies\&. 
+.RS 2
+.TP 2
+*
+If a permanent application dies, all other applications are also terminated\&.
+.TP 2
+*
+If a transient application dies normally, this is reported and no other applications are terminated\&. If a transient application dies abnormally, all other applications are also terminated\&.
+.TP 2
+*
+If a temporary application dies this is reported and no other applications are terminated\&. In this way, an application can run in test mode, without disturbing the other applications\&.
+.RE
+.LP
+Default value for \fIType\fR is \fItemporary\fR\&. 
+.RE
+.LP
+.B
+start_type() -> normal | local | {takeover, node()} | {failover, node()} 
+.br
+.RS
+.LP
+This function returns the type of application start which is executing\&. 
+.LP
+\fInormal\fR is returned when an application is starting and the below circumstances have not occurred\&. 
+.LP
+\fIlocal\fR is returned if a supervised process restarts due to abnormal exit or if no start is running at the time of request\&. 
+.LP
+\fI{takeover, Node}\fR is returned if the application is requested to move to another node either due to a call to \fItakeover/2\fR or when a node with higher priority to run the application is restarted\&. 
+.LP
+\fI{failover, Node}\fR is returned if the application is restarted due to the \fINode\fR crashing where the application was previously executing\&. 
+.RE
+.LP
+.B
+stop(Application) -> ok
+.br
+.RS
+.TP
+Types
+Application = atom()
+.br
+.RE
+.RS
+.LP
+This function stops a running application\&. If the application was distributed, no other node will restart it\&. All processes in the application tree are terminated, and also all processes with the same group leader as the application\&. 
+.RE
+.LP
+.B
+takeover(Application, Type) -> {ok, Pid} | {error, Reason} 
+.br
+.RS
+.TP
+Types
+Application = atom()
+.br
+Type = permanent | transient | temporary
+.br
+.RE
+.RS
+.LP
+This function moves a distributed application which executes on another node \fINode\fR to the current node\&. The application is started by calling \fIMod:start({takeover, Node}, StartArgs)\fR before the application is stopped on the other node\&. This makes it possible to transfer application specific data from a currently running application to a new node\&. When the application start function returns, the application on a \fINode\fR is stopped\&. This means that two instances of the application may be running on two different nodes at one time\&. If this is not acceptable, parts of the application on the old node (\fINode\fR) may be shut down when the new node starts the application\&. \fINote:\fR that the old application must not be stopped entirely (i\&.e\&. \fIapplication:stop/1\fR must not be called on the old node)\&. The main supervisor, must still be alive\&. 
+.RE
+.LP
+.B
+which_applications() -> [{Name, Description, Version}]
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+Description = string()
+.br
+Version = string()
+.br
+.RE
+.RS
+.LP
+Returns a list of the applications which are running in the system\&. \fIDescription\fR and \fIVersion\fR are as defined in the application specification\&. 
+.RE
+.SH Call back Module 
+.LP
+The following functions are exported from an \fIapplication\fR call back module\&. 
+.SH EXPORTS
+.LP
+.B
+Module:config_change(Changed, New, Removed) -> ok
+.br
+.RS
+.TP
+Types
+Changed = [{Parameter, NewValue}] 
+.br
+New = [{Parameter, Value}] 
+.br
+Removed = [Parameter] 
+.br
+Parameter = atom()
+.br
+NewValue = term()
+.br
+Value = term()
+.br
+.RE
+.RS
+.LP
+After an installation of a new release all started applications on a node are notified of the changed, new and removed configuration parameters\&. The unchanged configuration parameters are not affected and therefore the function is not evaluated for applications which have unchanged configuration parameters between the old and new releases\&. 
+.RE
+.LP
+.B
+Module:start(Type, ModuleStartArgs) -> {ok, Pid} | {ok, Pid, State} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Type = normal | {takeover, node()} | {failover, node()}
+.br
+ModuleStartArgs = term()
+.br
+Pid = pid()
+.br
+State = state()
+.br
+.RE
+.RS
+.LP
+This function starts a primary application\&. Normally, this function starts the main supervisor of the primary application\&. 
+.LP
+If \fIType\fR is \fI{takeover, Node}\fR, it is a distributed application which is running on the \fINode\fR\&. If the application does not have the start-phases key defined in the application\&'s resource file, the application will be stopped by the application controller after this call returns (see \fIstart-phase/3\fR) This makes it possible to transfer the internal state from the running application to the one to be started\&. This function must not stop the application on \fINode\fR, but it may shut down parts of it\&. For example, instead of stopping the application, the main supervisor may terminate all its children\&. 
+.LP
+If \fIType\fR is \fI{failover, Node}\fR, the application will be restarted due to a crash of the node where the application was previously executing\&.
+.br
+ \fI{failover, node()}\fR is valid only if the \fIstart_phases \fRkey is defined in the applications resource file\&. Otherwise the type is set to \fInormal\fR at failover\&. 
+.LP
+The \fIModuleStartArgs\fR parameter is specified in the application resource file (\fI\&.app\fR), as \fI{mod, {Module, ModuleStartArgs}}\fR\&. 
+.LP
+\fIState\fR is any term\&. It is passed to \fIModule:prep_stop/1\fR\&. If no \fIState\fR is returned, \fI[]\fR is used\&. 
+.RE
+.LP
+.B
+Module:start_phase(Phase, Type, PhaseStartArgs) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Phase = atom()
+.br
+Type = normal | {takeover, node()} | {failover, node()}
+.br
+PhaseStartArgs = term()
+.br
+Pid = pid()
+.br
+State = state()
+.br
+.RE
+.RS
+.LP
+This function starts a application in the phase \fIPhase\fR\&. It is called by default only for a primary application and not for the included applications, refer to User\&'s Guide chapter \&'Design Principles\&' regarding incorporating included applications\&. 
+.LP
+The \fIPhaseStartArgs\fR parameter is specified in the application\&'s resource file (\fI\&.app\fR), as \fI{start_phases, [{Phase, PhaseStartArgs}]}\fR, the \fIModule\fR as \fI{mod, {Module, ModuleStartArgs}}\fR\&. 
+.LP
+This call back function is only valid for applications with a defined \fIstart_phases\fR key\&. This function will be called once per \fIPhase\fR\&. 
+.LP
+If \fIType\fR is \fI{takeover, Node}\fR, it is a distributed application which runs on the \fINode\fR\&. When this call returns for the last start phase, the application on \fINode\fR will be stopped by the application controller\&. This makes it possible to transfer the internal state from the running application\&. When designing the start phase function it is imperative that the application is not allowed to terminate the application on \fInode\fR\&. However, it possible to partially shut it down for eg\&. the main supervisor may terminate all the application\&'s children\&. 
+.LP
+If \fIType\fR is \fI{failover, Node}\fR, due to a crash of the node where the application was previously executing, the application will restart\&. 
+.RE
+.LP
+.B
+Module:prep_stop(State) -> NewState
+.br
+.RS
+.TP
+Types
+State = state()
+.br
+NewState = state()
+.br
+.RE
+.RS
+.LP
+See \fIModule:stop/1\fR\&. This function is called when the application is about to be stopped, before shutting down the processes of the application\&. 
+.LP
+\fIState\fR is the state that was returned from \fIMod:start/2\fR, or \fI[]\fR if no state was returned\&. \fINewState\fR will be passed to \fIModule:stop/1\fR\&. 
+.LP
+If \fIModule:prep_stop/1\fR isn\&'t defined, \fINewState\fR will be identical to \fIState\fR\&. 
+.RE
+.LP
+.B
+Module:stop(State) -> void()
+.br
+.RS
+.TP
+Types
+State = state()
+.br
+.RE
+.RS
+.LP
+This function is called when the application has stopped, either because it crashed, or because someone called \fIapplication:stop\fR\&. It cleans up after the \fIModule:start/2\fR function\&. 
+.LP
+Before \fIMod:stop/1\fR is called, \fIMod:prep_stop/1\fR will have been called\&. \fIState\fR is the state that was returned from \fIMod:prep_stop/1\fR\&. 
+.RE
+.SH See Also
+.LP
+kernel(3) 
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Esko Vierumaki - support@erlang.ericsson.se
+.fi

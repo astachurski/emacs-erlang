@@ -1,0 +1,132 @@
+
+
+
+CosNotifyChannelAdmin_EPRrLoAxNyGCCooMnsOsNDuoUmtLeiErf(yD3CE)hFIaNnInTeIlOANdmin_ProxyConsumer(3)
+
+
+
+MODULE
+     CosNotifyChannelAdmin_ProxyConsumer -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     This module also exports the functions described in:
+
+       * CosNotification_QoSAdmin
+
+       * CosNotifyFilter_FilterAdmin
+
+
+EXPORTS
+     _get_MyType(ProxyConsumer) -> ProxyType
+
+          Types
+               ProxyConsumer = #objref
+               ProxyType   =   'PUSH_ANY'    |    'PULL_ANY'    |
+               'PUSH_STRUCTURED'     |     'PULL_STRUCTURED'    |
+               'PUSH_SEQUENCE' | 'PULL_SEQUENCE'
+
+          This  readonly  attribute   maintains   the   enumerant
+          describing the which type the target object is.
+
+     _get_MyAdmin(ProxyConsumer) -> AdminObject
+
+          Types
+               ProxyConsumer = AdminObject = #objref
+
+          This readonly attribute maintains the admin's reference
+          which created the target object.
+
+     obtain_subscription_types(ProxyConsumer, ObtainInfoMode)  ->
+     EventTypeSeq
+
+          Types
+               ProxyConsumer = #objref
+               ObtainInfoMode    =    'ALL_NOW_UPDATES_OFF'     |
+               'ALL_NOW_UPDATES_ON'  |  'NONE_NOW_UPDATES_OFF'  |
+               'NONE_NOW_UPDATES_ON'
+               EventTypeSeq = [EventType]
+               EventType                                        =
+               #'CosNotification_EventType'{domain_name,
+               type_name}
+               domain_name = type_name = string()
+
+          Depending on the input parameter  _O_b_t_a_i_n_I_n_f_o_M_o_d_e,  this
+          operation  may  return a sequence of the _E_v_e_n_t_T_y_p_e_s the
+          target  object   is   interested   in   receiving.   If
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+CosNotifyChannelAdmin_EPRrLoAxNyGCCooMnsOsNDuoUmtLeiErf(yD3CE)hFIaNnInTeIlOANdmin_ProxyConsumer(3)
+
+
+
+          '_A_L_L__N_O_W__U_P_D_A_T_E_S__O_F_F'  or '_A_L_L__N_O_W__U_P_D_A_T_E_S__O_N' is given
+          a  sequence  will  be  returned,  otherwise   not.   If
+          '_A_L_L__N_O_W__U_P_D_A_T_E_S__O_F_F'   or  '_N_O_N_E__N_O_W__U_P_D_A_T_E_S__O_F_F'  are
+          issued the target object will not inform the associated
+          _N_o_t_i_f_y_S_u_b_s_c_r_i_b_e   object   when   an   update   occurs.
+          '_A_L_L__N_O_W__U_P_D_A_T_E_S__O_N'  or   '_N_O_N_E__N_O_W__U_P_D_A_T_E_S__O_N'   will
+          result in that update information will be sent.
+
+     validate_event_qos(ProxyConsumer, QoSProperties) -> Reply
+
+          Types
+               ProxyConsumer = #objref
+               QoSProperties = [QoSProperty]
+               QoSProperty  =   #'CosNotification_Property'{name,
+               value}
+               name = string()
+               value = #any
+               Reply =  {ok,  NamedPropertyRangeSeq}  |  {'EXCEP-
+               TION', CosNotification_UnsupportedQoS{qos_err}}
+               NamedPropertyRangeSeq = [NamedPropertyRange]
+               NamedPropertyRange                               =
+               #CosNotification_NamedPropertyRange{name, range}
+               name = string()
+               range  =   #CosNotification_PropertyRange{low_val,
+               high_val}
+               low_val = #any
+               high_val = #any
+               qos_err = PropertyErrorSeq
+               PropertyErrorSeq = [PropertyError]
+               PropertyError                                    =
+               #'CosNotification_PropertyError'{code,       name,
+               available_range}
+               code       =       'UNSUPPORTED_PROPERTY'        |
+               'UNAVAILABLE_PROPERTY'   |  'UNSUPPORTED_VALUE'  |
+               'UNAVAILABLE_VALUE' | 'BAD_PROPERTY' |  'BAD_TYPE'
+               | 'BAD_VALUE'
+               name = string()
+               available_range = PropertyRange
+               PropertyRange                                    =
+               #CosNotification_PropertyRange{low_val, high_val}
+               low_val = high_val = #any
+
+          To check if certain Quality of Service  properties  can
+          be added to events in the current context of the target
+          object this operation should be used. If we cannot sup-
+          port  the required settings an exception describing why
+          will be raised.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+

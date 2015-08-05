@@ -1,0 +1,305 @@
+.TH crypto 3 "crypto  1.1.2" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+crypto \- Crypto Functions
+.SH DESCRIPTION
+.LP
+This module provides a set of cryptographic functions\&. 
+.LP
+References: 
+.RS 2
+.TP 2
+*
+md5: The MD5 Message Digest Algorithm (RFC 1321) 
+.TP 2
+*
+sha: Secure Hash Standard (FIPS 180-1) 
+.TP 2
+*
+hmac: Keyed-Hashing for Message Authentication (RFC 2104) 
+.TP 2
+*
+des: Data Encryption Standard (FIPS 46-2) 
+.TP 2
+*
+ecb, cbc, cfb, ofb: DES modes of operation (FIPS 81)\&. 
+.RE
+.LP
+\fITypes\fR 
+
+.nf
+byte() = 0 \&.\&.\&. 255
+ioelem() = byte() | binary() | iolist()
+iolist() = [ioelem()]
+.fi
+.LP
+
+
+.SH EXPORTS
+.LP
+.B
+start() -> ok
+.br
+.RS
+.LP
+Starts the crypto server\&. 
+.RE
+.LP
+.B
+stop() -> ok
+.br
+.RS
+.LP
+Stops the crypto server\&. 
+.RE
+.LP
+.B
+info() -> [atom()]
+.br
+.RS
+.LP
+Stops the crypto server\&. 
+.RE
+.LP
+.B
+md5(Data) -> Digest
+.br
+.RS
+.TP
+Types
+Data = iolist() | binary()
+.br
+Digest = binary()
+.br
+.RE
+.RS
+.LP
+Computes an \fIMD5\fR message digest from \fIData\fR, where the length of the digest is 128 bits (16 bytes)\&. 
+.RE
+.LP
+.B
+md5_init() -> Context
+.br
+.RS
+.TP
+Types
+Context = binary()
+.br
+.RE
+.RS
+.LP
+Creates an MD5 context, to be used in subsequent calls to \fImd5_update/2\fR\&. 
+.RE
+.LP
+.B
+md5_update(Context, Data) -> NewContext
+.br
+.RS
+.TP
+Types
+Data = iolist() | binary()
+.br
+Context = NewContext = binary()
+.br
+.RE
+.RS
+.LP
+Updates an MD5 \fIContext\fR with \fIData\fR, and returns a \fINewContext\fR\&. 
+.RE
+.LP
+.B
+md5_final(Context) -> Digest
+.br
+.RS
+.TP
+Types
+Context = Digest = binary()
+.br
+.RE
+.RS
+.LP
+Finishes the update of an MD5 \fIContext\fR and returns the computed \fIMD5\fR message digest\&. 
+.RE
+.LP
+.B
+sha(Data) -> Digest
+.br
+.RS
+.TP
+Types
+Data = iolist() | binary()
+.br
+Digest = binary()
+.br
+.RE
+.RS
+.LP
+Computes an \fISHA\fR message digest from \fIData\fR, where the length of the digest is 160 bits (20 bytes)\&. 
+.RE
+.LP
+.B
+sha_init() -> Context
+.br
+.RS
+.TP
+Types
+Context = binary()
+.br
+.RE
+.RS
+.LP
+Creates an SHA context, to be used in subsequent calls to \fIsha_update/2\fR\&. 
+.RE
+.LP
+.B
+sha_update(Context, Data) -> NewContext
+.br
+.RS
+.TP
+Types
+Data = iolist() | binary()
+.br
+Context = NewContext = binary()
+.br
+.RE
+.RS
+.LP
+Updates an SHA \fIContext\fR with \fIData\fR, and returns a \fINewContext\fR\&. 
+.RE
+.LP
+.B
+sha_final(Context) -> Digest
+.br
+.RS
+.TP
+Types
+Context = Digest = binary()
+.br
+.RE
+.RS
+.LP
+Finishes the update of an SHA \fIContext\fR and returns the computed \fISHA\fR message digest\&. 
+.RE
+.LP
+.B
+md5_mac(Key, Data) -> Mac
+.br
+.RS
+.TP
+Types
+Key = Data = iolist() | binary()
+.br
+Mac = binary()
+.br
+.RE
+.RS
+.LP
+Computes an \fIMD5 MAC\fR message authentification code from \fIKey\fR and \fIData\fR, where the the length of the Mac is 128 bits (16 bytes)\&. 
+.RE
+.LP
+.B
+md5_mac_96(Key, Data) -> Mac
+.br
+.RS
+.TP
+Types
+Key = Data = iolist() | binary()
+.br
+Mac = binary()
+.br
+.RE
+.RS
+.LP
+Computes an \fIMD5 MAC\fR message authentification code from \fIKey\fR and \fIData\fR, where the length of the Mac is 96 bits (12 bytes)\&. 
+.RE
+.LP
+.B
+sha_mac(Key, Data) -> Mac
+.br
+.RS
+.TP
+Types
+Key = Data = iolist() | binary()
+.br
+Mac = binary()
+.br
+.RE
+.RS
+.LP
+Computes an \fISHA MAC\fR message authentification code from \fIKey\fR and \fIData\fR, where the length of the Mac is 160 bits (20 bytes)\&. 
+.RE
+.LP
+.B
+sha_mac_96(Key, Data) -> Mac
+.br
+.RS
+.TP
+Types
+Key = Data = iolist() | binary()
+.br
+Mac = binary()
+.br
+.RE
+.RS
+.LP
+Computes an \fISHA MAC\fR message authentification code from \fIKey\fR and \fIData\fR, where the length of the Mac is 96 bits (12 bytes)\&. 
+.RE
+.LP
+.B
+des_cbc_encrypt(Key, IVec, Text) -> Cipher
+.br
+.RS
+.TP
+Types
+Key = Text = iolist() | binary()
+.br
+IVec = Cipher = binary()
+.br
+.RE
+.RS
+.LP
+Encrypts \fIText\fR according to DES in CBC mode\&. \fIText\fR must be a multiple of 64 bits (8 bytes)\&. \fIKey\fR is the DES key, and \fIIVec\fR is an arbitrary initializing vector\&. The lengths of \fIKey\fR and \fIIVec\fR must be 64 bits (8 bytes)\&. 
+.RE
+.LP
+.B
+des_cbc_decrypt(Key, IVec, Cipher) -> Text
+.br
+.RS
+.TP
+Types
+Key = Cipher = iolist() | binary()
+.br
+IVec = Text = binary()
+.br
+.RE
+.RS
+.LP
+Decrypts \fICipher\fR according to DES in CBC mode\&. \fIKey\fR is the DES key, and \fIIVec\fR is an arbitrary initializing vector\&. \fIKey\fR and \fIIVec\fR must have the same values as those used when encrypting\&. \fICipher\fR must be a multiple of 64 bits (8 bytes)\&. The lengths of \fIKey\fR and \fIIVec\fR must be 64 bits (8 bytes)\&. 
+.RE
+.SH DES in CBC mode
+.LP
+The Data Encryption Standard (DES) defines an algoritm for encrypting and decrypting an 8 byte quantity using an 8 byte key (actually only 56 bits of the key is used)\&. 
+.LP
+When it comes to encrypting and decrypting blocks that are multiples of 8 bytes various modes are defined (FIPS 81)\&. One of those modes is the Cipher Block Chaining (CBC) mode, where the encryption of an 8 byte segment depend not only of the contents of the segment itself, but also on the result of encrypting the previous segment: the encryption of the previous segment becomes the initializing vector of the encryption of the current segment\&. 
+.LP
+Thus the encryption of every segment depends on the encryption key (which is secret) and the encryption of the previous segment, except the first segment which has to be provided with a first initializing vector\&. That vector could be chosen at random, or be counter of some kind\&. It does not have to be secret\&. 
+.LP
+The following example is drawn from the FIPS 81 standard, where both the plain text and the resulting cipher text is settled\&. We use the Erlang bitsyntax to define binary literals\&. The following Erlang code fragment returns `true\&'\&. 
+
+.nf
+      Key = <<16#01,16#23,16#45,16#67,16#89,16#ab,16#cd,16#ef>>,
+      IVec = <<16#12,16#34,16#56,16#78,16#90,16#ab,16#cd,16#ef>>,
+      P = "Now is the time for all ",
+      C = crypto:des_cbc_encrypt(K, I, P),
+      C == <<16#e5,16#c7,16#cd,16#de,16#87,16#2b,16#f2,16#7c,
+             16#43,16#e9,16#34,16#00,16#8c,16#38,16#9c,16#0f,
+             16#68,16#37,16#88,16#49,16#9a,16#7c,16#05,16#f6>>,
+      <<"Now is the time for all ">> == crypto:des_cbc_decrypt(Key,IVec,C)\&.
+.fi
+.LP
+The following is true for the DES CBC mode\&. For all decompositions \fIP1 ++ P2 = P\fR of a plain text message \fIP\fR (where the length of all quantities are multiples of 8 bytes), the encryption \fIC\fR of \fIP\fR is equal to \fIC1 ++ C2\fR, where \fIC1\fR is obtained by encrypting \fIP1\fR with \fIKey\fR and the initializing vector \fIIVec\fR, and where \fIC2\fR is obtained by encrypting \fIP2\fR with \fIKey\fR and the initializing vector \fIl(C1)\fR, where \fIl(B)\fR denotes the last 8 bytes of the binary \fIB\fR\&. 
+.LP
+Similarly, for all decompositions \fIC1 ++ C2 = C\fR of a cipher text message \fIC\fR (where the length of all quantities are multiples of 8 bytes), the decryption \fIP\fR of \fIC\fR is equal to \fIP1 ++ P2\fR, where \fIP1\fR is obtained by decrypting \fIC1\fR with \fIKey\fR and the initializing vector \fIIVec\fR, and where \fIP2\fR is obtained by decrypting \fIC2\fR with \fIKey\fR and the initializing vector \fIl(C1)\fR, where \fIl(\&.)\fR is as above\&. 
+.SH AUTHOR
+.nf
+Peter Hogfeldt - support@erlang.ericsson.se
+.fi

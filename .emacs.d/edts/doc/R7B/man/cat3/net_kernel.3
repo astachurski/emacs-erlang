@@ -1,0 +1,132 @@
+
+
+
+net_kernel(3)       ERLANG MODULE DEFINITION        net_kernel(3)
+
+
+
+MODULE
+     net_kernel - Erlang Networking Kernel
+
+DESCRIPTION
+     The net kernel is a system process which must be running for
+     distributed  Erlang  to work. The purpose of this process is
+     to implement parts of the BIFs _s_p_a_w_n/_4 and _s_p_a_w_n__l_i_n_k/_4, and
+     to provide authentication and monitoring of the network.
+
+     An Erlang runtime system can be started from the  UNIX  com-
+     mand line as follows:
+
+           % erl -name foobar
+
+     With  this  command  line,  the  _n_e_t__k_e_r_n_e_l  is  started  as
+     _n_e_t__k_e_r_n_e_l:_s_t_a_r_t([_f_o_o_b_a_r]). See erl(1).
+
+     This is done by the system  itself,  but  the  _s_t_a_r_t([_N_a_m_e])
+     function  can also be called directly from the normal Erlang
+     shell prompt, and a normal Erlang  runtime  system  is  then
+     converted  to  a  node. The kernel can be shut down with the
+     function _s_t_o_p(), but only if the kernel was not  started  by
+     the  system itself. The node is then converted into a normal
+     Erlang runtime system. All other nodes on the  network  will
+     regard this as a total node crash.
+
+     If the system is started as % _e_r_l -_s_n_a_m_e  _f_o_o_b_a_r,  the  node
+     name  of  the  node  will  be _f_o_o_b_a_r@_H_o_s_t, where _H_o_s_t is the
+     short name of the  host  (not  the  fully  qualified  domain
+     name).  The -_n_a_m_e flag gives a node with the fully qualified
+     domain name. See erl(1).
+
+     The system can be started with the  flag  -_d_i_s_t__a_u_t_o__c_o_n_n_e_c_t
+     to   control  automatic  connection  of  remote  nodes.  See
+     _c_o_n_n_e_c_t__n_o_d_e/_1 below and erl(1).
+
+EXPORTS
+     kernel_apply(M, F, A)
+
+          As the net kernel runs in the 'user space', it is  easy
+          to  provide another net kernel which is tailor made for
+          a specific application. For example, the user  supplied
+          kernel  can limit the set of registered processes which
+          can be accessed from remote nodes, or it  can  spawn  a
+          new process for each {_n_o_d_e_u_p, _N_o_d_e} message and perform
+          some application specific user authentication, a log-in
+          procedure  for example. The _k_e_r_n_e_l__a_p_p_l_y(_M, _F, _A) func-
+          tion is supplied for this purpose.
+
+     monitor_nodes(Flag)
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+net_kernel(3)       ERLANG MODULE DEFINITION        net_kernel(3)
+
+
+
+          A process which evaluates this function receives copies
+          of  the  {_n_o_d_e_u_p,  _N_o_d_e}  and {_n_o_d_e_d_o_w_n, _N_o_d_e} messages
+          that the net kernel receives from the  runtime  system.
+          The  flag  _F_l_a_g  is set to _t_r_u_e to turn the service on,
+          and _f_a_l_s_e to turn it off.
+
+     allow(NodeList)
+
+          In a simple way, this function limits access to a  node
+          from  a  specific  number  of named nodes. A node which
+          evaluates this function can only be accessed from nodes
+          listed  in  the  _N_o_d_e_L_i_s_t variable. Any access attempts
+          made from nodes not listed in _N_o_d_e_L_i_s_t are rejected.
+
+     connect_node(Node)
+
+          Explicitly establishes a connection to the node  speci-
+          fied by the atom _N_o_d_e. Returns _t_r_u_e if succesful, _f_a_l_s_e
+          if not, and _i_g_n_o_r_e_d if _n_e_t__k_e_r_n_e_l is not started.
+
+          This function  is  only  necessary  if  the  system  is
+          started with the flag -_d_i_s_t__a_u_t_o__c_o_n_n_e_c_t. See erl(1).
+
+AUTHOR
+      Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+

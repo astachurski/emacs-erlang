@@ -1,0 +1,146 @@
+.TH sasl 6 "sasl  1.9" "Ericsson Utvecklings AB" "ERLANG APPLICATION DEFINITION"
+.SH APPLICATION
+sasl \- The SASL Application
+.SH DESCRIPTION
+.LP
+This section describes the SASL application which provides the following services: 
+.RS 2
+.TP 2
+*
+\fIalarm_handler\fR 
+.TP 2
+*
+\fIoverload\fR 
+.TP 2
+*
+\fIrelease_handler\fR 
+.RE
+.LP
+The SASL application also includes \fIerror_logger\fR event handlers for formatting SASL error and crash reports\&. 
+
+.SH Error logger event handlers
+.LP
+The following error logger event handlers are defined in the SASL application\&. 
+.RS 2
+.TP 4
+.B
+\fIsasl_report_tty_h\fR:
+Formats and writes \fIsupervisor report\fR, \fIcrash report\fR and \fIprogress report\fR to \fIstdio\fR\&.
+.RS 4
+.LP
+
+.RE
+.TP 4
+.B
+\fIsasl_report_file_h\fR:
+Formats and writes \fIsupervisor report\fR, \fIcrash report\fR and \fIprogress report\fR to a single file\&.
+.RS 4
+.LP
+
+.RE
+.TP 4
+.B
+\fIerror_logger_mf_h\fR:
+This error logger writes \fIall\fR events sent to the error logger to disk\&. It installs the \fIlog_mf_h\fR event handler in the \fIerror_logger\fR process\&. 
+.RE
+.SH Configuration
+.LP
+The following configuration parameters are defined for the SASL application\&. Refer to application(3) for more information about configuration parameters: 
+.RS 2
+.TP 4
+.B
+\fIsasl_error_logger = Value <optional>\fR:
+\fIValue\fR is one of: 
+.RS 4
+.RS 2
+.TP 4
+.B
+\fItty\fR:
+Installs \fIsasl_report_tty_h\fR in the error logger\&. This is the default option\&. 
+.TP 4
+.B
+\fI{file, FileName}\fR:
+Installs \fIsasl_report_file_h\fR in the error logger\&. This makes all reports go to the file \fIFileName\fR\&. \fIFileName\fR is a string\&. 
+.TP 4
+.B
+\fIfalse\fR:
+No SASL error logger handler is installed\&. 
+.RE
+.LP
+
+.RE
+.TP 4
+.B
+\fIerrlog_type = error | progress | all <optional>\fR:
+Restricts the error logging performed by the specified \fIsasl_error_logger\fR to error reports, progress reports, or both\&. Default is \fIall\fR\&. 
+.TP 4
+.B
+\fIerror_logger_mf_dir = string() | false<optional>\fR:
+Specifies in which directory the files are stored\&. If this parameter is undefined or \fIfalse\fR, the \fIerror_logger_mf_h\fR is not installed\&. 
+.TP 4
+.B
+\fIerror_logger_mf_maxbytes = integer() <optional>\fR:
+Specifies how large each individual file can be\&. If this parameter is undefined, the \fIerror_logger_mf_h\fR is not installed\&. 
+.TP 4
+.B
+\fIerror_logger_mf_maxfiles = 0 < integer() < 256 <optional>\fR:
+Specifies how many files are used\&. If this parameter is undefined, the \fIerror_logger_mf_h\fR is not installed\&. 
+.TP 4
+.B
+\fIoverload_max_intensity = float() > 0 <optional>\fR:
+Specifies the maximum intensity for \fIoverload\fR\&. Default is \fI0\&.8\fR\&. 
+.TP 4
+.B
+\fIoverload_weight = float() > 0 <optional>\fR:
+Specifies the \fIoverload\fR weight\&. Default is \fI0\&.1\fR\&. 
+.TP 4
+.B
+\fIstart_prg = string()<optional>\fR:
+Specifies which program should be used when restarting the system\&. Default is \fI$OTP_ROOT/bin/start\fR\&. 
+.TP 4
+.B
+\fImasters = [atom()] <optional>\fR:
+Specifies which nodes this node uses to read/write release information\&. This parameter is ignored if the \fIclient_directory\fR parameter is not set\&. 
+.TP 4
+.B
+\fIclient_directory = string() <optional>\fR:
+This parameter specifies the client directory at the master nodes\&. Refer to Release Handling in the SASL User\&'s Guide for more information\&. This parameter is ignored if the \fImasters\fR parameter is not set\&. 
+.TP 4
+.B
+\fIstatic_emulator = true | false <optional>\fR:
+Indicates if the Erlang emulator is statically installed\&. A node with a static emulator cannot switch dynamically to a new emulator as the executable files are written into memory statically\&. This parameter is ignored if the \fImasters\fR and \fIclient_directory\fR parameters are not set\&. 
+.TP 4
+.B
+\fIreleases_dir = string()<optional>\fR:
+Indicates where the releases directory is located\&. The release handler writes all its files to this directory\&. If this parameter is not set, the OS environment parameter \fIRELDIR\fR is used\&. By default, this is \fI$OTP_ROOT/releases\fR\&. 
+.RE
+.SH SNMP MIBs
+.LP
+The following MIBs are defined in SASL: 
+.RS 2
+.TP 4
+.B
+OTP-REG:
+This MIB contains the top-level OTP registration objects, used by all other MIBs\&. 
+.TP 4
+.B
+OTP-TC:
+This MIB contains the general Textual Conventions, which can be used by any other MIB\&. 
+.TP 4
+.B
+OTP-MIB:
+This MIB contains objects for instrumentation of the Erlang nodes, the Erlang machines and the applications in the system\&.
+.RE
+.LP
+The MIBs are stored in the \fImibs\fR directory\&. All MIBs are defined in SNMPv2 SMI syntax\&. SNMPv1 versions of the mibs are delivered in the \fImibs/v1\fR directory\&. 
+.LP
+The compiled MIBs are located under \fIpriv/mibs\fR, and the generated \fI\&.hrl\fR files under the \fIinclude\fR directory\&. To compile a MIB that IMPORTS the \fIOTP-MIB\fR, give the option \fI{il, ["sasl/priv/mibs"]}\fR to the MIB compiler\&. 
+.LP
+The only MIB with Managed Objects is \fIOTP-MIB\fR\&. If it is to be used in a system, it must be loaded into an agent with a call to \fIotp_mib:init(Agent)\fR, where \fIAgent\fR is the Pid or registered name of an SNMP agent\&. Use \fIotp_mib:stop(Agent)\fR to unload the MIB\&. The implementation of this MIB uses Mnesia to store a cache with data needed, which means that Mnesia must run if the implementation of the MIB should be performed\&. 
+.SH See Also
+.LP
+alarm_handler(3), error_logger(3), log_mf_h(3), overload(3), release_handler(3), systools(3), appup(4), rel(4), relup(4), script(4), application(3), snmp(6) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

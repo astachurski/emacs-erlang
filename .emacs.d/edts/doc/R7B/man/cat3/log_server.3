@@ -1,0 +1,66 @@
+
+
+
+log_server(3)       ERLANG MODULE DEFINITION        log_server(3)
+
+
+
+MODULE
+     log_server - The main server in LOG
+
+DESCRIPTION
+     This module implements the main server in the  LOG  applica-
+     tion. The client API to this server is defined in the module
+     _l_o_g.
+
+
+EXPORTS
+     start_link() -> {ok, Pid} | {error, Reason}
+
+          Starts the log server. This function  can  be  used  to
+          include the server in a supervisor. Normally, functions
+          in the supervisor _l_o_g__s_u_p can be used instead.
+
+SEE ALSO
+     eva_log_sup(3), log(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   1
+
+
+

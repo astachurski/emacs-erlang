@@ -1,0 +1,198 @@
+
+
+
+os_mon(3)         ERLANG APPLICATION DEFINITION         os_mon(3)
+
+
+
+APPLICATION
+     os_mon - OS Monitoring Application
+
+DESCRIPTION
+     This section describes the _o_s__m_o_n application in Erlang. The
+     OS Monitoring application provides the following services:
+
+       * _c_p_u__s_u_p
+
+       * _d_i_s_k_s_u_p
+
+       * _m_e_m_s_u_p
+
+       * _o_s__s_u_p
+
+
+Configuration
+     The following configuration parameters are defined  for  the
+     OS  Monitoring application. Refer to application(3) for more
+     information about configuration parameters.
+
+       _s_t_a_r_t__d_i_s_k_s_u_p = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           Specifies if _d_i_s_k_s_u_p should be started. The default is
+           _t_r_u_e.
+
+       _s_t_a_r_t__m_e_m_s_u_p = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           Specifies if _m_e_m_s_u_p should be started. The default  is
+           _t_r_u_e.
+
+       _s_t_a_r_t__o_s__s_u_p = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           Specifies if _o_s__s_u_p should be started. The default  is
+           _f_a_l_s_e.
+
+       _d_i_s_k__s_p_a_c_e__c_h_e_c_k__i_n_t_e_r_v_a_l = _i_n_t_e_g_e_r() <_o_p_t_i_o_n_a_l>:
+           Defines how often, in  minutes,  the  _d_i_s_k_s_u_p  process
+           should  check  the  disk  space.  The  default  is  30
+           minutes.
+
+       _d_i_s_k__a_l_m_o_s_t__f_u_l_l__t_h_r_e_s_h_o_l_d = _f_l_o_a_t() <_o_p_t_i_o_n_a_l>:
+           Defines what percentage of total  disk  space  can  be
+           utilized before the _d_i_s_k__a_l_m_o_s_t__f_u_l_l alarm is set. The
+           default is 0.80 (80%).
+
+       _m_e_m_o_r_y__c_h_e_c_k__i_n_t_e_r_v_a_l = _i_n_t_e_g_e_r() <_o_p_t_i_o_n_a_l>:
+           Defines how often,  in  minutes,  the  _m_e_m_s_u_p  process
+           should check the memory. The default is one minute.
+
+       _s_y_s_t_e_m__m_e_m_o_r_y__h_i_g_h__w_a_t_e_r_m_a_r_k = _f_l_o_a_t() <_o_p_t_i_o_n_a_l>:
+           Defines what percentage of the available system memory
+           can  be  allocated  before  the corresponding alarm is
+           set. The default is 0.8 (80%).
+
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  1
+
+
+
+
+
+
+os_mon(3)         ERLANG APPLICATION DEFINITION         os_mon(3)
+
+
+
+       _p_r_o_c_e_s_s__m_e_m_o_r_y__h_i_g_h__w_a_t_e_r_m_a_r_k = _f_l_o_a_t() <_o_p_t_i_o_n_a_l>:
+           Defines what percentage of the available system memory
+           can  be  allocated  by  one  Erlang process before the
+           corresponding alarm is set. The default is 0.05 (5%).
+
+       _o_s__s_u_p__o_w_n = _s_t_r_i_n_g() :
+           Defines which directory contains the backup  copy  and
+           the  Erlang  specific configuration files for _s_y_s_l_o_g_d,
+           and the named pipe to receive the messages  from  _s_y_s_-
+           _l_o_g_d.
+            Usually, this parameter has the value "/etc".
+
+       _o_s__s_u_p__s_y_s_l_o_g_c_o_n_f = _s_t_r_i_n_g() :
+           Defines the full file name of the  configuration  file
+           for _s_y_s_l_o_g_d.
+            Usually,    this    parameter    has    the     value
+           "/etc/syslog.conf".
+
+       _o_s__s_u_p__e_r_r_o_r_t_a_g = _a_t_o_m() :
+           Defines the atom with which to tag  messages  received
+           from  _s_y_s_l_o_g_d  before  forwarding  them  to  the error
+           logger in the Erlang runtime system.
+
+SNMP MIBs
+     The following MIBs are defined in OS_MON:
+
+       OTP-OS-MON-MIB:
+           This MIB contains objects for instrumentation of disk,
+           memory and cpu usage of the nodes in the system.
+
+     The MIB is stored in the _m_i_b_s directory. It  is  defined  in
+     SNMPv2 SMI syntax. An SNMPv1 version of the mib is delivered
+     in the _m_i_b_s/_v_1 directory.
+
+     The compiled MIB is located under _p_r_i_v/_m_i_b_s,  and  the  gen-
+     erated  ._h_r_l  file under the _i_n_c_l_u_d_e directory. To compile a
+     MIB that IMPORTS the _O_T_P-_O_S-_M_O_N-_M_I_B, give  the  option  {_i_l,
+     ["_o_s__m_o_n/_p_r_i_v/_m_i_b_s"]} to the MIB compiler.
+
+     If the MIB should be used in a system, it should  be  loaded
+     into  an  agent with a call to _o_s__m_o_n__m_i_b:_i_n_i_t(_A_g_e_n_t), where
+     _A_g_e_n_t is the Pid or registered name of an  SNMP  agent.  Use
+     _o_s__m_o_n__m_i_b:_s_t_o_p(_A_g_e_n_t) to unload the MIB. The implementation
+     of this MIB uses Mnesia to store a cache with  data  needed.
+     This  means  that  Mnesia must run if this implementation of
+     the MIB should be used. It also use  functions  defined  for
+     the _O_T_P-_M_I_B, thus that MIB must be loaded as well.
+
+See Also
+     cpu_sup(3),  memsup(3),  disksup(3),   os_sup(3),   applica-
+     tion(3), snmp(6)
+
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  2
+
+
+
+
+
+
+os_mon(3)         ERLANG APPLICATION DEFINITION         os_mon(3)
+
+
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Mats Nilsson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  3
+
+
+

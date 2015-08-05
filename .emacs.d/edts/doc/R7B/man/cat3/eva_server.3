@@ -1,0 +1,66 @@
+
+
+
+eva_server(3)       ERLANG MODULE DEFINITION        eva_server(3)
+
+
+
+MODULE
+     eva_server  - The Main Global Server in EVA
+
+DESCRIPTION
+     This module implements the main global server  in  EVA.  The
+     client API towards this server is defined in the module _e_v_a.
+     The functions in this module are used to start the service.
+
+
+EXPORTS
+     create_tables(Nodes) -> void()
+
+          Types
+               Nodes = [node()]
+
+          This function creates the Mnesia  tables  required  for
+          the  _e_v_a__s_e_r_v_e_r.  _N_o_d_e_s  is  a  list of nodes where the
+          tables should be replicated. This list of nodes  should
+          specify the same nodes where the application EVA can be
+          run distributed, so that  EVA  always  can  have  local
+          access to the tables.
+
+          This function should be called once when installing the
+          EVA application in the system.
+
+     start_link() -> {ok, Pid} | {error, Reason}
+
+          Starts the eva server. This function  can  be  used  to
+          include the server in a supervisor. Normally, functions
+          in the supervisor _e_v_a__s_u_p can be used instead.
+
+          The function  _c_r_e_a_t_e__t_a_b_l_e_s/_1  must  have  been  called
+          before the server is started.
+
+SEE ALSO
+     eva(3), eva_sup(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   1
+
+
+

@@ -1,0 +1,132 @@
+
+
+
+comet(3)          ERLANG APPLICATION DEFINITION          comet(3)
+
+
+
+APPLICATION
+     comet  - The COM client for Erlang
+
+DESCRIPTION
+     Comet, the COM client for Erlang, is a way to call any  COM-
+     service  in Windows from an Erlang program. It is a combina-
+     tion of a gen_server and a port  program  (or  port  driver)
+     that enables Erlang programs to call almost any COM-server.
+
+     Comet uses a gen_server in the module erl_com, together with
+     a  port  program (or port driver), to call COM-servers. Both
+     the late-binding interface IDispatch and early-binding  vir-
+     tual  interfaces  can be used. Erlang types are converted to
+     COM types and parameters are returned.
+
+     COM stands for Component Object Model, (or sometimes  Common
+     Object  Model),  and is MicroSoft's technique for component-
+     based programming. It allows programs on Windows systems, to
+     call  other  programs  and  libraries  across language boun-
+     daries. It is a competitor to Corba,  but  has  other  func-
+     tionality too.
+
+     COM is available on all 32-bit Windows systems, such  as  NT
+     4,  Windows  95,  Windows  98 and Windows 2000. Comet can be
+     used on any of these.
+
+     With Comet, an Erlang application can use (almost) any  COM-
+     service on Windows from Erlang. Examples of what can be done
+     include:
+
+       * Opening webpages with Internet Exporer (or Netscape)
+
+       * Reading and writing data from Excel Worksheet
+
+       * Reading and writing from Word
+
+       * Call C-code-libraries an efficient way, without the has-
+         sle of creating a port-driver
+
+       * Execute scripts in VBScript or JavaScript
+
+     Each of these examples are described in _c_o_m_e_t__e_x_a_m_p_l_e_s.
+
+     Using Comet for other purposes than those described  in  the
+     examples, requires knowledge of COM. COM is a complex topic,
+     and there are a lot of books written about it. Three  decent
+     references are given below. Some sections of the Comet docu-
+     mentation assumes basic knowledge of COM.
+
+CONFIGURATION
+     Comet does not use any configuration parameters.
+
+
+
+
+Ericsson Utvecklings ALBast change: comet  1.0                    1
+
+
+
+
+
+
+comet(3)          ERLANG APPLICATION DEFINITION          comet(3)
+
+
+
+SEE ALSO
+     erl_com(3), comet_examples(3), some  decent  books  on  COM,
+     such  as:  Inside  COM,  by Dale Rogerson (ISBN: 1572313498)
+     Essential COM, by Don Box (ISBN: 0201634465)  Mastering  COM
+     and COM+, by Rofail and Shohoud (ISBN: 0782123848)
+
+AUTHOR
+     Jakob Cederlund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: comet  1.0                    2
+
+
+

@@ -1,0 +1,660 @@
+
+
+
+code(3)             ERLANG MODULE DEFINITION              code(3)
+
+
+
+MODULE
+     code - Erlang Code Server
+
+DESCRIPTION
+     This module deals with the loading of  compiled  and  inter-
+     preted code into a running Erlang runtime system.
+
+     The code server dynamically loads modules into the system on
+     demand, which means the first time the module is referenced.
+     This functionality can be turned off using the command  line
+     flag -_m_o_d_e _e_m_b_e_d_d_e_d. In this mode, all code is loaded during
+     system start-up.
+
+     If started in _i_n_t_e_r_a_c_t_i_v_e mode, all  directories  under  the
+     $ROOT/lib  directory  are initially added to the search path
+     of the code server (). The $ROOT directory is the  installa-
+     tion  directory  of Erlang/OTP, _c_o_d_e:_r_o_o_t__d_i_r(). Directories
+     can be named _N_a_m_e[-_V_s_n] and the  code  server,  by  default,
+     chooses  the  greatest  (>) directory among those which have
+     the same _N_a_m_e. The -_V_s_n suffix is optional.
+
+     If an _e_b_i_n directory exists under a chosen directory, it  is
+     added  to  the  directory.  The  _N_a_m_e  of  the directory (or
+     library) can  be  used  to  find  the  full  directory  name
+     (including  the  current version) through the _p_r_i_v__d_i_r/_1 and
+     _l_i_b__d_i_r/_1 functions.
+
+
+EXPORTS
+     start() -> {ok, Pid} | {error, What}
+     start(Flags) -> {ok, Pid} | {error, What}
+
+          Types
+               Flags = [stick | nostick | embedded | interactive]
+               Pid = pid()
+               What = term()
+
+          This function starts the code server.  _s_t_a_r_t/_0  implies
+          that the _s_t_i_c_k and _i_n_t_e_r_a_c_t_i_v_e flags are set.
+
+          _F_l_a_g_s can also be entered as  the  command  line  flags
+          -_s_t_i_c_k,  -_n_o_s_t_i_c_k  and  -_m_o_d_e  _e_m_b_e_d_d_e_d  | _i_n_t_e_r_a_c_t_i_v_e.
+          -_s_t_i_c_k and -_m_o_d_e  _i_n_t_e_r_a_c_t_i_v_e  are  the  defaults.  The
+          _s_t_i_c_k  flag  indicates  that  a module can never be re-
+          loaded once it has been loaded from the _k_e_r_n_e_l, _s_t_d_l_i_b,
+          or _c_o_m_p_i_l_e_r directories.
+
+     start_link() -> {ok, Pid} | {error, What}
+     start_link(Flags) -> {ok, Pid} | {error, What}
+
+          Types
+               Flags = [stick | nostick | embedded | interactive]
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+code(3)             ERLANG MODULE DEFINITION              code(3)
+
+
+
+               Pid = pid()
+               What = term()
+
+          This function starts the code server and sets up a link
+          to the calling process. This function should be used if
+          the code server  is  supervised.  _s_t_a_r_t__l_i_n_k/_0  implies
+          that the_s_t_i_c_k and _i_n_t_e_r_a_c_t_i_v_e flags are set.
+
+          The _F_l_a_g_s can also be  given  as  command  line  flags,
+          -_s_t_i_c_k, -_n_o_s_t_i_c_k and -_m_o_d_e _e_m_b_e_d_d_e_d | _i_n_t_e_r_a_c_t_i_v_e where
+          -_s_t_i_c_k and -_m_o_d_e _i_n_t_e_r_a_c_t_i_v_e is the default. The  _s_t_i_c_k
+          flag indicates that a module which has been loaded from
+          the _k_e_r_n_e_l, _s_t_d_l_i_b or _c_o_m_p_i_l_e_r directories can never be
+          reloaded.
+
+     set_path(DirList) -> true | {error, What}
+
+          Types
+               DirList = [Dir]
+               Dir = string()
+               What = bad_directory | bad_path
+
+          Sets the code server search path to the list of  direc-
+          tories _D_i_r_L_i_s_t.
+
+     get_path() -> Path
+
+          Types
+               Path = [Dir]
+               Dir = string()
+
+          Returns the current path.
+
+     add_path(Dir) -> true | {error, What}
+     add_pathz(Dir) -> true | {error, What}
+
+          Types
+               Dir = string()
+               What = bad_directory
+
+          Adds _D_i_r to the current path. The directory is added as
+          the  last  directory  in  the  new path. If _D_i_r already
+          exists in the path, it is not added.
+
+     add_patha(Dir) -> true | {error, What}
+
+          Types
+               Dir = string()
+               What = bad_directory
+
+          This function adds _D_i_r to the beginning of the  current
+          path.  If  _D_i_r  already  exists,  the  old directory is
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+code(3)             ERLANG MODULE DEFINITION              code(3)
+
+
+
+          removed from path.
+
+     add_paths(DirList) -> ok
+     add_pathsz(DirList) -> ok
+
+          Types
+               DirList = [Dir]
+               Dir = string()
+
+          This function adds the directories in  _D_i_r_L_i_s_t  to  the
+          end of the current path. If a _D_i_r already exists in the
+          path, it is not added. This function always returns _o_k,
+          regardless of the validity of each individual _D_i_r.
+
+     add_pathsa(DirList) -> ok
+
+          Types
+               DirList = [Dir]
+               Dir = string()
+
+          Adds the directories in _D_i_r_L_i_s_t to the beginning of the
+          current  path.  If a _D_i_r already exists, the old direc-
+          tory is removed from the  path.  This  function  always
+          returns  _o_k, regardless of the validity of each indivi-
+          dual _D_i_r.
+
+     del_path(NameDir) -> true | false | {error, What}
+
+          Types
+               NameDir = Name | Dir
+               Name = atom()
+               Dir = string()
+               What = bad_name
+
+          This function deletes an old occurrence of a  directory
+          in  the current path with the name .../_N_a_m_e[-*][/_e_b_i_n].
+          It is also possible to give the complete directory name
+          _D_i_r in order to delete it.
+
+          This  function  returns  _t_r_u_e  if  the  directory   was
+          deleted, and _f_a_l_s_e if the directory was not found.
+
+     replace_path(Name, Dir) -> true | {error, What}
+
+          Types
+               Name = atom()
+               Dir = string()
+               What = bad_name | bad_directory | {badarg, term()}
+
+          This function replaces an old occurrence of a directory
+          named  .../_N_a_m_e[-*][/_e_b_i_n],  in  the current path, with
+          _D_i_r. If _N_a_m_e does not exist, it adds the new  directory
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+code(3)             ERLANG MODULE DEFINITION              code(3)
+
+
+
+          _D_i_r  last in path. The new directory must also be named
+          .../_N_a_m_e[-*][/_e_b_i_n]. This function should be used if  a
+          new  version  of  the directory (library) is added to a
+          running system.
+
+     load_file(Module) -> {module, Module} | {error, What}
+
+          Types
+               Module = atom()
+               What = nofile | sticky_directory | badarg | term()
+
+          This function tries to load the Erlang  module  _M_o_d_u_l_e,
+          using  the  current  path. It looks for the object code
+          file which has a suffix that corresponds to the  Erlang
+          machine  used,  for  example  _M_o_d_u_l_e.beam.  The loading
+          fails if the module  name  found  in  the  object  code
+          differs  from  the  name  _M_o_d_u_l_e. _l_o_a_d__b_i_n_a_r_y/_3 must be
+          used to load object code with a  module  name  that  is
+          different from the file name.
+
+     load_abs(File) -> {module, Module} | {error, What}
+
+          Types
+               File = atom() | string()
+               Module = atom()
+               What = nofile | sticky_directory | badarg | term()
+
+          This function does the same as  _l_o_a_d__f_i_l_e(_M_o_d_u_l_e),  but
+          _F_i_l_e  is  either  an  absolute file name, or a relative
+          file name. The current path is not searched. It returns
+          a value in the same way as _l_o_a_d__f_i_l_e(_M_o_d_u_l_e). Note that
+          _F_i_l_e  should  not  contain  an   extension   ("._b_e_a_m");
+          _l_o_a_d__a_b_s/_1 adds the correct extension itself.
+
+     ensure_loaded(Module) -> {module, Module} | {error, What}  |
+     {interpret, Module}
+
+          Types
+               Module = atom()
+               What = nofile  |  sticky_directory  |  embedded  |
+               badarg | term()
+
+          This function tries to ensure that the module _M_o_d_u_l_e is
+          loaded. To work correctly, a file with the same name as
+          _M_o_d_u_l_e._S_u_f_f_i_x must exist in the  current  search  path.
+          _S_u_f_f_i_x  must  correspond to the running Erlang machine,
+          for example ._b_e_a_m. It returns a value in the  same  way
+          as _l_o_a_d__f_i_l_e(_F_i_l_e), or {_i_n_t_e_r_p_r_e_t, _M_o_d_u_l_e} if _M_o_d_u_l_e is
+          interpreted.
+
+          If the system is started with the -_m_o_d_e  _e_m_b_e_d_d_e_d  com-
+          mand  line  flag,  this function will not load a module
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+
+
+
+
+code(3)             ERLANG MODULE DEFINITION              code(3)
+
+
+
+          which has not already been loaded. {_e_r_r_o_r, _e_m_b_e_d_d_e_d} is
+          returned.
+
+     delete(Module) -> true | false
+
+          Types
+               Module = atom()
+
+          This function deletes the code in _M_o_d_u_l_e and  the  code
+          in _M_o_d_u_l_e is marked as old. This means that no external
+          function calls  can  be  made  to  this  occurrence  of
+          _M_o_d_u_l_e,  but  a process which executes code inside this
+          module continues to do so. Returns _t_r_u_e if  the  opera-
+          tion  was successful (i.e., there was a current version
+          of the module, but no old version), otherwise _f_a_l_s_e.
+
+     purge(Module) -> true | false
+
+          Types
+               Module = atom()
+
+          This function purges the code in _M_o_d_u_l_e,  that  is,  it
+          removes  code  marked  as  old. If some processes still
+          execute code in the old  occurrence  of  _M_o_d_u_l_e,  these
+          processes  are  killed  before  the  module  is purged.
+          Returns _t_r_u_e if a process has  been  killed,  otherwise
+          _f_a_l_s_e.
+
+     soft_purge(Module) -> true | false
+
+          Types
+               Module = atom()
+
+          This function purges the code in _M_o_d_u_l_e,  that  is,  it
+          removes  code  marked  as  old,  but only if no process
+          currently runs the old code. It returns _f_a_l_s_e if a pro-
+          cess uses the old code, otherwise _t_r_u_e.
+
+     is_loaded(Module) -> {file, Loaded} | false
+
+          Types
+               Module = atom()
+               Loaded = AbsFileName | preloaded | interpreted
+               AbsFileName = string()
+
+          This function tests if module _M_o_d_u_l_e is loaded. If  the
+          module  is  loaded,  the absolute file name of the file
+          from which the code was obtained is returned.
+
+     all_loaded() -> [LoadMod]
+
+          Types
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  5
+
+
+
+
+
+
+code(3)             ERLANG MODULE DEFINITION              code(3)
+
+
+
+               LoadMod = {Module, Loaded}
+               Module = atom()
+               Loaded = AbsFileName | preloaded | interpreted
+               AbsFileName = string()
+
+          This function returns a list  of  tuples  of  the  type
+          {_M_o_d_u_l_e,  _L_o_a_d_e_d} for all loaded modules. _L_o_a_d_e_d is the
+          absolute file name  of  the  loaded  module,  the  atom
+          _p_r_e_l_o_a_d_e_d  if  the  module  was pre-loaded, or the atom
+          _i_n_t_e_r_p_r_e_t_e_d if the module is interpreted.
+
+     load_binary(Module, File,  Binary)  ->  {module,  Module}  |
+     {error, What}
+
+          Types
+               Module = atom()
+               What = sticky_directory | badarg | term()
+
+          This function can be used to load object code on remote
+          Erlang  nodes.  It can also be used to load object code
+          where the file name and module name differ. This,  how-
+          ever,  is  a  very unusual situation and should be used
+          with care. The parameter  _B_i_n_a_r_y  must  contain  object
+          code  for the module _M_o_d_u_l_e. The _F_i_l_e parameter is only
+          used by the code server to keep  a  record  from  which
+          file the object code in _M_o_d_u_l_e comes. Accordingly, _F_i_l_e
+          is not opened and read by the code server.
+
+     stop() -> stopped
+
+          Stops the code server.
+
+     root_dir() -> RootDir
+
+          Types
+               RootDir = string()
+
+          Returns the root directory of Erlang/OTP, which is  the
+          directory where it is installed.
+
+     lib_dir() -> LibDir
+
+          Types
+               LibDir = string()
+
+          Returns the library directory.
+
+     lib_dir(Name) -> LibDir | {error, What}
+
+          Types
+               Name = atom()
+               LibDir = string()
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  6
+
+
+
+
+
+
+code(3)             ERLANG MODULE DEFINITION              code(3)
+
+
+
+               What = bad_name
+
+          This function returns the current _l_i_b directory for the
+          _N_a_m_e[-*]  directory  (or  library). The current path is
+          searched for a directory named .../_N_a_m_e-* (the -*  suf-
+          fix  is optional for directories in the search path and
+          it represents the version of the directory).
+
+     compiler_dir() -> CompDir
+
+          Types
+               CompDir = string()
+
+          This function returns the compiler directory.
+
+     priv_dir(Name) -> PrivDir | {error, What}
+
+          Types
+               Name = atom()
+               PrivDir = string()
+               What = bad_name
+
+          This function returns the current  _p_r_i_v  directory  for
+          the  _N_a_m_e[-*]  directory.  The current path is searched
+          for a directory named  .../_N_a_m_e-*  (the  -*  suffix  is
+          optional  for  directories  in  the  search path and it
+          represents the version of  the  directory).  The  /_p_r_i_v
+          suffix is added to the end of the found directory.
+
+     get_object_code(Module)  ->  {Module,  Bin,  AbsFileName}  |
+     error
+
+          Types
+               Module = atom()
+               Bin = binary()
+               AbsFileName = string()
+
+          This function searches the code path in the code server
+          for  the  object  code of the module _M_o_d_u_l_e. It returns
+          {_M_o_d, _B_i_n, _F_i_l_e_n_a_m_e} if successful, and _e_r_r_o_r  if  not.
+          _B_i_n  is  a binary data object which contains the object
+          code for the module. This can be useful if code  is  to
+          be loaded on a remote node in a distributed system. For
+          example, loading module _M_o_d_u_l_e on node  _N  is  done  as
+          follows:
+
+          ...
+          {Mod, B, F} = code:get_object_code(Mod),
+          rpc:call(N,code, load_binary, [Mod, F, B]),
+          ...
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  7
+
+
+
+
+
+
+code(3)             ERLANG MODULE DEFINITION              code(3)
+
+
+
+     objfile_extension() -> Ext
+
+          Types
+               Ext = string()
+
+          This function returns the object  code  file  extension
+          for the running Erlang machine, for example ".beam".
+
+     stick_dir(Dir) -> ok | {error, term()}
+
+          Types
+               Dir = string()
+
+          This function marks _D_i_r as 'sticky'. The system  issues
+          a  warning  and  rejects the request if a user tries to
+          re-load a module in a sticky directory.  Sticky  direc-
+          tories  are  used  to  warn  the user about inadvertent
+          changes to system software.
+
+     unstick_dir(Dir) -> ok | {error, term()}
+
+          Types
+               Dir = string()
+
+          This function  unsticks  a  directory  which  has  been
+          marked  sticky.  Code  which  is located in the unstuck
+          directory can be re-loaded into the system.
+
+     which(Module) -> WhichFile
+
+          Types
+               Module = atom()
+               WhichFile = FileName | non_existing | preloaded  |
+               interpreted
+               FileName = string()
+
+          If the module is  not  loaded  already,  this  function
+          returns  the  directory  path to the first file name in
+          the search path of the code server which  contains  the
+          object  code  for  _M_o_d_u_l_e . If the module is loaded, it
+          returns the directory path to the file name which  con-
+          tains  the  loaded  object  code. If the module is pre-
+          loaded  or  interpreted,  this  is  returned   instead.
+          _n_o_n__e_x_i_s_t_i_n_gis returned if the module cannot be found.
+
+     clash() -> ok
+
+          Searches the entire code space for  module  names  with
+          identical names and writes a report to _s_t_d_o_u_t.
+
+     interpret(Module) -> {module, Module} | {error, What}
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  8
+
+
+
+
+
+
+code(3)             ERLANG MODULE DEFINITION              code(3)
+
+
+
+          Types
+               Module = atom()
+               What = no_interpreter | sticky_directory | badarg
+
+          Marks _M_o_d_u_l_e as being interpreted.
+
+     interpret_binary(Module, File, Binary) -> {module, Module} |
+     {error, What}
+
+          Types
+               Module = atom()
+               File = string()
+               Binary = binary()
+               What = no_interpreter | sticky_directory |  badarg
+               | term()
+
+          Loads the interpreted _M_o_d_u_l_e into the interpreter.  The
+          parameter  _B_i_n_a_r_y  contains  the abstract form (and the
+          source code) of the module.  The  file  _F_i_l_e  parameter
+          locates the used source code file.
+
+     delete_interpret(Module) -> ok | {error, What}
+
+          Types
+               Module = atom()
+               What = no_interpreter | badarg
+
+          Stops interpretation of _M_o_d_u_l_e.
+
+     interpreted() -> Modules
+
+          Types
+               Modules = [Module]
+               Module = atom()
+
+          Returns a list of all modules which  are  being  inter-
+          preted.
+
+     interpreted(Module) -> true | false
+
+          Types
+               Module = atom()
+
+          Returns _t_r_u_e if _M_o_d_u_l_e is being interpreted,  otherwise
+          _f_a_l_s_e.
+
+Notes
+     _D_i_r has the described type _s_t_r_i_n_g() in  all  functions.  For
+     backwards   compatibility,   _a_t_o_m()  is  also  allowed,  but
+     _s_t_r_i_n_g() is recommended.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  9
+
+
+
+
+
+
+code(3)             ERLANG MODULE DEFINITION              code(3)
+
+
+
+     The described type for _M_o_d_u_l_e is _a_t_o_m()  in  all  functions.
+     For backwards compatibility, _s_t_r_i_n_g() is also allowed.
+
+AUTHORS
+     Joe Armstrong - support@erlang.ericsson.se
+     Magnus Froberg - support@erlang.ericsson.se
+     Robert Virding - support@erlang.ericsson.se
+     Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 10
+
+
+

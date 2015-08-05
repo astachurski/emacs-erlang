@@ -1,0 +1,401 @@
+.TH calendar 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+calendar \- Local and universal time, day-of-the-week, date and time conversions
+.SH DESCRIPTION
+.LP
+This module provides computation of local and universal time, day-of-the-week, and several time conversion functions\&. 
+.LP
+Time is local when it is adjusted in accordance with the current time zone and daylight saving\&. Time is universal when it reflects the time at longitude zero, without any adjustment for daylight saving\&. Universal Coordinated Time (UTC) time is also called Greenwich Mean Time (GMT)\&. 
+.LP
+The time functions \fIlocal_time/0\fR and \fIuniversal_time/0\fR provided in this module both return date and time\&. The reason for this is that separate functions for date and time may result in a date/time combination which is displaced by 24 hours\&. This happens if one of the functions is called before midnight, and the other after midnight\&. This problem also applies to the Erlang BIFs \fIdate/0\fR and \fItime/0\fR, and their use is strongly discouraged if a reliable date/time stamp is required\&. 
+.LP
+All dates conform to the Gregorian calendar\&. This calendar was introduced by Pope Gregory XIII in 1582 and was used in all Catholic countries from this year\&. Protestant parts of Germany and the Netherlands adopted it in 1698, England followed in 1752, and Russia in 1918 (the October revolution of 1917 took place in November according to the Gregorian calendar)\&.
+.LP
+The Gregorian calendar in this module is extended back to year 0\&. For a given date, the \fIgregorian days\fR is the number of days up to and including the date specified\&. Similarly, the \fIgregorian seconds\fR for a given date and time, is the the number of seconds up to and including the specified date and time\&. 
+.LP
+For computing differences between epochs in time, use the functions counting gregorian days or seconds\&. If epochs are given as local time, they must be converted to universal time, in order to get the correct value of the elapsed time between epochs\&. Use of the function \fItime_difference/2\fR is discouraged\&. 
+
+.SH EXPORTS
+.LP
+.B
+date_to_gregorian_days(Year, Month, Day) -> Days
+.br
+.B
+date_to_gregorian_days(Date) -> Days
+.br
+.RS
+.TP
+Types
+Date = {Year, Month, Day}
+.br
+Year = Month = Day = Days = int()
+.br
+.RE
+.RS
+.LP
+This function computes the number of gregorian days starting with year 0 and ending at the given date\&. 
+.RE
+.LP
+.B
+datetime_to_gregorian_seconds(DateTime) -> Days
+.br
+.RS
+.TP
+Types
+DateTime = {date(), time()}
+.br
+date() = {Year, Month, Day}
+.br
+time() = {Hour, Minute, Second}
+.br
+Year = Month = Day = Hour = Minute = Second = Days = int()
+.br
+.RE
+.RS
+.LP
+This function computes the number of gregorian seconds starting with year 0 and ending at the given date and time\&. 
+.RE
+.LP
+.B
+day_of_the_week(Date) -> DayNumber
+.br
+.B
+day_of_the_week(Year, Month, Day) -> DayNumber
+.br
+.RS
+.TP
+Types
+Date = {Year, Month, Day}
+.br
+Year = Month = Day = DayNumber = int()
+.br
+.RE
+.RS
+.LP
+This function computes the day of the week given \fIYear\fR, \fIMonth\fR and \fIDay\fR\&. The return value denotes the day of the week as follows: 
+
+.nf
+Monday = 1, Tuesday = 2, \&.\&.\&., Sunday = 7
+.fi
+.LP
+\fIYear\fR cannot be abbreviated and a value of 93 denotes the year 93, and not the year 1993\&. \fIMonth\fR is the month number with January = 1\&. \fIDay\fR is an integer in the range 1 and the number of days in the month \fIMonth\fR of the year \fIYear\fR\&. 
+.RE
+.LP
+.B
+gregorian_days_to_date(Days) -> Date
+.br
+.RS
+.TP
+Types
+Date = {Year, Month, Day}
+.br
+Year = Month = Day = Days = int()
+.br
+.RE
+.RS
+.LP
+This function computes the date given the number of gregorian days\&. 
+.RE
+.LP
+.B
+gregorian_seconds_to_datetime(Secs) -> DateTime
+.br
+.RS
+.TP
+Types
+DateTime = {date(), time()}
+.br
+date() = {Year, Month, Day}
+.br
+time() = {Hour, Minute, Second}
+.br
+Year = Month = Day = Hour = Minute = Second = Days = int()
+.br
+.RE
+.RS
+.LP
+This function computes the date and time from the given number of gregorian seconds\&. 
+.RE
+.LP
+.B
+is_leap_year(Year) -> bool()
+.br
+.RS
+.TP
+Types
+Year = int()
+.br
+.RE
+.RS
+.LP
+This function checks if a year is a leap year\&. 
+.RE
+.LP
+.B
+last_day_of_the_month(Year, Month) -> int()
+.br
+.RS
+.TP
+Types
+Year = Month = int()
+.br
+.RE
+.RS
+.LP
+This function computes the number of days in a month\&. 
+.RE
+.LP
+.B
+local_time() -> {Date, Time}
+.br
+.RS
+.TP
+Types
+Date = {Year, Month, Day}
+.br
+Time = {Hour, Minute, Second}
+.br
+Year = Month = Day = Hour = Minute = Second = int()
+.br
+.RE
+.RS
+.LP
+This function returns the local time reported by the underlying operating system\&. 
+.RE
+.LP
+.B
+local_time_to_universal_time({Date, Time}) -> {Date, Time}
+.br
+.RS
+.TP
+Types
+Date = {Year, Month, Day}
+.br
+Time = {Hour, Minute, Second}
+.br
+Year = Month = Day = Hour = Minute = Second = int()
+.br
+.RE
+.RS
+.LP
+This function converts from local time to Universal Coordinated Time (UTC)\&. \fIDate\fR must refer to a local date after Jan 1, 1970\&.
+.RE
+.LP
+.B
+now_to_local_time(Now) -> {Date, Time}
+.br
+.RS
+.TP
+Types
+Now = {MegaSecs, Secs, MicroSecs}
+.br
+Date = {Year, Month, Day}
+.br
+Time = {Hour, Minute, Second}
+.br
+MegaSecs = Secs = MilliSecs = int()
+.br
+Year = Month = Day = Hour = Minute = Second = int()
+.br
+.RE
+.RS
+.LP
+This function returns local date and time converted from the return value from \fIerlang:now()\fR\&. 
+.RE
+.LP
+.B
+now_to_universal_time(Now) -> {Date, Time}
+.br
+.B
+now_to_datetime(Now) -> {Date, Time}
+.br
+.RS
+.TP
+Types
+Now = {MegaSecs, Secs, MicroSecs}
+.br
+Date = {Year, Month, Day}
+.br
+Time = {Hour, Minute, Second}
+.br
+MegaSecs = Secs = MilliSecs = int()
+.br
+Year = Month = Day = Hour = Minute = Second = int()
+.br
+.RE
+.RS
+.LP
+This function returns Universal Coordinated Time (UTC) converted from the return value from \fIerlang:now()\fR\&. 
+.RE
+.LP
+.B
+seconds_to_daystime(Secs) -> {Days, Time}
+.br
+.RS
+.TP
+Types
+Time() = {Hour, Minute, Second}
+.br
+Hour = Minute = Second = Days = int()
+.br
+.RE
+.RS
+.LP
+This function transforms a given number of seconds into days, hours, minutes, and seconds\&. The \fITime\fR part is always non-negative, but \fIDays\fR is negative if the argument \fISecs\fR is\&. 
+.RE
+.LP
+.B
+seconds_to_time(Secs) -> Time
+.br
+.RS
+.TP
+Types
+Time() = {Hour, Minute, Second}
+.br
+Hour = Minute = Second = Secs = int()
+.br
+.RE
+.RS
+.LP
+This function computes the time from the given number of seconds\&. \fISecs\fR must be less than the number of seconds per day\&. 
+.RE
+.LP
+.B
+time_difference(T1, T2) -> Tdiff
+.br
+.RS
+.TP
+Types
+T1 = T2 = {Date, Time}
+.br
+Tdiff = {Day, {Hour, Minute, Second}}
+.br
+Date = {Year, Month, Day}
+.br
+Time = {Hour, Minute, Second}
+.br
+Year = Month = Day = Hour = Minute = Second = int()
+.br
+.RE
+.RS
+.LP
+This function returns the difference between two \fI{Date, Time}\fR structures\&. \fIT2\fR should refer to an epoch later than \fIT1\fR\&. 
+.LP
+This function is obsolete\&. Use the conversion functions for gregorian days and seconds instead\&.
+.RE
+.LP
+.B
+time_to_seconds(Time) -> Secs
+.br
+.RS
+.TP
+Types
+Time() = {Hour, Minute, Second}
+.br
+Hour = Minute = Second = Secs = int()
+.br
+.RE
+.RS
+.LP
+This function computes the number of seconds since midnight up to the specified time\&. 
+.RE
+.LP
+.B
+universal_time() -> {Date, Time}
+.br
+.RS
+.TP
+Types
+Date = {Year, Month, Day}
+.br
+Time = {Hour, Minute, Second}
+.br
+Year = Month = Day = Hour = Minute = Second = int()
+.br
+.RE
+.RS
+.LP
+This function returns the Universal Coordinated Time (UTC) reported by the underlying operating system\&. Local time is returned if universal time is not available\&. 
+.RE
+.LP
+.B
+universal_time_to_local_time({Date, Time}) -> {Date, Time}
+.br
+.RS
+.TP
+Types
+Date = {Year, Month, Day}
+.br
+Time = {Hour, Minute, Second}
+.br
+Year = Month = Day = Hour = Minute = Second = int()
+.br
+.RE
+.RS
+.LP
+This function converts from Universal Coordinated Time (UTC) to local time\&. \fIDate\fR must refer to a date after Jan 1, 1970\&.
+.RE
+.LP
+.B
+valid_date(Date) -> bool()
+.br
+.B
+valid_date(Year, Month, Day) -> bool()
+.br
+.RS
+.TP
+Types
+Date = {Year, Month, Day}
+.br
+Year = Month = Day = int()
+.br
+.RE
+.RS
+.LP
+This function checks if a date is a valid\&. 
+.RE
+.SH Leap Years
+.LP
+The notion that every fourth year is a leap year is not completely true\&. By the Gregorian rule, a year Y is a leap year if either of the following rules is valid: 
+.RS 2
+.TP 2
+*
+Y is divisible by 4, but not by 100; or 
+.TP 2
+*
+Y is divisible by 400\&. 
+.RE
+.LP
+Accordingly, 1996 is a leap year, 1900 is not, but 2000 is\&. 
+.SH Date and Time Source
+.LP
+Local time is obtained from the Erlang BIF \fIlocaltime/0\fR\&. Universal time is computed from the BIF \fIuniversaltime/0\fR\&. 
+.LP
+The following facts apply:
+.RS 2
+.TP 2
+*
+there are 86400 seconds in a day
+.TP 2
+*
+there are 365 days in an ordinary year
+.TP 2
+*
+there are 366 days in a leap year
+.TP 2
+*
+there are 1461 days in a 4 year period
+.TP 2
+*
+there are 36524 days in a 100 year period
+.TP 2
+*
+there are 146097 days in a 400 year period
+.TP 2
+*
+there are 719528 days between Jan 1, 0 and Jan 1, 1970\&.
+.RE
+.SH AUTHOR
+.nf
+Peter Hogfeldt - support@erlang.ericsson.se
+.fi

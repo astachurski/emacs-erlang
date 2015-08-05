@@ -1,0 +1,396 @@
+
+
+
+filename(3)         ERLANG MODULE DEFINITION          filename(3)
+
+
+
+MODULE
+     filename - File Name Manipulation Functions
+
+DESCRIPTION
+     The module _f_i_l_e_n_a_m_e provides a number  of  useful  functions
+     for  analyzing  and manipulating file names. These functions
+     are designed so that the Erlang code can work on  many  dif-
+     ferent platforms with different formats for file names. With
+     file name is meant all strings that can be used to denote  a
+     file.  They  can  be short relative names like _f_o_o._e_r_l, very
+     long absolute name which  include  a  drive  designator  and
+     directory names like _D:\_u_s_r/_l_o_c_a_l\_b_i_n\_e_r_l/_l_i_b\_t_o_o_l_s\_f_o_o._e_r_l,
+     or any variations in between.
+
+     In Windows, all functions return  file  names  with  forward
+     slashes  only,  even  if the arguments contain back slashes.
+     Use the _j_o_i_n/_1 function to normalize a file name by removing
+     redundant directory separators.
+
+
+EXPORTS
+     absname(Filename) -> Absname
+
+          Types
+               Filename = string() |[string()] | atom()
+               Absname = string()
+
+          Converts a relative _F_i_l_e_n_a_m_e and  returns  an  absolute
+          name.  No  attempt is made to create the shortest abso-
+          lute name, because this can give incorrect  results  on
+          file systems which allow links.
+
+          Examples include:
+
+          Assume (for UNIX) current directory "/usr/local"
+          Assume (for WIN32) current directory "D:/usr/local"
+
+          (for UNIX):  absname("foo") -> "/usr/local/foo"
+          (for WIN32): absname("foo") -> "D:/usr/local/foo"
+          (for UNIX):  absname("../x") -> "/usr/local/../x"
+          (for WIN32): absname("../x") -> "D:/usr/local/../x"
+          (for UNIX):  absname("/") -> "/"
+          (for WIN32): absname("/") -> "D:/"
+
+     absname(Filename, Directory) -> Absname
+
+          Types
+               Filename = string() |[string()] | atom()
+               Directory = string()
+               Absname = string()
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+filename(3)         ERLANG MODULE DEFINITION          filename(3)
+
+
+
+          This function works like  _a_b_s_n_a_m_e/_1,  except  that  the
+          directory  to  which the file name should be made rela-
+          tive is given explicitly in the _D_i_r_e_c_t_o_r_y argument.
+
+     basename(Filename)
+
+          Types
+               Filename = string() |[string()] | atom()
+
+          Returns the part of the _F_i_l_e_n_a_m_e after the last  direc-
+          tory  separator,  or  the  _F_i_l_e_n_a_m_e itself if it has no
+          separators.
+
+          Examples include:
+
+          basename("foo") -> "foo"
+          basename("/usr/foo") -> "foo"
+          basename("/") -> []
+
+     basename(Filename,Ext) -> string()
+
+          Types
+               Filename = Ext = string() | [string()] | atom()
+
+          Returns the last component of _F_i_l_e_n_a_m_e with the  exten-
+          sion  _E_x_t stripped. Use this function if you want to to
+          remove an extension  which  might,  or  might  not,  be
+          there.  Use _r_o_o_t_n_a_m_e(_b_a_s_e_n_a_m_e(_F_i_l_e_n_a_m_e)) if you want to
+          remove an extension that exists, but you are  not  sure
+          which one it is.
+
+          Examples include:
+
+          basename("~/src/kalle.erl", ".erl") -> "kalle"
+          basename("~/src/kalle.beam", ".erl") -> "kalle.beam"
+          basename("~/src/kalle.old.erl", ".erl") -> "kalle.old"
+          rootname(basename("~/src/kalle.erl")) -> "kalle"
+          rootname(basename("~/src/kalle.beam")) -> "kalle"
+
+     dirname(Filename) -> string()
+
+          Types
+               Filename = string() | [string()] | atom()
+
+          Returns the directory part of _F_i_l_e_n_a_m_e.
+
+          Examples include:
+
+          dirname("/usr/src/kalle.erl") -> "/usr/src"
+          dirname("kalle.erl") -> "."
+          On Win32:
+          filename:dirname("\\usr\\src/kalle.erl") -> "/usr/src"
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+filename(3)         ERLANG MODULE DEFINITION          filename(3)
+
+
+
+     extension(Filename) -> string() | []
+
+          Types
+               Filename = string() | [string()] | atom()
+
+          Given  a  file  name  string  _F_i_l_e_n_a_m_e,  this  function
+          returns   the  file  extension  including  the  period.
+          Returns an empty list if there is no extension.
+
+          Examples include:
+
+          extension("foo.erl") -> ".erl"
+          extension("beam.src/kalle") -> []
+
+     join(Components) -> string()
+
+          Types
+               Components = [string()]
+
+          Joins a list of file  name  _C_o_m_p_o_n_e_n_t_s  with  directory
+          separators.  If  one  of the elements in the _C_o_m_p_o_n_e_n_t_s
+          list includes an absolute path, for example "/xxx", the
+          preceding  elements,  if  any,  are  removed  from  the
+          result.
+
+          The result of the _j_o_i_n function is "normalized":
+
+            * There are no redundant directory separators.
+
+            * In Windows, all directory  separators  are  forward
+              slashes and the drive letter is in lower case.
+
+          Examples include:
+
+          join("/usr/local", "bin") -> "/usr/local/bin"
+          join(["/usr", "local", "bin"]) -> "/usr/local/bin"
+          join(["a/b///c/"] -> "a/b/c"
+          join(["B:a\\b///c/"] -> "b:a/b/c"  % On Windows only
+
+     join(Name1, Name2) -> string()
+
+          Types
+               Name1 = Name2 = string()
+
+          Joins two file name components with  directory  separa-
+          tors. Equivalent to _j_o_i_n([_N_a_m_e_1, _N_a_m_e_2]).
+
+     nativename(Path) -> string()
+
+          Types
+               Path = string()
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+filename(3)         ERLANG MODULE DEFINITION          filename(3)
+
+
+
+          Converts a filename in _P_a_t_h to a form accepted  by  the
+          command  shell  and  native applications on the current
+          platform. On Windows, forward slashes will be converted
+          to backward slashes. On all platforms, the name will be
+          normalized as done by _j_o_i_n/_1.
+
+          Example:
+
+          (on UNIX)  filename:nativename("/usr/local/bin/") -> "/usr/local/bin"
+          (on Win32) filename:nativename("/usr/local/bin/") -> "\\usr\\local\\bin"
+
+     pathtype(Path) -> absolute | relative | volumerelative
+
+          Returns one of _a_b_s_o_l_u_t_e, _r_e_l_a_t_i_v_e, or _v_o_l_u_m_e_r_e_l_a_t_i_v_e.
+
+            _a_b_s_o_l_u_t_e:
+                The path name refers to  a  specific  file  on  a
+                specific volume.
+
+                Examples include:
+
+                on Unix
+                /usr/local/bin/
+                on Windows
+                D:/usr/local/bin
+
+            _r_e_l_a_t_i_v_e:
+                The path name is relative to the current  working
+                directory on the current volume.
+
+                Example:
+
+                foo/bar, ../src
+
+            _v_o_l_u_m_e_r_e_l_a_t_i_v_e:
+                The path name is relative to the current  working
+                directory  on  a  specified  volume,  or  it is a
+                specific file on the current working volume.
+
+                Examples include:
+
+                In Windows
+                D:bar.erl, /bar/foo.erl
+                /temp
+
+     rootname(Filename) -> string()
+     rootname(Filename, Ext) -> string()
+
+          Types
+               Filename = Ext = string() | [string()] | atom()
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+filename(3)         ERLANG MODULE DEFINITION          filename(3)
+
+
+
+          _r_o_o_t_n_a_m_e/_1 returns all characters in  _F_i_l_e_n_a_m_e,  except
+          the extension.
+
+          _r_o_o_t_n_a_m_e/_2 works as _r_o_o_t_n_a_m_e/_1, except that the  exten-
+          sion is removed only if it is _E_x_t.
+
+          Examples include:
+
+          rootname("/beam.src/kalle") -> "/beam.src/kalle"
+          rootname("/beam.src/foo.erl") -> "/beam.src/foo"
+          rootname("/beam.src/foo.erl",".erl") -> "/beam.src/foo"
+          rootname("/beam.src/foo.beam",".erl") -> "/beam.src/foo.beam"
+
+     split(Filename) -> Components
+
+          Types
+               Filename = string() | [string()] | atom()
+               Components = [string()]
+
+          Returns a list whose elements are the  path  components
+          of _F_i_l_e_n_a_m_e.
+
+          Examples include:
+
+          split("/usr/local/bin") -> ["/", "usr", "local", "bin"]
+          split("foo/bar") -> ["foo", "bar"]
+          split("a:\\msdev\\include") -> ["a:/", "msdev", "include"]
+
+     find_src(Module) -> {SourceFile, Options}
+     find_src(Module, Rules) -> {SourceFile, Options}
+
+          Types
+               Module = atom() | string()
+               SourceFile = string()
+               Options = [CompilerOption]
+               CompilerOption  =   {i,   string()}   |   {outdir,
+               string()} | {d, atom()}
+
+          Finds the source file name and compilation options  for
+          a   compiled   module.   The   result  can  be  fed  to
+          _c_o_m_p_i_l_e:_f_i_l_e/_2 in order to compile the file again.
+
+          The Module argument, which can be a string or an  atom,
+          specifies  either  the  module  name or the path to the
+          source code, with or without the ".erl"  extension.  In
+          either  case,  the  module  must  be  known by the code
+          manager, i.e. _c_o_d_e:_w_h_i_c_h/_1 must succeed.
+
+          Rules describe how the source directory is found,  when
+          the object code directory is known. Each rule is of the
+          form {_B_i_n_S_u_f_f_i_x, _S_o_u_r_c_e_S_u_f_f_i_x} and  is  interpreted  as
+          follows:  If  the  end  of the directory name where the
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+filename(3)         ERLANG MODULE DEFINITION          filename(3)
+
+
+
+          object is located matches _B_i_n_S_u_f_f_i_x, then the suffix of
+          the  directory name is replaced by _S_o_u_r_c_e_S_u_f_f_i_x. If the
+          source file is found in the resulting  directory,  then
+          the   function  returns  that  location  together  with
+          _O_p_t_i_o_n_s. Otherwise, the next rule is tried, and so on.
+
+          The function returns {_S_o_u_r_c_e_F_i_l_e, _O_p_t_i_o_n_s}.  _S_o_u_r_c_e_F_i_l_e
+          is  the  absolute  path  to the source file without the
+          ".erl" extension. _O_p_t_i_o_n_s include the options which are
+          necessary  to compile the file with _c_o_m_p_i_l_e:_f_i_l_e/_2, but
+          excludes options such as _r_e_p_o_r_t or _v_e_r_b_o_s_e which do not
+          change  the  way  code  is  generated. The paths in the
+          {_o_u_t_d_i_r, _P_a_t_h} and {_i, _P_a_t_h} options are guaranteed  to
+          be absolute.
+
+AUTHOR
+     Bjorn Gustavsson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+

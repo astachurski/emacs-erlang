@@ -1,0 +1,66 @@
+
+
+
+CosEventChannelAdmin_SEuRpLpAlNiGerCMAoOdsDmEUivLneE(n3tD)CEFhIaNnInTeIlOANdmin_SupplierAdmin(3)
+
+
+
+MODULE
+     CosEventChannelAdmin_SupplierAdmin -  This module implements
+     a SupplierAdmin interface, which allows suppliers to be con-
+     nected to the event channel.
+
+DESCRIPTION
+     The SupplierAdmin interface defines the first step for  con-
+     necting suppliers to the event channel. It acts as a factory
+     for creating proxy consumers. Both  consumer  administration
+     and  supplier administration are defined as separate objects
+     so that the creator of the channel can control the  addition
+     of suppliers and consumers.
+
+     Any object that possesses an object reference that  supports
+     the  EventChannelFactory interface can perform the following
+     operations:
+
+
+EXPORTS
+     obtain_push_consumer(Object) -> Return
+
+          Types
+               Object = #objref
+               Return = #objref
+
+          This  operation  returns  a  ProxyPushConsumer   object
+          reference.
+
+     obtain_pull_consumer(Object) -> Return
+
+          Types
+               Object = #objref
+               Return = #objref
+
+          This  operation  returns  a  ProxyPullConsumer   object
+          reference.
+
+AUTHOR
+     Helen Airiyan - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                1
+
+
+

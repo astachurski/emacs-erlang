@@ -1,0 +1,39 @@
+.TH run_erl 1 "erts  5.0.1" "Ericsson Utvecklings AB" "USER COMMANDS"
+.SH NAME
+run_erl \- Redirect Erlang input and output streams on Solaris(R)
+.SH DESCRIPTION
+.LP
+This describes the \fIrun_erl\fR program specific to Solaris\&. This program redirect the standard input and standard output streams so that all output can be logged\&. It also let the program \fIto_erl\fR connect to the Erlang console making it possible to monitor and debug an embedded system remotely\&. 
+.LP
+You can read more about the use in the \fIEmbedded System User\&'s Guide\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+run_erl pipe_dir/ log_dir "exec command [command_arguments]"
+.br
+.RS
+.LP
+The \fIrun_erl\fR program arguments are: 
+.RS 2
+.TP 4
+.B
+pipe_dir:
+This is where to put the named pipe, usually \fI/tmp/\fR\&.
+.TP 4
+.B
+log_dir:
+This is where the log files are written\&. There will be one log file, \fIrun_erl\&.log\fR that log progress and warnings from the \fIrun_erl\fR program itself and there will be up to five log files at maximum 100KB each with the content of the standard streams from and to the command\&. When the logs are full \fIrun_erl\fR will delete and reuse the oldest log file\&.
+.TP 4
+.B
+"exec command [command_arguments]":
+In the third argument \fIcommand\fR is the to execute where everything written to stdin and stdout is logged to \fIlog_dir\fR\&.
+.RE
+.RE
+.SH SEE ALSO
+.LP
+start(1), start_erl(1)
+.SH AUTHOR
+.nf
+Kent Boortz - support@erlang.ericsson.se
+.fi

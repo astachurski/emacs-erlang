@@ -1,0 +1,3366 @@
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+MODULE
+     erlang - The Erlang BIFs
+
+DESCRIPTION
+     By convention, Built In Functions (BIFs) are seen  as  being
+     in    the    module    _e_r_l_a_n_g.    Thus,   both   the   calls
+     _a_t_o_m__t_o__l_i_s_t(_E_r_l_a_n_g)  and  _e_r_l_a_n_g:_a_t_o_m__t_o__l_i_s_t(_E_r_l_a_n_g)   are
+     identical.
+
+     BIFs may fail for a variety of reasons.  All  BIFs  fail  if
+     they  are  called  with  arguments of an incorrect type. For
+     example, _a_t_o_m__t_o__l_i_s_t/_1 will fail if it is  called  with  an
+     argument  which  is  not an atom. If this type of failure is
+     not within the scope of a catch (and the BIF is  not  called
+     within a guard; see below), the process making the call will
+     exit, and an EXIT signal with the associated  reason  _b_a_d_a_r_g
+     will be sent to all linked processes. The other reasons that
+     may make BIFs fail are  described  in  connection  with  the
+     description of each individual BIF.
+
+     A few BIFs may be used in guard tests, for example:
+
+     tuple_5(Something) when size(Something) == 5 ->
+         is_tuple_size_5;
+     tuple_5(_) ->
+         is_something_else.
+
+     Here the BIF _s_i_z_e/_1 is used in a guard. If _s_i_z_e/_1 is  called
+     with  a  tuple,  it will return the size of the tuple (i.e.,
+     how many elements there are in  the  tuple).  In  the  above
+     example,  _s_i_z_e/_1 is used in a guard which tests if its argu-
+     ment _S_o_m_e_t_h_i_n_g is a tuple and, if it is, whether  it  is  of
+     size  5.  In  this case, calling size with an argument other
+     than a tuple will cause the guard to fail and execution will
+     continue  with the next clause. Suppose _t_u_p_l_e__5/_1 is written
+     as follows:
+
+     tuple_5(Something) ->
+         case size(Something) of
+              5 -> is_tuple_size_5;
+                      _ -> is_something_else
+                 end.
+
+     In this case, _s_i_z_e/_1 is not in a guard. If _S_o_m_e_t_h_i_n_g is  not
+     a tuple, _s_i_z_e/_1 will fail and cause the process to exit with
+     the associated reason _b_a_d_a_r_g (see above).
+
+     Some of the BIFs in this  chapter  are  optional  in  Erlang
+     implementations,  and  not  all implementations will include
+     them.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+     The following descriptions indicate which BIFs can  be  used
+     in guards and which BIFs are optional.
+
+
+EXPORTS
+     abs(Number)
+
+          Returns an integer or float which is  the  arithmetical
+          absolute  value  of  the  argument  _N_u_m_b_e_r  (integer or
+          float).
+
+          > abs(-3.33).
+          3.33000
+          > abs(-3).
+          3
+
+          This BIF is allowed in guard tests.
+
+          Failure: _b_a_d_a_r_g if the argument is not an integer or  a
+          float.
+
+     erlang:append_element(Tuple, Term)
+
+          Returns a new tuple which has  one  element  more  than
+          _T_u_p_l_e,  and  contains the elements in Tuple followed by
+          Term as the last element. Semantically  equvivalent  to
+          _l_i_s_t__t_o__t_u_p_l_e(_t_u_p_l_e__t_o__l_i_s_t(_T_u_p_l_e  ++ [_T_e_r_m]), but much
+          faster.
+
+          Failure: _b_a_d_a_r_g if _T_u_p_l_e is not a tuple.
+
+     apply({Module, Function}, ArgumentList)
+
+          This   is   equivalent   to   _a_p_p_l_y(_M_o_d_u_l_e,   _F_u_n_c_t_i_o_n,
+          _A_r_g_u_m_e_n_t_L_i_s_t).
+
+     apply(Module, Function, ArgumentList)
+
+          Returns the result of applying _F_u_n_c_t_i_o_n  in  _M_o_d_u_l_e  on
+          _A_r_g_u_m_e_n_t_L_i_s_t.  The  applied  function  must  have  been
+          exported from _M_o_d_u_l_e. The arity of the function is  the
+          length of _A_r_g_u_m_e_n_t_L_i_s_t.
+
+          > apply(lists, reverse, [[a, b, c]]).
+          [c,b,a]
+
+          _a_p_p_l_y can be used to evaluate BIFs by using the  module
+          name _e_r_l_a_n_g.
+
+          > apply(erlang, atom_to_list, ['Erlang']).
+          "Erlang"
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          Failure: _e_r_r_o_r__h_a_n_d_l_e_r:_u_n_d_e_f_i_n_e_d__f_u_n_c_t_i_o_n/_3  is  called
+          if  _M_o_d_u_l_e  has  not exported _F_u_n_c_t_i_o_n/_A_r_i_t_y. The error
+          handler can be redefined (see the BIF  _p_r_o_c_e_s_s__f_l_a_g/_2).
+          If  the  _e_r_r_o_r__h_a_n_d_l_e_r is undefined, or if the user has
+          redefined the default _e_r_r_o_r__h_a_n_d_l_e_r so the  replacement
+          module  is  undefined,  an  error with the reason _u_n_d_e_f
+          will be generated.
+
+     atom_to_list(Atom)
+
+          Returns a  list  of  integers  (Latin-1  codes),  which
+          corresponds  to the text representation of the argument
+          _A_t_o_m.
+
+          >atom_to_list('Erlang').
+          "Erlang"
+
+          Failure: _b_a_d_a_r_g if the argument is not an atom.
+
+     erlang:binary_to_float(Binary)
+
+          Returns a float corresponding to  the  big-endian  IEEE
+          representation  in _B_i_n_a_r_y. The size of _B_i_n_a_r_y must be 4
+          or 8 bytes.
+
+  Warning:
+     This is an internal BIF, only to be used by OTP code.
+
+
+     Failure: _b_a_d_a_r_g if the argument is not a binary or  not  the
+     representation of a number.
+
+     binary_to_list(Binary)
+
+          Returns a list of  integers  which  correspond  to  the
+          bytes of _B_i_n_a_r_y.
+
+     binary_to_list(Binary, Start, Stop)
+
+          As _b_i_n_a_r_y__t_o__l_i_s_t/_1, but it only returns the list  from
+          position  _S_t_a_r_t  to  position  _S_t_o_p. _S_t_a_r_t and _S_t_o_p are
+          integers. Positions in the binary are numbered starting
+          from 1.
+
+     binary_to_term(Binary)
+
+          Returns an Erlang term which is the result of  decoding
+          the  binary  _B_i_n_a_r_y.  _B_i_n_a_r_y  is  encoded in the Erlang
+          external binary representation. See _t_e_r_m__t_o__b_i_n_a_r_y/_1.
+
+     bump_reductions(Reductions)
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          This implementation-dependent function  increments  the
+          reduction  counter for the current process. In the Beam
+          emulator, the reduction counter is normally incremented
+          by  one  for  each function and BIF call, and a context
+          switch is forced when the counter reaches 1000.
+
+  Warning:
+     This BIF might be removed in a future version  of  the  Beam
+     machine  without  prior warning. It is unlikely to be imple-
+     mented in other Erlang implementations. If  you  think  that
+     you  must  use  it,  encapsulate it your own wrapper module,
+     and/or wrap it in a catch.
+
+
+     erlang:cancel_timer(Ref)
+
+          _c_a_n_c_e_l__t_i_m_e_r(_R_e_f)  cancels  a  timer,  where  _R_e_f   was
+          returned  by  either  _s_e_n_d__a_f_t_e_r/_3 or _s_t_a_r_t__t_i_m_e_r/_3. If
+          the timer  was  there  to  be  removed,  _c_a_n_c_e_l__t_i_m_e_r/_1
+          returns  the time in ms left until the timer would have
+          expired, otherwise _f_a_l_s_e (which may mean that  _R_e_f  was
+          never  a  timer, or that it had already been cancelled,
+          or that it had already delivered its message).
+
+          Note: usually, cancelling a timer  does  not  guarantee
+          that  the message has not already been delivered to the
+          message queue. However, in the special case of  a  pro-
+          cess  P cancelling a timer which would have sent a mes-
+          sage to P itself, attempting to read the  timeout  mes-
+          sage from the queue is guaranteed to remove the timeout
+          in that situation:
+
+                  cancel_timer(Ref),
+                  receive
+                      {timeout, Ref, _} ->
+                          ok
+                  after 0 ->
+                          ok
+                  end
+
+          Failure: _b_a_d_a_r_g if _R_e_f is not a reference.
+
+     erlang:check_process_code(Pid, Module)
+
+          Returns _t_r_u_e if the process _P_i_d  is  executing  an  old
+          version  of  Module, if the current call of the process
+          executes code for an old version of the module, if  the
+          process has references to an old version of the module,
+          or if the process contains funs that references the old
+          version of the module. Otherwise, it returns _f_a_l_s_e.
+
+          > erlang:check_process_code(Pid, lists).
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          false
+
+          This is an optional BIF.
+
+          Failure: _b_a_d_a_r_g, if the process argument is not a  Pid,
+          or the module argument is not an atom.
+
+     concat_binary(ListOfBinaries)
+
+          Concatenates a list of binaries _L_i_s_t_O_f_B_i_n_a_r_i_e_s into one
+          binary.
+
+     date()
+
+          Returns the current date as {_Y_e_a_r, _M_o_n_t_h, _D_a_y}
+
+          > date().
+          {1995, 2, 19}
+
+     erlang:delete_module(Module)
+
+          Moves the current version of the code of _M_o_d_u_l_e to  the
+          old  version  and  deletes  all  export  references  of
+          _M_o_d_u_l_e. Returns _u_n_d_e_f_i_n_e_d if the module does not exist,
+          otherwise _t_r_u_e.
+
+          > delete_module(test).
+          true
+
+          This is an optional BIF.
+
+          Failure: _b_a_d_a_r_g if there is already an old  version  of
+          the module (see BIF _p_u_r_g_e__m_o_d_u_l_e/_1).
+
+  Warning:
+     In normal  Erlang  implementations  code  handling  -  which
+     includes  loading, deleting, and replacing modules - is per-
+     formed in the module _c_o_d_e. This BIF is intended for use with
+     the implementation of the module _c_o_d_e and should not be used
+     elsewhere.
+
+
+     erlang:demonitor(Ref)
+
+          If  _R_e_f  is  a  reference  which  the  current  process
+          obtained by calling _e_r_l_a_n_g:_m_o_n_i_t_o_r/_2, the monitoring is
+          turned off. No action is performed  if  the  monitoring
+          already is turned of before the call. Returns _t_r_u_e.
+
+          After the call to _e_r_l_a_n_g:_m_o_n_i_t_o_r/_2 the monitoring  pro-
+          cess will not get any new '_D_O_W_N' message from this mon-
+          itor into the receive queue.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  5
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          It is an error if _R_e_f refers to a monitoring started by
+          another process. Not all such cases are cheap to check;
+          if checking is cheap, the call fails with  _b_a_d_a_r_g  (for
+          example if _R_e_f is a remote reference).
+
+     erlang:disconnect_node(Node)
+
+          Forces the disconnection of a node. This will appear to
+          the  node _N_o_d_e as if the current node has crashed. This
+          BIF is mainly used in the Erlang network authentication
+          protocols. Returns _t_r_u_e if disconnection succeeds, oth-
+          erwise _f_a_l_s_e.
+
+          Failure: _b_a_d_a_r_g if _N_o_d_e is not an atom.
+
+     erlang:display(Term)
+
+          Prints a text representation _T_e_r_m on the standard  out-
+          put. Useful for debugging (especially startup problems)
+          and strongly discouraged for other purposes.
+
+     element(N, Tuple)
+
+          Returns the _Nth element (numbering from 1) of _T_u_p_l_e.
+
+          > element(2, {a, b, c}).
+          b
+
+          Failure: _b_a_d_a_r_g if _N < _1, or _N > _s_i_z_e(_T_u_p_l_e), or if the
+          argument _T_u_p_l_e is not a tuple. Allowed in guard tests.
+
+     erase()
+
+          Returns the process dictionary and deletes it.
+
+          > put(key1, {1, 2, 3}), put(key2, [a, b, c]), erase().
+          [{key1,{1, 2, 3}},{key2,[a, b, c]}]
+
+     erase(Key)
+
+          Returns the value associated with _K_e_y  and  deletes  it
+          from  the  process  dictionary. Returns _u_n_d_e_f_i_n_e_d if no
+          value is associated with _K_e_y. _K_e_y  can  be  any  Erlang
+          term.
+
+          > put(key1, {merry, lambs, are, playing}),
+            X = erase(key1), {X, erase(key1)}.
+          {{merry, lambs, are, playing}, undefined}
+
+     exit(Reason)
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  6
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          Stops the execution of the  current  process  with  the
+          reason  _R_e_a_s_o_n.  Can  be  caught.  _R_e_a_s_o_n is any Erlang
+          term. Since evaluating this function causes the process
+          to terminate, it has no return value.
+
+          > exit(foobar).
+          ** exited: foobar **
+          > catch exit(foobar).
+          {'EXIT', foobar}
+
+     exit(Pid, Reason)
+
+          Sends an EXIT message to the process _P_i_d. Returns _t_r_u_e.
+
+          > exit(Pid, goodbye).
+          true
+
+  Note:
+     The above is not necessarily the same as:
+
+     Pid ! {'EXIT', self(), goodbye}
+
+
+     The above two alternatives are the same if the process  with
+     the  process identity _P_i_d is trapping exits. However, if _P_i_d
+     is not trapping exits, the _P_i_d itself  will  exit  and  pro-
+     pagate EXIT signals in turn to its linked processes.
+
+     If the reason is the atom _k_i_l_l, for example _e_x_i_t(_P_i_d, _k_i_l_l),
+     an  untrappable EXIT signal will be sent to the process _P_i_d.
+     In other words, the  process  _P_i_d  will  be  unconditionally
+     killed.
+
+     Returns _t_r_u_e.
+
+     Failure: _b_a_d_a_r_g if _P_i_d is not a Pid.
+
+     fault(Reason)
+
+          Stops the execution of the  current  process  with  the
+          reason  _R_e_a_s_o_n,  where  _R_e_a_s_o_n  is any Erlang term. The
+          actual EXIT term will be {_R_e_a_s_o_n, _W_h_e_r_e},  where  _W_h_e_r_e
+          is  a  list  of the functions most recently called (the
+          current function first). Since evaluating this function
+          causes  the  process  to  terminate,  it  has no return
+          value.
+
+     fault(Reason, Args)
+
+          Stops the execution of the  current  process  with  the
+          reason  _R_e_a_s_o_n,  where  _R_e_a_s_o_n  is any Erlang term. The
+          actual EXIT term will be {_R_e_a_s_o_n, _W_h_e_r_e},  where  _W_h_e_r_e
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  7
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          is  a  list  of the functions most recently called (the
+          current function first). The _A_r_g_s is expected to be the
+          arguments  for the current function; in Beam it will be
+          used to provide the actual arguments  for  the  current
+          function in the _W_h_e_r_e term. Since evaluating this func-
+          tion causes the process to terminate, it has no  return
+          value.
+
+     float(Number)
+
+          Returns a float by converting _N_u_m_b_e_r to a float.
+
+          > float(55).
+          55.0000
+
+  Note:
+     _f_l_o_a_t/_1 is allowed in guard tests, but it tests whether  the
+     argument is a float or not.
+
+     -module(t).
+
+     f(F) when float(F) -> float;
+     f(F) -> not_a_float.
+
+     1> t:f(1).
+     not_a_float
+     2> t:f(1.0).
+     float
+     3>
+
+
+     Failure: _b_a_d_a_r_g if  the  argument  is  not  a  float  or  an
+     integer.
+
+     erlang:float_to_binary(Float, Size)
+
+          Returns  a  binary  containing  the   big-endian   IEEE
+          representation  of _F_l_o_a_t. _S_i_z_e is the size in bits, and
+          must be either 32 or 64.
+
+  Warning:
+     This is an internal BIF, only to be used by OTP code.
+
+
+     Failure: _b_a_d_a_r_g if the argument is not a float.
+
+     float_to_list(Float)
+
+          Returns  a  list  of  integers  (ASCII   codes)   which
+          corresponds to _F_l_o_a_t.
+
+          > float_to_list(7.0).
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  8
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          "7.00000000000000000000e+00"
+
+          Failure: _b_a_d_a_r_g if the argument is not a float.
+
+     erlang:fun_info(Fun)
+
+          Returns a list containing  information  about  the  fun
+          _F_u_n.  This BIF is only intended for debugging. The list
+          returned contains the following tuples, not necessarily
+          in the order listed here (i.e. you should not depend on
+          the order).
+
+            {_p_i_d, _P_i_d}:
+                _P_i_d is the pid of  the  process  that  originally
+                created the fun. It will be the atom _u_n_d_e_f_i_n_e_d if
+                the fun is given in the tuple representation.
+
+            {_m_o_d_u_l_e, _M_o_d_u_l_e}:
+                _M_o_d_u_l_e (an atom) is the module in which  the  fun
+                is defined.
+
+            {_i_n_d_e_x, _I_n_d_e_x}:
+                _I_n_d_e_x (an integer) is an index into the  module's
+                fun table.
+
+            {_u_n_i_q, _U_n_i_q}:
+                _U_n_i_q (an integer) is a unique value for this fun.
+
+            {_e_n_v, _E_n_v}:
+                _E_n_v (a list) is the environment or free variables
+                for the fun.
+
+     erlang:function_exported(Module, Function, Arity)
+
+          Returns _t_r_u_e if the module _M_o_d_u_l_e is loaded and it con-
+          tains  an  exported  function _F_u_n_c_t_i_o_n/_A_r_i_t_y; otherwise
+          returns _f_a_l_s_e. Returns _f_a_l_s_e  for  any  BIF  (functions
+          implemented in C rather than in Erlang).
+
+          This function is retained mainly for backwards compati-
+          bility.  It  is  not clear why you really would want to
+          use it.
+
+     erlang:fun_info(Fun, Item)
+
+          Returns information about the _F_u_n as specified by _I_t_e_m,
+          in  the form {_I_t_e_m, _I_n_f_o}. Item can be any of the atoms
+          _i_d,   _m_o_d_u_l_e,   _i_n_d_e_x,   _u_n_i_q,   or   _e_n_v.   See    the
+          _e_r_l_a_n_g:_f_u_n__i_n_f_o/_1 BIF.
+
+     erlang:fun_to_list(Fun)
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  9
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          Returns a textual representation of the fun _F_u_n.
+
+     erlang:garbage_collect()
+
+          Forces an immediate garbage collection of the currently
+          executing     process.     You     should    not    use
+          _e_r_l_a_n_g:_g_a_r_b_a_g_e__c_o_l_l_e_c_t() unless  you  have  noticed  or
+          have  good reasons to suspect that the spontaneous gar-
+          bage collection will occur too  late  or  not  at  all.
+          Improper use may seriously degrade system performance.
+
+          Compatability note: In versions of OTP prior to R7, the
+          garbage  collection  took  place  at  the  next context
+          switch, not immediately.  To  force  a  context  switch
+          after a call to _e_r_l_a_n_g:_g_a_r_b_a_g_e__c_o_l_l_e_c_t(), it was suffi-
+          cient to make any function call.
+
+     erlang:garbage_collect(Pid)
+
+          Works like erlang:garbage_collect() but on any process.
+          The  same caveats apply. Returns _f_a_l_s_e if _P_i_d refers to
+          a dead process; _t_r_u_e otherwise.
+
+     get()
+
+          Returns the process  dictionary  as  a  list  of  {_K_e_y,
+          _V_a_l_u_e} tuples.
+
+          > put(key1, merry), put(key2, lambs),
+            put(key3, {are, playing}), get().
+          [{key1, merry}, {key2, lambs}, {key3, {are, playing}}]
+
+     get(Key)
+
+          Returns the value associated with _K_e_y  in  the  process
+          dictionary,  and  _u_n_d_e_f_i_n_e_d  if  no value is associated
+          with _K_e_y. _K_e_y can be any Erlang term.
+
+          > put(key1, merry), put(key2, lambs),
+            put({any, [valid, term]}, {are, playing}),
+            get({any, [valid, term]}).
+          {are, playing}
+
+     erlang:get_cookie()
+
+          Returns the "magic cookie" of the current node, if  the
+          node is alive; otherwise the atom _n_o_c_o_o_k_i_e.
+
+     get_keys(Value)
+
+          Returns a list of keys which corresponds  to  _V_a_l_u_e  in
+          the process dictionary.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 10
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          > put(mary, {1, 2}), put(had, {1, 2}), put(a, {1, 2}),
+            put(little, {1, 2}), put(dog, {1, 3}), put(lamb, {1, 2}),
+            get_keys({1, 2}).
+          [mary, had, a, little, lamb]
+
+     group_leader()
+
+          Every process is a member of some process group and all
+          groups have a leader.
+
+          This BIF returns the  process  identifier  _P_i_d  of  the
+          group  leader  for the process which evaluates the BIF.
+          When a process is spawned,  the  group  leader  of  the
+          spawned  process  is  the  same  as that of the process
+          which spawned it. Initially, at system  start-up,  _i_n_i_t
+          is  both  its  own group leader and the group leader of
+          all processes.
+
+     group_leader(Leader, Pid)
+
+          Sets the group leader of _P_i_d to _L_e_a_d_e_r. Typically, this
+          is  used  when a processes started from a certain shell
+          should have another group leader than _i_n_i_t. The process
+          _L_e_a_d_e_r  is normally a process with an I/O protocol. All
+          I/O from this group of processes are thus channeled  to
+          the same place.
+
+     halt()
+
+          Halts the Erlang runtime system  and  indicates  normal
+          exit to the calling environment. Has no return value.
+
+          > halt().
+          unix_prompt%
+
+     halt(Status)
+
+          _S_t_a_t_u_s must be a non-negative  integer,  or  a  string.
+          Halts  the  Erlang runtime system. Has no return value.
+          If _S_t_a_t_u_s is an integer, it  is  returned  as  an  exit
+          status  of Erlang to the calling environment. If _S_t_a_t_u_s
+          is a string, produces an Erlang crash dump with  _S_t_r_i_n_g
+          as slogan, and then exits with a non-zero status code.
+
+          Note that on many  platforms,  only  the  status  codes
+          0-255 are supported by the operating system.
+
+     erlang:hash(Term, Range)
+
+          Returns  a  hash  value  for  _T_e_r_m  within  the   range
+          _1.._R_a_n_g_e. The allowed range is 1..2^27-1.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 11
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+  Warning:
+     This BIF is deprecated as the hash value may differ on  dif-
+     ferent architectures. Also the hash values for integer terms
+     larger than 2^27 as well as large binaries  are  very  poor.
+     The  BIF  is retained for backward compatibility reasons (it
+     may have been used to hash records into a file), but all new
+     code should use the BIF _e_r_l_a_n_g:_p_h_a_s_h/_2 instead.
+
+
+     hd(List)
+
+          Returns the first item of _L_i_s_t.
+
+          > hd([1,2,3,4,5]).
+          1
+
+          Allowed in guard tests.
+
+          Failure: _b_a_d_a_r_g if _L_i_s_t is the empty list [], or is not
+          a list.
+
+     erlang:info(What)
+
+          This BIF is now equvivalent to erlang:system_info/1.
+
+     integer_to_list(Integer)
+
+          Returns  a  list  of  integers  (ASCII   codes)   which
+          correspond to _I_n_t_e_g_e_r.
+
+          > integer_to_list(77).
+          "77"
+
+          Failure: _b_a_d_a_r_g if the argument is not an integer.
+
+     is_alive()
+
+          Returns the atom _t_r_u_e if the  current  node  is  alive;
+          i.e.,  if the node can be part of a distributed system.
+          Otherwise, it returns the atom _f_a_l_s_e.
+
+     erlang:is_builtin(Module, Function, Arity)
+
+          Returns _t_r_u_e if _M_o_d_u_l_e:_F_u_n_c_t_i_o_n/_A_r_i_t_y is a  BIF  imple-
+          mented  in C; otherwise returns _f_a_l_s_e. This BIF is use-
+          ful for builders of cross reference tools.
+
+     is_process_alive(Pid)
+
+          _P_i_d must refer  to  a  process  on  the  current  node.
+          Returns  the  atom  _t_r_u_e if the process is alive, i.e.,
+          has not exited. Otherwise, it returns the  atom  _f_a_l_s_e.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 12
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          This  is  the  preferred way to check whether a process
+          exists. Unlike _p_r_o_c_e_s_s__i_n_f_o/[_1, _2],  _i_s__p_r_o_c_e_s_s__a_l_i_v_e/_1
+          does not report zombie processes as alive.
+
+     length(List)
+
+          Returns the length of _L_i_s_t.
+
+          > length([1,2,3,4,5,6,7,8,9]).
+          9
+
+          Allowed in guard tests.
+
+          Failure: _b_a_d_a_r_g if the argument is not a proper list.
+
+     link(Pid)
+
+          Creates a link to the process (or port) _P_i_d,  if  there
+          is  not  such  a link already. If a process attempts to
+          create a link to itself, nothing is done. Returns _t_r_u_e.
+
+          Failure: _b_a_d_a_r_g if the argument is not a Pid  or  port.
+          Sends  the  EXIT  signal  _n_o_p_r_o_c  to  the process which
+          evaluates _l_i_n_k if the argument is the Pid of a  process
+          which does not exist.
+
+     list_to_atom(CharIntegerList)
+
+          Returns  an  atom  whose  text  representation  is  the
+          integers (Latin-1 codes) in _C_h_a_r_I_n_t_e_g_e_r_L_i_s_t.
+
+          > list_to_atom([69, 114, 108, 97, 110, 103]).
+          'Erlang'
+
+          Failure: _b_a_d_a_r_g if  the  argument  is  not  a  list  of
+          integers,  or  if  any  integer  in  the list is not an
+          integer in the range [0, 255].
+
+     list_to_binary(List)
+
+          Returns a binary which is made from  the  integers  and
+          binaries  in _L_i_s_t. _L_i_s_t may be deep and may contain any
+          combination of integers and binaries.
+
+          Example:  _l_i_s_t__t_o__b_i_n_a_r_y([_B_i_n_1,  _1,   [_2,   _3,   _B_i_n_2],
+          _4|_B_i_n_3])
+
+          Failure: _b_a_d_a_r_g if the argument is not a  list,  or  if
+          the  list  or  any  sublist contains anything else than
+          binaries or integers in the range [0, 255].
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 13
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+     list_to_float(AsciiIntegerList)
+
+          Returns  a  float  whose  text  representation  is  the
+          integers (ASCII-values) in _A_s_c_i_i_I_n_t_e_g_e_r_L_i_s_t.
+
+          > list_to_float([50,46,50,48,49,55,55,54,52,101,43,48]).
+          2.20178
+
+          Failure: _b_a_d_a_r_g if  the  argument  is  not  a  list  of
+          integers,   or   if  _A_s_c_i_i_I_n_t_e_g_e_r_L_i_s_t  contains  a  bad
+          representation of a float.
+
+     list_to_integer(AsciiIntegerList)
+
+          Returns an integer whose  text  representation  is  the
+          integers (ASCII-values) in _A_s_c_i_i_I_n_t_e_g_e_r_L_i_s_t.
+
+          > list_to_integer([49, 50, 51]).
+          123
+
+          Failure: _b_a_d_a_r_g if  the  argument  is  not  a  list  of
+          integers,   or   if  _A_s_c_i_i_I_n_t_e_g_e_r_L_i_s_t  contains  a  bad
+          representation of an integer.
+
+     list_to_pid(AsciiIntegerList)
+
+          Returns a Pid whose text representation is the integers
+          (ASCII-values)   in   _A_s_c_i_i_I_n_t_e_g_e_r_L_i_s_t.   This  BIF  is
+          intended for debugging, and  in  the  Erlang  operating
+          system. _I_t _s_h_o_u_l_d _n_o_t _b_e _u_s_e_d _i_n _a_p_p_l_i_c_a_t_i_o_n _p_r_o_g_r_a_m_s.
+
+          > list_to_pid("<0.4.1>").
+          <0.4.1>
+
+          Failure: _b_a_d_a_r_g if  the  argument  is  not  a  list  of
+          integers,  or _A_s_c_i_i_I_n_t_e_g_e_r_L_i_s_t contains a bad represen-
+          tation of a Pid.
+
+     list_to_tuple(List)
+
+          Returns a tuple which corresponds  to  _L_i_s_t.  _L_i_s_t  can
+          contain any Erlang terms.
+
+          > list_to_tuple([mary, had, a, little, {dog, cat, lamb}]).
+          {mary, had, a, little, {dog, cat, lamb}}
+
+          Failure: _b_a_d_a_r_g if _L_i_s_t is not a proper list.
+
+     erlang:load_module(Module, Binary)
+
+          If _B_i_n_a_r_y contains  the  object  code  for  the  module
+          _M_o_d_u_l_e,  this  BIF loads that object code. Also, if the
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 14
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          code for the module _M_o_d_u_l_e already exists,  all  export
+          references  are  replaced  so  they  point to the newly
+          loaded code. The previously loaded code is kept in  the
+          system  as  `old code', as there may still be processes
+          which  are  executing  that  code.  It  returns  either
+          {_m_o_d_u_l_e,  _M_o_d_u_l_e},  where  _M_o_d_u_l_e  is  the  name of the
+          module which has been loaded,  or  {_e_r_r_o_r,  _R_e_a_s_o_n}  if
+          _l_o_a_d fails. _R_e_a_s_o_n is one of the following:
+
+            _b_a_d_f_i_l_e:
+                If the object code in  _B_i_n_a_r_y  has  an  incorrect
+                format.
+
+            _n_o_t__p_u_r_g_e_d:
+                If _B_i_n_a_r_y  contains  a  module  which  cannot  be
+                loaded  because  old code for this module already
+                exists   (see   the   BIFs    _p_u_r_g_e__m_o_d_u_l_e    and
+                _d_e_l_e_t_e__m_o_d_u_l_e).
+
+            _b_a_d_f_i_l_e:
+                If the object  code  contains  code  for  another
+                module than _M_o_d_u_l_e
+
+  Warning:
+     Code  handling  -  which  includes  loading,  deleting,  and
+     replacing  of modules - is done by the module _c_o_d_e in normal
+     Erlang implementations. This BIF is intended for the  imple-
+     mentation  of  the  module named _c_o_d_e and should not be used
+     elsewhere.
+
+
+     This is an optional BIF.
+
+     Failure: _b_a_d_a_r_g if the first argument is not an atom, or the
+     second argument is not a binary.
+
+     erlang:loaded()
+
+          Returns a list of all loaded Erlang modules,  including
+          preloaded  modules.  A  module  will be included in the
+          list if it has either current code or old code or  both
+          loaded.
+
+     erlang:localtime()
+
+          Returns the current local date and time {{_Y_e_a_r,  _M_o_n_t_h,
+          _D_a_y}, {_H_o_u_r, _M_i_n_u_t_e, _S_e_c_o_n_d}}.
+
+          The time  zone  and  daylight  saving  time  correction
+          depend on the underlying OS.
+
+          > erlang:localtime().
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 15
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          {{1996,11,6},{14,45,17}}
+
+     erlang:localtime_to_universaltime(DateTime)
+
+          Converts local date and time in _D_a_t_e_T_i_m_e  to  Universal
+          Time  Coordinated  (UTC),  if  this is supported by the
+          underlying OS. Otherwise, no  conversion  is  done  and
+          _D_a_t_e_T_i_m_e  is  returned. The return value is of the form
+          {{_Y_e_a_r, _M_o_n_t_h, _D_a_y}, {_H_o_u_r, _M_i_n_u_t_e, _S_e_c_o_n_d}}.
+
+          Failure: _b_a_d_a_r_g if the argument is not a valid date and
+          time   tuple   {{_Y_e_a_r,   _M_o_n_t_h,  _D_a_y},  {_H_o_u_r,  _M_i_n_u_t_e,
+          _S_e_c_o_n_d}}.
+
+          > erlang:localtime_to_universaltime({{1996,11,6},{14,45,17}}).
+          {{1996,11,6},{13,45,17}}
+
+     make_ref()
+
+          Returns an almost unique reference.
+
+          The returned reference will reoccur after approximately
+          2^82  calls;  therefore  it  is  unique enough for most
+          practical purposes.
+
+          > make_ref().
+          #Ref<0.0.0.135>
+
+     make_tuple(Arity, InitialValue)
+
+          Returns a new tuple of the given _A_r_i_t_y, where all  ele-
+          ments are _I_n_i_t_i_a_l_V_a_l_u_e.
+
+          > erlang:make_tuple(4, []).
+          {[],[],[],[]}
+
+     erlang:md5(Data) -> Digest
+
+          Types
+               Data = iolist() | binary()
+               Digest = binary()
+
+          Computes an _M_D_5 message digest  from  _D_a_t_a,  where  the
+          length  of the digest is 128 bits (16 bytes). _D_a_t_a is a
+          binary or a list of small integers and binaries.
+
+          See The MD5 Message Digest  Algorithm  (RFC  1321)  for
+          more information about MD5.
+
+          Failure: _b_a_d_a_r_g if the _D_a_t_a argument is not a list,  or
+          if  the list or any sublist contains anything else than
+          binaries or integers in the range [0, 255].
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 16
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+     erlang:md5_init() -> Context
+
+          Types
+               Context = binary()
+
+          Creates an MD5 context, to be used in subsequent  calls
+          to _m_d_5__u_p_d_a_t_e/_2.
+
+     erlang:md5_update(Context, Data) -> NewContext
+
+          Types
+               Data = iolist() | binary()
+               Context = NewContext = binary()
+
+          Updates an MD5 _C_o_n_t_e_x_t with _D_a_t_a, and returns a _N_e_w_C_o_n_-
+          _t_e_x_t.
+
+     erlang:md5_final(Context) -> Digest
+
+          Types
+               Context = Digest = binary()
+
+          Finishes the update of an MD5 _C_o_n_t_e_x_t and  returns  the
+          computed _M_D_5 message digest.
+
+     erlang:module_loaded(Module)
+
+          Returns the atom _t_r_u_e if the module contained  in  atom
+          _M_o_d_u_l_e  is loaded, otherwise it returns the atom _f_a_l_s_e.
+          It does not attempt to load the module.
+
+  Warning:
+     This BIF is intended for the implementation  of  the  module
+     named  _c_o_d_e  and  should  not  be  used  anywhere  else. Use
+     _c_o_d_e:_i_s__l_o_a_d_e_d/_1 instead.
+
+
+     > erlang:module_loaded(lists).
+     true
+
+     This is an optional BIF.
+
+     Failure: _b_a_d_a_r_g if the argument is not an atom.
+
+     erlang:monitor(Type, Item)
+
+          The current process starts monitoring _I_t_e_m, and will be
+          notified  when  _I_t_e_m dies, with a message {'_D_O_W_N', _R_e_f,
+          _T_y_p_e, _O_b_j_e_c_t, _I_n_f_o}, where _R_e_f is the value returned by
+          the call to _e_r_l_a_n_g:_m_o_n_i_t_o_r/_2, and _I_n_f_o gives additional
+          information. The  message  is  also  sent  if  _I_t_e_m  is
+          already  dead._O_b_j_e_c_t refers to the same entity as _I_t_e_m,
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 17
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          but sometimes with a different format e.g when _I_t_e_m  is
+          a  process  name  _O_b_j_e_c_t  may  be  the  pid.  The value
+          returned can be used for  disabling  the  monitor  (see
+          _e_r_l_a_n_g:_d_e_m_o_n_i_t_o_r/_1).
+
+          The currently  allowed  value  for  _T_y_p_e  is  the  atom
+          _p_r_o_c_e_s_s._I_t_e_m  may  then  be  a  pid,  an atom _N_a_m_e or a
+          tuple{_N_a_m_e, _N_o_d_e} where Node also is  an  atom;_I_n_f_o  in
+          the  message  is  the  exit  reason  of the process (or
+          _n_o_p_r_o_c or _n_o_c_o_n_n_e_c_t_i_o_n, when the process does not exist
+          or  the remote node goes down, respectively, in analogy
+          with _l_i_n_k/_1). _O_b_j_e_c_t in the message  is  the  pid  that
+          _I_t_e_m  refers  to,  but if _N_a_m_e is not registered on the
+          referred node or if _N_o_d_e is not alive  then  _O_b_j_e_c_t  is
+          equal  to _N_a_m_e, If an attempt is made to monitor a pro-
+          cess on an older node (where remote process  monitoring
+          is  not  implemented (or one where remote process moni-
+          toring by registered name  is  not  implemented)),  the
+          call fails with _b_a_d_a_r_g.
+
+          Making several calls to _e_r_l_a_n_g:_m_o_n_i_t_o_r/_2 for  the  same
+          item  is not an error; it results in several completely
+          independent monitorings.
+
+     monitor_node(Node, Flag)
+
+          Monitors the status of the node _N_o_d_e. If _F_l_a_g is  _t_r_u_e,
+          monitoring  is  turned on; if _F_l_a_g is _f_a_l_s_e, monitoring
+          is turned off. Calls to the BIF are  accumulated.  This
+          is  shown  in the following example, where a process is
+          already monitoring the node _N_o_d_e and a library function
+          is called:
+
+          monitor_node(Node, true),
+              ...  some operations
+          monitor_node(Node, false),
+
+          After the call, the process  is  still  monitoring  the
+          node.
+
+          If _N_o_d_e fails or does not exist, the message {_n_o_d_e_d_o_w_n,
+          _N_o_d_e}  is  delivered  to  the process. If a process has
+          made two calls to  _m_o_n_i_t_o_r__n_o_d_e(_N_o_d_e,  _t_r_u_e)  and  _N_o_d_e
+          terminates,  two _n_o_d_e_d_o_w_n messages are delivered to the
+          process. If there is no connection to _N_o_d_e, there  will
+          be  an attempt to create one. If this fails, a _n_o_d_e_d_o_w_n
+          message is delivered.
+
+          Returns _t_r_u_e.
+
+          Failure: _b_a_d_a_r_g if _F_l_a_g  is  not  _t_r_u_e  or  _f_a_l_s_e,  and
+          _b_a_d_a_r_g if _N_o_d_e is not an atom indicating a remote node,
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 18
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          or if the local node is not alive.
+
+     node()
+
+          Returns the name of the current node. If it  is  not  a
+          networked  node  but a local Erlang runtime system, the
+          atom _n_o_n_o_d_e@_n_o_h_o_s_t is returned.
+
+          Allowed in guard tests.
+
+     node(Arg)
+
+          Returns the node where _A_r_g is located.  _A_r_g  can  be  a
+          Pid, a reference, or a port.
+
+          Allowed in guard tests.
+
+          Failure: _b_a_d_a_r_g if _A_r_g is  not  a  Pid,  reference,  or
+          port.
+
+     nodes()
+
+          Returns a list  of  all  known  nodes  in  the  system,
+          excluding the current node.
+
+     now()
+
+          Returns the tuple {_M_e_g_a_S_e_c_s, _S_e_c_s, _M_i_c_r_o_s_e_c_s}
+
+          which is the elapsed time since 00:00 GMT,  January  1,
+          1970  (zero hour) on the assumption that the underlying
+          OS supports this. Otherwise, some other point  in  time
+          is  chosen. It is also guaranteed that subsequent calls
+          to this BIF  returns  continuously  increasing  values.
+          Hence,  the return value from _n_o_w() can be used to gen-
+          erate unique time-stamps. It can only be used to  check
+          the  local  time  of  day  if the time-zone info of the
+          underlying operating system is properly configured.
+
+     open_port(PortName, PortSettings)
+
+          Returns a port identifier as the result  of  opening  a
+          new  Erlang  port.  A  port  can be seen as an external
+          Erlang process. _P_o_r_t_N_a_m_e is one of the following:
+
+            {_s_p_a_w_n, _C_o_m_m_a_n_d}:
+                Starts an external program. _C_o_m_m_a_n_d is  the  name
+                of  the  external program which will be run. _C_o_m_-
+                _m_a_n_d runs outside the Erlang work space unless an
+                Erlang  driver with the name _C_o_m_m_a_n_d is found. If
+                found, that driver will be started. A driver runs
+                in  the  Erlang workspace, which means that it is
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 19
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+                linked with the Erlang runtime system.
+
+                When starting external programs on  Solaris,  the
+                system  call  _v_f_o_r_k is used in preference to _f_o_r_k
+                for performance reasons, although it has  a  his-
+                tory  of being less robust. If there are problems
+                with using _v_f_o_r_k, setting the  environment  vari-
+                able _E_R_L__N_O__V_F_O_R_K to any value will cause _f_o_r_k to
+                be used instead.
+
+            _A_t_o_m:
+                _T_h_i_s _u_s_e _o_f _o_p_e_n__p_o_r_t() _i_s _o_b_s_o_l_e_t_e _a_n_d  _w_i_l_l  _b_e
+                _r_e_m_o_v_e_d  _i_n  _a  _f_u_t_u_r_e _v_e_r_s_i_o_n _o_f _E_r_l_a_n_g. _U_s_e _t_h_e
+                _f_i_l_e _m_o_d_u_l_e _i_n_s_t_e_a_d. The atom is  assumed  to  be
+                the  name  of an external resource. A transparent
+                connection is established between Erlang and  the
+                resource named by the atom _A_t_o_m. The characteris-
+                tics of the port depend on the type of  resource.
+                If _A_t_o_m represents a normal file, the entire con-
+                tents of the file is sent to the  Erlang  process
+                as  one  or more messages. When messages are sent
+                to the port, it causes data to be written to  the
+                file.
+
+            {_f_d, _I_n, _O_u_t}:
+                Allows an Erlang process to access any  currently
+                opened  file descriptors used by Erlang. The file
+                descriptor _I_n can be used for standard input, and
+                the  file  descriptor _O_u_t for standard output. It
+                is only used for various servers  in  the  Erlang
+                operating system (_s_h_e_l_l and _u_s_e_r). Hence, its use
+                is very limited.
+
+          _P_o_r_t_S_e_t_t_i_n_g_s is a list of settings for the port.  Valid
+          values are:
+
+            {_p_a_c_k_e_t, _N}:
+                Messages are preceded by their length, sent in  _N
+                bytes,  with  the  most  significant  byte first.
+                Valid values for _N are 1, 2, or 4.
+
+            _s_t_r_e_a_m:
+                Output messages are sent without packet  lengths.
+                A  user-defined protocol must be used between the
+                Erlang process and the external object.
+
+            {_l_i_n_e, _N}:
+                Messages are delivered on a per line basis.  Each
+                line   (delimited  by  the  OS-dependent  newline
+                sequence) is delivered in one single message. The
+                message  data  format is {_F_l_a_g, _L_i_n_e}, where _F_l_a_g
+                is either _e_o_l or _n_o_e_o_l and  _L_i_n_e  is  the  actual
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 20
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+                data delivered (without the newline sequence).
+
+                _N specifies the maximum  line  length  in  bytes.
+                Lines  longer than this will be delivered in more
+                than one message, with the _F_l_a_g set to _n_o_e_o_l  for
+                all  but  the  last  message.  If  end of file is
+                encountered anywere else than immediately follow-
+                ing  a  newline sequence, the last line will also
+                be delivered with the _F_l_a_g set to _n_o_e_o_l.  In  all
+                other cases, lines are delivered with _F_l_a_g set to
+                _e_o_l.
+
+                The {_p_a_c_k_e_t, _N} and {_l_i_n_e, _N} settings are  mutu-
+                ally exclusive.
+
+            {_c_d, _D_i_r}:
+                This is only  valid  for  {_s_p_a_w_n,  _C_o_m_m_a_n_d}.  The
+                external  program starts using Dir as its working
+                directory. Dir must be a string. Not available on
+                VxWorks.
+
+            {_e_n_v, _E_n_v_i_r_o_n_m_e_n_t}:
+                This is only  valid  for  {_s_p_a_w_n,  _C_o_m_m_a_n_d}.  The
+                environment  of  the  started process is extended
+                using the environment specifications in  _E_n_v_i_r_o_n_-
+                _m_e_n_t.  _E_n_v_i_r_o_n_m_e_n_t  should  be  a  list of tuples
+                {_N_a_m_e, _V_a_l_u_e}, where  _N_a_m_e  is  the  name  of  an
+                environment  variable,  and _V_a_l_u_e is the value it
+                is to have in the spawned port process. Both _N_a_m_e
+                and  _V_a_l_u_e  must be strings. The one exception is
+                _V_a_l_u_e being  the  atom  _f_a_l_s_e  (in  analogy  with
+                _o_s:_g_e_t_e_n_v/_1), which removes the environment vari-
+                able. Not available on VxWorks.
+
+            _e_x_i_t__s_t_a_t_u_s:
+                This is only valid  for  {_s_p_a_w_n,  _C_o_m_m_a_n_d}  where
+                _C_o_m_m_a_n_d  refers  to an external program. When the
+                external process connected to the port  exits,  a
+                message of the form {_P_o_r_t, {_e_x_i_t__s_t_a_t_u_s, _S_t_a_t_u_s}}
+                is sent to the connected process, where _S_t_a_t_u_s is
+                the  exit  status of the external process. If the
+                program aborts, on Unix the  same  convention  is
+                used  as  the shells do (i.e. 128+signal). If the
+                _e_o_f option has been given as well, the  _e_o_f  mes-
+                sage  and  the  _e_x_i_t__s_t_a_t_u_s  message appear in an
+                unspecified order. If the port program closes its
+                stdout  without  exiting,  the _e_x_i_t__s_t_a_t_u_s option
+                will not work.
+
+            _u_s_e__s_t_d_i_o:
+                This is  only  valid  for  {_s_p_a_w_n,  _C_o_m_m_a_n_d}.  It
+                allows   the  standard  input  and  output  (file
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 21
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+                descriptors 0 and 1) of the spawned  (UNIX)  pro-
+                cess for communication with Erlang.
+
+            _n_o_u_s_e__s_t_d_i_o:
+                The opposite of the above. Uses file  descriptors
+                3 and 4 for communication with Erlang.
+
+            _s_t_d_e_r_r__t_o__s_t_d_o_u_t:
+                Affects ports to external programs. The  executed
+                program  gets  its standard error file redirected
+                to its standard output file. _s_t_d_e_r_r__t_o__s_t_d_o_u_t and
+                _n_o_u_s_e__s_t_d_i_o are mutually exclusive.
+
+            _i_n: The port can only be used for input.
+
+            _o_u_t:
+                The port can only be used for output.
+
+            _b_i_n_a_r_y:
+                All I/O from the port are binary data objects  as
+                opposed to lists of bytes.
+
+            _e_o_f:
+                The port will not be closed at  the  end  of  the
+                file and produce an EXIT signal. Instead, it will
+                remain open and a {_P_o_r_t,  _e_o_f}  message  will  be
+                sent to the process holding the port.
+
+          The default  is  _s_t_r_e_a_m  for  all  types  of  port  and
+          _u_s_e__s_t_d_i_o for spawned ports.
+
+          Failure: _b_a_d_a_r_g if the format of _P_o_r_t_N_a_m_e  or  _P_o_r_t_S_e_t_-
+          _t_i_n_g_s  is  incorrect. If the port cannot be opened, the
+          exit reason is the Posix error code which most  closely
+          describes  the  error,  or  _e_i_n_v_a_l  if no Posix code is
+          appropriate.  The  following  Posix  error  codes   may
+          appear:
+
+            _e_n_o_m_e_m:
+                There was not enough memory to create the port.
+
+            _e_a_g_a_i_n:
+                There are  no  more  available  operating  system
+                processes.
+
+            _e_n_a_m_e_t_o_o_l_o_n_g:
+                The external command given was too long.
+
+            _e_m_f_i_l_e:
+                There are no more available file descriptors.
+
+            _e_n_f_i_l_e:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 22
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+                A file or port table is full.
+
+          During use of a port opened using {_s_p_a_w_n, _N_a_m_e}, errors
+          arising when sending messages to it are reported to the
+          owning process using exit signals of the form  {'_E_X_I_T',
+          _P_o_r_t,  _P_o_s_i_x_C_o_d_e}.  Posix codes are listed in the docu-
+          mentation for the _f_i_l_e module.
+
+          The maximum number of ports that can  be  open  at  the
+          same  time is 1024 by default, but can be configured by
+          the environment variable _E_R_L__M_A_X__P_O_R_T_S.
+
+     erlang:phash(Term, Range)
+
+          Portable hash function that will give the same hash for
+          the same erlang term regardless of machine architecture
+          and ERTS  version  (The  BIF  was  introduced  in  ERTS
+          4.9.1.1). Range can be between 1 and 2^32, the function
+          returns  a  hash  value  for  _T_e_r_m  within  the   range
+          _1.._R_a_n_g_e.
+
+          This BIF should always  be  used  instead  of  the  old
+          deprecated  _e_r_l_a_n_g:_h_a_s_h/_2  BIF, as it calculates better
+          hashes for all datatypes.
+
+     pid_to_list(Pid)
+
+          Returns a list which corresponds to the process _P_i_d.
+
+  Warning:
+     This BIF is intended for debugging and for use in the Erlang
+     operating  system. It should not be used in application pro-
+     grams.
+
+
+     > pid_to_list(whereis(init)).
+     "<0.0.0>"
+
+     Failure: _b_a_d_a_r_g if the argument is not a Pid.
+
+     port_close(Port, Data)
+
+          Closes an  open  port.  Roughly  the  same  as  _P_o_r_t  !
+          {_s_e_l_f(),  _c_l_o_s_e}  except  for  the error behaviour (see
+          below), and that the port does _n_o_t  reply  with  {_P_o_r_t,
+          _c_l_o_s_e_d}.   Any   process   may   close   a   port  with
+          _p_o_r_t__c_l_o_s_e/_1, not only the port  owner  (the  connected
+          process).
+
+          Returns: _t_r_u_e.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 23
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          Failure: _b_a_d_a_r_g if _P_o_r_t is not an open port.
+
+          For comparision: _P_o_r_t  !  {_s_e_l_f(),  _c_l_o_s_e}  fails  with
+          _b_a_d_a_r_g if _P_o_r_t cannot be sent to (i.e. _P_o_r_t refers nei-
+          ther to a port nor to a process). If _P_o_r_t is  a  closed
+          port  nothing  happens. If _P_o_r_t is an open port and the
+          current process is the port owner the port replies with
+          {_P_o_r_t,  _c_l_o_s_e_d}  when all buffers have been flushed and
+          the port really closes, but if the current  process  is
+          not the port owner the _p_o_r_t _o_w_n_e_r fails with _b_a_d_s_i_g.
+
+          Note that any process can close a  port  using  _P_o_r_t  !
+          {_P_o_r_t_O_w_n_e_r,  _c_l_o_s_e}  just  as if it itself was the port
+          owner, but the reply always goes to the port owner.
+
+          In short: _p_o_r_t__c_l_o_s_e(_P_o_r_t) has a cleaner and more logi-
+          cal behaviour than _P_o_r_t ! {_s_e_l_f(), _c_l_o_s_e}.
+
+     port_command(Port, Data)
+
+          Sends data to a port. Same as _P_o_r_t ! {_s_e_l_f(), {_c_o_m_m_a_n_d,
+          _D_a_t_a}}  except for the error behaviour (see below). Any
+          process may send data to a  port  with  _p_o_r_t__c_o_m_m_a_n_d/_2,
+          not only the port owner (the connected process).
+
+          Returns: _t_r_u_e.
+
+          Failure: _b_a_d_a_r_g if _P_o_r_t is not an open port or if  _D_a_t_a
+          is  not an I/O list. An I/O list is a binary or a (pos-
+          sibly) deep list of binaries or integers in the range 0
+          through 255.
+
+          For comparision: _P_o_r_t ! {_s_e_l_f(), {_c_o_m_m_a_n_d, _D_a_t_a}} fails
+          with _b_a_d_a_r_g if _P_o_r_t cannot be sent to (i.e. _P_o_r_t refers
+          neither to a port nor to  a  process).  If  _P_o_r_t  is  a
+          closed  port  the  data  message  disappears  without a
+          sound. If _P_o_r_t is open and the current process  is  not
+          the  port  owner, the _p_o_r_t _o_w_n_e_r fails with _b_a_d_s_i_g. The
+          port owner fails with_b_a_d_s_i_g also if _D_a_t_a is not a legal
+          I/O list.
+
+          Note that any process can send to a port using  _P_o_r_t  !
+          {_P_o_r_t_O_w_n_e_r,  {_c_o_m_m_a_n_d,  _D_a_t_a}} just as if it itself was
+          the port owner.
+
+          In short: _p_o_r_t__c_o_m_m_a_n_d(_P_o_r_t, _D_a_t_a) has  a  cleaner  and
+          more  logical  behaviour than _P_o_r_t ! {_s_e_l_f(), {_c_o_m_m_a_n_d,
+          _D_a_t_a}}.
+
+     port_connect(Port, Pid)
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 24
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          Sets the  port  owner  (the  connected  port)  to  _P_i_d.
+          Roughly  the  same  as  _P_o_r_t ! {_s_e_l_f(), {_c_o_n_n_e_c_t, _P_i_d}}
+          except for the following:
+
+            * The error behavior differs, see below.
+
+            * The port does _n_o_t reply with {_P_o_r_t, _c_o_n_n_e_c_t_e_d}.
+
+            * The new port owner gets linked to the port.
+
+          The old port owner stays linked to the port and have to
+          call  _u_n_l_i_n_k(_P_o_r_t)  if this is not desired. Any process
+          may  set  the  port  owner  to  be  any  process   with
+          _p_o_r_t__c_o_n_n_e_c_t/_2.
+
+          Returns: _t_r_u_e.
+
+          Failure: _b_a_d_a_r_g if _P_o_r_t is not an open port or  if  _P_i_d
+          is not a valid local pid.
+
+          For comparision: _P_o_r_t ! {_s_e_l_f(), {_c_o_n_n_e_c_t, _P_i_d}}  fails
+          with _b_a_d_a_r_g if _P_o_r_t cannot be sent to (i.e. _P_o_r_t refers
+          neither to a port nor to  a  process).  If  _P_o_r_t  is  a
+          closed  port  nothing  happens. If _P_o_r_t is an open port
+          and the current process is  the  port  owner  the  port
+          replies  with  {_P_o_r_t, _c_o_n_n_e_c_t_e_d} to the old port owner.
+          Note that the old port owner is  still  linked  to  the
+          port,  and that the new is not. If _P_o_r_t is an open port
+          and the current process is not the port owner the  _p_o_r_t
+          _o_w_n_e_r fails with _b_a_d_s_i_g. The port owner fails with _b_a_d_-
+          _s_i_g also if _P_i_d is not a valid local pid.
+
+          Note that any process can set the port owner using _P_o_r_t
+          !  {_P_o_r_t_O_w_n_e_r, {_c_o_n_n_e_c_t, _P_i_d}} just as if it itself was
+          the port owner, but the reply always goes to  the  port
+          owner.
+
+          In short: _p_o_r_t__c_o_n_n_e_c_t(_P_o_r_t, _P_i_d)  has  a  cleaner  and
+          more  logical  behaviour than _P_o_r_t ! {_s_e_l_f(), {_c_o_n_n_e_c_t,
+          _P_i_d}}.
+
+     port_control(Port, Operation, Data)
+
+          Performs a synchronous control operation on a port. The
+          meaning of _O_p_e_r_a_t_i_o_n and _D_a_t_a depends on the port, i.e.
+          on the port driver. Not all port drivers  support  this
+          control feature.
+
+          Returns: a list of integers in the range 0 through 255,
+          or  a binary, depending on the port driver. The meaning
+          of the returned data also depends on the port driver.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 25
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          Failure: _b_a_d_a_r_g if _P_o_r_t is not an open port, if  _O_p_e_r_a_-
+          _t_i_o_n cannot fit in a 32-bit integer, if the port driver
+          does not support  synchronous  control  operations,  if
+          _D_a_t_a  is  not a valid I/O list (see port_command/2), or
+          if the port driver so decides for any reason  (probably
+          something wrong with _O_p_e_r_a_t_i_o_n or _D_a_t_a).
+
+     erlang:port_info(Port, Item)
+
+          Returns information about the port _P_o_r_t as specified by
+          _I_t_e_m,  which can be any one of the atoms _i_d, _c_o_n_n_e_c_t_e_d,
+          _l_i_n_k_s, _n_a_m_e, _i_n_p_u_t, or _o_u_t_p_u_t.
+
+            {_i_d, _I_n_d_e_x}:
+                _I_n_d_e_x is the internal index  of  the  port.  This
+                index may be used to separate ports.
+
+            {_c_o_n_n_e_c_t_e_d, _P_i_d}:
+                _P_i_d is the process connected to the port.
+
+            {_l_i_n_k_s, _L_i_s_t_O_f_P_i_d_s}:
+                _L_i_s_t_O_f_P_i_d_s is a list of Pids  with  processes  to
+                which the port has a link.
+
+            {_n_a_m_e, _S_t_r_i_n_g}:
+                _S_t_r_i_n_g is the command name set by _o_p_e_n__p_o_r_t.
+
+            {_i_n_p_u_t, _B_y_t_e_s}:
+                _B_y_t_e_s is the total number of bytes read from  the
+                port.
+
+            {_o_u_t_p_u_t, _B_y_t_e_s}:
+                _B_y_t_e_s is the total number of bytes written to the
+                port.
+
+          All implementations may not support all  of  the  above
+          _I_t_e_m_s. Returns _u_n_d_e_f_i_n_e_d if the port does not exist.
+
+          Failure: _b_a_d_a_r_g if _P_o_r_t is not a process identifier, or
+          if _P_o_r_t is a port identifier of a remote process.
+
+     erlang:ports()
+
+          Returns a list of all ports on the current node.
+
+     erlang:port_to_list(Port)
+
+          Returns a list which corresponds to the port identifier
+          _P_o_r_t.
+
+  Warning:
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 26
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+     This BIF is intended for debugging and for use in the Erlang
+     operating  system. It should not be used in application pro-
+     grams.
+
+
+     > erlang:port_to_list(open_port({spawn,ls}, [])).
+     "#Port<0.15>"
+
+     Failure: _b_a_d_a_r_g if the argument is not a port.
+
+     erlang:pre_loaded()
+
+          Returns a list of Erlang modules which  are  pre-loaded
+          in  the  system. As all loading of code is done through
+          the file system, the file system must have been  loaded
+          previously.  Hence,  at  least  the module _i_n_i_t must be
+          pre-loaded.
+
+     erlang:process_display(Pid, Type)
+
+          Writes information about the local process _P_i_d on stan-
+          dard  error.  The  currently allowed value for the atom
+          _T_y_p_e is _b_a_c_k_t_r_a_c_e, which  shows  the  contents  of  the
+          stack, including information about the call chain, with
+          the most recent data printed last. The  format  of  the
+          output is not further defined. _P_i_d may be a zombie pro-
+          cess.
+
+     process_flag(Flag, Option)
+
+          Sets certain flags for the  process  which  calls  this
+          function. Returns the old value of the flag.
+
+            _p_r_o_c_e_s_s__f_l_a_g(_t_r_a_p__e_x_i_t, _B_o_o_l_e_a_n):
+                When _t_r_a_p__e_x_i_t  is  set  to  _t_r_u_e,  EXIT  signals
+                arriving  to  a process are converted to {'_E_X_I_T',
+                _F_r_o_m, _R_e_a_s_o_n} messages, which can be received  as
+                ordinary  messages. If _t_r_a_p__e_x_i_t is set to _f_a_l_s_e,
+                the process exits if it receives an  EXIT  signal
+                other  than  _n_o_r_m_a_l  and  the EXIT signal is pro-
+                pagated  to  its  linked  processes.  Application
+                processes should normally not trap exits.
+
+            _p_r_o_c_e_s_s__f_l_a_g(_e_r_r_o_r__h_a_n_d_l_e_r, _M_o_d_u_l_e):
+                This is used by a process to redefine  the  error
+                handler  for  undefined  function calls and unde-
+                fined registered processes.  Inexperienced  users
+                should  not  use this flag since code autoloading
+                is dependent on  the  correct  operation  of  the
+                error handling module.
+
+            _p_r_o_c_e_s_s__f_l_a_g(_p_r_i_o_r_i_t_y, _L_e_v_e_l):
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 27
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+                This sets the process priority. _L_e_v_e_l is an atom.
+                All  implementations  support three priority lev-
+                els, _l_o_w, _n_o_r_m_a_l, and _h_i_g_h. The default  is  _n_o_r_-
+                _m_a_l.
+
+            _p_r_o_c_e_s_s__f_l_a_g(_s_a_v_e__c_a_l_l_s, _N):
+                _N must be an integer in the interval [0,  10000].
+                If _N > 0, call saving is made active for the pro-
+                cess, which means that information  about  the  _N
+                most  recent  global  function  calls, BIF calls,
+                sends and receives made by the process are  saved
+                in   a   list,   which   can  be  retrieved  with
+                _p_r_o_c_e_s_s__i_n_f_o(_P_i_d, _l_a_s_t__c_a_l_l_s). A global  function
+                call  is  one in which the module of the function
+                is explicitly mentioned. Only a fixed  amount  of
+                information  is saved: a tuple {_M_o_d_u_l_e, _F_u_n_c_t_i_o_n,
+                _A_r_i_t_y} for function calls,  and  the  mere  atoms
+                _s_e_n_d,   '_r_e_c_e_i_v_e'   and  _t_i_m_e_o_u_t  for  sends  and
+                receives ('_r_e_c_e_i_v_e' when a  message  is  received
+                and  _t_i_m_e_o_u_t when a receive times out). If _N = 0,
+                call saving is disabled for the process. Whenever
+                the size of the call saving list is set, its con-
+                tents are reset.
+
+          Failure: _b_a_d_a_r_g if _F_l_a_g is not an atom,  or  is  not  a
+          recognized flag value, or if _O_p_t_i_o_n is not a recognized
+          term for _F_l_a_g.
+
+     process_flag(Pid, Flag, Option)
+
+          Sets certain flags for the process  _P_i_d,  in  the  same
+          manner  as _p_r_o_c_e_s_s__f_l_a_g/_2. Returns the old value of the
+          flag. The allowed values for _F_l_a_g are only a subset  of
+          those allowed in _p_r_o_c_e_s_s__f_l_a_g/_2, namely: _s_a_v_e__c_a_l_l_s.
+
+          Failure: _b_a_d_a_r_g if _P_i_d is not a process  on  the  local
+          node, or if _F_l_a_g is not an atom, or is not a recognized
+          flag value, or if _O_p_t_i_o_n is not a recognized  term  for
+          _F_l_a_g.
+
+     process_info(Pid)
+
+          Returns a long list which  contains  information  about
+          the  process  _P_i_d. This BIF is only intended for debug-
+          ging. It should not be used for any other purpose.  The
+          list  returned contains the following tuples. The order
+          in which these tuples are returned is not defined,  nor
+          are all the tuples mandatory.
+
+            {_c_u_r_r_e_n_t__f_u_n_c_t_i_o_n, {_M_o_d_u_l_e, _F_u_n_c_t_i_o_n, _A_r_g_u_m_e_n_t_s}}:
+                _M_o_d_u_l_e, _F_u_n_c_t_i_o_n, _A_r_g_u_m_e_n_t_s is the current  func-
+                tion call of the process.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 28
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+            {_d_i_c_t_i_o_n_a_r_y, _D_i_c_t_i_o_n_a_r_y}:
+                _D_i_c_t_i_o_n_a_r_y is the dictionary of the process.
+
+            {_e_r_r_o_r__h_a_n_d_l_e_r, _M_o_d_u_l_e}:
+                _M_o_d_u_l_e is the error handler module  used  by  the
+                process  (for undefined function calls, for exam-
+                ple).
+
+            {_g_r_o_u_p__l_e_a_d_e_r, _G_r_o_u_p_l_e_a_d_e_r}:
+                _G_r_o_u_p_l_e_a_d_e_r is group leader for the  I/O  of  the
+                process.
+
+            {_h_e_a_p__s_i_z_e, _S_i_z_e}:
+                _S_i_z_e is the heap size  of  the  process  in  heap
+                words.
+
+            {_i_n_i_t_i_a_l__c_a_l_l, {_M_o_d_u_l_e, _F_u_n_c_t_i_o_n, _A_r_i_t_y}}:
+                _M_o_d_u_l_e, _F_u_n_c_t_i_o_n, _A_r_i_t_y is the  initial  function
+                call with which the process was spawned.
+
+            {_l_i_n_k_s, _L_i_s_t_O_f_P_i_d_s}:
+                _L_i_s_t_O_f_P_i_d_s is a list of Pids, with  processes  to
+                which the process has a link.
+
+            {_m_e_s_s_a_g_e__q_u_e_u_e__l_e_n, _M_e_s_s_a_g_e_Q_u_e_u_e_L_e_n}:
+                _M_e_s_s_a_g_e_Q_u_e_u_e_L_e_n  is  the   number   of   messages
+                currently  in  the  message queue of the process.
+                This is  the  length  of  the  list  _M_e_s_s_a_g_e_Q_u_e_u_e
+                returned as the info item _m_e_s_s_a_g_e_s (see below).
+
+            {_m_e_s_s_a_g_e_s, _M_e_s_s_a_g_e_Q_u_e_u_e}:
+                _M_e_s_s_a_g_e_Q_u_e_u_e is a list of  the  messages  to  the
+                process, which have not yet been processed.
+
+            {_p_r_i_o_r_i_t_y, _L_e_v_e_l}:
+                _L_e_v_e_l is the current priority level for the  pro-
+                cess. Only _l_o_w and _n_o_r_m_a_l are always supported.
+
+            {_r_e_d_u_c_t_i_o_n_s, _N_u_m_b_e_r}:
+                _N_u_m_b_e_r is the number of  reductions  executed  by
+                the process.
+
+            {_r_e_g_i_s_t_e_r_e_d__n_a_m_e, _A_t_o_m}:
+                _A_t_o_m is the registered name of  the  process.  If
+                the process has no registered name, this tuple is
+                not present in the list.
+
+            {_s_t_a_c_k__s_i_z_e, _S_i_z_e}:
+                _S_i_z_e is the stack size of the  process  in  stack
+                words.
+
+            {_s_t_a_t_u_s, _S_t_a_t_u_s}:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 29
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+                _S_t_a_t_u_s is the status of the  process.  _S_t_a_t_u_s  is
+                _w_a_i_t_i_n_g  (waiting  for a message), _r_u_n_n_i_n_g, _r_u_n_n_-
+                _a_b_l_e (ready to run, but another process  is  run-
+                ning),  _s_u_s_p_e_n_d_e_d  (suspended on a "busy" port or
+                by the _e_r_l_a_n_g:_s_u_s_p_e_n_d__p_r_o_c_e_s_s/_1 BIF), or  _e_x_i_t_i_n_g
+                (if the process has exited, but remains as a zom-
+                bie).
+
+            {_t_r_a_p__e_x_i_t, _B_o_o_l_e_a_n}:
+                _B_o_o_l_e_a_n is _t_r_u_e if the process is trapping exits,
+                otherwise it is _f_a_l_s_e.
+
+          Failure: _b_a_d_a_r_g if the argument is not a Pid, or if _P_i_d
+          is a Pid of a remote process.
+
+     process_info(Pid, Item)
+
+          Returns information about the process _P_i_d as  specified
+          by  _I_t_e_m, in the form {_I_t_e_m, _I_n_f_o}. _I_t_e_m can be any one
+          of the atoms _b_a_c_k_t_r_a_c_e,  _c_u_r_r_e_n_t__f_u_n_c_t_i_o_n,  _d_i_c_t_i_o_n_a_r_y,
+          _e_r_r_o_r__h_a_n_d_l_e_r,     _e_x_i_t,    _g_r_o_u_p__l_e_a_d_e_r,    _h_e_a_p__s_i_z_e,
+          _i_n_i_t_i_a_l__c_a_l_l,      _l_a_s_t__c_a_l_l_s,      _l_i_n_k_s,      _m_e_m_o_r_y,
+          _m_e_s_s_a_g_e__q_u_e_u_e__l_e_n,  _m_e_s_s_a_g_e_s,  _m_o_n_i_t_o_r_e_d__b_y,  _m_o_n_i_t_o_r_s,
+          _p_r_i_o_r_i_t_y,  _r_e_d_u_c_t_i_o_n_s,   _r_e_g_i_s_t_e_r_e_d__n_a_m_e,   _s_t_a_c_k__s_i_z_e,
+          _s_t_a_t_u_s or _t_r_a_p__e_x_i_t.
+
+          Returns _u_n_d_e_f_i_n_e_d if no information is known about  the
+          process.
+
+          _p_r_o_c_e_s_s__i_n_f_o can be used to  obtain  information  about
+          processes  which  have  exited but whose data are still
+          kept, so called zombie processes. To determine  whether
+          to  keep  information about dead processes, use the BIF
+          _e_r_l_a_n_g:_s_y_s_t_e_m__f_l_a_g/_2.  Since  _p_r_o_c_e_s_s__i_n_f_o   does   not
+          necessarily  return  _u_n_d_e_f_i_n_e_d  for a dead process, use
+          _i_s__p_r_o_c_e_s_s__a_l_i_v_e/_1 to check whether a process is alive.
+
+          Item _e_x_i_t returns [] if the process is alive, or {_e_x_i_t,
+          _R_e_a_s_o_n}  if the process has exited, where _R_e_a_s_o_n is the
+          exit reason.
+
+          Item _r_e_g_i_s_t_e_r_e_d__n_a_m_e returns [] if the process  has  no
+          registered  name.  If  the  process  is  a  zombie, the
+          registered name it had when it died is returned.
+
+          Item _m_e_m_o_r_y returns {memory, Size}, where _S_i_z_e  is  the
+          size of the process in bytes. This includes stack, heap
+          and internal structures.
+
+          Item _b_a_c_k_t_r_a_c_e returns a  binary,  which  contains  the
+          same     information     as     the     output     from
+          _e_r_l_a_n_g:_p_r_o_c_e_s_s__d_i_s_p_l_a_y(_P_i_d,       _b_a_c_k_t_r_a_c_e).       Use
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 30
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          _b_i_n_a_r_y__t_o__l_i_s_t/_1  to  obtain  the  string of characters
+          from the binary.
+
+          Item _l_a_s_t__c_a_l_l_s returns _f_a_l_s_e if  call  saving  is  not
+          active  for  the  process (see process_flag/3). If call
+          saving is active, a list is returned, in which the last
+          element is the most recent.
+
+          Item _l_i_n_k_s returns a list of pids to which the  process
+          is linked.
+
+          Item _m_o_n_i_t_o_r_s returns a list of  monitors  (started  by
+          erlang:monitor/2)  that are active for the process. For
+          a local process monitor or a remote process monitor  by
+          pid,  the list item is {process, Pid}, and for a remote
+          process monitor by name  the  list  item  is  {process,
+          {Name, Node}}.
+
+          Item _m_o_n_i_t_o_r_e_d__b_y returns a list of pids that are moni-
+          toring the process (with erlang:monitor/2).
+
+          Not all implementations support every one of the  above
+          _I_t_e_m_s.
+
+          Failure: _b_a_d_a_r_g if _P_i_d is not a process identifier,  or
+          if _P_i_d is a process identifier of a remote process.
+
+     processes()
+
+          Returns a list of all processes on  the  current  node,
+          including zombie processes. See system_flag/2.
+
+          > processes().
+          [<0.0.1>, <0.1.1>, <0.2.1>, <0.3.1>, <0.4.1>, <0.6.1>]
+
+     erlang:purge_module(Module)
+
+          Removes old code for _M_o_d_u_l_e. Before this BIF  is  used,
+          _e_r_l_a_n_g:_c_h_e_c_k__p_r_o_c_e_s_s__c_o_d_e/_2  should  be called to check
+          that no  processes  are  executing  old  code  in  this
+          module.
+
+  Warning:
+     In normal Erlang implementations, code handling -  which  is
+     loading,  deleting  and  replacing modules - is evaluated by
+     the module _c_o_d_e. This BIF is intended  to  be  used  by  the
+     implementation  of the module code and should not be used in
+     any other place.
+
+
+     This is an optional BIF.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 31
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+     Failure: _b_a_d_a_r_g if _M_o_d_u_l_e does not exist.
+
+     put(Key, Value)
+
+          Adds a new _V_a_l_u_e to the process dictionary and  associ-
+          ates it with _K_e_y. If a value is already associated with
+          _K_e_y, that value is deleted  and  replaced  by  the  new
+          value _V_a_l_u_e. It returns any value previously associated
+          with _K_e_y, or _u_n_d_e_f_i_n_e_d if no value was associated  with
+          _K_e_y. _K_e_y and _V_a_l_u_e can be any valid Erlang terms.
+
+  Note:
+     The values stored when _p_u_t is evaluated within the scope  of
+     a _c_a_t_c_h will not be retracted if a _t_h_r_o_w is evaluated, or if
+     an error occurs.
+
+
+     > X = put(name, walrus), Y = put(name, carpenter),
+       Z = get(name),
+       {X, Y, Z}.
+     {undefined, walrus, carpenter}
+
+     erlang:read_timer(Ref)
+
+          _r_e_t_u_r_n_s__t_i_m_e_r(_R_e_f) returns the number  of  milliseconds
+          remaining for a timer, where _R_e_f was returned by either
+          _s_e_n_d__a_f_t_e_r/_3 or _s_t_a_r_t__t_i_m_e_r/_3. If the timer was active,
+          _r_e_a_d__t_i_m_e_r/_1  returns  the  time  in  milliseconds left
+          until the timer will expire, otherwise _f_a_l_s_e (which may
+          mean  that  _R_e_f  was never a timer, or that it has been
+          cancelled, or that it has already  delivered  its  mes-
+          sage).
+
+          Failure: _b_a_d_a_r_g if _R_e_f is not a reference.
+
+     erlang:ref_to_list(Ref)
+
+          Returns a list which corresponds to the reference _R_e_f.
+
+  Warning:
+     This BIF is intended for debugging and for use in the Erlang
+     operating  system. It should not be used in application pro-
+     grams.
+
+
+     > erlang:ref_to_list(make_ref()).
+     "#Ref<0.0.0.134>"
+
+     Failure: _b_a_d_a_r_g if the argument is not a reference.
+
+     register(Name, Pid)
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 32
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          Associates the name _N_a_m_e with the process identity _P_i_d.
+          _N_a_m_e,  which  must be an atom, can be used instead of a
+          pid in the send operator (_N_a_m_e ! _M_e_s_s_a_g_e).
+
+          Returns _t_r_u_e.
+
+          Failure: _b_a_d_a_r_g if _P_i_d is not an active process, or  if
+          _P_i_d  is  a process on another node, or if the name _N_a_m_e
+          is already  in  use,  or  if  the  process  is  already
+          registered (it already has a name), or if the name _N_a_m_e
+          is not an atom, or if _N_a_m_e is the atom _u_n_d_e_f_i_n_e_d.
+
+     registered()
+
+          Returns a list of  names  which  have  been  registered
+          using _r_e_g_i_s_t_e_r/_2.
+
+          > registered().
+          [code_server, file_server, init, user, my_db]
+
+     erlang:resume_process(Pid)
+
+          Resume a suspended process. This  should  be  used  for
+          debugging purposes only, not in production code.
+
+     round(Number)
+
+          Returns an  integer  by  rounding  the  number  _N_u_m_b_e_r.
+          Allowed in guard tests.
+
+          > round(5.5).
+          6
+
+          Failure: _b_a_d_a_r_g if the argument is not a float  (or  an
+          integer).
+
+     self()
+
+          Returns the process identity of  the  calling  process.
+          Allowed in guard tests.
+
+          > self().
+          <0.16.1>
+
+     erlang:send_after(Time, Pid, Msg)
+
+          _T_i_m_e is a non-negative integer, _P_i_d is either a pid  or
+          an  atom,  and  _M_s_g  is  any  Erlang term. The function
+          returns a reference.
+
+          After _T_i_m_e ms, _s_e_n_d__a_f_t_e_r/_3 sends _M_s_g to _P_i_d.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 33
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          If _P_i_d is an atom, it is supposed to be the name  of  a
+          registered process. The process referred to by the name
+          is looked up at the time of delivery. No error is given
+          if  the  name  does  not  refer  to a process. See also
+          _s_t_a_r_t__t_i_m_e_r/_3 and _c_a_n_c_e_l__t_i_m_e_r/_1.
+
+          Limitations: _P_i_d must be a process on the  local  node.
+          The timeout value must fit in 32 bits.
+
+          Failure: _b_a_d_a_r_g if any arguments are of the wrong type,
+          or do not obey the limitations noted above.
+
+     erlang:set_cookie(Node, Cookie)
+
+          Sets the "magic cookie" of _N_o_d_e to the atom _C_o_o_k_i_e.  If
+          _N_o_d_e  is the current node, the BIF also sets the cookie
+          of all other unknown nodes to _C_o_o_k_i_e (see auth(3)).
+
+     setelement(Index, Tuple, Value)
+
+          Returns a tuple which is a copy of the  argument  _T_u_p_l_e
+          with  the  element  given by the integer argument _I_n_d_e_x
+          (the  first  element  is  the  element  with  index  1)
+          replaced by the argument _V_a_l_u_e.
+
+          > setelement(2, {10, green, bottles}, red).
+          {10, red, bottles}
+
+          Failure: _b_a_d_a_r_g if _I_n_d_e_x is not an integer, or _T_u_p_l_e is
+          not a tuple, or if _I_n_d_e_x is less than 1 or greater than
+          the size of _T_u_p_l_e.
+
+     size(Item)
+
+          Returns an integer which is the size  of  the  argument
+          _I_t_e_m, where _I_t_e_m must be either a tuple or a binary.
+
+          > size({morni, mulle, bwange}).
+          3
+
+          Allowed in guard tests.
+
+          Failure: _b_a_d_a_r_g if _I_t_e_m is not a tuple or a binary.
+
+     spawn(Fun)
+
+          Returns the Pid of a new process started by the  appli-
+          cation  of _F_u_n to the empty argument list []. Otherwise
+          works like _s_p_a_w_n/_3.
+
+     spawn(Node, Fun)
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 34
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          Returns the Pid of a new process started by the  appli-
+          cation  of  _F_u_n  to  the empty argument list [] on node
+          _N_o_d_e. Otherwise works like _s_p_a_w_n/_4.
+
+     spawn(Module, Function, ArgumentList)
+
+          Returns the Pid of a new process started by the  appli-
+          cation  of  _M_o_d_u_l_e:_F_u_n_c_t_i_o_n  to _A_r_g_u_m_e_n_t_L_i_s_t. _N_o_t_e: The
+          new process  created  will  be  placed  in  the  system
+          scheduler queue and will be run some time later.
+
+          _e_r_r_o_r__h_a_n_d_l_e_r:_u_n_d_e_f_i_n_e_d__f_u_n_c_t_i_o_n(_M_o_d_u_l_e,      _F_u_n_c_t_i_o_n,
+          _A_r_g_u_m_e_n_t_L_i_s_t)  is  evaluated  by  the  new  process  if
+          _M_o_d_u_l_e:_F_u_n_c_t_i_o_n/_A_r_i_t_y does not exist  (where  _A_r_i_t_y  is
+          the  length  of ArgumentList). The error handler can be
+          redefined  (see  BIF  _p_r_o_c_e_s_s__f_l_a_g/_2)).  _A_r_i_t_y  is  the
+          length  of  the _A_r_g_u_m_e_n_t_L_i_s_t. If _e_r_r_o_r__h_a_n_d_l_e_r is unde-
+          fined,  or  the  user   has   redefined   the   default
+          _e_r_r_o_r__h_a_n_d_l_e_r   so  its  replacement  is  undefined,  a
+          failure with the reason _u_n_d_e_f will occur.
+
+          > spawn(speed, regulator, [high_speed, thin_cut]).
+          <0.13.1>
+
+          Failure: _b_a_d_a_r_g if _M_o_d_u_l_e and/or  _F_u_n_c_t_i_o_n  is  not  an
+          atom, or if _A_r_g_u_m_e_n_t_L_i_s_t is not a list.
+
+     spawn(Node, Module, Function, ArgumentList)
+
+          Works like _s_p_a_w_n/_3, with the exception that the process
+          is  spawned  at _N_o_d_e. If _N_o_d_e does not exist, a useless
+          Pid is returned.
+
+          Failure: _b_a_d_a_r_g if _N_o_d_e, _M_o_d_u_l_e, or  _F_u_n_c_t_i_o_n  are  not
+          atoms, or _A_r_g_u_m_e_n_t_L_i_s_t is not a list.
+
+     spawn_link(Fun)
+
+          Works like _s_p_a_w_n/_1 except that a link is made from  the
+          current process to the newly created one, atomically.
+
+     spawn_link(Node, Fun)
+
+          Works like _s_p_a_w_n/_2 except that a link is made from  the
+          current process to the newly created one, atomically.
+
+     spawn_link(Module, Function, ArgumentList)
+
+          This BIF is  identical  to  the  following  code  being
+          evaluated in an atomic operation:
+
+          > Pid = spawn(Module, Function, ArgumentList),
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 35
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+            link(Pid),
+            Pid.
+
+          This BIF is necessary since the process  created  might
+          run immediately and fail before _l_i_n_k/_1 is called.
+
+          Failure: See _s_p_a_w_n/_3.
+
+     spawn_link(Node, Module, Function, ArgumentList)
+
+          Works like _s_p_a_w_n__l_i_n_k/_3, except  that  the  process  is
+          spawned  at _N_o_d_e. If an attempt is made to spawn a pro-
+          cess on a node which does not exist, a useless  Pid  is
+          returned, and an EXIT signal will be received.
+
+     spawn_opt(Module, Function, ArgumentList, Options)
+
+          Works exactly like spawn/3, except that an extra option
+          list can be given when creating the process.
+
+  Warning:
+     This BIF is  only  useful  for  performance  tuning.  Random
+     tweaking of the parameters without measuring execution times
+     and memory  consumption  may  actually  make  things  worse.
+     Furthermore,    most   of   the   options   are   inherently
+     implementation-dependent, and they can be changed or removed
+     in future versions of OTP.
+
+
+       _l_i_n_k:
+           Sets a link to the parent process  (like  _s_p_a_w_n__l_i_n_k/_3
+           does).
+
+       {_p_r_i_o_r_i_t_y, _L_e_v_e_l}:
+           Sets the priority of the new  process.  Equivalent  to
+           executing  _p_r_o_c_e_s_s__f_l_a_g(_p_r_i_o_r_i_t_y,  _L_e_v_e_l) in the start
+           function of the new process, except that the  priority
+           will  be  set  before  the process is scheduled in the
+           first time.
+
+       {_f_u_l_l_s_w_e_e_p__a_f_t_e_r, _N_u_m_b_e_r}:
+           The Erlang runtime system uses a generational  garbage
+           collection  scheme,  using an "old heap" for data that
+           has survived at least  one  garbage  collection.  When
+           there  is  no  more  room on the old heap, a fullsweep
+           garbage collection will be done.
+
+           Using the _f_u_l_l_s_w_e_e_p__a_f_t_e_r option, you can specify  the
+           maximum  number  of  generational  collections  before
+           forcing a fullsweep even if there is still room on the
+           old  heap. Setting the number to zero effectively dis-
+           ables the general collection algorithm,  meaning  that
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 36
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+           all live data is copied at every garbage collection.
+
+           Here are a few cases when it could be useful to change
+           _f_u_l_l_s_w_e_e_p__a_f_t_e_r.  Firstly,  if  you want binaries that
+           are no longer used to be thrown away as soon as possi-
+           ble.  (Set  _N_u_m_b_e_r  to zero.) Secondly, a process that
+           mostly have short-lived data will be fullsweeped  sel-
+           dom  or  never, meaning that the old heap will contain
+           mostly garbage. To ensure a fullsweep once in a while,
+           set  _N_u_m_b_e_r  to  a  suitable  value  such as 10 or 20.
+           Thirdly, in embedded systems with  limited  amount  of
+           RAM  and no virtual memory, you might want to preserve
+           memory by setting _N_u_m_b_e_r to zero. (You  probably  want
+           to the set the value globally. See system_flag/2.)
+
+       {_m_i_n__h_e_a_p__s_i_z_e, _S_i_z_e}:
+           Gives a minimum heap size in words. Setting this value
+           higher  than  the  system  default might speed up some
+           processes because less  garbage  collection  is  done.
+           Setting  too  high  value, however, might waste memory
+           and slow down the system due to worse  data  locality.
+           Therefore,  it  is recommended to use this option only
+           for fine-tuning an application and to measure the exe-
+           cution time with various _S_i_z_e values.
+
+     split_binary(Binary, Pos)
+
+          Returns a tuple which contains two binaries  which  are
+          the  result of splitting _B_i_n_a_r_y into two parts at posi-
+          tion _P_o_s. This is not a  destructive  operation.  After
+          this  operation,  there  are three binaries altogether.
+          Returns a tuple consisting of the two new binaries. For
+          example:
+
+          1> B = list_to_binary("0123456789").
+          #Bin
+          2> size(B).
+          10
+          3> {B1, B2} = split_binary(B,3).
+          {#Bin, #Bin}
+          4> size(B1).
+          3
+          5> size(B2).
+          7
+
+          Failure: _b_a_d_a_r_g if _B_i_n_a_r_y is not a binary,  or  _P_o_s  is
+          not an integer or is out of range.
+
+     erlang:start_timer(Time, Pid, Msg)
+
+          _T_i_m_e is a non-negative integer, _P_i_d is either a pid  or
+          an  atom,  and  _M_s_g  is  any  Erlang term. The function
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 37
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          returns a reference.
+
+          After _T_i_m_e ms, _s_t_a_r_t__t_i_m_e_r/_3 sends the tuple  {_t_i_m_e_o_u_t,
+          _R_e_f,  _M_s_g}  to _P_i_d, where _R_e_f is the reference returned
+          by _s_t_a_r_t__t_i_m_e_r/_3.
+
+          If _P_i_d is an atom, it is supposed to be the name  of  a
+          registered process. The process referred to by the name
+          is looked up at the time of delivery. No error is given
+          if  the  name  does  not  refer  to a process. See also
+          _s_e_n_d__a_f_t_e_r/_3 and _c_a_n_c_e_l__t_i_m_e_r/_1.
+
+          Limitations: _P_i_d must be a process on the  local  node.
+          The timeout value must fit in 32 bits.
+
+          Failure: _b_a_d_a_r_g if any arguments are of the wrong type,
+          or do not obey the limitations noted above.
+
+     statistics(Type)
+
+          Returns information about the system. _T_y_p_e is  an  atom
+          which is one of:
+
+            _r_u_n__q_u_e_u_e:
+                Returns the length of the run queue, that is  the
+                number of processes that are ready to run.
+
+            _r_u_n_t_i_m_e:
+                Returns {_T_o_t_a_l__R_u_n__T_i_m_e, _T_i_m_e__S_i_n_c_e__L_a_s_t__C_a_l_l}.
+
+            _w_a_l_l__c_l_o_c_k:
+                Returns                    {_T_o_t_a_l__W_a_l_l_c_l_o_c_k__T_i_m_e,
+                _W_a_l_l_c_l_o_c_k__T_i_m_e__S_i_n_c_e__L_a_s_t__C_a_l_l}.  _w_a_l_l__c_l_o_c_k  can
+                be used in the same manner as the  atom  _r_u_n_t_i_m_e,
+                except  that  real time is measured as opposed to
+                runtime or CPU time.
+
+            _r_e_d_u_c_t_i_o_n_s:
+                Returns                        {_T_o_t_a_l__R_e_d_u_c_t_i_o_n_s,
+                _R_e_d_u_c_t_i_o_n_s__S_i_n_c_e__L_a_s_t__C_a_l_l}.
+
+            _g_a_r_b_a_g_e__c_o_l_l_e_c_t_i_o_n:
+                Returns {_N_u_m_b_e_r__o_f__G_C_s, _W_o_r_d_s__R_e_c_l_a_i_m_e_d, _0}. This
+                information  may not be valid for all implementa-
+                tions.
+
+          All times are in milliseconds.
+
+          > statistics(runtime).
+          {1690, 1620}
+          > statistics(reductions).
+          {2046, 11}
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 38
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          > statistics(garbage_collection).
+          {85, 23961, 0}
+
+          Failure: _b_a_d_a_r_g if _T_y_p_e is not one of the  atoms  shown
+          above.
+
+     erlang:suspend_process(Pid)
+
+          Suspend a process. This should be  used  for  debugging
+          purposes only, not in production code.
+
+     erlang:system_flag(Flag, Value)
+
+          This BIF sets various system properties of  the  Erlang
+          node.  If  _F_l_a_g  is  a valid name of a system flag, its
+          value is set to _V_a_l_u_e, and the old value is returned.
+
+          The following values for _F_l_a_g  are  currently  allowed:
+          _k_e_e_p__z_o_m_b_i_e_s, _f_u_l_l_s_w_e_e_p__a_f_t_e_r, and _b_a_c_k_t_r_a_c_e__d_e_p_t_h.
+
+          The value of the _k_e_e_p__z_o_m_b_i_e_s flag is an integer  which
+          indicates  how  many  processes  to keep in memory when
+          they  exit,  so  that  they  can  be   inspected   with
+          _p_r_o_c_e_s_s__i_n_f_o.  Originally,  the number is 0. Setting it
+          to 0 disables the keeping of zombies. A negative number
+          -_N means to keep the _N latest zombies; a positive value
+          _N means to keep the _N first zombies. Setting  the  flag
+          always  clears away any already saved zombies. The max-
+          imum number of zombies  which  can  be  saved  is  100.
+          Resources  owned  by  a zombie process are cleared away
+          immediately when the  process  dies,  for  example  ets
+          tables and ports, and cannot be inspected.
+
+          The value of the  _f_u_l_l_s_w_e_e_p__a_f_t_e_r  is  an  non-negative
+          integer  which  indicates  how  many times generational
+          garbages collections can  be  done  without  forcing  a
+          fullsweep   collection.   The   value  applies  to  new
+          processes; processes already running are not affected.
+
+          In  low-memory  systems  (especially  without   virtual
+          memory), setting the value to zero can help to conserve
+          memory.
+
+          An alternative way to set this  value  is  through  the
+          (operating       system)      environment      variable
+          _E_R_L__F_U_L_L_S_W_E_E_P__A_F_T_E_R.
+
+     erlang:system_info(What)
+
+          _W_h_a_t can be any of the atoms _i_n_f_o, _p_r_o_c_s, _l_o_a_d_e_d, _d_i_s_t,
+          _t_h_r_e_a_d__p_o_o_l__s_i_z_e  or  _a_l_l_o_c_a_t_e_d__a_r_e_a_s.  The BIF returns
+          information of the different `topics'  as  binary  data
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 39
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          objects     (except     for     thread_pool_size    and
+          allocated_areas, see below).
+
+            _e_r_l_a_n_g:_s_y_s_t_e_m__i_n_f_o(_t_h_r_e_a_d__p_o_o_l__s_i_z_e):
+                Returns the number of  threads  used  for  driver
+                calls (as an integer).
+
+            _e_r_l_a_n_g:_s_y_s_t_e_m__i_n_f_o(_a_l_l_o_c_a_t_e_d__a_r_e_a_s):
+                Returns a list of tuples. Each tuple contains  an
+                atom  describing the type of memory as first ele-
+                ment and the amount of allocated memory in  bytes
+                as second element. In those cases when the system
+                pre-allocate memory, a third element is  present.
+                This  third  element  contains the amount of used
+                memory in bytes.
+
+                A lot of these values are  shown  by  the  (_i)_n_f_o
+                alternative  under the _B_R_E_A_K menu. The _B_R_E_A_K menu
+                can be reached by typing Control C in the  Erlang
+                shell.
+
+                Observe that this  is  not  a  complete  list  of
+                memory allocated by the system!
+
+          Failure: _b_a_d_a_r_g if _W_h_a_t is not one of the  atoms  shown
+          above.
+
+     term_to_binary(Term)
+
+          This BIF returns the encoded value of any  Erlang  term
+          and  turns  it into the Erlang external term format. It
+          can be used for a  variety  of  purposes,  for  example
+          writing  a term to a file in an efficient way, or send-
+          ing an Erlang term to some type of communications chan-
+          nel not supported by distributed Erlang.
+
+          Returns a binary data object which  corresponds  to  an
+          external representation of the Erlang term _T_e_r_m.
+
+     term_to_binary(Term, Options)
+
+          This BIF returns the encoded value of any  Erlang  term
+          and  turns  it into the Erlang external term format. If
+          the _O_p_t_i_o_n_s list  contains  the  atom  _c_o_m_p_r_e_s_s_e_d,  the
+          external term format will be compressed. The compressed
+          format is automatically recognised by  _b_i_n_a_r_y__t_o__t_e_r_m/_1
+          in R7.
+
+          Returns a binary data object which  corresponds  to  an
+          external representation of the Erlang term _T_e_r_m.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 40
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          Failure: _b_a_d_a_r_g if _O_p_t_i_o_n_s is not a list or if contains
+          something else than the supported flags (currently only
+          the atom _c_o_m_p_r_e_s_s_e_d).
+
+     throw(Any)
+
+          A non-local return from a function. If evaluated within
+          a _c_a_t_c_h, _c_a_t_c_h will return the value _A_n_y.
+
+          > catch throw({hello, there}).
+          {hello, there}
+
+          Failure: _n_o_c_a_t_c_h if not evaluated within a catch.
+
+     time()
+
+          Returns the tuple {_H_o_u_r, _M_i_n_u_t_e, _S_e_c_o_n_d} of the current
+          system    time.    The    time   zone   correction   is
+          implementation-dependent.
+
+          > time().
+          {9, 42, 44}
+
+     tl(List)
+
+          Returns _L_i_s_t stripped of its first element.
+
+          > tl([geesties, guilies, beasties]).
+          [guilies, beasties]
+
+          Failure: _b_a_d_a_r_g if _L_i_s_t is the empty list [], or is not
+          a list. Allowed in guard tests.
+
+     erlang:trace(PidSpec, How, Flaglist)
+
+          Turns on (if How == _t_r_u_e) or off (if How == _f_a_l_s_e)  the
+          trace  flags  in  _F_l_a_g_l_i_s_t for the process or processes
+          represented by _P_i_d_S_p_e_c. _P_i_d_S_p_e_c is either a pid  for  a
+          local process, or one of the following atoms:
+
+            _e_x_i_s_t_i_n_g:
+                All processes currently existing.
+
+            _n_e_w:
+                All processes that will be created in the future.
+
+            _a_l_l:
+                All  currently   existing   processes   and   all
+                processes that will be created in the future.
+
+          _F_l_a_g_l_i_s_t can contain any number of the following  atoms
+          (the  "message  tags"  refers  to  the  list of message
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 41
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          following below):
+
+            _s_e_n_d:
+                Traces the messages the process _P_i_d  sends.  Mes-
+                sage tags: _s_e_n_d, _s_e_n_d__t_o__n_o_n__e_x_i_s_t_i_n_g__p_r_o_c_e_s_s.
+
+            '_r_e_c_e_i_v_e':
+                Traces the messages  the  process  _P_i_d  receives.
+                Message tags: '_r_e_c_e_i_v_e'.
+
+            _p_r_o_c_s:
+                Traces process related events, for example _s_p_a_w_n,
+                _l_i_n_k,  _e_x_i_t.  Message  tags:  _s_p_a_w_n,  _e_x_i_t, _l_i_n_k,
+                _u_n_l_i_n_k, _g_e_t_t_i_n_g__l_i_n_k_e_d.
+
+            _c_a_l_l:
+                Traces function calls to functions  that  tracing
+                has     been     enabled     for.     Use     the
+                erlang:trace_pattern/3  BIF to enable tracing for
+                functions. Message tags: _c_a_l_l, _r_e_t_u_r_n__f_r_o_m.
+
+            _r_e_t_u_r_n__t_o:
+                Traces the actual return  of  a  process  from  a
+                traced  function  back to its caller. This return
+                trace only works together  with  call  trace  and
+                functions   traced   with  the  _l_o_c_a_l  option  to
+                erlang:trace_pattern/3  . The semantics is that a
+                message is sent when a call traced function actu-
+                ally returns, i.e. when a chain of tail recursive
+                calls is ended. There will be only one trace mes-
+                sage sent per chain of tail recursive calls,  why
+                the properties of tail recursiveness for function
+                calls are kept  while  tracing  with  this  flag.
+                Using  _c_a_l_l and _r_e_t_u_r_n__t_o trace together makes it
+                possible to know exactly in which function a pro-
+                cess executes at any time.
+
+                To get trace messages  containing  return  values
+                from functions, use the {_r_e_t_u_r_n__t_r_a_c_e} match_spec
+                action instead.
+
+                Message tags: _r_e_t_u_r_n__t_o.
+
+            _r_u_n_n_i_n_g:
+                Traces scheduling of processes. Message tags: _i_n,
+                _o_u_t.
+
+            _g_a_r_b_a_g_e__c_o_l_l_e_c_t_i_o_n:
+                Traces garbage collections of processes.  Message
+                tags: _g_c__s_t_a_r_t, _g_c__e_n_d.
+
+            _t_i_m_e_s_t_a_m_p:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 42
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+                Make a time stamp in all trace messages. The time
+                stamp  (Ts)  is  of  the same form as returned by
+                _e_r_l_a_n_g:_n_o_w().
+
+            _a_r_i_t_y:
+                Instead of {_M_o_d, _F_u_n, _A_r_g_s} in call traces, there
+                will be {_M_o_d, _F_u_n, _A_r_i_t_y}.
+
+            _s_e_t__o_n__s_p_a_w_n:
+                Makes any process  created  by  _P_i_d  inherit  the
+                flags of _P_i_d, including the _s_e_t__o_n__s_p_a_w_n flag.
+
+            _s_e_t__o_n__f_i_r_s_t__s_p_a_w_n:
+                Makes the first process created  by  _P_i_d  inherit
+                the  flags  of  _P_i_d That process does not inherit
+                the _s_e_t__o_n__f_i_r_s_t__s_p_a_w_n flag.
+
+            _s_e_t__o_n__l_i_n_k:
+                Makes any process linked by _P_i_d inherit the flags
+                of _P_i_d, including the _s_e_t__o_n__l_i_n_k flag.
+
+            _s_e_t__o_n__f_i_r_s_t__l_i_n_k:
+                Makes the first process linked to by _P_i_d  inherit
+                the  flags  of _P_i_d. That process does not inherit
+                the _s_e_t__o_n__f_i_r_s_t__l_i_n_k flag.
+
+            {_t_r_a_c_e_r, _T_r_a_c_e_r}:
+                _T_r_a_c_e_r should be the pid for a local  process  or
+                the  port  identifier for a local port. All trace
+                messages will be sent to  the  given  process  or
+                port.  If  this flag is not given, trace messages
+                will  be  sent  to  the   process   that   called
+                _e_r_l_a_n_g:_t_r_a_c_e/_3.
+
+          The  effect   of   combining   _s_e_t__o_n__f_i_r_s_t__l_i_n_k   with
+          _s_e_t__o_n__l_i_n_k  is  the  same  as having _s_e_t__o_n__f_i_r_s_t__l_i_n_k
+          alone.     Likewise      for      _s_e_t__o_n__s_p_a_w_n      and
+          _s_e_t__o_n__f_i_r_s_t__s_p_a_w_n.
+
+          If the _t_i_m_e_s_t_a_m_p flag is not given, the tracing process
+          will receive the trace messages described below. If the
+          _t_i_m_e_s_t_a_m_p flag is given, the first element of the tuple
+          will  be _t_r_a_c_e__t_s and the timestamp will be in the last
+          element of the tuple.
+
+            {_t_r_a_c_e, _P_i_d, '_r_e_c_e_i_v_e', _M_e_s_s_a_g_e}:
+                When the traced _P_i_d receives something.
+
+            {_t_r_a_c_e, _P_i_d, _s_e_n_d, _M_s_g, _T_o}:
+                When _P_i_d sends a message.
+
+            {_t_r_a_c_e, _P_i_d, _s_e_n_d__t_o__n_o_n__e_x_i_s_t_i_n_g__p_r_o_c_e_s_s, _M_s_g, _T_o}:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 43
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+                When _P_i_d sends a message to a non  existing  pro-
+                cess.
+
+            {_t_r_a_c_e, _P_i_d, _c_a_l_l, {_M, _F, _A}}:
+                When Pid makes a function/BIF  call.  The  return
+                values of calls are never supplied, only the call
+                and its arguments.
+
+            {_t_r_a_c_e, _P_i_d, _r_e_t_u_r_n__t_o, {_M, _F, _A}}:
+                When Pid returns _t_o function {_M, _F, _A}. This mes-
+                sage  will  be  sent  if  both  the  _c_a_l_l and the
+                _r_e_t_u_r_n__t_o flags are present and the  function  is
+                set  to  be  traced  on _l_o_c_a_l function calls. The
+                message is only sent when returning from a  chain
+                of  tail  recursive function calls where at least
+                one call generated a _c_a_l_l trace message (i.e. the
+                functions  match  specification matched and {_m_e_s_-
+                _s_a_g_e, _f_a_l_s_e} was not an action).
+
+            {_t_r_a_c_e, _P_i_d, _r_e_t_u_r_n__f_r_o_m, {_M, _F, _A}, _R_e_t_u_r_n_V_a_l_u_e}:
+                When Pid returns _f_r_o_m the function {_M, _F, _A} This
+                trace message is sent when the _c_a_l_l flag has been
+                specified, and the function has a match  specifi-
+                cation with a _r_e_t_u_r_n__t_r_a_c_e action.
+
+            {_t_r_a_c_e, _P_i_d, _s_p_a_w_n, _P_i_d_2}:
+                When Pid spawns a new process _P_i_d_2.
+
+            {_t_r_a_c_e, _P_i_d, _e_x_i_t, _R_e_a_s_o_n}:
+                When Pid exits with reason _R_e_a_s_o_n.
+
+            {_t_r_a_c_e, _P_i_d, _l_i_n_k, _P_i_d_2}:
+                When Pid links to a process _P_i_d_2.
+
+            {_t_r_a_c_e, _P_i_d, _u_n_l_i_n_k, _P_i_d_2}:
+                When Pid removes the link from a process _P_i_d_2.
+
+            {_t_r_a_c_e, _P_i_d, _g_e_t_t_i_n_g__l_i_n_k_e_d, _P_i_d_2}:
+                When Pid gets linked to a process _P_i_d_2.
+
+            {_t_r_a_c_e, _P_i_d, _i_n, {_M, _F, _A}}:
+                When Pid is scheduled to run.  The  process  will
+                run  in  function  {M,F,A}, where A is always the
+                arity.
+
+            {_t_r_a_c_e, _P_i_d, _o_u_t, {_M, _F, _A}}:
+                When Pid is scheduled out. The process  was  run-
+                ning  in  function  {M,F,A} where A is always the
+                arity.
+
+            {_t_r_a_c_e, _P_i_d, _g_c__s_t_a_r_t, _I_n_f_o}:
+                Sent when  garbage  collection  is  about  to  be
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 44
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+                started.  _I_n_f_o  is  a list of two-element tuples,
+                where the first element is a key, and the  second
+                is the value. You should not depend on the tuples
+                have any defined order Currently,  the  following
+                keys are defined.
+
+                  _h_e_a_p__s_i_z_e:
+                      The size of the used part of the heap.
+
+                  _o_l_d__h_e_a_p__s_i_z_e:
+                      The size of the used part of the old heap.
+
+                  _s_t_a_c_k__s_i_z_e:
+                      The actual size of the stack.
+
+                  _r_e_c_e_n_t__s_i_z_e:
+                      The size of the data that survived the pre-
+                      vious garbage collection.
+
+                  _m_b_u_f__s_i_z_e:
+                      The combined size of message buffers  asso-
+                      ciated with the process.
+
+                All sizes are in words.
+
+            {_t_r_a_c_e, _P_i_d, _g_c__e_n_d, _I_n_f_o}:
+                Sent when garbage collection  is  finished.  _I_n_f_o
+                contains the same kind of list as in the _g_c__s_t_a_r_t
+                message, but the  sizes  reflect  the  new  sizes
+                after garbage collection.
+
+          If the tracing process dies, the flags will be silently
+          removed.
+
+          Only one process can trace a  particular  process.  For
+          this  reason,  attempts to trace an already traced pro-
+          cess will fail.
+
+          Returns: A number indicating the  number  of  processes
+          that  matched  _P_i_d_S_p_e_c. If _P_i_d_S_p_e_d is a pid, the return
+          value will be _1. If _P_i_d_S_p_e_c  is  _a_l_l  or  _e_x_i_s_t_i_n_g  the
+          return  value  will be the number of processes running,
+          excluding tracer processes.  If  _P_i_d_S_p_e_c  is  _n_e_w,  the
+          return value will be _0.
+
+          Failure: _b_a_d_a_r_g if bad arguments are given.
+
+     erlang:trace_info(PidOrFunc, Item)
+
+          Returns trace information about a process  or  exported
+          function.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 45
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          To get information about a process, _P_i_d_O_r_F_u_n_c should be
+          a  pid  or  the  atom  _n_e_w. The atom _n_e_w means that the
+          default trace state for processes to be created will be
+          returned. _I_t_e_m must have one of the following values:
+
+            _f_l_a_g_s:
+                Return a list of atoms indicating  what  kind  of
+                traces  is enabled for the process. The list will
+                be empty if no traces are  enabled,  and  one  or
+                more  of  the  followings  atoms  if  traces  are
+                enabled:  _s_e_n_d,  '_r_e_c_e_i_v_e',  _s_e_t__o_n__s_p_a_w_n,  _c_a_l_l,
+                _r_e_t_u_r_n__t_o,       _p_r_o_c_s,       _s_e_t__o_n__f_i_r_s_t__s_p_a_w_n,
+                _s_e_t__o_n__l_i_n_k, _r_u_n_n_i_n_g, _g_a_r_b_a_g_e__c_o_l_l_e_c_t_i_o_n,  _t_i_m_e_s_-
+                _t_a_m_p, and _a_r_i_t_y. The order is arbitrary.
+
+            _t_r_a_c_e_r:
+                Return the identifier for process or port tracing
+                this  process.  If  this  process  is  not  being
+                traced, the return value will be [].
+
+          To get information about an exported  function,  _P_i_d_O_r_-
+          _F_u_n_c  should  be  a three-element tuple: {_M_o_d_u_l_e, _F_u_n_c_-
+          _t_i_o_n, _A_r_i_t_y} or the  atom  _o_n__l_o_a_d.  No  wildcards  are
+          allowed. _I_t_e_m must have one of the following values:
+
+            _t_r_a_c_e_d:
+                Return _g_l_o_b_a_l if this function is traced on  glo-
+                bal  function  calls,  _l_o_c_a_l  if this function is
+                traced on local function  calls  (i.e  local  and
+                global function calls) and _f_a_l_s_e if this function
+                is not traced at all.
+
+            _m_a_t_c_h__s_p_e_c:
+                Return the match specification for this function,
+                if it has one. If the function is not traced, the
+                returned value is _f_a_l_s_e and if  the  function  is
+                traced  but  has  no match specification defined,
+                the returned value is [].
+
+          The actual return value will be  {_I_t_e_m,  _V_a_l_u_e},  where
+          _V_a_l_u_e  is the requested information as described above.
+          If a pid for a dead process was given, or the name of a
+          non-existing function, _V_a_l_u_e will be _u_n_d_e_f_i_n_e_d.
+
+          If _P_i_d_O_r_F_u_n_c is the _o_n__l_o_a_d, the  information  returned
+          refers  to  the  default  value  for  code that will be
+          loaded.
+
+     erlang:trace_pattern(MFA, MatchSpec)
+
+          The same as erlang:trace_pattern(MFA,  MatchSpec,  []),
+          retained for backward compatibility.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 46
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+     erlang:trace_pattern(MFA, MatchSpec, FlagList)
+
+          This BIF is used to enable or disable call tracing  for
+          exported   functions.   It   must   be   combined  with
+          erlang:trace/3 to set the _c_a_l_l trace flag  for  one  or
+          more processes.
+
+          Conceptually, call tracing works like this: Inside  the
+          Erlang  virtual  machine there is a set of processes to
+          be traced and a set of functions to be traced.  Tracing
+          will  be  enabled  on the intersection of the set. That
+          is, if a process included in  the  traced  process  set
+          calls  a  function included in the traced function set,
+          the trace action will be taken. Otherwise, nothing will
+          happen.
+
+          Use  erlang:trace/3  to  add  or  remove  one  or  more
+          processes   to   the   set  of  traced  processes.  Use
+          _e_r_l_a_n_g:_t_r_a_c_e__p_a_t_t_e_r_n/_2 to add or remove exported  func-
+          tions to the set of traced functions.
+
+          The  _e_r_l_a_n_g:_t_r_a_c_e__p_a_t_t_e_r_n/_3  BIF  can  also  add  match
+          specifications  to an exported function. A match spefi-
+          cation comprises a pattern that the  arguments  to  the
+          function  must  match,  a  guard  expression which must
+          evaluate to  _t_r_u_e  and  action  to  be  performed.  The
+          default  action is to send a trace message. If the pat-
+          tern does not match or the guard fails, the action will
+          not be executed.
+
+          The _M_F_A argument should be a tuple like {_M_o_d_u_l_e,  _F_u_n_c_-
+          _t_i_o_n,  _A_r_i_t_y} or the atom _o_n__l_o_a_d (described below). It
+          can be the module, function, and arity for an  exported
+          function  (or a BIF in any module). The '_' atom can be
+          used to mean any of that kind. Wildcards can be used in
+          any of the following ways:
+
+            {_M_o_d, _F_u_n_c, '_'}:
+                All exported functions of any arity named _F_u_n_c in
+                module _M_o_d.
+
+            {_M_o_d, '_', '_'}:
+                All exported functions in module _M_o_d.
+
+            {'_', '_', '_'}:
+                All exported functions in all loaded modules.
+
+          Other combinations, such as {_M_o_d, '_', _A_r_i_t_y}, are  not
+          allowed.  Local  functions will match wildcards only if
+          the _l_o_c_a_l option is in the _F_l_a_g_L_i_s_t.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 47
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          If the _M_F_A argument is  the  atom  _o_n__l_o_a_d,  the  match
+          specification and flag list will be used on all modules
+          that are newly loaded.
+
+          The _M_a_t_c_h_S_p_e_c argument can take any  of  the  following
+          forms:
+
+            _f_a_l_s_e:
+                Disable tracing for the matching function(s). Any
+                match specification will be removed.
+
+            _t_r_u_e:
+                Enable tracing for the matching function(s).
+
+            _M_a_t_c_h_S_p_e_c_L_i_s_t:
+                A list of match specifications. An empty list  is
+                equvivalent  to  _t_r_u_e.  See the ERTS User's Guide
+                for a description of match specifications.
+
+          The _F_l_a_g_L_i_s_t parameter is a list of options.  The  fol-
+          lowing options are allowed:
+
+            _g_l_o_b_a_l:
+                Turn on or off call tracing for  global  function
+                calls  (i.e.  calls  specifying the module expli-
+                citly). Only exported functions  will  match  and
+                only  global  calls will generate trace messages.
+                This is the default.
+
+            _l_o_c_a_l:
+                Turn on of off call  tracing  for  all  types  of
+                function calls. Trace messages will be sent when-
+                ever any of the specified functions  are  called,
+                regardless  of how it is called. If the _r_e_t_u_r_n__t_o
+                flag is set for the process, a _r_e_t_u_r_n__t_o  message
+                will  also  be sent when this function returns to
+                its caller.
+
+          The options are mutually exclusive and  _g_l_o_b_a_l  is  the
+          default  (if  no options are specified). A function can
+          be _e_i_t_h_e_r globally or locally traced. If  global  trace
+          is  specified  for  a specified set of functions, local
+          trace for the matching set of local functions  will  be
+          disabled, and vice versa.
+
+          When disabling trace, the option must match the type of
+          trace  that is set on the function, so that local trac-
+          ing must be disabled with the _l_o_c_a_l option  and  global
+          tracing with the _g_l_o_b_a_l option (or no option at all).
+
+          There is no way to directly  change  part  of  a  match
+          specification   list.   If   a  function  has  a  match
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 48
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          specification, you can replace it with a completely new
+          one. If you need to change an existing match specifica-
+          tion, use the  erlang:trace_info/2  BIF to retrieve the
+          existing match specification.
+
+          Returns the number of exported functions  that  matched
+          the  _M_F_A argument. This will be zero if none matched at
+          all.
+
+          Failure: _b_a_d_a_r_g for invalid _M_F_A or _M_a_t_c_h_S_p_e_c.
+
+     trunc(Number)
+
+          Returns an integer by the truncation of _N_u_m_b_e_r. Allowed
+          in guard tests.
+
+          > trunc(5.5).
+          5
+
+          Failure: _b_a_d_a_r_g if the argument is not a float,  or  an
+          integer.
+
+     tuple_to_list(Tuple)
+
+          Returns a list which corresponds to  _T_u_p_l_e.  _T_u_p_l_e  may
+          contain any valid Erlang terms.
+
+          > tuple_to_list({share, {'Ericsson_B', 163}}).
+          [share, {'Ericsson_B', 163}]
+
+          Failure: _b_a_d_a_r_g if the argument is not a tuple.
+
+     erlang:universaltime()
+
+          Returns the current date and time according to  Univer-
+          sal  Time  Coordinated  (UTC),  also called GMT, in the
+          form {{_Y_e_a_r, _M_o_n_t_h, _D_a_y}, {_H_o_u_r,  _M_i_n_u_t_e,  _S_e_c_o_n_d}}  if
+          supported  by  the underlying operating system. If not,
+          _e_r_l_a_n_g:_u_n_i_v_e_r_s_a_l_t_i_m_e()      is      equivalent       to
+          _e_r_l_a_n_g:_l_o_c_a_l_t_i_m_e().
+
+          > erlang:universaltime().
+          {{1996,11,6},{14,18,43}}
+
+     erlang:universaltime_to_localtime(DateTime)
+
+          Converts UTC date and time in _D_a_t_e_T_i_m_e  to  local  date
+          and  time if supported by the underlying operating sys-
+          tem. Otherwise, no conversion is done, and _D_a_t_e_T_i_m_e  is
+          returned.  The  return  value  is  of  the form {{_Y_e_a_r,
+          _M_o_n_t_h, _D_a_y}, {_H_o_u_r, _M_i_n_u_t_e, _S_e_c_o_n_d}}.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 49
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+          Failure: _b_a_d_a_r_g if the argument is not a valid date and
+          time   tuple   {{_Y_e_a_r,   _M_o_n_t_h,  _D_a_y},  {_H_o_u_r,  _M_i_n_u_t_e,
+          _S_e_c_o_n_d}}.
+
+          > erlang:universaltime_to_localtime({{1996,11,6},{14,18,43}}).
+          {{1996,11,7},{15,18,43}}
+
+     unlink(Pid)
+
+          Removes a link, if there is one, from the calling  pro-
+          cess to another process given by the argument _P_i_d.
+
+          Returns _t_r_u_e. Will not fail if not linked to _P_i_d, or if
+          _P_i_d does not exist.
+
+          Failure: _b_a_d_a_r_g if the argument is not a valid Pid.
+
+     unregister(Name)
+
+          Removes the registered name for a process, given by the
+          atom argument _N_a_m_e.
+
+          Returns the atom _t_r_u_e.
+
+          > unregister(db).
+          true
+
+          Failure: _b_a_d_a_r_g if _N_a_m_e is not the name of a registered
+          process.
+
+          Users are advised not to unregister system processes.
+
+     whereis(Name)
+
+          Returns the Pid for the process registered  under  _N_a_m_e
+          (see  _r_e_g_i_s_t_e_r/_2). Returns _u_n_d_e_f_i_n_e_d if no such process
+          is registered.
+
+          > whereis(user).
+          <0.3.1>
+
+          Failure: _b_a_d_a_r_g if the argument is not an atom.
+
+     yield()
+
+          Voluntarily let other processes (if any) get  a  chance
+          to execute. Using _y_i_e_l_d() is similar to _r_e_c_e_i_v_e _a_f_t_e_r _1
+          -> _o_k _e_n_d, except that _y_i_e_l_d() is faster.
+
+AUTHORS
+     Joe Armstrong - support@erlang.ericsson.se
+     Mike Williams - support@erlang.ericsson.se
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 50
+
+
+
+
+
+
+erlang(3)           ERLANG MODULE DEFINITION            erlang(3)
+
+
+
+     Robert Virding - support@erlang.ericsson.se
+     Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                 51
+
+
+

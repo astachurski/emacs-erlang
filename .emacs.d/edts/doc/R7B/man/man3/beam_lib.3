@@ -1,0 +1,116 @@
+.TH beam_lib 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+beam_lib \- An interface to the BEAM file format
+.SH DESCRIPTION
+.LP
+\fIbeam_lib\fR provides an interface to files created by the BEAM compiler ("BEAM files")\&. The format used, a variant of "EA IFF 1985" Standard for Interchange Format Files, divides data into chunks\&. 
+.LP
+Chunk data can be returned as binaries or as compound terms\&. Compound terms are returned when chunks are referenced by names (atoms) rather than identifiers (strings)\&. The names recognized and the corresponding identifiers are \fIabstract_code\fR ("Abst"), \fIattributes\fR ("Attr"), \fIexports\fR ("ExpT"), \fIimports\fR ("ImpT"), and \fIlocals\fR ("LocT")\&. 
+.LP
+The syntas of the compound term (\fIChunkData\fR) is as follows: 
+.RS 2
+.TP 2
+*
+\fIChunkData = {ChunkId, binary()} | {abstract_code, AbstractCode} | {attributes, [{Attribute, [AttributeValue]}]} | {exports, [{Function, Arity}]} | {imports, [{Module, Function, Arity}]} | {locals, [{Function, Arity}]}]}\fR 
+.TP 2
+*
+\fIChunkRef = ChunkId | ChunkName\fR 
+.TP 2
+*
+\fIChunkName = abstract_code | attributes | exports | imports | locals\fR 
+.TP 2
+*
+\fIChunkId = string()\fR 
+.TP 2
+*
+\fIAbstractCode = {AbstVersion, forms()} | no_abstract_code\fR 
+.TP 2
+*
+\fIAbstVersion = atom()\fR 
+.TP 2
+*
+\fIAttribute = atom()\fR 
+.TP 2
+*
+\fIAttributeValue = term()\fR 
+.TP 2
+*
+\fIModule = Function = atom()\fR 
+.TP 2
+*
+\fIArity = integer() >= 0\fR 
+.RE
+.LP
+The list of attributes is sorted on \fIAttribute\fR, and each attribute name occurs once in the list\&. The attribute values occur in the same order as on the file\&. The lists of functions are also sorted\&. It is not checked that the forms conform to the abstract format indicated by \fIAbstVersion\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+chunks(FileName, [ChunkRef]) -> {ok, {ModuleName, [ChunkData]}} | {error, Module, Reason} 
+.br
+.RS
+.TP
+Types
+FileName = string() | atom()
+.br
+ModuleName = string()
+.br
+Reason = {not_a_file_name, term()} | {not_a_list, term()} | {not_a_beam_file, FileName} | {missing_chunk, FileName, "FOR1"} | {form_not_beam, FileName} | {form_too_big, FileName, FormSize, FileSize} | {invalid_beam_file, FileName, FilePosition} | {file_error, FileName, FileError} | {invalid_chunk, FileName, "Atom"} | {missing_chunk, FileName, ChunkId} | {unknown_chunk, FileName, atom()} | {chunk_too_big, FileName, ChunkId, ChunkSize, FileSize} | {invalid_chunk, FileName, ChunkId} | {file_error, FileName, FileError} | {not_a_beam_handle, pid()} 
+.br
+.RE
+.RS
+.LP
+The \fIchunks/2\fR function reads chunk data for selected chunks\&. The order of the returned list of chunk data is determined by the order of the list of chunks references; if each chunk data were replaced by the tag, the result would be the given list\&. 
+.RE
+.LP
+.B
+version(FileName) -> {ok, {ModuleName, Version}} | {error, Module, Reason} 
+.br
+.RS
+.TP
+Types
+FileName = string() | atom()
+.br
+ModuleName = string()
+.br
+Version = [term()]
+.br
+.RE
+.RS
+.LP
+The \fIversion/1\fR function returns the module version(s) found on a BEAM file\&. 
+.LP
+See \fIchunks/2\fR for possible error reasons\&. 
+.RE
+.LP
+.B
+info(FileName) -> [{file, FileName}, {module, Module}, {chunks, [ChunkInfo]}] | {error, Module, Reason} 
+.br
+.RS
+.TP
+Types
+FileName = string() | atom()
+.br
+ChunkInfo = {ChunkId, StartPosition, Size}
+.br
+StartPosition = Size = integer() > 0
+.br
+Reason = {not_a_file_name, term()} | {not_a_beam_file, FileName} | {missing_chunk, FileName, "FOR1"} | {form_not_beam, FileName} | {form_too_big, FileName, FormSize, FileSize} | {invalid_beam_file, FileName, FilePosition} | {file_error, FileName, FileError} | {invalid_chunk, FileName, "Atom"} 
+.br
+.RE
+.RS
+.LP
+The \fIinfo/1\fR function extracts some information about a BEAM file: the file name, the module name, and for each chunk the identifier as well as the position and size in bytes of the chunk data\&. 
+.RE
+.LP
+.B
+format_error(Error) -> character_list()
+.br
+.RS
+.LP
+Given the error returned by any function in this module, the function \fIformat_error\fR returns a descriptive string of the error in English\&. For file errors, the function \fIformat_error/1\fR in the \fIfile\fR module is called\&. 
+.RE
+.SH AUTHOR
+.nf
+Hans Bolinder - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,132 @@
+
+
+
+epp(3)              ERLANG MODULE DEFINITION               epp(3)
+
+
+
+MODULE
+     epp - An Erlang Code Preprocessor
+
+DESCRIPTION
+     The Erlang code preprocessor includes  functions  which  are
+     used  by  _c_o_m_p_i_l_e  to  preprocess  macros  and include files
+     before the actual parsing takes place.
+
+
+EXPORTS
+     open(FileName, IncludePath) ->  {ok,Epp}  |  {error,  Error-
+     Descriptor}
+     open(FileName,  IncludePath,  PredefMacros)  ->  {ok,Epp}  |
+     {error, ErrorDescriptor}
+
+          Types
+               FileName = atom() | string()
+               IncludePath = [DirectoryName]
+               DirectoryName = atom() | string()
+               PredefMacros = [{atom(), term()}]
+               Epp = pid() -- handle to the epp server
+               ErrorDescriptor = term()
+
+          Opens a file for preprocessing.
+
+     close(Epp) -> ok
+
+          Types
+               Epp = pid() -- handle to the epp server
+
+          Closes the preprocessing of a file.
+
+     parse_erl_form(Epp) -> {ok, AbsForm} | {eof, Line} | {error,
+     ErrorInfo}
+
+          Types
+               Epp = pid()
+               AbsForm = term()
+               Line = integer()
+               ErrorInfo = see separate description below.
+
+          Returns the next Erlang form  from  the  opened  Erlang
+          source  file. The tuple {_e_o_f, _L_i_n_e} is returned at end-
+          of-file. The first  form  corresponds  to  an  implicit
+          attribute  -_f_i_l_e(_F_i_l_e,  _1).,  where _F_i_l_e is the name of
+          the file.
+
+     parse_file(FileName,IncludePath,PredefMacro) ->  {ok,[Form]}
+     | {error,OpenError}
+
+          Types
+               FileName = atom() | string()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+epp(3)              ERLANG MODULE DEFINITION               epp(3)
+
+
+
+               IncludePath = [DirectoryName]
+               DirectoryName = atom() | string()
+               PredefMacros = [{atom(), term()}]
+               Form   =   term()   --   same   as   returned   by
+               erl_parse:parse_form
+
+          Preprocesses and parses an  Erlang  source  file.  Note
+          that  the  tuple {_e_o_f, _L_i_n_e} returned at end-of-file is
+          included as a "form".
+
+Error Information
+     The _E_r_r_o_r_I_n_f_o mentioned  above  is  the  standard  _E_r_r_o_r_I_n_f_o
+     structure  which is returned from all IO modules. It has the
+     following format:
+
+         {ErrorLine, Module, ErrorDescriptor}
+
+     A string which describes the error is obtained with the fol-
+     lowing call:
+
+     apply(Module, format_error, ErrorDescriptor)
+
+See Also
+     erl_parse
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+

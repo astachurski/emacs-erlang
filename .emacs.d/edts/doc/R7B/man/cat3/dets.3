@@ -1,0 +1,528 @@
+
+
+
+dets(3)             ERLANG MODULE DEFINITION              dets(3)
+
+
+
+MODULE
+     dets - A Disk Based Term Storage
+
+DESCRIPTION
+     _d_e_t_s is a disk based version of the module  _e_t_s.  New  users
+     should  read  the  documentation  for  the _e_t_s module before
+     reading this description. In places where no description  is
+     given  for  the  behavior of a function in this module, then
+     the function behaves exactly as its  corresponding  function
+     in the _e_t_s module.
+
+     This module provides a term (tuple) storage on file.  It  is
+     possible to insert, delete, and search for specific terms in
+     a file. The implementation is based on linear hashing.  This
+     module  is  used as the underlying file storage mechanism of
+     the Mnesia DBMS. The module is provided as is,  and  without
+     Mnesia, for users who are interested in an efficient storage
+     of Erlang terms on disk only. Many applications only need to
+     store  some  terms  in  a  file.  Mnesia  adds transactions,
+     queries, and distribution.
+
+     A file must be opened and closed. If a  file  has  not  been
+     properly  closed,  the _d_e_t_s module will automatically repair
+     the file. This might take some time  if  the  file  is  very
+     large.  By  default,  files  are closed if the process which
+     opened the file terminates. If several Erlang processes open
+     the  same  _d_e_t_s file, they will all share the file. The file
+     is properly closed when all users has either  terminated  or
+     closed  the  file._d_e_t_s  files are not properly closed if the
+     Erlang runtime system is terminated abnormally.
+
+  Note:
+     A ^C command abnormally terminates an Erlang runtime  system
+     in a Unix environment with a break-handler.
+
+
+     Since all operations in this module are disk operations,  it
+     is  important  to  realize  that  a single look-up operation
+     might involve a series of disk seek and read operations. For
+     this  reason,  the operations in this module are much slower
+     than the  corresponding  operation  in  _e_t_s,  although  this
+     module exports a similar interface.
+
+     All functions in this module fail and return {_e_r_r_o_r, _R_e_a_s_o_n}
+     if an error occurs.
+
+     The size of an empty _d_e_t_s file  is  approximately  34  kilo-
+     bytes.  This  may seem large, but this is the price paid for
+     searching for an object in an arbitrarily  large  file  with
+     almost constant search time.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+dets(3)             ERLANG MODULE DEFINITION              dets(3)
+
+
+
+     The implementation of _d_e_t_s is based on the principle of  the
+     _e_t_s  module. Data is organized as a linear hash list and the
+     hash list grows gracefully the more data  is  inserted  into
+     the  file. Space management on the file is performed by what
+     is called a buddy system.
+
+     It is worth noting that the ordered_set data-type present in
+     _e_t_s  tables  is  not yet implemented in _d_e_t_s, neither is the
+     limited  support  for  concurrent  updates  which  makes   a
+     _f_i_r_s_t/_n_e_x_t  sequence safe to use on 'fixed' _e_t_s tables. Both
+     these features will be implemented  for  _d_e_t_s  in  a  future
+     release  of  the  Erlang/OTP  system. Until then, the _M_n_e_s_i_a
+     DBMS (or some user implemented method for locking) has to be
+     used  to  implement safe concurrency. No supplied library in
+     Erlang/OTP currently has support for ordered disk based term
+     storage.
+
+
+EXPORTS
+     open_file(Name, Args) -> {ok, Name} | {error, Reason}
+
+          This function opens a _d_e_t_s file. An empty _d_e_t_s file  is
+          created if no file exists.
+
+          The _N_a_m_e argument is the name of the table.  The  table
+          name  must  be provided in all subsequent operations on
+          the file. This means that _d_e_t_s files have atomic names.
+          The  name  can  be used by other processes as well, and
+          several process can share one _d_e_t_s file. This  behavior
+          is  similar  to  the  _n_a_m_e_d__t_a_b_l_e option in _e_t_s. If two
+          processes open the same file, give the  file  the  same
+          name and provide the same arguments, then the file will
+          have two users. If one user closes the file,  it  still
+          remains open until the second user closes the file. The
+          _A_r_g_s argument is a list of {_K_e_y, _V_a_l} tuple  where  the
+          following values are allowed:
+
+            * {_t_y_p_e, _T_y_p_e}, where _T_y_p_e  must  be  either  of  the
+              atoms  _s_e_t,  _b_a_g  or _d_u_p_l_i_c_a_t_e__b_a_g. If a file is of
+              type _s_e_t, it means that each key  uniquely  identi-
+              fies  either one or zero objects. Thus, if a second
+              object is inserted  with  a  key  that  is  already
+              present  in the file, then the first object will be
+              overwritten. On the contrary, a file  of  type  _b_a_g
+              can  have  multiple objects with same key. However,
+              identical instances of the same object cannot occur
+              in   the   same   file.  If  the  type  is  set  to
+              _d_u_p_l_i_c_a_t_e__b_a_g multiple identical objects may  occur
+              in the file. The default value is _s_e_t.
+
+            * {_f_i_l_e, _F_i_l_e_n_a_m_e} is the name  of  the  file  to  be
+              opened. The default value is the name of the table.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+dets(3)             ERLANG MODULE DEFINITION              dets(3)
+
+
+
+            * {_k_e_y_p_o_s, _P_o_s}. Only tuples can  be  inserted  in  a
+              _d_e_t_s  file. This attribute specifies which position
+              in each tuple to use as the key field. The  default
+              value  is _1. The ability to change the key position
+              is most convenient when we  want  to  store  Erlang
+              records   in   which  the  first  position  of  the
+              tuple/record is the name of the record type.
+
+            * {_r_e_p_a_i_r, _V_a_l_u_e} _V_a_l_u_e can be either a boolean (_t_r_u_e
+              or _f_a_l_s_e), or the atom _f_o_r_c_e. The flag specifies if
+              the _d_e_t_s server invokes the automatic  file  repair
+              algorithm.  The default is _t_r_u_e. If _f_a_l_s_e is speci-
+              fied, there is no attempt to repair  the  file  and
+              the error {_e_r_r_o_r, _n_e_e_d__r_e_p_a_i_r} is returned.
+
+              The value _f_o_r_c_e means that repair  should  be  done
+              even  if it is not needed. This can be used to con-
+              vert dets files from an older version of stdlib. An
+              example   is   files  hashed  with  the  deprecated
+              _e_r_l_a_n_g:_h_a_s_h/_2 BIF. Files created with dets  from  a
+              stdlib  version  of  1.8.2  and  later uses the new
+              erlang:phash/2 function, which may be preferred. An
+              older  dets  file can only be converted by a repair
+              of the file, why forced repairs can be of use.
+
+            * {_c_a_c_h_e__s_i_z_e, _I_n_t_e_g_e_r} The dets process can  keep  a
+              cache  of  elements  read (or written) to the file.
+              The cache is "write-through", i.  e.  the  data  is
+              always saved to disk when inserting.
+
+              The integer value is the number of keys kept in the
+              cache, (the objects are also kept in the cache, but
+              there can be more than one object per key in a  _b_a_g
+              or  _d_u_p_l_i_c_a_t_e  _b_a_g).  The atom _i_n_f_i_n_i_t_y can be sup-
+              plied as _c_a_c_h_e__s_i_z_e, which indicates that the cache
+              can  grow  infinitely  (and be as large as the disk
+              based table itself). A infinite  cache  may  be  an
+              alternative to manually (or via Mnesia) shadowing a
+              dets table in an ets ditto.
+
+              Default is to have no cache at all (0).
+
+            * {_a_u_t_o__s_a_v_e, _T_i_m_e} If _a_u_t_o__s_a_v_e  is  specified,  the
+              dets  table  is  flushed to disk whenever it is not
+              accessed for _T_i_m_e milliseconds. A dets  table  that
+              is  flushed  will  require  no repair when reopened
+              after an uncontrolled emulator halt.
+
+              A _T_i_m_e value of _i_n_f_i_n_i_t_y will disable auto save.
+
+              The default value is 180000 (3 minutes).
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+dets(3)             ERLANG MODULE DEFINITION              dets(3)
+
+
+
+            * {_r_a_m__f_i_l_e, _B_o_o_l} The  _d_e_t_s  file  is  kept  in  RAM
+              memory  if this flag is set. This may sound like an
+              anomaly, but this flag can enhance the  performance
+              of  applications  which  open a _d_e_t_s file, insert a
+              set of objects, and then close the file.  When  the
+              _d_e_t_s  file  is  closed, its contents are written to
+              the real disk file. The default value is _f_a_l_s_e.
+
+            * {_e_s_t_i_m_a_t_e_d__n_o__o_b_j_e_c_t, _I_n_t} Application  performance
+              can  be enhanced with this flag by specifying, when
+              the  file  is  created,  the  estimated  number  of
+              objects that will occupy the _d_e_t_s file. The default
+              value as well as the minimum value is _2_5_6.
+
+            * {_a_c_c_e_s_s, _A_c_c_e_s_s}. It is possible to  open  existing
+              _d_e_t_s  files  in  read-only  mode.  The value of the
+              parameter _A_c_c_e_s_s is either _r_e_a_d or _r_e_a_d__w_r_i_t_e.  The
+              default  value  is _r_e_a_d__w_r_i_t_e. A _d_e_t_s file which is
+              opened in read-only mode is not marked  as  opened,
+              and   consequently  it  is  not  subjected  to  the
+              automatic repair process if it is later opened.
+
+          The _d_e_t_s server keeps track of the number of  users  of
+          each file. If a file is opened twice, it must be closed
+          twice.
+
+     open_file(Filename) -> ok | {error, Reason}
+
+          This function opens an existing _d_e_t_s file. If the  file
+          is   not   properly   closed,  it  fails  with  {_e_r_r_o_r,
+          _n_e_e_d__r_e_p_a_i_r}. This function is most useful  for  debug-
+          ging purposes.
+
+     close(Name) -> ok | {error, Reason}
+
+          This function closes a file. Only the owner of  a  _d_e_t_s
+          file  (i.e., the process which opened it) is allowed to
+          close it.
+
+          All open files must be  closed  before  the  system  is
+          stopped.  If  we  attempt  to open a file which has not
+          been properly closed, the _d_e_t_s module tries to automat-
+          ically repair the file.
+
+     insert(Name, Object) -> ok | {error, Reason}
+
+          This function inserts an _O_b_j_e_c_t in table _N_a_m_e.
+
+     lookup(Name, Key) -> ObjectList | {error, Reason}
+
+          This function searches the  table  _N_a_m_e  for  object(s)
+          with  the  key  _K_e_y  and  returns  a  list of the found
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+dets(3)             ERLANG MODULE DEFINITION              dets(3)
+
+
+
+          object(s). Insert and look-up times in tables are  con-
+          stant. For example:
+
+          2> dets:open_file(abc, [{type, bag}]).
+          {ok,abc}
+          3> dets:insert(abc, {1,2,3}).
+          ok
+          4> dets:insert(abc, {1,3,4}).
+          ok
+          5> dets:lookup(abc, 1).
+          [{1,2,3},{1,3,4}]
+
+          If the table is  of  type  _s_e_t,  the  function  returns
+          either  [  ],  or  a  list with a maximum length of one
+          (there can be only be one object with a single key in a
+          set).  If the table is of type _b_a_g, a look-up returns a
+          list of arbitrary length.
+
+     traverse(Name, Fun) -> Return
+
+          This function makes it possible  to  traverse  a  whole
+          _d_e_t_s  file  and  perform  some operation on all or some
+          objects  in  the  file.  Different  actions  are  taken
+          depending on the return value of _F_u_n. The following _F_u_n
+          return values are allowed:
+
+            _c_o_n_t_i_n_u_e:
+                Continue to perform the traversal.  For  example,
+                the  following  function  is supplied in order to
+                print the contents of a file to the terminal:
+
+                fun(X) -> io:format("~p~n", [X]), continue end.
+
+            {_c_o_n_t_i_n_u_e, _V_a_l}:
+                Continue the  traversal_a_n_d  accumulate  _V_a_l.  The
+                following  function  is supplied in order to col-
+                lect all objects in a file into a list:
+
+                fun(X) -> {continue, X} end.
+
+            {_d_o_n_e, _V_a_l_u_e}:
+                Terminate  the  search  and   return   [_V_a_l_u_e   |
+                _P_r_e_v_i_o_u_s_l_y__a_c_c_u_m_u_l_a_t_e_d].
+
+     delete(Name, Key) -> ok
+
+          This function deletes all objects with a  specific  key
+          from a table.
+
+     delete_object(Name, Object) -> ok
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+dets(3)             ERLANG MODULE DEFINITION              dets(3)
+
+
+
+          This function deletes a specific object from  a  table.
+          If a table is of type _b_a_g, the _d_e_l_e_t_e/_2 function cannot
+          be used to delete only  some  of  the  objects  with  a
+          specific key. This function makes this possible.
+
+     first(Name) -> Key | '$end_of_table'
+
+          This function returns the 'first' object in a table.
+
+      next(Name, Key) -> Key | '$end_of_table'
+
+          This function returns the next key in a table.
+
+     slot(Name, I) -> $end_of_table | ObjList
+
+          This function return the  list  of  objects  associated
+          with slot _I.
+
+     all() -> NameList
+
+          This function returns a list of all open files on  this
+          node.
+
+     sync(Name) -> ok
+
+          This function ensures that all data written to _N_a_m_e  is
+          written  to disk. This also applies to files which have
+          been opened with the _r_a_m__f_i_l_e flag set to _t_r_u_e. In this
+          case, the contents of the RAM file is flushed to disk.
+
+     match_object(Name, Pattern) -> ObjectList
+
+          This function matches objects and returns a list of all
+          objects  which  match _P_a_t_t_e_r_n. If the keypos'th element
+          of _P_a_t_t_e_r_n is unbound, a full search of  file  is  per-
+          formed.  On  the  contrary, if the keypos'th element is
+          not a variable, this function only searches  among  the
+          objects with the right key.
+
+     match(Name, Pattern) -> BindingsList
+
+          This function matches objects and returns a list of all
+          bindings  which match _P_a_t_t_e_r_n. If the keypos'th element
+          of _P_a_t_t_e_r_n is unbound, a full  search  over  the  whole
+          file  is  performed.  On the contrary, if the keypos'th
+          element is not a variable, this function only  searches
+          among the objects with the right key.
+
+      match_delete(Name, Pattern) -> ok
+
+          Deletes all objects which matches _P_a_t_t_e_r_n from _N_a_m_e.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+
+
+
+
+dets(3)             ERLANG MODULE DEFINITION              dets(3)
+
+
+
+      info(Name) -> InfoList
+
+          This function returns a  list  of  {_T_a_g,  _V_a_l_u_e}  pairs
+          describing  the  file.  The  following list of items is
+          returned.
+
+            * {_t_y_p_e, _T_y_p_e}, where _T_y_p_e is either of the atoms _s_e_t
+              or _b_a_g.
+
+            * {_k_e_y_p_o_s, _P_o_s}.
+
+            * {_s_i_z_e, _S_i_z_e}, where _S_i_z_e is the number  of  objects
+              which reside in the file.
+
+            * {_f_i_l_e__s_i_z_e, _F_z}, where _F_z is the size of  the  file
+              in bytes.
+
+            * {_u_s_e_r_s, _U}. where _U  is  list  of  the  Pids  which
+              currently use the file.
+
+            * {_f_i_l_e_n_a_m_e, _F}, where _F is the name  of  the  actual
+              file being used.
+
+     safe_fixtable(Name, true|false)
+
+          This function works as the  corresponding  function  in
+          _e_t_s,  except that it does _n_o_t guarantee that _f_i_r_s_t/_n_e_x_t
+          sequences during concurrent _d_e_l_e_t_e_s work  as  expected.
+          The  limited support for concurrency implemented in _e_t_s
+          tables is not yet implemented in _d_e_t_s.  This  interface
+          currently  only disables resizing of the hash area in a
+          table. Until  concurrent  deletes  are  supported,  the
+          interface  is  of  limited  usage  for  others than the
+          _M_n_e_s_i_a DBMS. It is documented here for completeness.
+
+     info(Name, Key) -> Value
+
+          Returns one of the possible  information  fields  which
+          are available by means of _i_n_f_o/_1.
+
+          Additionally, the following _K_e_ys can be specified:
+
+            * _f_i_x_e_d. Returns _t_r_u_e if rehashing is disabled either
+              by  the  _M_n_e_s_i_a _i_n_t_e_r_n_a_l _f_i_x_t_a_b_l_e/_2 interface or by
+              the _s_a_f_e__f_i_x_t_a_b_l_e/_2 interface.
+
+              The _K_e_y is special in  that  it  returns  the  atom
+              _u_n_d_e_f_i_n_e_d  if _N_a_m_e is not an open table. Other _K_e_ys
+              will generate an exit signal (_b_a_d_a_r_g) in  the  same
+              situation, which is not compatible with _e_t_s and may
+              be subject to change in future releases.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  7
+
+
+
+
+
+
+dets(3)             ERLANG MODULE DEFINITION              dets(3)
+
+
+
+            * _s_a_f_e__f_i_x_e_d.  If  the   table   is   'fixed'   using
+              _s_a_f_e__f_i_x_t_a_b_l_e/_2,  the call returns a tuple: {_F_i_x_e_d_-
+              _N_o_w_T_i_m_e, [{_P_i_d, _R_e_f_C_o_u_n_t}]}, where _F_i_x_e_d_N_o_w_T_i_m_e  is
+              the time when the table was fixed by the first pro-
+              cess (which may not be one of the processes  fixing
+              it  now), _P_i_d is a process 'fixing' the table right
+              now and  _R_e_f_C_o_u_n_t  is  the  reference  counter  for
+              'fixes'  done  by  that  process.  There may be any
+              number of processes  in  the  list.  In  _a_l_l  other
+              cases, the atom _f_a_l_s_e is returned.
+
+            * _h_a_s_h. Determines which BIF is used to calculate the
+              hashes  in  the  dets table. Possible return values
+              are _h_a_s_h, which means  the  _e_r_l_a_n_g:_h_a_s_h/_2  BIF,  or
+              _p_h_a_s_h,  which  means  the _e_r_l_a_n_g:_p_h_a_s_h/_2 BIF. Files
+              created with  this  version  of  dets  always  uses
+              _e_r_l_a_n_g:_p_h_a_s_h/_2.  Older  dets files may need conver-
+              sion, which is done by using  the  {_r_e_p_a_i_r,  _f_o_r_c_e}
+              argument when opening.
+
+            * _h_a_s_h. Determines which BIF is used to calculate the
+              hashes  in  the  dets table. Possible return values
+              are _h_a_s_h, which means  the  _e_r_l_a_n_g:_h_a_s_h/_2  BIF,  or
+              _p_h_a_s_h,  which  means  the _e_r_l_a_n_g:_p_h_a_s_h/_2 BIF. Files
+              created with  this  version  of  dets  always  uses
+              _e_r_l_a_n_g:_p_h_a_s_h/_2.  Older  dets files may need conver-
+              sion, which is done by using  the  {_r_e_p_a_i_r,  _f_o_r_c_e}
+              argument when opening.
+
+See Also
+     ets(3), mnesia(3)
+
+AUTHOR
+      Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  8
+
+
+

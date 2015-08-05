@@ -1,0 +1,272 @@
+.TH init 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+init \- Called at System Start
+.SH DESCRIPTION
+.LP
+\fIinit\fR is pre-loaded into the system before the system starts and it coordinates the start-up of the system\&. The first function evaluated at start-up is \fIboot(Bootargs)\fR, where \fIBootargs\fR is a list of the arguments supplied to the Erlang runtime system from the local operating system\&. The Erlang code for the module \fIinit\fR is always pre-loaded\&. 
+.LP
+\fIinit\fR reads a boot script which contains instructions on how to initiate the system\&. The default boot script (\fIstart\&.boot\fR) is in the directory \fI<ERL_INSTALL_DIR>/bin\fR\&. 
+.LP
+\fIinit\fR contains functions to fetch command line flags, or arguments, supplied to the Erlang runtime system\&. 
+.LP
+\fIinit\fR also contains functions to restart, reboot, and stop the system\&. 
+
+.SH EXPORTS
+.LP
+.B
+boot(BootArgs) -> void()
+.br
+.RS
+.TP
+Types
+BootArgs = [term()]
+.br
+.RE
+.RS
+.LP
+Erlang is started with the command \fIerl <script-flags> <user-flags>\fR\&.
+.LP
+\fIerl\fR is the name of the Erlang start-up script\&. \fI<script-flags>\fR, described in erl(1), are read by the script\&. \fI<user-flags>\fR are put into a list and passed as \fIArgs\fR to \fIboot/1\fR\&. 
+.LP
+The \fIboot/1\fR function interprets the \fIboot\fR, \fImode\fR, and \fIs\fR flags\&. These are described in \fICOMMAND LINE FLAGS\fR\&. 
+.LP
+If the \fIboot\fR function finds other arguments starting with the character \fI-\fR, that argument is interpreted as a flag with zero or more values\&. It ends the previous argument\&. For example: 
+.LP
+\fIerl -run foo bar -charles peterson\fR 
+.LP
+This starts the Erlang runtime system, evaluates \fIfoo:bar()\fR, and sets the flag \fI-charles\fR, which has the associated value \fIpeterson\fR\&. 
+.LP
+Other arguments which are passed to the \fIboot\fR function, and do not fit into the above description, are passed to the \fIinit\fR loop as plain arguments\&. 
+.LP
+The special flag \fI--\fR can be used to separate plain arguments to \fIboot\fR\&. 
+.RE
+.LP
+.B
+get_arguments() -> Flags
+.br
+.RS
+.TP
+Types
+Flags = [{Flag, [Value]}]
+.br
+Flag = atom()
+.br
+Value = string()
+.br
+.RE
+.RS
+.LP
+Returns all flags given to the system\&. 
+.RE
+.LP
+.B
+get_argument(Flag) -> {ok, Values} | error
+.br
+.RS
+.TP
+Types
+Flag = atom()
+.br
+Values = [FValue]
+.br
+FValue = [Value]
+.br
+Value = string()
+.br
+.RE
+.RS
+.LP
+Returns all values associated with \fIFlag\fR\&. If \fIFlag\fR is provided several times, each \fIFValue\fR is returned in preserved order\&. 
+.RE
+.LP
+.B
+get_args() -> [Arg]
+.br
+.RS
+.TP
+Types
+Arg = atom()
+.br
+.RE
+.RS
+.LP
+Returns the additional plain arguments as a list of atoms (possibly empty)\&. It is recommended that \fIget_plain_arguments/1\fR be used instead, because of the limited length of atoms\&. 
+.RE
+.LP
+.B
+get_plain_arguments() -> [Arg]
+.br
+.RS
+.TP
+Types
+Arg = string()
+.br
+.RE
+.RS
+.LP
+Returns the additional plain arguments as a list of strings (possibly empty)\&. 
+.RE
+.LP
+.B
+restart() -> void()
+.br
+.RS
+.LP
+The system is restarted \fIinside\fR the running Erlang node, which means that the emulator is not restarted\&. All applications are taken down smoothly, all code is unloaded, and all ports are closed before the system is booted again in the same way as initially started\&. The same \fIBootArgs\fR are used again\&. 
+.LP
+To limit the shutdown time, the time \fIinit\fR is allowed to spend taking down applications, the \fI-shutdown_time\fR command line flag should be used\&. 
+.RE
+.LP
+.B
+reboot() -> void()
+.br
+.RS
+.LP
+All applications are taken down smoothly, all code is unloaded, and all ports are closed before the Erlang node terminates\&. If the \fI-heart\fR system flag was given, the \fIheart\fR program will try to reboot the system\&. Refer to the \fIheart\fR module for more information\&. 
+.LP
+In order to limit the shutdown time, the time \fIinit\fR is allowed to spend taking down applications, the \fI-shutdown_time\fR command line flag should be used\&. 
+.RE
+.LP
+.B
+stop() -> void()
+.br
+.RS
+.LP
+All applications are taken down smoothly, all code is unloaded, and all ports are closed before the system terminates\&. If the \fI-heart\fR system flag was given, the \fIheart\fR program is terminated before the Erlang node terminates\&. Refer to the \fIheart\fR module for more information\&. 
+.LP
+In order to limit the shutdown time, the time init is allowed to spend taking down applications, the \fI-shutdown_time\fR command line flag should be used\&. 
+.RE
+.LP
+.B
+get_status() -> {InternalStatus, ProvidedStatus}
+.br
+.RS
+.TP
+Types
+InternalStatus = starting | started | stopping
+.br
+ProvidedStatus = term()
+.br
+.RE
+.RS
+.LP
+The current status of the \fIinit\fR process can be inspected\&. During system start (initialization), \fIInternalStatus\fR is \fIstarting\fR, and \fIProvidedStatus\fR indicates how long the boot script has been interpreted\&. Each \fI{progress, Info}\fR term interpreted in the boot script affects the \fIProvidedStatus\fR status, i\&.e\&., \fIProvidedStatus\fR gets the value of \fIInfo\fR\&. 
+.RE
+.LP
+.B
+script_id() -> Id
+.br
+.RS
+.TP
+Types
+Id = term()
+.br
+.RE
+.RS
+.LP
+Get the identity of the boot script used to boot the system\&. \fIId\fR can be any Erlang term\&. In the delivered boot scripts, \fIId\fR is \fI{Name, Vsn}\fR\&. \fIName\fR and \fIVsn\fR are strings\&. 
+.RE
+.SH Command Line Flags
+.LP
+The \fIinit\fR module interprets the following flags: 
+.RS 2
+.TP 4
+.B
+\fI-boot File\fR:
+Specifies the name of the boot script, \fIFile\fR\&.boot, used to start the system\&. Unless \fIFile\fR contains an absolute path, the system searches for \fIFile\fR\&.boot in the current and \fI<ERL_INSTALL_DIR>/bin\fR directories 
+.RS 4
+.LP
+If this flag is omitted, the \fI<ERL_INSTALL_DIR>/bin/start\&.boot\fR boot script is used\&. 
+.RE
+.TP 4
+.B
+\fI-boot_var Var Directory [Var Directory]\fR:
+If the boot script used contains another path variable than $ROOT, that variable must have a value assigned in order to start the system\&. A boot variable is used if user applications are installed in a different location than underneath the \fI<ERL_INSTALL_DIR>/lib\fR directory\&. \fI$Var\fR is expanded to \fIDirectory\fR in the boot script\&.
+.TP 4
+.B
+\fI-mode Mode\fR:
+The mode flag indicates if the system will load code automatically at runtime, or if all code should be loaded during system initialization\&. \fIMode\fR can be either \fIinteractive\fR (allow automatic code loading) or \fIembedded\fR (load all code during start-up)\&. 
+.TP 4
+.B
+\fI-shutdown_time Time\fR:
+Specifies how long time (in ms) the \fIinit\fR process is allowed to spend shutting down the system\&. If \fITime\fR milliseconds has elapsed, all processes still existing are \fIkilled\fR\&. 
+.RS 4
+.LP
+If \fI-shutdown_time\fR is not specified, the default time is \fIinfinity\fR\&. 
+.RE
+.TP 4
+.B
+\fI-run Module [Function [Args]]\fR:
+Evaluate the function during system initialization\&. \fIFunction\fR defaults to \fIstart\fR and \fIArgs\fR to \fI[]\fR\&. If the function call ends abnormally, the Erlang runtime system stops with an error message\&. 
+.RS 4
+.LP
+The arguments after \fI-run\fR are used as arguments to Erlang functions\&. All arguments are passed as strings\&. For example: 
+.LP
+\fIerl -run foo -run foo bar -run foo bar baz 1 2\fR 
+.LP
+This starts the Erlang runtime system and then evaluates the following Erlang functions:
+.LP
+
+
+.nf
+            foo:start()
+            foo:bar()
+            foo:bar([baz, "1", "2"])\&.
+.fi
+.LP
+
+.LP
+The functions are executed sequentially in the initialization process, which then terminates normally and passes control to the user\&. This means that a \fI-run\fR call which does not terminate will block further processing; to avoid this, use some variant of \fIspawn\fR in such cases\&. 
+.RE
+.TP 4
+.B
+\fI-s Module [Function [Args]]\fR:
+Evaluate the function during system initialization\&. \fIFunction\fR defaults to \fIstart\fR and \fIArgs\fR to \fI[]\fR\&. If the function call ends abnormally, the Erlang runtime system stops with an error message\&. 
+.RS 4
+.LP
+The arguments after \fI-s\fR are used as arguments to Erlang functions\&. All arguments are passed as atoms\&. For example: 
+.LP
+\fIerl -s foo -s foo bar -s foo bar baz 1 2\fR 
+.LP
+This starts the Erlang runtime system and then evaluates the following Erlang functions:
+.LP
+
+
+.nf
+            foo:start()
+            foo:bar()
+            foo:bar([baz, \&'1\&', \&'2\&'])\&.
+.fi
+.LP
+
+.LP
+The functions are executed sequentially in the initialization process, which then terminates normally and passes control to the user\&. This means that a \fI-s\fR call which does not terminate will block further processing; to avoid this, use some variant of \fIspawn\fR in such cases\&. 
+.LP
+Due to the 255 character limit on atoms, it is recommended that \fI-run\fR be used instead\&. 
+.RE
+.TP 4
+.B
+\fI-init_debug\fR:
+The \fIinit\fR process writes some debug information while interpreting the boot script\&. 
+.RE
+.SH Example
+
+.nf
+erl -- a b -children thomas claire -ages 7 3 -- x y
+1> init:get_plain_arguments()\&.
+["a", "b", "x", "y"]
+2> init:get_argument(children)\&.   
+{ok, [["thomas", "claire"]]}
+3> init:get_argument(ages)\&.    
+{ok, [["7", "3"]]}
+4> init:get_argument(silly)\&.
+error
+.fi
+.SH See also
+.LP
+erl_prim_loader(3), heart(3) 
+.SH AUTHORS
+.nf
+Claes Wikstrom - support@erlang.ericsson.se
+Magnus Froberg - support@erlang.ericsson.se
+.fi

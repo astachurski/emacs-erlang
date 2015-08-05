@@ -1,0 +1,463 @@
+.TH i 3 "debugger  1.5.2" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+i \- Interpreter (debugger) Interface\&.
+.SH DESCRIPTION
+.LP
+The module \fIi\fR provides short forms for some of the functions in the \fIint\fR module\&. 
+.LP
+This module also provides facilities for displaying status information about interpreted processes and break points\&. 
+.LP
+It is possible to attach interpreted processes by giving the corresponding process identity only\&. By default, an attachment window pops up\&. Processes at other Erlang nodes can be attached manually or automatically \&. 
+.LP
+By preference, these functions can be included in the module \fIshell_default\fR\&. By default, they are\&. 
+
+.SH EXPORTS
+.LP
+.B
+im() -> pid()
+.br
+.RS
+.LP
+Starts a new graphical monitor\&. This is the main window of the interpreter\&. All of the interpreter functionality is accessed from the monitor window\&. The monitor window displays the status of all processes that are running interpreted modules\&. 
+.RE
+.LP
+.B
+ii(AbsModule) -> {module, Module} | error
+.br
+.RS
+.TP
+Types
+AbsModule = atom() | string() | [atom() | string()]
+.br
+Module = atom()
+.br
+.RE
+.RS
+.LP
+Marks \fIModule\fR as being interpreted\&. The \fIModule\fR parameter can either be a single module name, or a list of module names\&. \fIModule\fR is compiled into an abstract form which is loaded into the interpreter\&. The actual paths are searched for the corresponding source file(s) (\fIModule\fR\&.erl)\&. \fIModule\fR can be given with an absolute path\&.
+.SS Note:
+.LP
+If \fIModule\fR is a list of modules, the result of the last module is returned\&.
+
+.SS Note:
+.LP
+If an interpreted module is compiled using the c:c function, this module is reloaded into the interpreter\&. 
+
+.RE
+.LP
+.B
+iq(Module) -> ok
+.br
+.RS
+.TP
+Types
+Module = atom() | string() | [atom() | string()]
+.br
+.RE
+.RS
+.LP
+Does not interpret \fIModule\fR\&. The \fIModule\fR parameter can either be a single module name, or a list of module names\&. \fIModule\fR is removed from the set of modules currently being interpreted\&. 
+.RE
+.LP
+.B
+ini(Module) -> {module,Module} | error | ok
+.br
+.B
+inq(Module) -> ok
+.br
+.RS
+.LP
+Behaves as the corresponding \fIii/1\fR and \fIiq/1\fR functions described above, but on all nodes in the network\&. It returns \fIok\fR if we are \fIalive\fR, otherwise as above\&. 
+.RE
+.LP
+.B
+il() -> ok
+.br
+.RS
+.LP
+Makes a printout of all interpreted modules\&. Modules are printed together with the full path name of the corresponding source code file\&. 
+.RE
+.LP
+.B
+ip() -> ok
+.br
+.RS
+.LP
+Makes a printout of the current status of all interpreted processes\&. Processes on all known nodes are printed\&. 
+.RE
+.LP
+.B
+ic() -> ok
+.br
+.RS
+.LP
+Deletes (clears) information about all terminated processes from the interpreter\&. 
+.RE
+.LP
+.B
+iaa(Flag) -> true
+.br
+.RS
+.TP
+Types
+Flag = FlagItem | [FlagItem]
+.br
+FlagItem = init | break | exit | false
+.br
+.RE
+.RS
+.LP
+Interpreted processes can be attached automatically, without the need to attach to a process using the monitor window, \fIi:im()\fR or \fIint:m()\fR\&. An attachment window - not described here - pops up for the attached process\&. \fIFlag\fR specifies at which point interpreted processes are automatically attached\&. 
+.LP
+\fIFlag\fR is one of: 
+.RS 2
+.TP 2
+*
+\fIinit\fR\&. Attach to a process the very first time it calls an interpreted function\&.
+.TP 2
+*
+\fIbreak\fR\&. Attach to a process whenever it reaches a break point\&.
+.TP 2
+*
+\fIexit\fR\&. Attach to a process when it terminates\&.
+.TP 2
+*
+\fIfalse\fR\&. Deactivate the automatic attach facility\&.
+.RE
+.LP
+If several conditions are to be active, a list of flags must be given\&. 
+.RE
+.LP
+.B
+iaa(Flag,Function) -> true
+.br
+.RS
+.TP
+Types
+Flag = FlagItem | [FlagItem]
+.br
+FlagItem = init | break | exit | false
+.br
+Function = {Mod, Func}
+.br
+Mod = atom()
+.br
+Fun = atom()
+.br
+.RE
+.RS
+.LP
+As above, but instead of using the default attachment window, the specified \fIFunction\fR is used in order to start the interaction with the attached process\&. The \fIFunction\fR parameter must be the tuple \fI{Mod, Func}\fR, and this function should implement the corresponding functionality in the same way as the \fIint_show:a_start/3, 4\fR functions\&. 
+.RE
+.LP
+.B
+ist(Flag) -> true
+.br
+.RS
+.TP
+Types
+Flag = all | true | no_tail | false
+.br
+.RE
+.RS
+.LP
+The interpreter can keep call frames in the stack for future inspections\&. Typically, you can go up and down in the stack in order to inspect the flow of control when the execution has been stopped - at a break point, when the process has terminated, or in a single step execution\&. 
+.LP
+By default, the whole stack is kept (\fIFlag\fR = \fIall\fR or \fItrue\fR)\&. If processes with a very long life time and with a lot of tail recursive calls are interpreted, the \fIno_tail\fR flag should be used\&. No tail recursive calls are kept in the stack if this flag is used\&. 
+.LP
+The \fIfalse\fR flag should be used if the interpreter is not to keep call frames\&. 
+.RE
+.LP
+.B
+ia(Pid) -> ok | no_proc
+.br
+.RS
+.TP
+Types
+Pid = pid()
+.br
+.RE
+.RS
+.LP
+Attaches to the \fIPid\fR process\&. An attachment window pops up\&. 
+.RE
+.LP
+.B
+ia(X,Y,Z) -> ok | no_proc
+.br
+.RS
+.TP
+Types
+X = Y = Z = int()
+.br
+.RE
+.RS
+.LP
+Attaches to the process with process identity c:pid(\fIX\fR,\fIY\fR,\fIZ\fR)\&. An attachment window pops up\&. 
+.RE
+.LP
+.B
+ia(Pid,Function) -> ok | no_proc
+.br
+.RS
+.TP
+Types
+Pid = pid()
+.br
+Function = {Mod, Fun}
+.br
+Mod = atom()
+.br
+Fun = atom()
+.br
+.RE
+.RS
+.LP
+Attaches to the \fIPid\fR process\&. Use \fIFunction\fR for the interaction with the attached process, as for the \fIi:iaa/2\fR function\&. 
+.RE
+.LP
+.B
+ia(X,Y,Z,Function) -> ok | no_proc
+.br
+.RS
+.TP
+Types
+X = Y = Z = int()
+.br
+Function = {Mod, Fun}
+.br
+Mod = atom()
+.br
+Fun = atom()
+.br
+.RE
+.RS
+.LP
+Attaches to the process with process identity c:pid(\fIX\fR,\fIY\fR,\fIZ\fR)\&. Use \fIFunction\fR for the interaction with the attached process, as for the \fIi:iaa/2\fR function\&. 
+.RE
+.LP
+.B
+ib(Module,Line) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+What = badarg | break_exists
+.br
+.RE
+.RS
+.LP
+Creates a new break point at \fILine\fR in \fIModule\fR\&. The execution of an interpreted process will be stopped before the expression at \fILine\fR in \fIModule\fR is executed\&. 
+.RE
+.LP
+.B
+ib(Module,Function,Arity) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Function = atom()
+.br
+Arity = int()
+.br
+What = badarg | function_not_found
+.br
+.RE
+.RS
+.LP
+Creates break points at the first line in every clause of the \fIModule\fR:\fIFunction\fR/\fIArity\fR function\&. 
+.RE
+.LP
+.B
+ir(Module,Line) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+What = badarg | no_break_exists
+.br
+.RE
+.RS
+.LP
+Deletes the break point located at \fILine\fR in \fIModule\fR\&. 
+.RE
+.LP
+.B
+ir() -> ok
+.br
+.RS
+.LP
+Deletes all existing break points\&. 
+.RE
+.LP
+.B
+ir(Module) -> ok
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+.RE
+.RS
+.LP
+Deletes all existing break points in \fIModule\fR\&. 
+.RE
+.LP
+.B
+ir(Module,Function,Arity) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Function = atom()
+.br
+Arity = int()
+.br
+What = badarg | function_not_found
+.br
+.RE
+.RS
+.LP
+Deletes break points at the first line in every clause of the \fIModule\fR:\fIFunction\fR/\fIArity\fR function\&. 
+.RE
+.LP
+.B
+ibd(Module,Line) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+What = badarg | no_break
+.br
+.RE
+.RS
+.LP
+Makes the break point at \fILine\fR in \fIModule\fR inactive\&. The break point still exists, but no processes will be stopped at the break point\&. 
+.RE
+.LP
+.B
+ibe(Module,Line) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+What = badarg | no_break
+.br
+.RE
+.RS
+.LP
+Makes the break point at \fILine\fR in \fIModule\fR active\&. Processes will again be stopped at the break point\&. 
+.RE
+.LP
+.B
+iba(Module,Line,Action) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+Action = enable | disable | delete
+.br
+What = badarg | no_break
+.br
+.RE
+.RS
+.LP
+Sets the status of the break point at \fILine\fR in \fIModule\fR after it is triggered the next time\&. \fIAction\fR is: \fIenable\fR, \fIdisable\fR, or \fIdelete\fR\&. 
+.RE
+.LP
+.B
+ibc(Module,Line,Function) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+Function = {M, F}
+.br
+Mod = atom()
+.br
+Func = atom()
+.br
+What = badarg | no_break
+.br
+.RE
+.RS
+.LP
+Makes the break point at \fILine\fR in \fIModule\fR conditional\&. \fIFunction\fR is called whenever the break point is reached\&. \fIFunction\fR is a tuple \fI{Mod, Func}\fR\&. \fIFunction\fR must have \fIarity 1\fR and return either \fItrue\fR or \fIfalse\fR\&. This way, the break point either triggers, or not\&. The argument to \fIFunction\fR is the current variable bindings of the process at the place of the break point\&. The bindings can be inspected using \fIint:get_binding/2\fR\&. 
+.RE
+.LP
+.B
+ipb() -> ok
+.br
+.RS
+.LP
+Makes a printout of all existing break points\&. 
+.RE
+.LP
+.B
+ipb(Module) -> ok
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+.RE
+.RS
+.LP
+Makes a printout of all existing break points located in \fIModule\fR\&. 
+.RE
+.LP
+.B
+iv() -> atom()
+.br
+.RS
+.LP
+Returns the current version number of the interpreter\&. 
+.RE
+.LP
+.B
+help() -> ok
+.br
+.RS
+.LP
+Prints help text\&. 
+.RE
+.SH Usage
+.LP
+Refer to the Debugger User\&'s Guide for information about the graphical interface\&. 
+.SH See Also
+.LP
+int(3), code(3) 
+.SH AUTHOR
+.nf
+Magnus Froberg - support@erlang.ericsson.se
+.fi

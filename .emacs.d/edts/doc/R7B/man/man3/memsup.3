@@ -1,0 +1,145 @@
+.TH memsup 3 "os_mon  1.3.9" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+memsup \- A memory Supervisor Process
+.SH DESCRIPTION
+.LP
+\fImemsup\fR is part of the \fIos_mon\fR application and all configuration parameters are defined in the reference documentation for the \fIos_mon\fR application\&. 
+.LP
+\fImemsup\fR is a process which supervises the memory usage for the system and for individual processes, as follows: 
+.RS 2
+.TP 2
+*
+If more than \fIsystem_memory_high_watermark\fR of available system memory is allocated, as reported by the underlying operating system, the alarm \fIsystem_memory_high_watermark\fR is set\&. 
+.TP 2
+*
+If any Erlang process in the system has allocated more than \fIprocess_memory_high_watermark\fR of total system memory, the alarm \fIprocess_memory_high_watermark\fR is set\&. 
+.RE
+.LP
+The total system memory reported under UNIX is the number of physical pages of memory times the page size, and the available memory is the number of available physical pages times the page size\&. This is a reasonable measure as swapping should be avoided anyway, but the task of defining total memory and available memory is difficult because of virtual memory and swapping\&. 
+.LP
+The \fImemsup\fR process defines two alarms which are set by the \fIalarm_handler:set_alarm(Alarm)\fR function\&. \fIAlarm\fR is defined as: 
+.RS 2
+.TP 4
+.B
+\fI{system_memory_high_watermark, []}\fR\&.:
+This alarm is set when the used system memory exceeds \fIsystem_memory_high_watermark\fR of the total available memory\&. 
+.TP 4
+.B
+\fI{process_memory_high_watermark, Pid}\fR\&.:
+This alarm is set when an Erlang process exceeds \fIprocess_memory_high_watermark\fR of the total available memory\&. 
+.RE
+.LP
+These alarms are cleared automatically when the alarm cause is no longer valid\&. 
+.LP
+There is also a interface to system dependent memory data, \fIget_system_memory_data/0\fR\&. The output is highly dependent on the underlying operating system and the interface is targeted primarily for systems without virtual memory (e\&.g\&. VxWorks)\&. The output on other systems is however still valid, although sparse\&. 
+.LP
+A call to \fIget_system_memory_data/0\fR is more costly than a call to \fIget_memory_data/0\fR as data is collected synchronously when this function is called\&. 
+
+.SH EXPORTS
+.LP
+.B
+get_check_interval() -> Time
+.br
+.RS
+.TP
+Types
+Time = integer()
+.br
+.RE
+.RS
+.LP
+A time interval, in milliseconds, which defines how often memory is checked\&. The \fIget_system_memory_data()\fR function is in no way affected by this interval\&. 
+.RE
+.LP
+.B
+get_memory_data() -> MemData
+.br
+.RS
+.TP
+Types
+MemData = {TotalMemorySize, AllocatedBytes, {LargestPid, PidAllocatedBytes}}
+.br
+TotalMemorySize = integer()
+.br
+AllocatedBytes = integer()
+.br
+LargestPid = pid()
+.br
+PidAllocatedBytes = integer()
+.br
+.RE
+.RS
+.LP
+Returns data about the memory in the system\&. \fILargestPid\fR is the Pid of the largest Erlang process in the system\&. \fIPidAllocatedBytes\fR is the amount of memory the \fILargestPid\fR has allocated\&. 
+.RE
+.LP
+.B
+get_system_memory_data() -> MemDataList
+.br
+.RS
+.TP
+Types
+MemDataList = [TaggedValue \&.\&.\&.]
+.br
+TaggedValue = {Tag, Value}
+.br
+Value = integer()
+.br
+Tag = atom()
+.br
+.RE
+.RS
+.LP
+Gets system dependent memory data\&. The result is returned as a list containing tagged tuples, where the tag can be one of the following:
+.RS 2
+.TP 4
+.B
+\fItotal_memory\fR:
+The total amount of memory (in bytes) available to the Erlang emulator, allocated and free\&. May or may not be equal to the amount of memory configured in the system\&.
+.TP 4
+.B
+\fIfree_memory\fR:
+The amount of free memory available to the Erlang emulator for allocation\&.
+.TP 4
+.B
+\fIsystem_total_memory\fR:
+The amount of memory available to the whole operating system\&. This may well be equal to \fItotal_memory\fR but not necessarily\&.
+.TP 4
+.B
+\fIlargest_free\fR:
+The size of the largest contiguous free memory block available to the Erlang emulator\&.
+.TP 4
+.B
+\fInumber_of_free\fR:
+The number of free blocks available to the Erlang runtime system\&. This gives a fair indication of how fragmented the memory is\&.
+.RE
+.LP
+As with \fIget_memory_data()\fR, the values on Unix-like systems indicate the amount of \fIphysical\fR memory that is configured and free\&. The \fIlargest_free\fR and \fInumber_of_free\fR tags are currently only returned on a VxWorks system\&.
+.LP
+All memory sizes are presented as number of \fIbytes\fR\&.
+.RE
+.LP
+.B
+get_procmem_high_watermark() -> integer()
+.br
+.RS
+.LP
+Threshold as a percentage of the total available system memory\&. It specifies how much memory can be allocated by one Erlang process before an alarm is sent\&. 
+.RE
+.LP
+.B
+get_sysmem_high_watermark() -> integer()
+.br
+.RS
+.LP
+Threshold as a percentage of the total available system memory\&. It specifies how much memory can be allocated by the system before an alarm is sent\&. 
+.RE
+.SH See Also
+.LP
+alarm_handler(3), os_mon(3)
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Peter Hogfeldt - support@erlang.ericsson.se
+Patrik Nyblom - support@erlang.ericsson.se
+.fi

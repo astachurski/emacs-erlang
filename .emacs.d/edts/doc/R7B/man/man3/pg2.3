@@ -1,0 +1,146 @@
+.TH pg2 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+pg2 \- Distributed Named Process Groups
+.SH DESCRIPTION
+.LP
+This module implements process groups\&. The groups in this module differ from the groups in the module \fIpg\fR in several ways\&. In \fIpg\fR, each message is sent to all members in the group\&. In this module, each message may be sent to one, some, or all members\&. 
+.LP
+A group of processes can be accessed by a common name\&. For example, if there is a group named \fIfoobar\fR, there can be a set of processes (which can be located on different nodes) which are all members of the group \fIfoobar\fR\&. There is no special functions for sending a message to the group\&. Instead, client functions should be written with the functions \fIget_members/1\fR and \fIget_local_members/1\fR to find out which process are members of the group\&. Then the message can be sent to one or more members of the group\&. 
+.LP
+If a member terminates, it is automatically removed from the group\&. 
+.SS Warning:
+.LP
+This module is used by the \fIdisk_log\fR module for managing distributed disk logs\&. The disk log names are used as group names, which means that some action may need to be taken to avoid name clashes\&.
+
+
+.SH EXPORTS
+.LP
+.B
+create(Name) -> void()
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+Creates a new, empty process group\&. The group is globally visible on all nodes\&. If the group exists, nothing happens\&. 
+.RE
+.LP
+.B
+delete(Name) -> void()
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+Deletes a process group\&. 
+.RE
+.LP
+.B
+get_closest_pid(Name) -> Pid | {error, Reason}
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+This is a useful dispatch function which can be used from client functions\&. It returns a process on the local node, if such a process exist\&. Otherwise, it chooses one randomly\&. 
+.RE
+.LP
+.B
+get_members(Name) -> [Pid] | {error, Reason}
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+Returns all processes in the group \fIName\fR\&. This function should be used from within a client function that accesses the group\&. It is then optimized for speed\&. 
+.RE
+.LP
+.B
+get_local_members(Name) -> [Pid] | {error, Reason}
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+Returns all processes running on the local node in the group \fIName\fR\&. This function should to be used from within a client function that accesses the group\&. It is then optimized for speed\&. 
+.RE
+.LP
+.B
+join(Name, Pid) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+Joins the process \fIPid\fR to the group \fIName\fR\&. 
+.RE
+.LP
+.B
+leave(Name, Pid) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+Makes the process \fIPid\fR leave the group \fIName\fR\&. 
+.RE
+.LP
+.B
+which_groups() -> [Name]
+.br
+.RS
+.TP
+Types
+Name = term()
+.br
+.RE
+.RS
+.LP
+Returns a list of all known groups\&. 
+.RE
+.LP
+.B
+start()
+.br
+.B
+start_link() -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.LP
+Starts the pg2 server\&. Normally, the server does not need to be started explicitly, as it is started dynamically if it is needed\&. This is useful during development, but in a target system the server should be started explicitly\&. Use configuration parameters for \fIkernel\fR for this\&. 
+.RE
+.SH See Also
+.LP
+kernel(3), pg(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

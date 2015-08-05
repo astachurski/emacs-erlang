@@ -1,0 +1,119 @@
+.TH pool 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+pool \- Load Distribution Facility 
+.SH DESCRIPTION
+.LP
+\fIpool\fR can be used to run a set of Erlang nodes as a pool of computational processors\&. It is organized as a master and a set of slave nodes and includes the following features:
+.RS 2
+.TP 2
+*
+The slave nodes send regular reports to the master about their current load\&.
+.TP 2
+*
+Queries can be sent to the master to determine which node will have the least load\&.
+.RE
+.LP
+The BIF \fIstatistics(run_queue)\fR is used for estimating future loads\&. It returns the length of the queue of ready to run processes in the Erlang runtime system\&.
+.LP
+The slave nodes are started with the \fIslave\fR module\&. This effects, tty IO, file IO, and code loading\&.
+.LP
+If the master node fails, the entire pool will exit\&. 
+
+.SH EXPORTS
+.LP
+.B
+start(Name) 
+.br
+.RS
+.LP
+Starts a new pool\&. The file \fI\&.hosts\&.erlang\fR is read to find host names where the pool nodes can be started\&. The current working directory is searched first, then the home directory, and finally the root directory of the Erlang runtime system\&. The start-up procedure fails if the file is not found\&. 
+.LP
+\fIName\fR is sent to all pool nodes\&. This is used as the first part of the node name in the \fIalive/3\fR statements for the nodes\&.
+.LP
+The function \fInet_adm:host_file()\fR reads the file \fI\&.hosts\&.erlang\fR for host names\&. The slave nodes are started with \fIslave:start\fR\&. See slave(3)\&.
+.LP
+\fIstart/1\fR is synchronous and all the nodes, as well as all the system servers, are running when it returns a value\&. Access rights must also be set so that all nodes in the pool have the authority to access each other\&.
+.RE
+.LP
+.B
+start(Name, Args) 
+.br
+.RS
+.LP
+This function is the same as \fIstart/1\fR, except that the environment \fIArgs\fR is passed to the pool nodes\&. See slave(3)\&. 
+.LP
+
+.RE
+.LP
+.B
+attach(Node) 
+.br
+.RS
+.LP
+This function ensures that a pool master is running and includes \fINode\fR in the pool master\&'s pool of nodes\&. 
+.LP
+
+.RE
+.LP
+.B
+stop() 
+.br
+.RS
+.LP
+Stops the pool and kills all the slave nodes\&. 
+.RE
+.LP
+.B
+get_nodes() 
+.br
+.RS
+.LP
+Returns a list of the current member nodes of the pool\&. 
+.RE
+.LP
+.B
+pspawn(Mod, Fun, Args) 
+.br
+.RS
+.LP
+Spawns a process on the pool node which is expected to have the lowest future load\&. 
+.LP
+
+.RE
+.LP
+.B
+pspawn_link(Mod, Fun, Args) 
+.br
+.RS
+.LP
+Spawn links a process on the pool node which is expected to have the lowest future load\&. 
+.LP
+
+.RE
+.LP
+.B
+get_node() 
+.br
+.RS
+.LP
+Returns the node ID of the node with the expected lowest future load\&. 
+.RE
+.LP
+.B
+new_node(Host, Name) 
+.br
+.RS
+.LP
+Starts a new node and attaches it to an already existing pool If there is no existing pool, it starts a pool with two nodes, the current node and \fINode\fR\&. This function can also be used as a convenient way of starting new nodes, even if the load distribution facilities of \fIpool\fR are of no interest\&. 
+.LP
+
+.RE
+.SH Files
+.LP
+$HOME/\&.hosts\&.erlang is used to pick hosts where nodes can be started\&. 
+.LP
+$HOME/\&.erlang\&.slave\&.out\&.HOST is used for all additional IO that may come from the slave nodes on standard IO\&. If the start-up procedure does not work, this file may indicate the reason\&. 
+.SH AUTHOR
+.nf
+ Claes Wikstrom - support@erlang.ericsson.se
+.fi

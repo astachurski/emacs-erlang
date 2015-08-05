@@ -1,0 +1,132 @@
+
+
+
+erl_scan(3)         ERLANG MODULE DEFINITION          erl_scan(3)
+
+
+
+MODULE
+     erl_scan - The Erlang Token Scanner
+
+DESCRIPTION
+     This module contains  functions  for  tokenizing  characters
+     into Erlang tokens.
+
+
+EXPORTS
+     string(CharList,StartLine]) -> {ok, Tokens, EndLine} | Error
+     string(CharList) -> {ok, Tokens, EndLine} | Error
+
+          Types
+               CharList = string()
+               StartLine = EndLine = Line = integer()
+               Tokens = [{atom(), Line}|{atom(), Line, term()}]
+               Error = {error, ErrorInfo, EndLine}
+
+          Takes the list of characters _C_h_a_r_L_i_s_t and tries to scan
+          (tokenize)  them.  Returns {_o_k, _T_o_k_e_n_s, _E_n_d_L_i_n_e}, where
+          _T_o_k_e_n_s are the Erlang tokens from _C_h_a_r_L_i_s_t. _E_n_d_L_i_n_e  is
+          the last line where a token was found.
+
+          _S_t_a_r_t_L_i_n_e indicates  the  initial  line  when  scanning
+          starts. _s_t_r_i_n_g/_1 is equivalent to _s_t_r_i_n_g(_C_h_a_r_L_i_s_t, _1).
+
+          {_e_r_r_o_r, _E_r_r_o_r_I_n_f_o, _E_n_d_L_i_n_e} is  returned  if  an  error
+          occurs._E_n_d_L_i_n_e indicates where the error occurred.
+
+     tokens(Continuation, CharList, StartLine) ->Return
+
+          Types
+               Return = {done, Result,  LeftOverChars}  |  {more,
+               Continuation}
+               Continuation = [] | string()
+               CharList = string()
+               StartLine = EndLine = integer()
+               Result = {ok, Tokens, EndLine} | {eof, EndLine}
+               Tokens = [{atom(), Line}|{atom(), Line, term()}]
+
+          This is the re-entrant scanner which  scans  characters
+          until  a  _d_o_t  ('.'  whitespace)  has  been reached. It
+          returns:
+
+            {_d_o_n_e, _R_e_s_u_l_t, _L_e_f_t_O_v_e_r_C_h_a_r_s}:
+                This return indicates that  there  is  sufficient
+                input data to get an input. _R_e_s_u_l_t is:
+
+                  {_o_k, _T_o_k_e_n_s, _E_n_d_L_i_n_e}:
+                      The scanning was successful. _T_o_k_e_n_s is  the
+                      list of tokens including _d_o_t.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+erl_scan(3)         ERLANG MODULE DEFINITION          erl_scan(3)
+
+
+
+                  {_e_o_f, _E_n_d_L_i_n_e}:
+                      End of file was encountered before any more
+                      tokens.
+
+                  {_e_r_r_o_r, _E_r_r_o_r_I_n_f_o, _E_n_d_L_i_n_e}:
+                      An error occurred.
+
+            {_m_o_r_e, _C_o_n_t_i_n_u_a_t_i_o_n}:
+                More data is required for building a  term.  _C_o_n_-
+                _t_i_n_u_a_t_i_o_n  must  be  passed  in  a  new  call  to
+                _t_o_k_e_n_s/_3 when more data is available.
+
+     reserved_word(Atom) -> bool()
+
+          Returns _t_r_u_e if _A_t_o_m is an Erlang reserved word, other-
+          wise _f_a_l_s_e.
+
+     format_error(ErrorDescriptor) -> string()
+
+          Types
+               ErrorDescriptor = errordesc()
+
+          Takes an _E_r_r_o_r_D_e_s_c_r_i_p_t_o_r and  returns  a  string  which
+          describes  the  error or warning. This function is usu-
+          ally called implicitly  when  processing  an  _E_r_r_o_r_I_n_f_o
+          structure (see below).
+
+Error Information
+     The _E_r_r_o_r_I_n_f_o mentioned  above  is  the  standard  _E_r_r_o_r_I_n_f_o
+     structure  which is returned from all IO modules. It has the
+     following format:
+
+         {ErrorLine, Module, ErrorDescriptor}
+
+     A string which describes the error is obtained with the fol-
+     lowing call:
+
+     apply(Module, format_error, ErrorDescriptor)
+
+Notes
+     The continuation of the first call to the  re-entrant  input
+     functions must be []. Refer to Armstrong, Virding and Willi-
+     ams, 'Concurrent Programming in Erlang', Chapter 13,  for  a
+     complete  description  of  how  the  re-entrant input scheme
+     works.
+
+See Also
+     io erl_parse
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+

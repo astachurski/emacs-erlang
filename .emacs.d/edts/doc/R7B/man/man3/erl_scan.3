@@ -1,0 +1,134 @@
+.TH erl_scan 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+erl_scan \- The Erlang Token Scanner
+.SH DESCRIPTION
+.LP
+This module contains functions for tokenizing characters into Erlang tokens\&. 
+
+.SH EXPORTS
+.LP
+.B
+string(CharList,StartLine]) -> {ok, Tokens, EndLine} | Error
+.br
+.B
+string(CharList) -> {ok, Tokens, EndLine} | Error
+.br
+.RS
+.TP
+Types
+CharList = string()
+.br
+StartLine = EndLine = Line = integer()
+.br
+Tokens = [{atom(), Line}|{atom(), Line, term()}]
+.br
+Error = {error, ErrorInfo, EndLine}
+.br
+.RE
+.RS
+.LP
+Takes the list of characters \fICharList\fR and tries to scan (tokenize) them\&. Returns \fI{ok, Tokens, EndLine}\fR, where \fITokens\fR are the Erlang tokens from \fICharList\fR\&. \fIEndLine\fR is the last line where a token was found\&. 
+.LP
+\fIStartLine\fR indicates the initial line when scanning starts\&. \fIstring/1\fR is equivalent to \fIstring(CharList, 1)\fR\&. 
+.LP
+\fI{error, ErrorInfo, EndLine}\fR is returned if an error occurs\&.\fIEndLine\fR indicates where the error occurred\&. 
+.RE
+.LP
+.B
+tokens(Continuation, CharList, StartLine) ->Return
+.br
+.RS
+.TP
+Types
+Return = {done, Result, LeftOverChars} | {more, Continuation}
+.br
+Continuation = [] | string()
+.br
+CharList = string()
+.br
+StartLine = EndLine = integer()
+.br
+Result = {ok, Tokens, EndLine} | {eof, EndLine}
+.br
+Tokens = [{atom(), Line}|{atom(), Line, term()}]
+.br
+.RE
+.RS
+.LP
+This is the re-entrant scanner which scans characters until a \fIdot\fR (\&'\&.\&' whitespace) has been reached\&. It returns: 
+.RS 2
+.TP 4
+.B
+\fI{done, Result, LeftOverChars}\fR:
+This return indicates that there is sufficient input data to get an input\&. \fIResult\fR is: 
+.RS 4
+.LP
+
+.LP
+
+.RS 2
+.TP 4
+.B
+\fI{ok, Tokens, EndLine}\fR:
+The scanning was successful\&. \fITokens\fR is the list of tokens including \fIdot\fR\&. 
+.TP 4
+.B
+\fI{eof, EndLine}\fR:
+End of file was encountered before any more tokens\&. 
+.TP 4
+.B
+\fI{error, ErrorInfo, EndLine}\fR:
+An error occurred\&. 
+.RE
+.RE
+.TP 4
+.B
+\fI{more, Continuation}\fR:
+More data is required for building a term\&. \fIContinuation\fR must be passed in a new call to \fItokens/3\fR when more data is available\&. 
+.RE
+.RE
+.LP
+.B
+reserved_word(Atom) -> bool()
+.br
+.RS
+.LP
+Returns \fItrue\fR if \fIAtom\fR is an Erlang reserved word, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+format_error(ErrorDescriptor) -> string() 
+.br
+.RS
+.TP
+Types
+ErrorDescriptor = errordesc()
+.br
+.RE
+.RS
+.LP
+Takes an \fIErrorDescriptor\fR and returns a string which describes the error or warning\&. This function is usually called implicitly when processing an \fIErrorInfo\fR structure (see below)\&. 
+.RE
+.SH Error Information
+.LP
+The \fIErrorInfo\fR mentioned above is the standard \fIErrorInfo\fR structure which is returned from all IO modules\&. It has the following format: 
+
+.nf
+    {ErrorLine, Module, ErrorDescriptor}
+.fi
+.LP
+A string which describes the error is obtained with the following call: 
+
+.nf
+apply(Module, format_error, ErrorDescriptor)
+.fi
+.SH Notes
+.LP
+The continuation of the first call to the re-entrant input functions must be \fI[]\fR\&. Refer to Armstrong, Virding and Williams, \&'Concurrent Programming in Erlang\&', Chapter 13, for a complete description of how the re-entrant input scheme works\&. 
+.SH See Also
+.LP
+io erl_parse 
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

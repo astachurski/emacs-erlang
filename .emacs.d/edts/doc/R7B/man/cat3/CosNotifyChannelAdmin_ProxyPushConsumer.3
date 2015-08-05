@@ -1,0 +1,132 @@
+
+
+
+CosNotifyChannelAdmin_EPRrCLooAxsNyNGPoutMsiOhfDCyUoCLnhEsaunDmnEeeFrlI(AN3dI)mTIiOnN_ProxyPushConsumer(3)
+
+
+
+MODULE
+     CosNotifyChannelAdmin_ProxyPushConsumer -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     This module also exports the functions described in:
+
+       * CosNotifyComm_NotifyPublish
+
+       * CosNotification_QoSAdmin
+
+       * CosNotifyFilter_FilterAdmin
+
+       * CosNotifyChannelAdmin_ProxyConsumer
+
+
+EXPORTS
+     connect_any_push_supplier(ProxyPushConsumer,   PushSupplier)
+     -> Reply
+
+          Types
+               ProxyPushConsumer = #objref
+               PushSupplier = #objref
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosEventChannelAdmin_AlreadyConnected'{}}
+
+          This operation connects a _P_u_s_h_S_u_p_p_l_i_e_r  to  the  target
+          object.  If a connection already exists the _A_l_r_e_a_d_y_C_o_n_-
+          _n_e_c_t_e_d exception is raised.
+
+     push(ProxyPushConsumer, Event) -> Reply
+
+          Types
+               ProxyPushConsumer = #objref
+               Event = #any
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosEventChannelAdmin_Disconnected'{}}
+
+          This operation pushes an #_a_n_y{}  event  to  the  target
+          object.  If  no  client have been connected the _D_i_s_c_o_n_-
+          _n_e_c_t_e_d exception is raised.
+
+     disconnect_push_consumer(ProxyPushConsumer) -> ok
+
+          Types
+               ProxyPushConsumer = #objref
+
+          Invoking this operation will cause the target object to
+          close the connection and terminate.
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+CosNotifyChannelAdmin_EPRrCLooAxsNyNGPoutMsiOhfDCyUoCLnhEsaunDmnEeeFrlI(AN3dI)mTIiOnN_ProxyPushConsumer(3)
+
+
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+

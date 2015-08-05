@@ -1,0 +1,58 @@
+.TH epmd 1 "erts  5.0.1" "Ericsson Utvecklings AB" "USER COMMANDS"
+.SH NAME
+epmd \- Erlang Port Mapper Daemon 
+.SH DESCRIPTION
+.LP
+This daemon acts as a name server on all hosts involved in distributed Erlang computations\&. When an Erlang node starts, the node has a name and it obtains an address from the host OS kernel\&. The name and the address are sent to the \fIepmd\fR daemon running on the local host\&. In a TCP/IP environment, the address consists of the IP address and a port number\&. The name of the node is an atom on the form of \fIName@Node\fR\&. The job of the \fIepmd\fR daemon is to keep track of which node name listens on which address\&. Hence, \fIepmd\fR map symbolic node names to machine addresses\&. 
+.LP
+The daemon is started automatically by the Erlang start-up script\&. 
+.LP
+The program \fIepmd\fR can also be used for a variety of other purposes, for example checking the DNS (Domain Name System) configuration of a host\&. 
+
+.SH EXPORTS
+.LP
+.B
+epmd [-daemon] 
+.br
+.RS
+.LP
+Starts a name server as a daemon\&. If it has no argument, the \fIepmd\fR runs as a normal program with the controlling terminal of the shell in which it is started\&. Normally, it should run as a daemon\&. 
+.RE
+.LP
+.B
+epmd -names
+.br
+.RS
+.LP
+Requests the names of the local Erlang nodes \fIepmd\fR has registered\&. 
+.RE
+.LP
+.B
+epmd -kill
+.br
+.RS
+.LP
+Kills the \fIepmd\fR process\&. 
+.RE
+.LP
+.B
+epmd -help
+.br
+.RS
+.LP
+Write short info about the usage including some debugging options not listed here\&. 
+.RE
+.SH Logging
+.LP
+On some operating systems \fIsyslog\fR will be used for error reporting when epmd runs as an daemon\&. To enable the error logging you have to edit /etc/syslog\&.conf() file and add an entry 
+
+.nf
+      !epmd
+      *&ld;TABs&gt;/var/log/epmd\&.log
+.fi
+.LP
+where <TABs> are real tab characters\&. Spaces will silently be ignored\&. 
+.SH AUTHOR
+.nf
+Claes Wikstrom - support@erlang.ericsson.se
+.fi

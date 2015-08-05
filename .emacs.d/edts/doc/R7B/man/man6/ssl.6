@@ -1,0 +1,77 @@
+.TH ssl 6 "ssl  2.3.1" "Ericsson Utvecklings AB" "ERLANG APPLICATION DEFINITION"
+.SH APPLICATION
+ssl \- The SSL Application
+.SH DESCRIPTION
+.LP
+The Secure Socket Layer (SSL) application provides secure socket communication over TCP/IP\&. 
+
+.SH Environment
+.LP
+The following environment configuration parameters are defined for the SSL application\&. Refer to application(3) for more information about configuration parameters\&. 
+.RS 2
+.TP 4
+.B
+\fIdebug = true | false <optional>\fR:
+Causes debug information to be written to standard output\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIdebugdir = path() | false <optional>\fR:
+Causes debug information output controlled by \fIdebug\fR and \fImsgdebug\fR to be printed to a file named \fIssl_esock\&.<pid>\&.log\fR in the directory specified by \fIdebugdir\fR, where \fI<pid>\fR is the operating system specific textual representation of the process indentifier of the external port program of the SSL application\&. Default is \fIfalse\fR, i\&.e\&. no log file is produced\&. 
+.TP 4
+.B
+\fImsgdebug = true | false <optional>\fR:
+Sets \fIdebug = true\fR and causes also the contents of low level messages to be printed to standard output\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIport_program = string() | false <optional>\fR:
+Name of port program\&. The default is \fIssl_esock\fR\&. 
+.TP 4
+.B
+\fIpproxylsport = integer() | false <optional>\fR:
+Define the port number of the listen port of the SSL port program\&. Almost never is this option needed\&. 
+.TP 4
+.B
+\fIpproxylsbacklog = integer() | false <optional>\fR:
+Set the listen queue size of the listen port of the SSL port program\&. The default is 5\&. 
+.RE
+.SH SSL libraries
+.LP
+The current implementation of the SSL application is based on the \fISSLeay\fR package version 0\&.9\&.0 available from various sites, see e\&.g\&.  http://www\&.cryptsoft\&.com <http://www\&.cryptosoft\&.com>\&. 
+.LP
+The user has to fetch the SSLeay package, compile and install the libraries \fIlibcrypto\&.so\fR and \fIlibssl\&.so\fR (UNIX), or the libraries \fIlibeay32\&.dll\fR and \fIssleay32\&.dll\fR (WIN32)\&. The WIN32 libraries must be compiled and linked with WinSock2\&. 
+.LP
+In order to build SSLeay-0\&.9\&.0 for WinSock2 on Windows NT 4\&.0 do as follows: 
+.RS 2
+.TP 4
+1.
+In \fIcrypto/bio/b_sock\&.c:int BIO_sock_init()\fR remove the call to \fIWSACancelBlockingCall()\fR\&. 
+.TP 4
+2.
+In \fIcrypto/bn/bn\&.h\fR replace \fI#define BN_ULLONG unsigned _int64\fR by \fI#define BN_ULLONG unsigned __int64\fR\&. 
+.TP 4
+3.
+In \fIcrypto/bn/bn_mulw\&.c:bn_add_words()\fR replace \fIreturn(ll&BN_MASK2);\fR by \fIreturn (BN_ULONG)(ll&BN_MASK2);\fR\&. 
+.TP 4
+4.
+In \fIapps/s_socket\&.c:sock_cleanup()\fR remove call to \fIWSACancelBlockingCall()\fR\&. 
+.TP 4
+5.
+In Configure replace \fI"VC-WIN32", "cl:::BN_LLONG RC4_INDEX "\&.$x86_gcc_opts\&.":::"\fR by \fI"VC-WIN32", "cl:::RC4_INDEX "\&.$x86_gcc_opts\&.":::"\fR\&. 
+.TP 4
+6.
+In \fImf-ddl\&.nt\fR replace \fIwsock32\&.lib\fR by \fIws2_32\&.lib\fR\&. 
+.RE
+.LP
+The \fIssl_esock\fR port program has to be built by linking object files and libraries\&. An example \fIMakefile\fR is provided in the \fIssl-X\&.Y/priv/obj\fR directory, where also the object files are found\&. 
+.LP
+There are also commercially available SSL libraries, e\&.g\&. \fIC/SSL\fR from Baltimore Technologies Ltd <http://www\&.baltimoretechnologies\&.com>, and \fISSL-C\fR from RSA Data Security Australia Pty Ltd <http://www\&.aus\&.rsa\&.com>, which may be supported by the SSL application in the future\&. 
+.SH Restrictions
+.LP
+Users must be aware of export restrictions and patent rights concerning cryptographic software\&. 
+.SH SEE ALSO
+.LP
+application(3) 
+.SH AUTHOR
+.nf
+Peter Hogfeldt - support@erlang.ericsson.se
+.fi

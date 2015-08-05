@@ -1,0 +1,330 @@
+
+
+
+kernel(6)         ERLANG APPLICATION DEFINITION         kernel(6)
+
+
+
+APPLICATION
+     kernel - The Kernel Application
+
+DESCRIPTION
+     The Kernel application is the first application started, and
+     it is one of two mandatory applications. The Kernel applica-
+     tion contains the following services:
+
+       * _a_p_p_l_i_c_a_t_i_o_n__c_o_n_t_r_o_l_l_e_r
+
+       * _a_u_t_h
+
+       * _c_o_d_e
+
+       * _d_i_s_k__l_o_g
+
+       * _e_r_l__b_o_o_t__s_e_r_v_e_r
+
+       * _e_r_l__d_d_l_l
+
+       * _e_r_r_o_r__l_o_g_g_e_r
+
+       * _f_i_l_e
+
+       * _g_l_o_b_a_l__g_r_o_u_p
+
+       * _g_l_o_b_a_l__n_a_m_e__s_e_r_v_e_r
+
+       * _n_e_t__k_e_r_n_e_l
+
+       * _o_s
+
+       * _r_p_c
+
+       * _p_g_2
+
+       * _t_i_m_e_r
+
+       * _u_s_e_r
+
+     It is possible to synchronize a set of Erlang nodes. One can
+     specify  for  a  node to wait a specified amount of time for
+     other nodes to become alive.
+
+
+Error Logger Event Handlers
+     Two error logger event handlers are defined  in  the  Kernel
+     application. These are described in _e_r_r_o_r__l_o_g_g_e_r(_3).
+
+Configuration
+     The following configuration parameters are defined  for  the
+     Kernel  application. See application(3) for more information
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+kernel(6)         ERLANG APPLICATION DEFINITION         kernel(6)
+
+
+
+     about configuration parameters.
+
+       _d_i_s_t_r_i_b_u_t_e_d = [_D_i_s_t_r_i_b] <_o_p_t_i_o_n_a_l>:
+           Specifies which applications are  distributed  and  on
+           which nodes they may execute. In this parameter:
+
+             * _D_i_s_t_r_i_b = {_A_p_p_l_N_a_m_e,  _N_o_d_e_s}  |  {_A_p_p_l_N_a_m_e,  _T_i_m_e,
+               _N_o_d_e_s}
+
+             * _A_p_p_l_N_a_m_e = _a_t_o_m()
+
+             * _T_i_m_e = _i_n_t_e_g_e_r() > _0
+
+             * _N_o_d_e_s = [_n_o_d_e() | {_n_o_d_e(), ..., _n_o_d_e()}]
+
+           These parameters are described in application(3).
+
+       _d_i_s_t__a_u_t_o__c_o_n_n_e_c_t = _V_a_l_u_e <_o_p_t_i_o_n_a_l>:
+           Specifies when nodes will be automatically  connected.
+           If  this  parameter is not specified, a node is always
+           automatically connected, e.g when a message is  to  be
+           sent to that node. _V_a_l_u_e is one of:
+
+             _n_e_v_e_r:
+                 Connections are never  automatically  connected,
+                 they   must   be   explicitly   connected.   See
+                 net_kernel(3).
+
+             _o_n_c_e:
+                 Connections will be  established  automatically,
+                 but  only once per node. If a node goes down, it
+                 must thereafter  be  explicitly  connected.  See
+                 net_kernel(3).
+
+       _p_e_r_m_i_s_s_i_o_n_s = [_P_e_r_m] <_o_p_t_i_o_n_a_l>:
+           Specifies the default permission for applications when
+           they are started. In this parameter:
+
+             * _P_e_r_m = {_A_p_p_l_N_a_m_e, _B_o_o_l}
+
+             * _A_p_p_l_N_a_m_e = _a_t_o_m()
+
+             * _B_o_o_l = _b_o_o_l_e_a_n()
+
+       _e_r_r_o_r__l_o_g_g_e_r = _V_a_l_u_e <_o_p_t_i_o_n_a_l>:
+           _V_a_l_u_e is one of:
+
+             _t_t_y:
+                 All standard error reports are written to _s_t_d_i_o.
+                 This is the default option.
+
+             {_f_i_l_e, _F_i_l_e_N_a_m_e}:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+kernel(6)         ERLANG APPLICATION DEFINITION         kernel(6)
+
+
+
+                 All standard error reports are  written  to  the
+                 file _F_i_l_e_N_a_m_e, where _F_i_l_e_N_a_m_e is a string.
+
+             _f_a_l_s_e:
+                 No error logger handler is installed.
+
+       _g_l_o_b_a_l__g_r_o_u_p_s = [_G_r_o_u_p_N_a_m_e, [_N_o_d_e]] <_o_p_t_i_o_n_a_l>:
+           Specifies the groups of nodes which  will  have  their
+           own global name space. In this parameter:
+
+             * _G_r_o_u_p_N_a_m_e = _a_t_o_m()
+
+             * _N_o_d_e = _a_t_o_m()
+
+           These parameters are described in global_group(3).
+
+       _i_n_e_t__p_a_r_s_e__e_r_r_o_r__l_o_g = _L_o_g_M_o_d_e <_o_p_t_i_o_n_a_l>:
+           _L_o_g_M_o_d_e is one of:
+
+             _s_i_l_e_n_t:
+                 No  _e_r_r_o_r__l_o_g_g_e_r  messages  are  generated  when
+                 erroneous  lines  are  found  and skipped in the
+                 various configuration files. The default if  the
+                 variable  is not set is that erroneous lines are
+                 reported via the _e_r_r_o_r__l_o_g_g_e_r.
+
+       _n_e_t__t_i_c_k_t_i_m_e = _T_i_c_k_T_i_m_e <_o_p_t_i_o_n_a_l>:
+           Specifies the _n_e_t__k_e_r_n_e_l tick time. _T_i_c_k_T_i_m_e is  given
+           in  seconds.  Once every _T_i_c_k_T_i_m_e / _4 second, all con-
+           nected nodes are ticked (if  anything  else  has  been
+           written  to  a  node) and if nothing has been received
+           from another node within the last four (4) tick  times
+           that  node is considered to be down. This ensures that
+           nodes which are not responding, for  reasons  such  as
+           hardware errors, are considered to be down.
+
+           The time _T, in which a node that is not responding  is
+           detected, is calculated as: _M_i_n_T < _T < _M_a_x_T where
+
+           MinT = TickTime - TickTime / 4
+           MaxT = TickTime + TickTime / 4
+
+           _T_i_c_k_T_i_m_e is by default 60 (seconds). Thus, 45 < T < 75
+           seconds.
+
+           _N_o_t_e:All communicating  nodes  should  have  the  same
+           _T_i_c_k_T_i_m_e value specified.
+
+           _N_o_t_e: Normally, a terminating node is detected immedi-
+           ately.
+
+       _s_y_n_c__n_o_d_e_s__m_a_n_d_a_t_o_r_y = [_N_o_d_e_N_a_m_e] <_o_p_t_i_o_n_a_l>:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+kernel(6)         ERLANG APPLICATION DEFINITION         kernel(6)
+
+
+
+           Specifies which other nodes _m_u_s_t be alive in order for
+           this node to start properly. If some node in this list
+           does not start within the specified  time,  this  node
+           will not start either. If this parameter is undefined,
+           it defaults to the empty list.
+
+       _s_y_n_c__n_o_d_e_s__o_p_t_i_o_n_a_l = [_N_o_d_e_N_a_m_e] <_o_p_t_i_o_n_a_l>:
+           Specifies which other nodes _c_a_n be alive in order  for
+           this node to start properly. If some node in this list
+           does not start within the specified  time,  this  node
+           starts  anyway.  If  this  parameter  is undefined, it
+           defaults to the empty list.
+
+       _s_y_n_c__n_o_d_e_s__t_i_m_e_o_u_t = _i_n_t_e_g_e_r() | _i_n_f_i_n_i_t_y <_o_p_t_i_o_n_a_l>:
+           Specifies the amount of time  (in  milliseconds)  this
+           node will wait for the mandatory and optional nodes to
+           start. If this parameter is undefined,  no  node  syn-
+           chronization is performed. This option also makes sure
+           that global is synchronized.
+
+       _s_t_a_r_t__d_d_l_l = _t_r_u_e | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Starts the _d_d_l_l__s_e_r_v_e_r if the parameter is  _t_r_u_e  (see
+           _e_r_l__d_d_l_l(_3)).  This parameter should be set to true in
+           an embedded system which uses this service.
+
+           The default value is _f_a_l_s_e.
+
+       _s_t_a_r_t__d_i_s_t__a_c = _t_r_u_e | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Starts the _d_i_s_t__a_c server if  the  parameter  is  _t_r_u_e
+           (see  _a_p_p_l_i_c_a_t_i_o_n(_3)). This parameter should be set to
+           true for systems that use distributed applications.
+
+           The default value is _f_a_l_s_e. If this parameter is unde-
+           fined,  the server is started if the parameter _d_i_s_t_r_i_-
+           _b_u_t_e_d is set.
+
+       _s_t_a_r_t__b_o_o_t__s_e_r_v_e_r = _t_r_u_e | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Starts the _b_o_o_t__s_e_r_v_e_r if the parameter is  _t_r_u_e  (see
+           _e_r_l__b_o_o_t__s_e_r_v_e_r(_3)).  This  parameter should be set to
+           true in an embedded system which uses this service.
+
+           The default value is _f_a_l_s_e.
+
+       _b_o_o_t__s_e_r_v_e_r__s_l_a_v_e_s = [_S_l_a_v_e_I_P] <_o_p_t_i_o_n_a_l>:
+           If the _s_t_a_r_t__b_o_o_t__s_e_r_v_e_r  configuration  parameter  is
+           _t_r_u_e,   this  parameter  can  be  used  to  initialize
+           _b_o_o_t__s_e_r_v_e_r  with  a  list  of  slave  IP   addresses.
+           _S_l_a_v_e_I_P  =  _s_t_r_i_n_g()  | _a_t_o_m | { _i_n_t_e_g_e_r(), _i_n_t_e_g_e_r(),
+           _i_n_t_e_g_e_r(), _i_n_t_e_g_e_r()}
+
+           where _0 <= _i_n_t_e_g_e_r() <=_2_5_5.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+
+
+
+
+kernel(6)         ERLANG APPLICATION DEFINITION         kernel(6)
+
+
+
+           Examples of _S_l_a_v_e_I_P in atom,  string  and  tuple  form
+           are:
+            '_1_5_0._2_3_6._1_6._7_0', "_1_5_0, _2_3_6, _1_6, _7_0", {_1_5_0,  _2_3_6,  _1_6,
+           _7_0}.
+
+           The default value is [].
+
+       _s_t_a_r_t__d_i_s_k__l_o_g = _t_r_u_e | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Starts the _d_i_s_k__l_o_g__s_e_r_v_e_r if the  parameter  is  _t_r_u_e
+           (see  _d_i_s_k__l_o_g(_3)).  This  parameter  should be set to
+           true in an embedded system which uses this service.
+
+           The default value is _f_a_l_s_e.
+
+       _s_t_a_r_t__p_g_2 = _t_r_u_e | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Starts the _p_g_2 server (see _p_g_2(_3)) if the parameter is
+           _t_r_u_e.  This  parameter  should  be  set  to true in an
+           embedded system which uses this service.
+
+           The default value is _f_a_l_s_e.
+
+       _s_t_a_r_t__t_i_m_e_r = _t_r_u_e | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Starts the _t_i_m_e_r__s_e_r_v_e_r if the parameter is _t_r_u_e  (see
+           _t_i_m_e_r(_3)).  This parameter should be set to true in an
+           embedded system which uses this service.
+
+           The default value is _f_a_l_s_e.
+
+       _k_e_e_p__z_o_m_b_i_e_s = _i_n_t_e_g_e_r() <_o_p_t_i_o_n_a_l>:
+           Sets the value of the system flag _k_e_e_p__z_o_m_b_i_e_s.
+
+           The default value is _0.
+
+See Also
+     application(3), auth(3), code(3), disk_log(3),  erl_ddll(3),
+     erl_boot_server(3),   error_logger(3),  file(3),  global(3),
+     global_group(3), net_kernel(3),  pg2(3),  rpc(3),  timer(3),
+     user(3)
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Magnus Froberg - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  5
+
+
+

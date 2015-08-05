@@ -1,0 +1,810 @@
+.TH snmp 3 "snmp  3.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+snmp \- Interface Functions to the SNMP toolkit
+.SH DESCRIPTION
+.LP
+The module \fIsnmp\fR contains interface functions to the SNMP toolkit\&. Some functions are off-line functions (e\&.g\&. \fIc\fR to compile a MIB), and some are functions called by instrumentation functions in a target system (e\&.g\&. \fIcurrent_address\fR)\&. 
+
+.SH Common data types
+.LP
+The following datatypes are used in the functions below: 
+.RS 2
+.TP 2
+*
+\fIoid() = [byte()]\fR 
+.RE
+.LP
+The \fIoid()\fR type is used to represent an ASN\&.1 OBJECT IDENTIFIER\&. 
+.SH EXPORTS
+.LP
+.B
+add_agent_caps(SysORID, SysORDescr) -> SysORIndex
+.br
+.RS
+.TP
+Types
+SysORID = oid()
+.br
+SysORDescr = string()
+.br
+SysORIndex = integer()
+.br
+.RE
+.RS
+.LP
+This function can be used to add an AGENT-CAPABILITY statement to the sysORTable in the agent\&. The table is defined in the SNMPv2-MIB\&. 
+.RE
+.LP
+.B
+c(File)
+.br
+.B
+c(File,Options) -> {ok, BinFileName} | {error, Reason}
+.br
+.RS
+.TP
+Types
+File = string()
+.br
+Options = [opt()]
+.br
+opt() = {db, volatile|persistent|mnesia} | {i, [dir()]} | {il, [dir()]} | {outdir, dir()} | {warnings, bool()} | {group_check, bool()} | {deprecated, bool()} | {description, bool()}
+.br
+dir() = string()
+.br
+BinFileName = string()
+.br
+.RE
+.RS
+.LP
+Compiles the specified MIB file \fI<File>\&.mib\fR\&. The compiled file \fIBinFileName\fR is called \fI<File>\&.bin\fR\&. 
+.RS 2
+.TP 2
+*
+The option \fIdb\fR specifies which database should be used for the default instrumentation\&. Default is \fIvolatile\fR\&.
+.TP 2
+*
+The option \fIi\fR specifies the path to search for imported (compiled) MIB files\&. The directories should be strings with a trailing directory delimiter\&. Default is \fI["\&./"]\fR\&.
+.TP 2
+*
+The option \fIil\fR (include_lib) also specifies a list of directories to search for imported MIBs\&. It assumes that the first element in the directory name corresponds to an OTP application\&. The compiler will find the current installed version\&. For example, the value ["snmp/mibs/"] will be replaced by ["snmp-3\&.1\&.1/mibs/"] (or what the current version may be in the system)\&. The current directory and the \fI<snmp-home>/priv/mibs/\fR are always listed last in the include path\&.
+.TP 2
+*
+The option \fIwarnings\fR specifies whether warning messages should be shown\&. Default is \fItrue\fR\&.
+.TP 2
+*
+The option \fIgroup_check\fR specifies whether the mib compiler should check the OBJECT-GROUP macro for correctness or not\&. Default is \fItrue\fR\&.
+.TP 2
+*
+The option \fIdeprecated\fR specifies if a deprecated definition should be ignored or not\&. If the option is true will the MIB-compilator ignore all deprecated definitions\&. Default is \fIfalse\fR\&.
+.TP 2
+*
+The option \fIdescription\fR specifies if the text of the DESCRIPTION field will be included or not\&. Default is \fIfalse\fR, in which case the description will be replaced by the atom \fIundefined\fR\&.
+.RE
+.LP
+The MIB compiler understands both SMIv1 and SMIv2 MIBs\&. It uses the \fIMODULE-IDENTITY\fR statement to determine if the MIB is version 1 or 2\&. 
+.LP
+The MIB compiler can be invoked from the OS command line by using the command \fIerlc\fR\&. \fIerlc\fR recognises the extension \fI\&.mib\fR, and invokes the SNMP MIB compiler for files with that extension\&. The options \fIdb\fR, \fIgroup_check\fR and \fIdeprecated\fR have to be specified to \fIerlc\fR using the syntax \fI+term\fR\&. See \fIerlc(1)\fR for details\&. 
+.RE
+.LP
+.B
+change_log_size(NewSize) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+NewSize = {MaxBytes, MaxFiles}
+.br
+MaxBytes = integer()
+.br
+MaxFiles = integer()
+.br
+.RE
+.RS
+.LP
+Changes the log size of the Audit Trail Log\&. The application must be configured to use the audit trail log function\&. Please refer to disk_log(3) in Kernel Reference Manual for a description of how to change the log size\&. 
+.LP
+The change is permanent, as long as the log is not deleted\&. That means, the log size is remebered across reboots\&. 
+.RE
+.LP
+.B
+config() -> ok | {error, Reason}
+.br
+.RS
+.LP
+A simple interactive SNMP agent configuration tool\&. Simple configuration files can be generated, but more complex configurations still have to be edited manually\&. 
+.LP
+The tool is a textual based tool that asks some questions and generates \fIsys\&.config\fR and \fI*\&.conf\fR files\&. 
+.RE
+.LP
+.B
+current_address() -> {value, {IP, UDP}} | false
+.br
+.RS
+.TP
+Types
+IP = [int(), int(), int(), int()]
+.br
+UDP = int()
+.br
+.RE
+.RS
+.LP
+Retrieves the IP address of the management station sending the request\&. It must be called from the same process that is handling the request (normally an instrumentation function)\&. 
+.LP
+Returns \fIfalse\fR if no request is currently handled\&. 
+.RE
+.LP
+.B
+current_community() -> {value, Community} | false
+.br
+.RS
+.TP
+Types
+Community = string()
+.br
+.RE
+.RS
+.LP
+Retrieves the community referred to in the current request\&. It must be called from the same process that is handling the request (normally an instrumentation function)\&. 
+.LP
+Returns \fIfalse\fR if no request is currently handled\&. 
+.LP
+NOTE: This function should only be used if the agent speaks SNMPv1 or SNMPv2c only\&. Otherwise, use \fIcurrent_context/0\fR\&. 
+.RE
+.LP
+.B
+current_context() -> {value, ContextName} | false
+.br
+.RS
+.TP
+Types
+ContextName = string()
+.br
+.RE
+.RS
+.LP
+Retrieves the context referred to in the current request\&. It must be called from the same process that is handling the request (normally an instrumentation function)\&. 
+.LP
+Returns \fIfalse\fR if no request is currently handled\&. 
+.RE
+.LP
+.B
+current_net_if_data() -> {value, NetIfData} | false
+.br
+.RS
+.TP
+Types
+NetIfData = term()
+.br
+.RE
+.RS
+.LP
+Retrieves the Net_if data for the current pdu being handled\&. This data is defined in the Net_if process, and can be used to forward information about the packet to the instrumentation functions\&. With the default Net_if implementation, it is nil\&. It must be called from the same process that handles the request (normally an instrumentation function)\&. 
+.LP
+Returns \fIfalse\fR if no request is currently handled\&. 
+.RE
+.LP
+.B
+current_request_id() -> {value, RequestId} | false
+.br
+.RS
+.TP
+Types
+RequestId = int()
+.br
+.RE
+.RS
+.LP
+Retrieves the request Id of the current request\&. It must be called from the same process that is handling the request (normally an instrumentation function)\&. 
+.LP
+Returns \fIfalse\fR if no request is currently handled\&. 
+.RE
+.LP
+.B
+date_and_time() -> DateAndTime
+.br
+.RS
+.TP
+Types
+DateAndTime = [int()]
+.br
+.RE
+.RS
+.LP
+Returns current date and time as the data type DateAndTime, as specified in RFC1903\&. This is an OCTET STRING\&. 
+.RE
+.LP
+.B
+date_and_time_to_universal_time(DateAndTime) -> UTC
+.br
+.RS
+.TP
+Types
+DateAndTime = [int()]
+.br
+UTC = {{Y, Mo, D}, {H, M, S}}
+.br
+.RE
+.RS
+.LP
+Converts a DateAndTime list to universal time\&. The unversal time value on the same format as defined in calendar(3)\&. 
+.RE
+.LP
+.B
+date_and_time_to_string(DateAndTime) -> string()
+.br
+.RS
+.TP
+Types
+DateAndTime = [int()]
+.br
+.RE
+.RS
+.LP
+Converts a DateAndTime list to a printable string, according to the DISPLAY-HINT definition in RFC1903\&. 
+.RE
+.LP
+.B
+debug(Agent,Bool) -> void()
+.br
+.RS
+.TP
+Types
+Agent = pid() | atom()
+.br
+Bool = bool()
+.br
+.RE
+.RS
+.LP
+Turns debugging of the agent on/off\&. Debug information is printed whenever an instrumentation function is called, and when a packet is received or sent\&. This actually sets verbosity to \fIlog\fR or \fIsilence\fR for the snmp_master_agent and snmp_net_if\&. 
+.RE
+.LP
+.B
+del_agent_caps(SysORIndex) -> void()
+.br
+.RS
+.TP
+Types
+SysORIndex = integer()
+.br
+.RE
+.RS
+.LP
+This function can be used to delete an AGENT-CAPABILITY statement to the sysORTable in the agent\&. This table is defined in the SNMPv2-MIB\&. 
+.RE
+.LP
+.B
+enum_to_int(Name,Enum) -> {value, Int} | false
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+Enum = atom()
+.br
+Int = int()
+.br
+.RE
+.RS
+.LP
+Converts the symbolic value \fIEnum\fR to the corresponding integer of the enumerated object or type \fIName\fR in a MIB\&. The MIB must be loaded\&. 
+.LP
+\fIfalse\fR is returned if the object or type is not defined in any loaded MIB, or if it does not define the symbolic value as enumerated\&. 
+.RE
+.LP
+.B
+get(Agent,Vars) -> Values | {error, Reason}
+.br
+.RS
+.TP
+Types
+Agent = pid() | atom()
+.br
+Vars = [oid()]
+.br
+Values = [term()]
+.br
+Reason = {atom(), oid()}
+.br
+.RE
+.RS
+.LP
+Performs a GET operation on the agent\&. All loaded MIB objects are visible in this operation\&. The agent calls the corresponding instrumentation functions just as if it was a GET request coming from a manager\&. That the request specific parameters (such as \fIsnmp:current_request_id/0\fR are not accessible for the instrumentation functions if this function is used\&. 
+.RE
+.LP
+.B
+get_agent_caps() -> [[SysORIndex, SysORID, SysORDescr, SysORUpTime]]
+.br
+.RS
+.TP
+Types
+SysORIndex = integer()
+.br
+SysORId = oid()
+.br
+SysORDescr = string()
+.br
+SysORUpTime = integer()
+.br
+.RE
+.RS
+.LP
+Returns all AGENT-CAPABILITY statements in the sysORTable in the agent\&. This table is defined in the SNMPv2-MIB\&. 
+.RE
+.LP
+.B
+info(Agent) -> [{Key, Value}]
+.br
+.RS
+.TP
+Types
+Agent = pid() | atom()
+.br
+.RE
+.RS
+.LP
+Returns a list (a dictionary) containing information about the agent\&. Information includes loaded MIBs, registered subagents, some information about the memory allocation\&. 
+.RE
+.LP
+.B
+int_to_enum(Name,Int) -> {value, Enum} | false
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+Int = int()
+.br
+Enum = atom()
+.br
+.RE
+.RS
+.LP
+Converts the integer \fIInt\fR to the corresponding symbolic value of the enumerated object or type \fIName\fR in a MIB\&. The MIB must be loaded\&. 
+.LP
+\fIfalse\fR is returned if the object or type is not defined in any loaded MIB, or if it does not define the symbolic value as enumerated\&. 
+.RE
+.LP
+.B
+is_consistent(Mibs) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Mibs = [MibName]
+.br
+MibName = string()
+.br
+.RE
+.RS
+.LP
+Checks for multiple usage of object identifiers and traps between MIBs\&. 
+.RE
+.LP
+.B
+load_mibs(Agent,Mibs) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Agent = pid() | atom()
+.br
+Mibs = [MibName]
+.br
+MibName = string()
+.br
+.RE
+.RS
+.LP
+Loads \fIMibs\fR into an agent\&. If the agent cannot load all MIBs, it will indicate where loading was aborted\&. The \fIMibName\fR is the name of the Mib, including the path to where the compiled mib is found\&. For example, 
+
+.nf
+          Dir = code:priv_dir(my_app) ++ "/mibs/",
+          snmp:load_mibs(snmp_master_agent, [Dir ++ "MY-MIB"])\&.
+.fi
+.RE
+.LP
+.B
+local_time_to_date_and_time(Local) -> DateAndTime
+.br
+.RS
+.TP
+Types
+Local = {{Y, Mo, D}, {H, M, S}}
+.br
+DateAndTime = [int()]
+.br
+.RE
+.RS
+.LP
+Converts a local time value to a DateAndTime list\&. The local time value on the same format as defined in calendar(3)\&. 
+.RE
+.LP
+.B
+log_to_txt(LogDir, Mibs)
+.br
+.B
+log_to_txt(LogDir, Mibs, OutFile) -> ok | {error, Reason}
+.br
+.B
+log_to_txt(LogDir, Mibs, OutFile, LogName) -> ok | {error, Reason}
+.br
+.B
+log_to_txt(LogDir, Mibs, OutFile, LogName, LogFile) -> ok | {error, Reason}
+.br
+.B
+log_to_txt(LogDir, Mibs, OutFile, LogName, LogFile, Start) -> ok | {error, Reason}
+.br
+.B
+log_to_txt(LogDir, Mibs, OutFile, LogName, LogFile, Start, Stop) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+LogDir = string()
+.br
+Mibs = [MibName]
+.br
+OutFile = string()
+.br
+MibName = string()
+.br
+LogName = string()
+.br
+LogFile = string()
+.br
+Start = Stop = null | datetime() | {local_time, datetime()} | {universal_time, datetime()} 
+.br
+.RE
+.RS
+.LP
+Converts an Audit Trail Log to a readable text file, where each item has a trailing TAB character, and any TAB character in the body of an item has been replaced by ESC TAB\&. 
+.LP
+The function can be used on a running system, or by copying the entire log directory and calling this function\&. SNMP must be running in order to provide MIB information\&. 
+.LP
+\fILogDir\fR is the name of the directory where the audit trail log is stored\&. \fIMibs\fR is a list of Mibs to be used\&. The function uses the information in the Mibs to convert for example object identifiers to their symbolic name\&. \fIOutFile\fR is the name of the generated textfile\&. It defaults to \fI"\&./snmp_log\&.txt"\fR\&. \fILogName\fR is the name of the log (default is \fI"snmp log"\fR), \fILogFile\fR is the name of the log file (default is \fI"snmp\&.log"\fR)\&. \fIStart\fR is the start (first) date and time from which log events will be converted and \fIStop\fR is the stop (last) date and time to which log events will be converted\&. 
+.LP
+The format of an audit trail log text item is as follows: 
+.LP
+\fITag Addr - Community [TimeStamp] Vsn\fR
+.br
+\fIPDU\fR 
+.LP
+where \fITag\fR is \fIrequest\fR, \fIresponse\fR, \fIreport\fR, \fItrap\fR or \fIinform\fR; Addr is \fIIP:Port\fR (or comma space separated list of such); \fICommunity\fR is the community parameter (SNMP version v1 and v2), or \fISecLevel:"AuthEngineID":"UserName"\fR (SNMP v3); \fITimeStamp\fR is a date and time stamp, and \fIVsn\fR is the SNMP version\&. \fIPDU\fR is a textual version of the protocol data unit\&. There is a new line between \fIVsn\fR and \fIPDU\fR\&. 
+.RE
+.LP
+.B
+mib_to_hrl(MibName) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+MibName = string()
+.br
+.RE
+.RS
+.LP
+Generates a \fI\&.hrl\fR file with definitions of Erlang constants for the objects in the MIB\&. The \fI\&.hrl\fR file is called \fI<MibName>\&.hrl\fR\&. The MIB must be compiled, and present in the current directory\&. 
+.LP
+The \fImib_to_hrl\fR generator can be invoked from the OS command line by using the command \fIerlc\fR\&. \fIerlc\fR recognises the extension \fI\&.bin\fR, and invokes this function for files with that extension\&. 
+.RE
+.LP
+.B
+name_to_oid(Name) -> {value, oid()} | false
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+.RE
+.RS
+.LP
+Looks up the OBJECT IDENTIFIER of a MIB object, given the symbolic name\&. Note, the OBJECT IDENTIFIER is given for the object, not for an instance\&. 
+.LP
+\fIfalse\fR is returned if the object is not defined in any loaded MIB\&. 
+.RE
+.LP
+.B
+oid_to_name(OID) -> {value, Name} | false
+.br
+.RS
+.TP
+Types
+OID = oid()
+.br
+Name = atom()
+.br
+.RE
+.RS
+.LP
+Looks up the symbolic name of a MIB object, given OBJECT IDENTIFIER\&. 
+.LP
+\fIfalse\fR is returned if the object is not defined in any loaded MIB\&. 
+.RE
+.LP
+.B
+register_subagent(Agent,SubTreeOid,Subagent) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Agent = pid() | atom()
+.br
+SubTreeOid = oid()
+.br
+SubAgent = pid()
+.br
+.RE
+.RS
+.LP
+Registers a subagent under a subtree of another agent\&. 
+.LP
+It is easy to make mistakes when registering subagents and this activity should be done carefully\&. For example, a strange behaviour would result from the following configuration: 
+
+.nf
+snmp_agent:register_subagent(MAPid,[1,2,3,4],SA1),
+snmp_agent:register_subagent(SA1,[1,2,3], SA2)\&.
+.fi
+.LP
+\fISA2\fR will not get requests starting with object identifier \fI[1, 2, 3]\fR since \fISA1\fR does not\&. 
+.RE
+.LP
+.B
+send_notification(Agent,Notification,Receiver)
+.br
+.B
+send_notification(Agent,Notification,Receiver,Varbinds)
+.br
+.B
+send_notification(Agent,Notification,Receiver, NotifyName,Varbinds)
+.br
+.B
+send_notification(Agent,Notification,Receiver, NotifyName,ContextName,Varbinds) -> void() 
+.br
+.RS
+.TP
+Types
+Agent = pid() | atom()
+.br
+Notification = atom()
+.br
+Receiver = no_receiver | {Tag, Recv}
+.br
+Tag = term()
+.br
+Recv = pid() | atom() | {M, F, A}
+.br
+NotifyName = string()
+.br
+ContextName = string()
+.br
+Varbinds = [Varbind]
+.br
+Varbind = {Variable, Value} | {Column, RowIndex, Value} | {OID, Value}
+.br
+Variable = atom()
+.br
+Column = atom()
+.br
+OID = oid()
+.br
+Value = term()
+.br
+RowIndex = [int()]
+.br
+.RE
+.RS
+.LP
+Sends the notification \fINotification\fR to the management targets defined for \fINotifyName\fR in the \fIsnmpNotifyTable\fR in SNMP-NOTIFICATION-MIB from the specified context\&. If no \fINotifyName\fR is specified (or if it is \fI""\fR), the notification is sent to all management targets\&. If no \fIContextName\fR is specified, the default \fI""\fR context is used\&. 
+.LP
+The parameter \fIReceiver\fR specifies where information about delivery of Inform-Requests should be sent\&. The agent sends Inform-Requests and waits for acknowledgements from the managers\&. If the \fIReceiver\fR is specified as \fIno_receiver\fR, nothing is sent\&. Otherwise, it is specified as \fI{Tag, Recv}\fR\&. The receiver (\fIRecv\fR) gets a message: 
+.RS 2
+.TP 2
+*
+\fI{snmp_targets, Tag, Addresses}\fR
+.RE
+.LP
+\fIAddresses\fR is a list of management target addresses\&. If UDP over IP is used, this is a 2-tuple \fI{IP, UDPport}\fR, where \fIIP\fR is a 4-tuple with the IP address, and \fIUDPport\fR is an integer\&. The notification is sent as an Inform-Request to each target address in \fIAddresses\fR\&. If there are no targets for which an Inform-Request is sent, \fIAddresses\fR is the empty list \fI[]\fR\&. 
+.LP
+For each such \fIAddress\fR is the \fIAddresses\fR list, one of the following two messages is sent to \fIRecv\fR: 
+.RS 2
+.TP 2
+*
+\fI{snmp_notification, Tag, {got_response, Address}}\fR
+.TP 2
+*
+\fI{snmp_notification, Tag, {no_response, Address}}\fR
+.RE
+.LP
+The optional argument \fIVarbinds\fR defines values for the objects in the notification\&. If no value is given for an object, the \fIAgent\fR performs a get-operation to retrieve the value\&. 
+.LP
+\fIVarbinds\fR is a list of \fIVarbind\fR, where each \fIVarbind\fR is one of: 
+.RS 2
+.TP 2
+*
+\fI{Variable, Value}\fR, where \fIVariable\fR is the symbolic name of a scalar variable referred to in the notification specification\&.
+.TP 2
+*
+\fI{Column, RowIndex, Value}\fR, where \fIColumn\fR is the symbolic name of a column variable\&. \fIRowIndex\fR is a list of indices for the specified element\&. If this is the case, the OBJECT IDENTIFIER sent in the notification is the \fIRowIndex\fR appended to the OBJECT IDENTIFIER for the table column\&. This is the OBJECT IDENTIFIER which specifies the element\&.
+.TP 2
+*
+\fI{OID, Value}\fR, where \fIOID\fR is the OBJECT IDENTIFIER for an instance of an object, scalar variable, or column variable\&.
+.RE
+.LP
+For example, to specify that \fIsysLocation\fR should have the value \fI"upstairs"\fR in the notification, we could use one of: 
+.RS 2
+.TP 2
+*
+\fI{sysLocation, "upstairs"}\fR or
+.TP 2
+*
+\fI{[1, 3, 6, 1, 2, 1, 1, 6, 0], "upstairs"}\fR or
+.TP 2
+*
+\fI{?sysLocation_instance, "upstairs"}\fR (provided that the generated \fI\&.hrl\fR file is included)
+.RE
+.LP
+If a variable in the notification is a table element, the \fIRowIndex\fR for the element must be given in the \fIVarbinds\fR list\&. In this case, the OBJECT IDENTIFIER sent in the notification is the OBJECT IDENTIFIER that identifies this element\&. This OBJECT IDENTIFIER could be used in a get operation later\&. 
+.LP
+This function is asynchronous, and does not return any information\&. If an error occurs, \fIsnmp_error:user_err/2\fR is called and the notification is discarded\&. 
+.RE
+.LP
+.B
+send_trap(Agent,Trap,Community)
+.br
+.B
+send_trap(Agent,Trap,Community,Varbinds) -> void()
+.br
+.RS
+.TP
+Types
+Agent = pid() | atom()
+.br
+Trap = atom()
+.br
+Community = string()
+.br
+Varbinds = [Varbind]
+.br
+Varbind = {Variable, Value} | {Column, RowIndex, Value} | {OID, Value}
+.br
+Variable = atom()
+.br
+Column = atom()
+.br
+OID = oid()
+.br
+Value = term()
+.br
+RowIndex = [int()]
+.br
+.RE
+.RS
+.LP
+Note! This function is only kept for backwards compatibility reasons\&. Use \fIsend_notification\fR instead\&. 
+.LP
+Sends the trap \fITrap\fR to the managers defined for \fICommunity\fR in the \fIintTrapDestTable\fR in OTP-SNMPEA-MIB\&. The optional argument \fIVarbinds\fR defines values for the objects in the trap\&. If no value is given for an object, the \fIAgent\fR performs a get-operation to retrieve the value\&. 
+.LP
+\fIVarbinds\fR is a list of \fIVarbind\fR, where each \fIVarbind\fR is one of: 
+.RS 2
+.TP 2
+*
+\fI{Variable, Value}\fR, where \fIVariable\fR is the symbolic name of a scalar variable referred to in the trap specification\&.
+.TP 2
+*
+\fI{Column, RowIndex, Value}\fR, where \fIColumn\fR is the symbolic name of a column variable\&. \fIRowIndex\fR is a list of indices for the specified element\&. If this is the case, the OBJECT IDENTIFIER sent in the trap is the \fIRowIndex\fR appended to the OBJECT IDENTIFIER for the table column\&. This is the OBJECT IDENTIFIER which specifies the element\&.
+.TP 2
+*
+\fI{OID, Value}\fR, where \fIOID\fR is the OBJECT IDENTIFIER for an instance of an object, scalar variable, or column variable\&.
+.RE
+.LP
+For example, to specify that \fIsysLocation\fR should have the value \fI"upstairs"\fR in the trap, we could use one of: 
+.RS 2
+.TP 2
+*
+\fI{sysLocation, "upstairs"}\fR or
+.TP 2
+*
+\fI{[1, 3, 6, 1, 2, 1, 1, 6, 0], "upstairs"}\fR or
+.TP 2
+*
+\fI{?sysLocation_instance, "upstairs"}\fR (provided that the generated \fI\&.hrl\fR file is included)
+.RE
+.LP
+If a variable in the trap is a table element, the \fIRowIndex\fR for the element must be given in the \fIVarbinds\fR list\&. In this case, the OBJECT IDENTIFIER sent in the trap is the OBJECT IDENTIFIER that identifies this element\&. This OBJECT IDENTIFIER could be used in a get operation later\&. 
+.LP
+This function is asynchronous, and does not return any information\&. If an error occurs, \fIsnmp_error:user_err/2\fR is called and the trap is discarded\&. 
+.RE
+.LP
+.B
+universal_time_to_date_and_time(UTC) -> DateAndTime
+.br
+.RS
+.TP
+Types
+UTC = {{Y, Mo, D}, {H, M, S}}
+.br
+DateAndTime = [int()]
+.br
+.RE
+.RS
+.LP
+Converts a universal time value to a DateAndTime list\&. The unversal time value on the same format as defined in calendar(3)\&. 
+.RE
+.LP
+.B
+unload_mibs(Agent,Mibs) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Agent = pid() | atom()
+.br
+Mibs = [MibName]
+.br
+MibName = string()
+.br
+.RE
+.RS
+.LP
+Unloads MIBs into an agent\&. If it cannot unload all MIBs, it will indicate where unloading was aborted\&. 
+.RE
+.LP
+.B
+unregister_subagent(Agent,SubagentOidOrPid) -> ok | {ok, SubAgentPid} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Agent = pid() | atom()
+.br
+SubTreeOidorPid = oid() | pid()
+.br
+.RE
+.RS
+.LP
+Unregisters a subagent\&. If the second argument is a pid, then that subagent will be unregistered from all trees in \fIAgent\fR\&. 
+.RE
+.LP
+.B
+validate_date_and_time(DateAndTime) bool()
+.br
+.RS
+.TP
+Types
+DateAndTime = term()
+.br
+.RE
+.RS
+.LP
+Checks if \fIDateAndTime\fR is a correct DateAndTime value, as specified in RFC1903\&. This function can be used in instrumentation functions to validate a DateAndTime value\&. 
+.RE
+.LP
+.B
+verbosity(Ref,Verbosity) -> void()
+.br
+.RS
+.TP
+Types
+Ref = pid() | snmp_master_agent | snmp_net_if | snmp_mib | snmp_symbolic_store | snmp_note_store | snmp_local_db
+.br
+Verbosity = silence | info | log | debug | trace
+.br
+.RE
+.RS
+.LP
+Sets verbosity for the designated process\&. For the lowest verbosity \fIsilence\fR, nothing is printed\&. The higher the verbosity, the more is printed\&. 
+.RE
+.SH SEE ALSO
+.LP
+calendar(3), erlc(1)
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Klas Eriksson - support@erlang.ericsson.se
+.fi

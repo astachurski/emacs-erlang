@@ -1,0 +1,132 @@
+
+
+
+supervisor_bridge(3)ERLANG MODULE DEFINITION supervisor_bridge(3)
+
+
+
+MODULE
+     supervisor_bridge - A Behaviour for Connecting Processes  To
+     a Supervision Tree
+
+DESCRIPTION
+     It can sometimes be useful to connect a process  or  a  sub-
+     system,  which  has  not  been designed with the supervision
+     principles in mind, to a supervisor tree. This can be accom-
+     plished  by  using  an  instance  of  the  _s_u_p_e_r_v_i_s_o_r__b_r_i_d_g_e
+     behaviour. A supervisor bridge is a process  which  sits  in
+     between  a  supervisor and the sub-system. It behaves like a
+     real supervisor to its own supervisor, but has  a  different
+     interface  than  a  real supervisor to the sub-system. Note,
+     however, that it does not allow the use of the sophisticated
+     code changing mechanisms to the sub-system.
+
+     An  instance  of  the  _s_u_p_e_r_v_i_s_o_r__b_r_i_d_g_e  behaviour  can  be
+     debugged with the module _s_y_s.
+
+     In the following, _M_o_d_u_l_e is the name of the callback  module
+     that implements the supervisor bridge behaviour.
+
+
+EXPORTS
+     start_link(Module,StartArgs) -> {ok, Pid} | ignore | {error,
+     Reason}
+     start_link(Name,Module,StartArgs) -> {ok, Pid}  |  ignore  |
+     {error, Reason}
+
+          Types
+               Name = {local, atom()} | {global, atom()}
+               Module = atom()
+               StartArgs = term()
+
+          Starts a new supervisor bridge  process  synchronously.
+          The  function  _M_o_d_u_l_e:_i_n_i_t(_S_t_a_r_t_A_r_g_s)  is  called  (see
+          below).
+
+          If the supervisor bridge is started with _N_a_m_e, the name
+          is registered locally or globally.
+
+Callback Functions
+     The  following  functions  should   be   exported   from   a
+     _s_u_p_e_r_v_i_s_o_r__b_r_i_d_g_e callback module.
+
+EXPORTS
+     Module:init(StartArgs)  ->  {ok,  Pid,  State}  |  ignore  |
+     {error, Reason}
+
+          Types
+               StartArgs = term()
+               State = term()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+supervisor_bridge(3)ERLANG MODULE DEFINITION supervisor_bridge(3)
+
+
+
+          This function starts the sub-system and returns the _P_i_d
+          of the main process in the sub-system, and a _S_t_a_t_e. The
+          _S_t_a_t_e  can  be  any  term  and  it  is  sent   to   the
+          _M_o_d_u_l_e:_t_e_r_m_i_n_a_t_e/_2 function (see below).
+
+     Module:terminate(Reason, State) -> void()
+
+          Types
+               Reason = term()
+               State = term()
+
+          This function terminates  the  sub-system.  The  return
+          value is ignored.
+
+System Events
+     The _s_u_p_e_r_v_i_s_o_r__b_r_i_d_g_e behaviour generates  the  same  system
+     events  as  the _g_e_n__s_e_r_v_e_r behaviour. System events are han-
+     dled by the _s_y_s module.
+
+See Also
+     gen_server(3), supervisor(3), sys(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+

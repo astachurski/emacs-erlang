@@ -1,0 +1,270 @@
+.TH snmp_mgr 3 "snmp  3.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+snmp_mgr \- SNMP Manager
+.SH DESCRIPTION
+.LP
+The module \fIsnmp_mgr\fR provides a simple SNMP (Simple Network Management Protocol) manager\&. It is used for test purposes during agent development\&. There are two modes of operation\&. First, it can be used as a simple command line manager\&. Second, it can be used to write test suites for testing the MIB implementation in the SNMP agent\&. 
+.LP
+The manager supports SNMPv1, SNMPv2c and SNMPv3, including authentication and privacy\&. 
+.LP
+The command line manager uses the Erlang shell\&. It supports all SNMPv1, v2 and v3 requests, i\&.e\&. \fIset\fR, \fIget\fR, \fIget-next\fR and \fIget-bulk\fR\&. For example, \fIsnmp_mgr:s([{[1, 2, 3, 0], "hej"}])\fR, sends a set request to the agent and \fIsnmp_mgr:g([[1, 2, 3, 0], [myVar, 0]])\fR gets two values\&. The manager operates asynchronously\&. This implies that the return value of most functions is nonsense\&. When the manager gets a response message from the agent, it is echoed to the display\&. 
+.LP
+The start-up option \fIquiet\fR tells the manager not to display incoming SNMP responses, traps and informs\&. Messages are sent to the Erlang process that started the manager\&. This makes it possible to process them from an application or a test suite\&. 
+.LP
+Use the \fIexpect\fR function (that operates on the message queue) to write test suites\&. Examples of how to write a test suite can be found in \fIsnmp_mgr_tests\&.erl\fR\&. 
+.LP
+MIBs (Management Information Base) can be loaded in the manager\&. There are two reasons for doing this\&. OBJECT IDENTIFIERs (Oids) can be entered in symbolic form\&. Example: instead of [1,3,6,1,2,1,1,1], the symbolic name \fIsysDescr\fR can be used\&. The other reason is to take advantage of the type information in the MIB when sending \fIset\fR requests\&. 
+.LP
+An \fIOid\fR is represented as a list\&. For convenience, nested lists are allowed\&. There is one exception though\&. If an oid is entered in symbolic form, this symbol must be the first item in the list\&. A symbolic name includes the complete path from the top of the global naming tree\&. Accordingly, an oid can only contain \fIone\fR symbolic name\&. 
+.LP
+Examples of valid Oids are: [myVar, 0], [1,2,3,4,5,0], [myColumn, 95], [myTable, 4, 123, [5|"eklas"]]\&. 
+.LP
+The last example refers to column 4 of the row with the two keys 123 and [5|"eklas"] of table myTable\&. 
+.LP
+Known bug: There is not yet a {timeout, Msecs} option\&. 
+
+.SH EXPORTS
+.LP
+.B
+expect(Id, What) -> ok | {error, Id, Reason}
+.br
+.B
+expect(Id, ErrorStatus,ErrorIndex,Varbinds)
+.br
+.B
+expect(Id, trap, Enterp, Generic, Specific, Varbinds)
+.br
+.B
+expect(Id, v2trap, Varbinds)
+.br
+.B
+expect(Id, report, Varbinds)
+.br
+.B
+expect(Id, {inform, InformReply}, Varbinds)
+.br
+.RS
+.TP
+Types
+Id = term()
+.br
+What = any|trap|timeout|Varbinds|ErrorStatus
+.br
+ErrorIndex = integer()
+.br
+Enterp = oid()
+.br
+Generic = integer()
+.br
+Specific = integer()
+.br
+InformReply = true | false | {error, ErrorStatus, ErrorIndex}
+.br
+.RE
+.RS
+.RS 2
+.TP 2
+*
+\fIId\fR is used to help identifying this particular test in a long test suite\&. It is not used by the manager\&. 
+.RE
+.RS 2
+.TP 2
+*
+The atom \fIany\fR makes the test succeed for any response\&. 
+.TP 2
+*
+\fItimeout\fR succeeds if the message queue is empty for 3\&.5 seconds\&. This can be used to ensure that no messages are pending\&. 
+.TP 2
+*
+\fIErrorStatus\fR is an atom which describes an error message\&. See documentation for the SNMP agent\&. 
+.TP 2
+*
+\fIVarbinds\fR is a list of {Oid, Value}|{Oid,any}\&. 
+.RE
+.LP
+If a response other than the expected one is received, an error message is displayed and and \fI{error, Id, Reason}\fR is returned\&. A call to \fIexpect\fR is normally directly preceeded by sending a message\&. 
+.LP
+The reply to a received Inform request can be controlled\&. If \fIInformReply\fR is \fItrue\fR, a \fInoError\fR reply is sent\&. If it is \fIfalse\fR no reply is sent\&. If it is \fI{error, ErrorStatus, ErrorIndex}\fR, a reply indicating the error is sent\&. 
+.RE
+.LP
+.B
+g(Oids) -> void()
+.br
+.RS
+.TP
+Types
+Oids = [oid()]
+.br
+.RE
+.RS
+.LP
+Sends a \fIget-request\fR\&.
+.RE
+.LP
+.B
+gb(NonRepeaters, MaxRepetitions, Oids) -> void()
+.br
+.RS
+.TP
+Types
+NonRepeaters = integer()
+.br
+MaxRepetitions = integer()
+.br
+Oids = [oid()]
+.br
+.RE
+.RS
+.LP
+Sends a \fIget-bulk-request\fR (See RFC1905)\&.
+.RE
+.LP
+.B
+gn(Oids) -> void()
+.br
+.RS
+.TP
+Types
+Oids = [oid()]
+.br
+.RE
+.RS
+.LP
+Sends a \fIget-next-request\fR\&.
+.RE
+.LP
+.B
+gn() -> void()
+.br
+.RS
+.LP
+Sends yet another get-next-request constructed from the previous response\&. This is a nice feature for manually traversing a MIB\&. 
+.RE
+.LP
+.B
+gn(N) -> void()
+.br
+.RS
+.TP
+Types
+N = integer()
+.br
+.RE
+.RS
+.LP
+Sends N \fIget-next-request\fR requests\&. 
+.LP
+The last response is used as the start value\&. Works somewhat like a \fIget-bulk-request\fR (see SNMPv2)\&. 
+.RE
+.LP
+.B
+r() -> void()
+.br
+.RS
+.LP
+Resends the last request\&.
+.RE
+.LP
+.B
+s(Varbinds) -> void()
+.br
+.RS
+.TP
+Types
+Varbinds = [varbind()]
+.br
+.RE
+.RS
+.LP
+Sends a \fIset-request\fR\&. 
+.LP
+Varbind is: 
+.RS 2
+.TP 2
+*
+{Oid, Value} if the object with Oid \fIOid\fR is loaded by the manager\&. 
+.TP 2
+*
+{Oid, TypeTag, Value} where TypeTag is \fIs|o|i\fR (String, Oid, Integer)\&. This syntax is used if this object is not defined in a MIB loaded by the manager\&. (Or if you explicitly want to send a request of wrongly typed data\&.) 
+.RE
+.RE
+.LP
+.B
+start(Options)
+.br
+.B
+start_link(Options) -> void()
+.br
+.RS
+.TP
+Types
+Options = [options()]
+.br
+.RE
+.RS
+.LP
+Starts the SNMP manager\&. 
+.LP
+Mandatary options are: 
+.RS 2
+.TP 2
+*
+{agent, Agent} - where Agent is the IP address of the agent {int(),int(),int(),int()} or the name of the host (string())\&. 
+.RE
+.LP
+Optional options are: 
+.RS 2
+.TP 2
+*
+\fI{agent_udp, int()}\fR - the UDP port that the agent listens to\&. Default is 4000\&. 
+.TP 2
+*
+\fI{trap_udp, int()}\fR - the UDP port where the manager will receive traps\&. Default is 5000\&. 
+.TP 2
+*
+\fI{community, string()}\fR - the community string that is sent in the requests from the manager\&. Default is "public"\&. 
+.TP 2
+*
+\fI{context, string()}\fR - the context that is sent in v3 requests from the manager\&. Default is ""\&. 
+.TP 2
+*
+\fI{user, string()}\fR - the USM user name that is sent in v3 requests from the manager\&. Default is "initial"\&. 
+.TP 2
+*
+\fI{engine_id, string()}\fR - the engine ID of the agent\&. Used in v3 only\&. Default is "agentEngine"\&. 
+.TP 2
+*
+\fI{context_engine_id, string()}\fR - the context engine ID used in v3 requests\&. Default is the same as \fIengine_id\fR\&. 
+.TP 2
+*
+\fI{sec_level, noAuthNoPriv + authNoPriv | authPriv}\fR - the requested security level\&. Used in v3 only\&. Default is \fInoAuthNoPriv\fR\&. 
+.TP 2
+*
+\fI{dir, string()}\fR - the directory where the file \fIusm\&.conf\fR is located\&. This file is only needed if v3 is used\&. The file has the same syntax as the usm\&.conf file for the agent\&. 
+.TP 2
+*
+\fI{mibs, List of filename}\fR - MIBs to be loaded in the manager\&. Default is no MIBs\&. The MIBs must be compiled\&. 
+.TP 2
+*
+\fI{receive_type, pdu | msg}\fR - defines the format of delivered messages\&. Default is \fIpdu\fR\&. 
+.TP 2
+*
+\fIquiet\fR - incoming responses are not displayed\&. Messages are sent to the Erlang process that started the manager\&. The format of the message depends on the value of \fIreceive_type\fR\&. If the value is \fIpdu\fR (default),the message is {snmp_pdu, PDU} where PDU is a pdu() or a trappdu() record defined in \fIsnmp_types\&.hrl\fR\&. If the value is \fImsg\fR, the message is \fI{snmp_msg, Msg, Ip, Udp}\fR\&. Default is, this option is not present, i\&.e\&. all incoming requests are displayed\&. This option must be present when running test suites\&. 
+.TP 2
+*
+\fIv1|v2|v3\fR - what SNMP version to use\&. Default is v1\&. 
+.RE
+.RE
+.LP
+.B
+stop() -> void()
+.br
+.RS
+.LP
+Stops the SNMP manager\&.
+.RE
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Klas Eriksson - support@erlang.ericsson.se
+.fi

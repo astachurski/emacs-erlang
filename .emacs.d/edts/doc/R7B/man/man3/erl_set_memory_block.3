@@ -1,0 +1,118 @@
+.TH erl_set_memory_block 3 "erts  5.0.1" "Ericsson Utvecklings AB" "C LIBRARY FUNCTIONS"
+.SH NAME
+erl_set_memory_block \- Custom memory allocation for Erlang on VxWorks(R)
+.SH DESCRIPTION
+.LP
+This documentation is specific to VxWorks\&. 
+.LP
+The \fIerl_set_memory_block\fR function/command initiates custom memory allocation for the Erlang emulator\&. It has to be called before the Erlang emulator is started and makes Erlang use one single large memory block for all memory allocation\&. 
+.LP
+The memory within the block can be utilized by other tasks than Erlang\&. This is accomplished by calling the functions \fIsys_alloc\fR, \fIsys_realloc\fR and \fIsys_free\fR instead of \fImalloc\fR, \fIrealloc\fR and \fIfree\fR respectively\&. 
+.LP
+The purpose of this is to avoid problems inherent in the VxWorks systems \fImalloc\fR library\&. The memory allocation within the large memory block avoids fragmentation by using an "address order first fit" algorithm\&. Another advantage of using a separate memory block is that resource reclamation can be made more easily when Erlang is stopped\&. 
+.LP
+The \fIerl_set_memory_block\fR function is callable from any C program as an ordinary 10 argument function as well as from the commandline\&. 
+
+.SH EXPORTS
+.LP
+.B
+int erl_set_memory_block(size_t size, void *ptr, int warn_mixed_malloc, int realloc_always_moves, int use_reclaim, \&.\&.\&.) 
+.br
+.RS
+.LP
+The function is called before Erlang is started to specify a large memory block where Erlang can maintain memory internally\&. 
+.LP
+Parameters: 
+.RS 2
+.TP 4
+.B
+size_t size:
+The size in bytes of Erlang\&'s internal memory block\&. Has to be specified\&. Note that the VxWorks system uses dynamic memory allocation heavily, so leave some memory to the system\&.
+.TP 4
+.B
+void *ptr:
+A pointer to the actual memory block of size \fIsize\fR\&. If this is specified as 0 (NULL), Erlang will allocate the memory when starting and will reclaim the memory block (as a whole) when stopped\&. 
+.RS 4
+.LP
+
+.LP
+If a memory block is allocated and provided here, the \fIsys_alloc\fR etc routines can still be used after the Erlang emulator is stopped\&. The Erlang emulator can also be restarted while other tasks using the memory block are running without destroying the memory\&. If Erlang is to be restarted, also set the \fIuse_reclaim\fR flag\&. 
+.LP
+
+.LP
+If 0 is specified here, the Erlang system should not be stopped while some other task uses the memory block (has called \fIsys_alloc\fR)\&. 
+.RE
+.TP 4
+.B
+int warn_mixed_malloc:
+If this flag is set to true (anything else than 0), the system will write a warning message on the console if a program is mixing normal \fImalloc\fR with \fIsys_realloc\fR or \fIsys_free\fR\&. 
+.TP 4
+.B
+int realloc_always_moves:
+If this flag is set to true (anything else than 0), all calls to \fIsys_realloc\fR result in a moved memory block\&. This can in certain conditions give less fragmentation\&. This flag may be removed in future releases\&. 
+.TP 4
+.B
+int use_reclaim:
+If this flag is set to true (anything else than 0), all memory allocated with \fIsys_alloc\fR is automatically reclaimed as soon as a task exits\&. This is very useful to make writing port programs (and other programs as well) easier\&. Combine this with using the routines \fIsave_open\fR etc\&. specified in the reclaim\&.h file delivered in the Erlang distribution\&. 
+.RE
+.LP
+Return Value: 
+.LP
+Returns 0 (OK) on success, otherwise a value <> 0\&.
+.RE
+.LP
+.B
+int erl_memory_show(\&.\&.\&.)
+.br
+.RS
+.LP
+Return Value: 
+.LP
+Returns 0 (OK) on success, otherwise a value <> 0\&.
+.RE
+.LP
+.B
+int erl_mem_info_get(MEM_PART_STATS *stats)
+.br
+.RS
+.LP
+Parameter: 
+.RS 2
+.TP 4
+.B
+MEM_PART_STATS *stats:
+A pointer to a MEM_PART_STATS structure as defined in \fI<memLib\&.h>\fR\&. A successful call will fill in all fields of the structure, on error all fields are left untouched\&.
+.RE
+.LP
+Return Value: 
+.LP
+Returns 0 (OK) on success, otherwise a value <> 0
+.RE
+.SH NOTES
+.LP
+The memory block used by Erlang actually does not need to be inside the area known to ordinary \fImalloc\fR\&. It is possible to set the \fIUSER_RESERVED_MEM\fR preprocessor symbol when compiling the wind kernel and then use user reserved memory for Erlang\&. Erlang can therefor utilize memory above the 32 Mb limit of VxWorks on the PowerPC architecture\&. 
+.LP
+Example:
+.LP
+In config\&.h for the wind kernel:
+
+.nf
+      #undef LOCAL_MEM_AUTOSIZE
+      #undef LOCAL_MEM_SIZE
+      #undef USER_RESERVED_MEM
+ 
+      #define LOCAL_MEM_SIZE        0x05000000
+      #define USER_RESERVED_MEM     0x03000000
+.fi
+.LP
+In the start-up script/code for the VxWorks node:
+
+.nf
+erl_set_memory_block(sysPhysMemTop()-sysMemTop(),sysMemTop(),0,0,1);
+.fi
+.LP
+Setting the \fIuse_reclaim\fR flag decreases performance of the system, but makes programming much easier\&. Other similar facilities are present in the Erlang system even without using a separate memory block\&. The routines called \fIsave_malloc\fR, \fIsave_realloc\fR and \fIsave_free\fR provide the same facilities by using VxWorks own \fImalloc\fR\&. Similar routines exist for files, see the file \fIreclaim\&.h\fR in the distribution\&. 
+.SH AUTHOR
+.nf
+Patrik Nyblom - support@erlang.ericsson.se
+.fi

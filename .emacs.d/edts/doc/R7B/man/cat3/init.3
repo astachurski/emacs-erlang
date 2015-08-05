@@ -1,0 +1,396 @@
+
+
+
+init(3)             ERLANG MODULE DEFINITION              init(3)
+
+
+
+MODULE
+     init - Called at System Start
+
+DESCRIPTION
+     _i_n_i_t is pre-loaded into the system before the system  starts
+     and  it  coordinates  the  start-up of the system. The first
+     function evaluated at start-up is _b_o_o_t(_B_o_o_t_a_r_g_s), where _B_o_o_-
+     _t_a_r_g_s is a list of the arguments supplied to the Erlang run-
+     time system from the local operating system. The Erlang code
+     for the module _i_n_i_t is always pre-loaded.
+
+     _i_n_i_t reads a boot script which contains instructions on  how
+     to initiate the system. The default boot script (_s_t_a_r_t._b_o_o_t)
+     is in the directory <_E_R_L__I_N_S_T_A_L_L__D_I_R>/_b_i_n.
+
+     _i_n_i_t contains functions to  fetch  command  line  flags,  or
+     arguments, supplied to the Erlang runtime system.
+
+     _i_n_i_t also contains functions to restart,  reboot,  and  stop
+     the system.
+
+
+EXPORTS
+     boot(BootArgs) -> void()
+
+          Types
+               BootArgs = [term()]
+
+          Erlang is started with the command  _e_r_l  <_s_c_r_i_p_t-_f_l_a_g_s>
+          <_u_s_e_r-_f_l_a_g_s>.
+
+          _e_r_l  is  the  name  of  the  Erlang  start-up   script.
+          <_s_c_r_i_p_t-_f_l_a_g_s>,  described  in  erl(1), are read by the
+          script. <_u_s_e_r-_f_l_a_g_s> are put into a list and passed  as
+          _A_r_g_s to _b_o_o_t/_1.
+
+          The _b_o_o_t/_1 function interprets the _b_o_o_t,  _m_o_d_e,  and  _s
+          flags. These are described in _C_O_M_M_A_N_D _L_I_N_E _F_L_A_G_S.
+
+          If the _b_o_o_t function  finds  other  arguments  starting
+          with the character -, that argument is interpreted as a
+          flag with zero or more values.  It  ends  the  previous
+          argument. For example:
+
+          _e_r_l -_r_u_n _f_o_o _b_a_r -_c_h_a_r_l_e_s _p_e_t_e_r_s_o_n
+
+          This  starts  the  Erlang  runtime  system,   evaluates
+          _f_o_o:_b_a_r(),  and  sets  the flag -_c_h_a_r_l_e_s, which has the
+          associated value _p_e_t_e_r_s_o_n.
+
+          Other arguments which are passed to the _b_o_o_t  function,
+          and  do  not fit into the above description, are passed
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+init(3)             ERLANG MODULE DEFINITION              init(3)
+
+
+
+          to the _i_n_i_t loop as plain arguments.
+
+          The special flag -- can be used to separate plain argu-
+          ments to _b_o_o_t.
+
+     get_arguments() -> Flags
+
+          Types
+               Flags = [{Flag, [Value]}]
+               Flag = atom()
+               Value = string()
+
+          Returns all flags given to the system.
+
+     get_argument(Flag) -> {ok, Values} | error
+
+          Types
+               Flag = atom()
+               Values = [FValue]
+               FValue = [Value]
+               Value = string()
+
+          Returns all values associated with  _F_l_a_g.  If  _F_l_a_g  is
+          provided  several  times,  each  _F_V_a_l_u_e  is returned in
+          preserved order.
+
+     get_args() -> [Arg]
+
+          Types
+               Arg = atom()
+
+          Returns the additional plain arguments  as  a  list  of
+          atoms   (possibly   empty).   It  is  recommended  that
+          _g_e_t__p_l_a_i_n__a_r_g_u_m_e_n_t_s/_1 be used instead, because  of  the
+          limited length of atoms.
+
+     get_plain_arguments() -> [Arg]
+
+          Types
+               Arg = string()
+
+          Returns the additional plain arguments  as  a  list  of
+          strings (possibly empty).
+
+     restart() -> void()
+
+          The system is restarted _i_n_s_i_d_e the running Erlang node,
+          which  means  that  the  emulator is not restarted. All
+          applications are  taken  down  smoothly,  all  code  is
+          unloaded, and all ports are closed before the system is
+          booted again in the same way as initially started.  The
+          same _B_o_o_t_A_r_g_s are used again.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+init(3)             ERLANG MODULE DEFINITION              init(3)
+
+
+
+          To limit the shutdown time, the time _i_n_i_t is allowed to
+          spend taking down applications, the -_s_h_u_t_d_o_w_n__t_i_m_e com-
+          mand line flag should be used.
+
+     reboot() -> void()
+
+          All applications are taken down smoothly, all  code  is
+          unloaded,  and  all  ports are closed before the Erlang
+          node terminates. If the -_h_e_a_r_t system flag  was  given,
+          the  _h_e_a_r_t program will try to reboot the system. Refer
+          to the _h_e_a_r_t module for more information.
+
+          In order to limit the shutdown time, the time  _i_n_i_t  is
+          allowed   to   spend   taking  down  applications,  the
+          -_s_h_u_t_d_o_w_n__t_i_m_e command line flag should be used.
+
+     stop() -> void()
+
+          All applications are taken down smoothly, all  code  is
+          unloaded,  and  all  ports are closed before the system
+          terminates. If the -_h_e_a_r_t system flag  was  given,  the
+          _h_e_a_r_t program is terminated before the Erlang node ter-
+          minates. Refer to the _h_e_a_r_t module  for  more  informa-
+          tion.
+
+          In order to limit the shutdown time, the time  init  is
+          allowed   to   spend   taking  down  applications,  the
+          -_s_h_u_t_d_o_w_n__t_i_m_e command line flag should be used.
+
+     get_status() -> {InternalStatus, ProvidedStatus}
+
+          Types
+               InternalStatus = starting | started | stopping
+               ProvidedStatus = term()
+
+          The  current  status  of  the  _i_n_i_t  process   can   be
+          inspected. During system start (initialization), _I_n_t_e_r_-
+          _n_a_l_S_t_a_t_u_s is _s_t_a_r_t_i_n_g, and _P_r_o_v_i_d_e_d_S_t_a_t_u_s indicates how
+          long  the  boot script has been interpreted. Each {_p_r_o_-
+          _g_r_e_s_s,  _I_n_f_o}  term  interpreted  in  the  boot  script
+          affects the _P_r_o_v_i_d_e_d_S_t_a_t_u_s status, i.e., _P_r_o_v_i_d_e_d_S_t_a_t_u_s
+          gets the value of _I_n_f_o.
+
+     script_id() -> Id
+
+          Types
+               Id = term()
+
+          Get the identity of the boot script used  to  boot  the
+          system.  _I_d  can  be  any Erlang term. In the delivered
+          boot scripts, _I_d is  {_N_a_m_e,  _V_s_n}.  _N_a_m_e  and  _V_s_n  are
+          strings.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+init(3)             ERLANG MODULE DEFINITION              init(3)
+
+
+
+Command Line Flags
+     The _i_n_i_t module interprets the following flags:
+
+       -_b_o_o_t _F_i_l_e:
+           Specifies the name of the boot script, _F_i_l_e.boot, used
+           to  start the system. Unless _F_i_l_e contains an absolute
+           path, the system searches for _F_i_l_e.boot in the current
+           and <_E_R_L__I_N_S_T_A_L_L__D_I_R>/_b_i_n directories
+
+           If      this      flag      is      omitted,       the
+           <_E_R_L__I_N_S_T_A_L_L__D_I_R>/_b_i_n/_s_t_a_r_t._b_o_o_t boot script is used.
+
+       -_b_o_o_t__v_a_r _V_a_r _D_i_r_e_c_t_o_r_y [_V_a_r _D_i_r_e_c_t_o_r_y]:
+           If the boot script used contains another path variable
+           than  $ROOT,  that variable must have a value assigned
+           in order to start the system. A boot variable is  used
+           if  user  applications  are  installed  in a different
+           location  than  underneath  the  <_E_R_L__I_N_S_T_A_L_L__D_I_R>/_l_i_b
+           directory.  $_V_a_r  is expanded to _D_i_r_e_c_t_o_r_y in the boot
+           script.
+
+       -_m_o_d_e _M_o_d_e:
+           The mode flag indicates if the system will  load  code
+           automatically  at  runtime,  or  if all code should be
+           loaded  during  system  initialization.  _M_o_d_e  can  be
+           either  _i_n_t_e_r_a_c_t_i_v_e  (allow automatic code loading) or
+           _e_m_b_e_d_d_e_d (load all code during start-up).
+
+       -_s_h_u_t_d_o_w_n__t_i_m_e _T_i_m_e:
+           Specifies how long time (in ms) the  _i_n_i_t  process  is
+           allowed  to  spend  shutting  down the system. If _T_i_m_e
+           milliseconds has elapsed, all processes still existing
+           are _k_i_l_l_e_d.
+
+           If -_s_h_u_t_d_o_w_n__t_i_m_e is not specified, the  default  time
+           is _i_n_f_i_n_i_t_y.
+
+       -_r_u_n _M_o_d_u_l_e [_F_u_n_c_t_i_o_n [_A_r_g_s]]:
+           Evaluate the function  during  system  initialization.
+           _F_u_n_c_t_i_o_n  defaults  to  _s_t_a_r_t  and  _A_r_g_s to []. If the
+           function call ends abnormally, the Erlang runtime sys-
+           tem stops with an error message.
+
+           The arguments after -_r_u_n  are  used  as  arguments  to
+           Erlang functions. All arguments are passed as strings.
+           For example:
+
+           _e_r_l -_r_u_n _f_o_o -_r_u_n _f_o_o _b_a_r -_r_u_n _f_o_o _b_a_r _b_a_z _1 _2
+
+           This starts the Erlang runtime system and then  evalu-
+           ates the following Erlang functions:
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+
+
+
+
+init(3)             ERLANG MODULE DEFINITION              init(3)
+
+
+
+                       foo:start()
+                       foo:bar()
+                       foo:bar([baz, "1", "2"]).
+
+           The functions are executed sequentially  in  the  ini-
+           tialization  process,  which  then terminates normally
+           and passes control to the user. This means that a -_r_u_n
+           call  which does not terminate will block further pro-
+           cessing; to avoid this, use some variant of  _s_p_a_w_n  in
+           such cases.
+
+       -_s _M_o_d_u_l_e [_F_u_n_c_t_i_o_n [_A_r_g_s]]:
+           Evaluate the function  during  system  initialization.
+           _F_u_n_c_t_i_o_n  defaults  to  _s_t_a_r_t  and  _A_r_g_s to []. If the
+           function call ends abnormally, the Erlang runtime sys-
+           tem stops with an error message.
+
+           The arguments after -_s are used as arguments to Erlang
+           functions.  All  arguments  are  passed  as atoms. For
+           example:
+
+           _e_r_l -_s _f_o_o -_s _f_o_o _b_a_r -_s _f_o_o _b_a_r _b_a_z _1 _2
+
+           This starts the Erlang runtime system and then  evalu-
+           ates the following Erlang functions:
+
+                       foo:start()
+                       foo:bar()
+                       foo:bar([baz, '1', '2']).
+
+           The functions are executed sequentially  in  the  ini-
+           tialization  process,  which  then terminates normally
+           and passes control to the user. This means that  a  -_s
+           call  which does not terminate will block further pro-
+           cessing; to avoid this, use some variant of  _s_p_a_w_n  in
+           such cases.
+
+           Due to the 255 character limit on atoms, it is  recom-
+           mended that -_r_u_n be used instead.
+
+       -_i_n_i_t__d_e_b_u_g:
+           The _i_n_i_t process writes some debug  information  while
+           interpreting the boot script.
+
+Example
+     erl -- a b -children thomas claire -ages 7 3 -- x y
+     1> init:get_plain_arguments().
+     ["a", "b", "x", "y"]
+     2> init:get_argument(children).
+     {ok, [["thomas", "claire"]]}
+     3> init:get_argument(ages).
+     {ok, [["7", "3"]]}
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  5
+
+
+
+
+
+
+init(3)             ERLANG MODULE DEFINITION              init(3)
+
+
+
+     4> init:get_argument(silly).
+     error
+
+See also
+     erl_prim_loader(3), heart(3)
+
+AUTHORS
+     Claes Wikstrom - support@erlang.ericsson.se
+     Magnus Froberg - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  6
+
+
+

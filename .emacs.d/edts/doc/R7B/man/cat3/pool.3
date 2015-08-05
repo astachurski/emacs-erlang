@@ -1,0 +1,132 @@
+
+
+
+pool(3)             ERLANG MODULE DEFINITION              pool(3)
+
+
+
+MODULE
+     pool - Load Distribution Facility
+
+DESCRIPTION
+     _p_o_o_l can be used to run a set of Erlang nodes as a  pool  of
+     computational  processors. It is organized as a master and a
+     set of slave nodes and includes the following features:
+
+       * The slave nodes send regular reports to the master about
+         their current load.
+
+       * Queries can be sent to the  master  to  determine  which
+         node will have the least load.
+
+     The BIF _s_t_a_t_i_s_t_i_c_s(_r_u_n__q_u_e_u_e) is used for estimating  future
+     loads.  It  returns  the length of the queue of ready to run
+     processes in the Erlang runtime system.
+
+     The slave nodes are started  with  the  _s_l_a_v_e  module.  This
+     effects, tty IO, file IO, and code loading.
+
+     If the master node fails, the entire pool will exit.
+
+
+EXPORTS
+     start(Name)
+
+          Starts a new pool. The file ._h_o_s_t_s._e_r_l_a_n_g  is  read  to
+          find  host  names  where the pool nodes can be started.
+          The current working directory is searched  first,  then
+          the  home  directory, and finally the root directory of
+          the Erlang runtime system. The start-up procedure fails
+          if the file is not found.
+
+          _N_a_m_e is sent to all pool nodes. This  is  used  as  the
+          first  part  of the node name in the _a_l_i_v_e/_3 statements
+          for the nodes.
+
+          The  function  _n_e_t__a_d_m:_h_o_s_t__f_i_l_e()   reads   the   file
+          ._h_o_s_t_s._e_r_l_a_n_g  for  host  names.  The  slave  nodes are
+          started with _s_l_a_v_e:_s_t_a_r_t. See slave(3).
+
+          _s_t_a_r_t/_1 is synchronous and all the nodes,  as  well  as
+          all  the  system servers, are running when it returns a
+          value. Access rights must also be set so that all nodes
+          in the pool have the authority to access each other.
+
+     start(Name, Args)
+
+          This function is the same as _s_t_a_r_t/_1, except  that  the
+          environment  _A_r_g_s  is  passed  to  the  pool nodes. See
+          slave(3).
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+pool(3)             ERLANG MODULE DEFINITION              pool(3)
+
+
+
+     attach(Node)
+
+          This function ensures that a pool master is running and
+          includes _N_o_d_e in the pool master's pool of nodes.
+
+     stop()
+
+          Stops the pool and kills all the slave nodes.
+
+     get_nodes()
+
+          Returns a list of the current member nodes of the pool.
+
+     pspawn(Mod, Fun, Args)
+
+          Spawns a process on the pool node which is expected  to
+          have the lowest future load.
+
+     pspawn_link(Mod, Fun, Args)
+
+          Spawn links  a  process  on  the  pool  node  which  is
+          expected to have the lowest future load.
+
+     get_node()
+
+          Returns the node ID  of  the  node  with  the  expected
+          lowest future load.
+
+     new_node(Host, Name)
+
+          Starts a new node and attaches it to an already  exist-
+          ing pool If there is no existing pool, it starts a pool
+          with two nodes, the current node and _N_o_d_e.  This  func-
+          tion  can  also be used as a convenient way of starting
+          new nodes, even if the load distribution facilities  of
+          _p_o_o_l are of no interest.
+
+Files
+     $HOME/.hosts.erlang is used to pick hosts where nodes can be
+     started.
+
+     $HOME/.erlang.slave.out.HOST is used for all  additional  IO
+     that  may  come  from the slave nodes on standard IO. If the
+     start-up procedure does not work, this file may indicate the
+     reason.
+
+AUTHOR
+      Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+

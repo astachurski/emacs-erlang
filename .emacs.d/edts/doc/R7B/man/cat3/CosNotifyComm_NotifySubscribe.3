@@ -1,0 +1,66 @@
+
+
+
+CosNotifyComm_NotifySuEbRsLcArNiGbeM(O3D)ULECoDsENFoItNiIfTyICOoNmm_NotifySubscribe(3)
+
+
+
+MODULE
+     CosNotifyComm_NotifySubscribe -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     All objects, which inherit this interface, export  functions
+     described in this module.
+
+
+EXPORTS
+     subscription_change(Object, Added, Removed) -> Reply
+
+          Types
+               Object = #objref
+               Added = Removed = EventTypeSeq
+               EventTypeSeq = [type]
+               Reply       =       ok       |       {'EXCEPTION',
+               CosNotifyComm_InvalidEventType{type}}
+               type  =  #'CosNotification_EventType'{domain_name,
+               type_name}
+               domain_name = type_name = string()
+
+          This operation takes as input two  sequences  of  event
+          type  names  specifying events the client will and will
+          not accept in the future respectively.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+

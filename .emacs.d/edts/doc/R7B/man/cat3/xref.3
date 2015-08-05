@@ -1,0 +1,1716 @@
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+MODULE
+     xref - A Cross Reference  Tool  for  analyzing  dependencies
+     between functions, modules, applications and releases.
+
+DESCRIPTION
+     _x_r_e_f is a cross reference tool that can be used for  finding
+     dependencies  between  functions,  modules, applications and
+     releases.
+
+     _C_a_l_l_s are pairs (From, To) of functions,  modules,  applica-
+     tions  or  releases. From is said to call To, and To is said
+     to be used by From. Calls between functions are either _l_o_c_a_l
+     _c_a_l_l_s  like  _f(), or _e_x_t_e_r_n_a_l _c_a_l_l_s like _m:_f(). _M_o_d_u_l_e _d_a_t_a,
+     which are extracted from BEAM  files,  include  local  func-
+     tions,  exported  functions, local calls and external calls.
+     By default, calls to built-in functions ( BIF ) are ignored,
+     but  if the option _b_u_i_l_t_i_n_s, accepted by some of this module
+     s functions, is set to _t_r_u_e, calls to BIFs are  included  as
+     well.  It  is  the  analyzing  OTP version that decides what
+     functions are BIFs. Functional objects  are  assumed  to  be
+     called where they are created (and nowhere else). _U_n_r_e_s_o_l_v_e_d
+     _c_a_l_l_s are calls to _a_p_p_l_y or _s_p_a_w_n with  variable  module  or
+     variable  arguments.  Examples are _M:_F(_a), _a_p_p_l_y(_M, _f, [_a]),
+     _s_p_a_w_n(_m,  _f,  _A_r_g_s). The unresolved calls are  a  subset  of
+     the external calls. Calls where the function is variable but
+     the module and  the  number  of  arguments  are  known,  are
+     resolved by replacing the function with the atom '$_F__E_X_P_R'.
+
+  Warning:
+     Unresolved calls make module data incomplete, which  implies
+     that the results of analyses may be invalid.
+
+
+     _A_p_p_l_i_c_a_t_i_o_n_s are collections of modules. The  modules   BEAM
+     files  are  located in the _e_b_i_n subdirectory of the applica-
+     tion directory. The name of the application directory deter-
+     mines  the name and version of the application. _R_e_l_e_a_s_e_s are
+     collections of applications located in the _l_i_b  subdirectory
+     of the release directory. There is more to read about appli-
+     cations and releases in the Design Principles book.
+
+     _X_r_e_f _s_e_r_v_e_r_s are identified by names, supplied when creating
+     new servers. Each xref server holds a set of releases, a set
+     of applications, and a set of modules with module data. Xref
+     servers  are independent of each other, and all analyses are
+     evaluated in the context of one single xref  server  (excep-
+     tions are the functions _m/_1 and _d/_1 which do not use servers
+     at all). The _m_o_d_e of an xref server determines  what  module
+     data  are  extracted from BEAM files as modules are added to
+     the server. Starting with R7, BEAM files contain  so  called
+     debug  information,  which  is an abstract representation of
+     the code. In _f_u_n_c_t_i_o_n_s mode,  which  is  the  default  mode,
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   1
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+     function  calls  and  line  numbers are extracted from debug
+     information. In _m_o_d_u_l_e_s mode, debug information  is  ignored
+     if  present,  but dependencies between modules are extracted
+     from other parts of the BEAM files. The _m_o_d_u_l_e_s mode is sig-
+     nificantly  less time and space consuming than the _f_u_n_c_t_i_o_n_s
+     mode, but the analyses that can be done are limited.
+
+     An _a_n_a_l_y_z_e_d _m_o_d_u_l_e is a module that has  been  added  to  an
+     xref  server together with its module data. A _l_i_b_r_a_r_y _m_o_d_u_l_e
+     is a module located  in  some  directory  mentioned  in  the
+     _l_i_b_r_a_r_y _p_a_t_h. A library module is said to be used if some of
+     its exported functions are used by some analyzed module.  An
+     _u_n_k_n_o_w_n  _m_o_d_u_l_e  is  a  module  that  is neither an analyzed
+     module nor a library module, but  whose  exported  functions
+     are  used  by some analyzed module. An _u_n_k_n_o_w_n _f_u_n_c_t_i_o_n is a
+     used function that is  neither  local  or  exported  by  any
+     analyzed  module  nor  exported  by  any  library module. An
+     _u_n_d_e_f_i_n_e_d _f_u_n_c_t_i_o_n is an externally used  function  that  is
+     not  exported by any analyzed module or library module. With
+     this notion, a local function can be an undefined  function,
+     namely  if  it  is  used  externally  from  some module. All
+     unknown functions are also undefined functions; there  is  a
+     figure  in  the User s Guide that illustrates this relation-
+     ship.
+
+     Before any analysis can take place, module data must be  _s_e_t
+     _u_p.  For instance, the cross reference and the unknown func-
+     tions are computed when all module data are known. The func-
+     tions  that  need complete data (_a_n_a_l_y_z_e, _q, _v_a_r_i_a_b_l_e_s) take
+     care of setting up data automatically. Module data  need  to
+     be  set  up  (again) after calls to any of the _a_d_d, _r_e_p_l_a_c_e,
+     _r_e_m_o_v_e, _s_e_t__l_i_b_r_a_r_y__p_a_t_h or _u_p_d_a_t_e functions.
+
+     The result of setting up module data is the  _C_a_l_l  _G_r_a_p_h.  A
+     (directed)  graph consists of a set of vertices and a set of
+     (directed) edges. The vertices of the  Call  Graph  are  the
+     functions  of  all module data: local and exported functions
+     of analyzed modules; used BIFs; used exported  functions  of
+     library   modules;  and  unknown  functions.  The  functions
+     _m_o_d_u_l_e__i_n_f_o/_0, _1 added by the compiler  are  included  among
+     the  exported  functions,  but  only  when  called from some
+     module. The edges are the function calls of all module data.
+     A consequence of the edges being a set is that there is only
+     one edge if a function is used locally or externally several
+     times on one and the same line of code.
+
+     The Call Graph is represented by Erlang terms (the sets  are
+     lists),  which  is  suitable for many analyses. But for ana-
+     lyses that look at chains of calls, a list representation is
+     much  too  slow.  Instead  the representation offered by the
+     _d_i_g_r_a_p_h  module  is  used.  The  translation  of  the   list
+     representation  of  the Call Graph - or a subgraph thereof -
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   2
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+     to the _d_i_g_r_a_p_h representation does not come for free, so the
+     language  used  for expressing queries to be described below
+     has a special operator for this task and  a  possibility  to
+     save the _d_i_g_r_a_p_h representation for subsequent analyses.
+
+     In addition to the Call Graph there is a  graph  called  the
+     _I_n_t_e_r  _C_a_l_l  _G_r_a_p_h. This is a graph of calls (From, To) such
+     that there is a chain of calls from From to To in  the  Call
+     Graph, and each of From and To is an exported function or an
+     unused local function. The vertices are the same as for  the
+     Call Graph.
+
+     Calls between modules, applications and  releases  are  also
+     directed  graphs.  The  _t_y_p_e_s  of  the vertices and edges of
+     these graphs are (ranging from the most special to the  most
+     general): _F_u_n for functions; _M_o_d for modules; _A_p_p for appli-
+     cations; and _R_e_l for releases. The following paragraphs will
+     describe  the  different constructs of the language used for
+     selecting and analyzing parts of the graphs, beginning  with
+     the _c_o_n_s_t_a_n_t_s:
+
+       * Expression ::= Constants
+
+       * Constants ::= Consts | Consts : Type | RegExpr
+
+       * Consts ::= Constant  |  [Constant,   ...]  |  {Constant,
+         ...}
+
+       * Constant ::= Call | Const
+
+       * Call ::= FunSpec -> FunSpec | {MFA,  MFA} | AtomConst ->
+         AtomConst | {AtomConst,  AtomConst}
+
+       * Const ::= AtomConst | FunSpec | MFA
+
+       * AtomConst ::= Application | Module | Release
+
+       * FunSpec ::= Module : Function / Arity
+
+       * MFA ::= {Module,  Function,  Arity}
+
+       * RegExpr ::= RegString : Type | RegFunc | RegFunc : Type
+
+       * RegFunc ::= RegModule : RegFunction / RegArity
+
+       * RegModule ::= RegAtom
+
+       * RegFunction ::= RegAtom
+
+       * RegArity ::= RegString | Number | _
+
+       * RegAtom ::= RegString | Atom | _
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   3
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+       * RegString ::= - a regular expression,  as  described  in
+         the _r_e_g_e_x_p module, enclosed in double quotes -
+
+       * Type ::= _F_u_n | _M_o_d | _A_p_p | _R_e_l
+
+       * Function ::= Atom
+
+       * Application ::= Atom
+
+       * Module ::= Atom
+
+       * Release ::= Atom
+
+       * Arity ::= Number
+
+       * Atom ::= - same as Erlang atoms -
+
+       * Number ::= - same as non-negative Erlang integers -
+
+     Examples of constants are: _k_e_r_n_e_l, _k_e_r_n_e_l->_s_t_d_l_i_b,  [_k_e_r_n_e_l,
+     _s_a_s_l], [_p_g -> _m_n_e_s_i_a, {_t_v, _m_n_e_s_i_a}] : _M_o_d. It is an error if
+     an instance of _C_o_n_s_t does not match any vertex of any graph.
+     If  there  are  more  than  one  vertex  matching an untyped
+     instance of _A_t_o_m_C_o_n_s_t, then the one of the most general type
+     is  chosen.  A  list of constants is interpreted as a set of
+     constants, all of the same type. A tuple of  constants  con-
+     stitute  a  chain of calls (which may, but does not have to,
+     correspond to an actual  chain  of  calls  of  some  graph).
+     Assigning  a  type  to  a  list  or  tuple  of  _C_o_n_s_t_a_n_t  is
+     equivalent to assigning the type to each _C_o_n_s_t_a_n_t.
+
+     _R_e_g_u_l_a_r _e_x_p_r_e_s_s_i_o_n_s are used as a means to  select  some  of
+     the vertices of a graph. A _R_e_g_E_x_p_r consisting of a _R_e_g_S_t_r_i_n_g
+     and a type - an example is "_x_r_e_f_.*" : _M_o_d - is  interpreted
+     as  those modules (or applications or releases, depending on
+     the type) that match the expression. Similarly, a _R_e_g_F_u_n_c is
+     interpreted  as  those vertices of the Call Graph that match
+     the expression. An  example  is  "_x_r_e_f_.*":"_a_d_d_.*"/"(_2|_3)",
+     which matches all _a_d_d functions of arity two or three of any
+     of the xref modules. Another example, one that  matches  all
+     functions  of  arity 10 or more: _:_/"[_1-_9].+". Here _ is an
+     abbreviation for ".*",  i.e.  the  regular  expression  that
+     matches everything.
+
+     The syntax of _v_a_r_i_a_b_l_e_s is simple:
+
+       * Expression ::= Variable
+
+       * Variable ::= - same as Erlang variables -
+
+     There are two kinds of variables: predefined  variables  and
+     user  variables.  _P_r_e_d_e_f_i_n_e_d  _v_a_r_i_a_b_l_e_s  hold  set up module
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   4
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+     data, and cannot be assigned to but only  used  in  queries.
+     _U_s_e_r _v_a_r_i_a_b_l_e_s on the other hand can be assigned to, and are
+     typically used for  temporary  results  while  evaluating  a
+     query,  and for keeping results of queries for use in subse-
+     quent  queries.  The  predefined  variables  are  (variables
+     marked with (*) are available in _f_u_n_c_t_i_o_n_s mode only):
+
+       _E:  Call Graph Edges (*).
+
+       _V:  Call Graph Vertices (*).
+
+       _M:  Modules. All modules: analyzed modules,  used  library
+           modules, and unknown modules.
+
+       _A:  Applications.
+
+       _R:  Releases.
+
+       _M_E: Module Edges. All module calls.
+
+       _A_E: Application Edges. All application calls.
+
+       _R_E: Release Edges. All release calls.
+
+       _L:  Local Functions (*). All local functions  of  analyzed
+           modules.
+
+       _X:  Exported Functions. All exported functions of analyzed
+           modules  and  all  used  exported functions of library
+           modules.
+
+       _F:  Functions (*).
+
+       _B:  Used BIFs. _B can be non-empty if _b_u_i_l_t_i_n_s is _f_a_l_s_e for
+           all  analyzed  modules, namely if there are unresolved
+           calls (some of  the  _a_p_p_l_y  and  _s_p_a_w_n  functions  are
+           BIFs).
+
+       _U:  Unknown Functions.
+
+       _U_U: Unused Functions (*). All local and exported functions
+           of analyzed modules that have not been used.
+
+       _X_U: Externally Used Functions. Functions of all modules  -
+           including  local  functions  -  that have been used in
+           some external call.
+
+       _L_U: Locally Used Functions (*). Functions of  all  modules
+           that have been used in some local call.
+
+       _L_C: Local Calls (*).
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   5
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+       _X_C: External Calls (*).
+
+       _A_M: Analyzed Modules.
+
+       _U_M: Unknown Modules.
+
+       _L_M: Used Library Modules.
+
+       _U_C: Unresolved Calls (*).
+
+       _E_E: Inter Call Graph Edges (*).
+
+     These are a few facts about the  predefined  variables  (the
+     set  operators  +  (union) and - (difference) as well as the
+     cast operator (Type) are described below):
+
+       * _F is equal to _L + _X.
+
+       * _V is equal to _X + _L + _B + _U, where _X, _L,  _B  and  _U  are
+         pairwise disjoint (that is, have no elements in common).
+
+       * _U_U is equal to _V - (_X_U + _L_U), where _L_U and _X_U  may  have
+         elements in common. Put in another way:
+
+       * _V is equal to _U_U + _X_U + _L_U.
+
+       * _E is equal to _L_C + _X_C. Note that _L_C and _X_C may have ele-
+         ments in common, namely if some function is used locally
+         and externally from one and the same function.
+
+       * _U is a subset of _X_U.
+
+       * _B is a subset of _X_U.
+
+       * _L_U is equal to _r_a_n_g_e _L_C.
+
+       * _X_U is equal to _r_a_n_g_e _X_C.
+
+       * _L_U is a subset of _F.
+
+       * _U_U is a subset of _F.
+
+       * _M is equal to _A_M + _L_M + _U_M, where  _A_M,  _L_M  and  _U_M  are
+         pairwise disjoint.
+
+       * _M_E is equal to (_M_o_d) _E.
+
+       * _A_E is equal to (_A_p_p) _E.
+
+       * _R_E is equal to (_R_e_l) _E.
+
+       * (_M_o_d) _V is a subset of _M. Equality holds if all analyzed
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   6
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+         modules  have  some  local, exported function or unknown
+         function.
+
+       * (_A_p_p) _M is a subset of _A. Equality holds if all applica-
+         tions have some module.
+
+       * (_R_e_l) _A is a subset of _R. Equality holds if all releases
+         have some application.
+
+     An important notion is that of  _c_o_n_v_e_r_s_i_o_n  of  expressions.
+     The syntax of a cast expression is:
+
+       * Expression ::= ( Type ) Expression
+
+     The interpretation of the cast operator depends on the named
+     type  _T_y_p_e, the type of _E_x_p_r_e_s_s_i_o_n, and the structure of the
+     elements of the interpretation of _E_x_p_r_e_s_s_i_o_n. If  the  named
+     type is equal to the expression type, no conversion is done.
+     Otherwise, the conversion is done one step at a time;  (_F_u_n)
+     (_A_p_p)  _R_E,  for instance, is equivalent to (_F_u_n) (_M_o_d) (_A_p_p)
+     _R_E. Now assume that the interpretation of  _E_x_p_r_e_s_s_i_o_n  is  a
+     set   of  constants  (functions,  modules,  applications  or
+     releases). If the  named  type  is  more  general  than  the
+     expression  type,  say  _M_o_d  and  _F_u_n respectively, then the
+     interpretation of the cast expression is the set of  modules
+     that  have  at least one of their functions mentioned in the
+     interpretation of the expression. If the named type is  more
+     special  than the expression type, say _F_u_n and _M_o_d, then the
+     interpretation is the  set  of  all  the  functions  of  the
+     modules  (in  _m_o_d_u_l_e_s  mode, the conversion is partial since
+     the local functions are not known). The conversions  to  and
+     from   applications   and  releases  work  analogously.  For
+     instance, (_A_p_p) "_x_r_e_f_.*" :  _M_o_d  returns  all  applications
+     containing  at  least one module such that _x_r_e_f_ is a prefix
+     of the module name.
+
+     Now assume that the interpretation of _E_x_p_r_e_s_s_i_o_n is a set of
+     calls. If the named type is more general than the expression
+     type, say _M_o_d and _F_u_n respectively, then the  interpretation
+     of  the  cast  expression  is the set of calls (M1, M2) such
+     that the interpretation of the expression  contains  a  call
+     from  some  function  of  M1  to some function of M2. If the
+     named type is more special than the expression type, say _F_u_n
+     and  _M_o_d, then the interpretation is the set of all function
+     calls (F1, F2) such that the interpretation of  the  expres-
+     sion contains a call (M1, M2) and F1 is a function of M1 and
+     F2 is a function of M2 (in _m_o_d_u_l_e_s mode, there are no  func-
+     tions  calls,  so a cast to _F_u_n always yields an empty set).
+     Again, the conversions to and from applications and releases
+     work analogously.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   7
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+     The interpretation of constants and variables are sets,  and
+     those  sets can be used as the basis for forming new sets by
+     the application of _s_e_t _o_p_e_r_a_t_o_r_s. The syntax:
+
+       * Expression ::= Expression BinarySetOp Expression
+
+       * BinarySetOp ::= + | * | -
+
+     +, * and  -  are  interpreted  as  union,  intersection  and
+     difference  respectively: the union of two sets contains the
+     elements of both sets; the intersection of two sets contains
+     the  elements common to both sets; and the difference of two
+     sets contains the elements of the first  set  that  are  not
+     members of the second set. The elements of the two sets must
+     be of the same structure; for instance, a function call can-
+     not  be combined with a function. But if a cast operator can
+     make the elements compatible, then the more general elements
+     are   converted  to  the  less  general  element  type.  For
+     instance, _M + _F is equivalent to (_F_u_n) _M + _F, and _E - _A_E  is
+     equivalent to _E - (_F_u_n) _A_E. One more example: _X * _x_r_e_f : _M_o_d
+     is interpreted as the  set  of  functions  exported  by  the
+     module  _x_r_e_f;  _x_r_e_f  :  _M_o_d is converted to the more special
+     type of _X (_F_u_n, that is) yielding all functions of _x_r_e_f, and
+     the  intersection with _X (all functions exported by analyzed
+     modules and library modules) is interpreted as  those  func-
+     tions  that  are  exported  by  some module _a_n_d functions of
+     _x_r_e_f.
+
+     There are also unary set operators:
+
+       * Expression ::= UnarySetOp Expression
+
+       * UnarySetOp ::= _d_o_m_a_i_n | _r_a_n_g_e | _s_t_r_i_c_t
+
+     Recall that a call is a pair (From, To). _d_o_m_a_i_n applied to a
+     set of calls is interpreted as the set of all vertices From,
+     and _r_a_n_g_e as the set of all vertices To. The  interpretation
+     of  the _s_t_r_i_c_t operator is the operand with all calls on the
+     form (A, A) removed.
+
+     The interpretation of the _r_e_s_t_r_i_c_t_i_o_n _o_p_e_r_a_t_o_r_s is a  subset
+     of  the first operand, a set of calls. The second operand, a
+     set of vertices, is converted  to  the  type  of  the  first
+     operand. The syntax of the restriction operators:
+
+       * Expression ::= Expression RestrOp Expression
+
+       * RestrOp ::= |
+
+       * RestrOp ::= ||
+
+       * RestrOp ::= |||
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   8
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+     The interpretation in some detail for the three operators:
+
+       |:  The subset of calls from any of the vertices.
+
+       ||: The subset of calls to any of the vertices.
+
+       |||:
+           The subset of calls to and from any of  the  vertices.
+           For  all sets of calls _C_S and all sets of vertices _V_S,
+           _C_S ||| _V_S  is equivalent to _C_S | _V_S * _C_S || _V_S.
+
+     Two functions (modules, applications,  releases)  belong  to
+     the  same  strongly  connected  component  if they call each
+     other (in)directly. The  interpretation  of  the  _c_o_m_p_o_n_e_n_t_s
+     operator  is  the  set of strongly connected components of a
+     set of calls. The _c_o_n_d_e_n_s_a_t_i_o_n of a set of calls  is  a  new
+     set  of calls between the strongly connected components such
+     that there is an edge between two  components  if  there  is
+     some  constant  of  the first component that calls some con-
+     stant of the second component.
+
+     The interpretation of the _o_f operator is a chain of calls of
+     the second operand (a set of calls) that passes throw all of
+     the vertices of the first operand (a tuple of constants), in
+     the given order. The second operand is converted to the type
+     of the first operand. For instance, the _o_f operator  can  be
+     used  for finding out whether a function calls another func-
+     tion indirectly, and the chain of  calls  demonstrates  how.
+     The syntax of the graph analyzing operators:
+
+       * Expression ::= Expression GraphOp Expression
+
+       * GraphOp ::= _c_o_m_p_o_n_e_n_t_s | _c_o_n_d_e_n_s_a_t_i_o_n | _o_f
+
+     As was mentioned before, the graph analyses operate  on  the
+     _d_i_g_r_a_p_h  representation  of  graphs. By default, the _d_i_g_r_a_p_h
+     representation is created when needed (and deleted  when  no
+     longer  used),  but it can also be created explicitly by use
+     of the _c_l_o_s_u_r_e operator:
+
+       * Expression ::= ClosureOp Expression
+
+       * ClosureOp ::= _c_l_o_s_u_r_e
+
+     The interpretation of the _c_l_o_s_u_r_e operator is the transitive
+     closure of the operand.
+
+     The restriction operators are defined for closures as  well;
+     _c_l_o_s_u_r_e  _E  |  _x_r_e_f  :  _M_o_d  is interpreted as the direct or
+     indirect function calls from  the  _x_r_e_f  module,  while  the
+     interpretation  of _E | _x_r_e_f : _M_o_d is the set of direct calls
+     from _x_r_e_f. If some graph is to  be  used  in  several  graph
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   9
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+     analyses, it saves time to assign the _d_i_g_r_a_p_h representation
+     of the graph to a user variable, and  then  make  sure  that
+     each graph analysis operates on that variable instead of the
+     list representation of the graph.
+
+     The lines where functions are defined (more precisely: where
+     the  first  clause begins) and the lines where functions are
+     used are available in _f_u_n_c_t_i_o_n_s mode. The line numbers refer
+     to  the  files  where  the functions are defined. This holds
+     also for files included with the -_i_n_c_l_u_d_e  and  -_i_n_c_l_u_d_e__l_i_b
+     directives, which may result in functions defined apparently
+     in the same line. The _l_i_n_e _o_p_e_r_a_t_o_r_s are used for  assigning
+     line  numbers  to  functions  and for assigning sets of line
+     numbers to function calls. The syntax is similar to the  one
+     of the cast operator:
+
+       * Expression ::= ( LineOp) Expression
+
+       * Expression ::= ( XLineOp) Expression
+
+       * LineOp ::= _L_i_n | _E_L_i_n | _L_L_i_n | _X_L_i_n
+
+       * XLineOp ::= _X_X_L
+
+     The interpretation of the _L_i_n operator applied to a  set  of
+     functions assigns to each function the line number where the
+     function is defined.  Unknown  functions  and  functions  of
+     library modules are assigned the number 0.
+
+     The interpretation of some LineOp operator applied to a  set
+     of  function  calls  assigns  to  each  call the set of line
+     numbers where the first function calls the second  function.
+     Not all calls are assigned line numbers by all operators:
+
+       * the _L_i_n operator is defined for Call Graph Edges;
+
+       * the _L_L_i_n operator is defined for Local Calls.
+
+       * the _X_L_i_n operator is defined for External Calls.
+
+       * the _E_L_i_n operator is defined for Inter Call Graph Edges.
+
+     The _L_i_n (_L_L_i_n, _X_L_i_n) operator assigns the lines where  calls
+     (local  calls,  external  calls) are made. The _E_L_i_n operator
+     assigns to each call (From, To), for which  it  is  defined,
+     each line L such that there is a chain of calls from From to
+     To beginning with a call on line L.
+
+     The _X_X_L operator is defined for the interpretation of any of
+     the LineOp operators applied to a set of function calls. The
+     result is that of replacing the function call  with  a  line
+     numbered  function  call, that is, each of the two functions
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  10
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+     of the call is replaced by a pair of the  function  and  the
+     line  where  the  function is defined. The effect of the _X_X_L
+     operator  can  be  undone  by  the  LineOp  operators.   For
+     instance, (_L_i_n) (_X_X_L) (_L_i_n) _E is equivalent to (_L_i_n) _E.
+
+     The +, -, * and # operators  are  defined  for  line  number
+     expressions,  provided  the  operands  are  compatible.  The
+     LineOp operators are also defined for modules, applications,
+     and  releases;  the operand is implicitly converted to func-
+     tions. Similarly, the  cast  operator  is  defined  for  the
+     interpretation of the LineOp operators.
+
+     The interpretation of the _c_o_u_n_t_i_n_g _o_p_e_r_a_t_o_r is the number of
+     elements  of  a set. The operator is undefined for closures.
+     The +, - and * operators  are  interpreted  as  the  obvious
+     arithmetical  operators  when applied to numbers. The syntax
+     of the counting operator:
+
+       * Expression ::= CountOp Expression
+
+       * CountOp ::= #
+
+     All binary operators are left associative; for instance, _A |
+     _B   ||  _C  is equivalent to (_A | _B) || _C. The following is a
+     list of all operators, in increasing order of _p_r_e_c_e_d_e_n_c_e:
+
+       * +, -
+
+       * *
+
+       * #
+
+       * |, ||, |||
+
+       * _o_f
+
+       * (Type)
+
+       * _c_l_o_s_u_r_e, _c_o_m_p_o_n_e_n_t_s, _c_o_n_d_e_n_s_a_t_i_o_n, _d_o_m_a_i_n, _r_a_n_g_e, _s_t_r_i_c_t
+
+     Parentheses are used for grouping, either to make an expres-
+     sion  more readable or to override the default precedence of
+     operators:
+
+       * Expression ::= ( Expression )
+
+     A _q_u_e_r_y is a non-empty sequence of statements.  A  statement
+     is either an assignment of a user variable or an expression.
+     The value of an assignment is the value of  the  right  hand
+     side expression. It makes no sense to put a plain expression
+     anywhere else but last in queries. The syntax of queries  is
+     summarized by these productions:
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  11
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+       * Query ::= Statement,  ...
+
+       * Statement ::= Assignment | Expression
+
+       * Assignment ::=  Variable  :=  Expression  |  Variable  =
+         Expression
+
+     A variable cannot be  assigned  a  new  value  unless  first
+     removed. Variables assigned to by the = operator are removed
+     at the end of queries, while variables assigned to by the :=
+     operator can only be removed by calls to _f_o_r_g_e_t.
+
+     _T_y_p_e_s
+
+     application() = atom()
+     arity() = integer()
+     bool() = true | false
+     call() = {atom(), atom()} | funcall()
+     constant() = mfa() | module() | application() | release()
+     directory() = string()
+     file() = string()
+     funcall() = {mfa(), mfa()}
+     function() = atom()
+     library() = atom()
+     library_path() = path() | code_path
+     mfa() = {module(), function(), arity()}
+     mode() = functions | modules
+     module() = atom()
+     integer() = int() >= 0
+     release() = atom()
+     string_position() = integer() | at_end
+     variable() = atom()
+     xref() = atom()
+
+
+EXPORTS
+     m(Module) -> [Result] | Error
+     m(file()) -> [Result] | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Module = module()
+               Reason = {file_error, file(), error()}  |  {inter-
+               preted,  module()}  |  {no_debug_info,  file()}  |
+               {no_such_module,  module()}   |   -   error   from
+               beam_lib:chunks/2 -
+               Result  =  {undefined,  [funcall()]}  |   {unused,
+               [mfa()]}
+
+          The given BEAM file (with or without the  ._b_e_a_m  exten-
+          sion)    or    the    the   file   found   by   calling
+          _c_o_d_e:_w_h_i_c_h(_M_o_d_u_l_e) is checked for  calls  to  undefined
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  12
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+          functions and for unused local functions. The code path
+          is used as library path.  Returns  a  list  of  tuples,
+          where the first element of each tuple is one of:
+
+            * _u_n_d_e_f_i_n_e_d, a sorted  list  of  calls  to  undefined
+              functions;
+
+            * _u_n_u_s_e_d, a sorted list of unused local functions.
+
+          If the BEAM file contains  no  debug  information,  the
+          error message _n_o__d_e_b_u_g__i_n_f_o is returned.
+
+     d(directory()) -> [Result] | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Reason   =   {file_error,   file(),   error()}   |
+               {unrecognized_file,   file()}   |   -  error  from
+               beam_lib:chunks/2 -
+               Result  =  {undefined,  [funcall()]}  |   {unused,
+               [mfa()]}
+
+          The modules found in a directory are checked for  calls
+          to  undefined functions and for unused local functions.
+          The code path is used as library path. Returns  a  list
+          of tuples, where the first element of each tuple is one
+          of:
+
+            * _u_n_d_e_f_i_n_e_d, a sorted  list  of  calls  to  undefined
+              functions;
+
+            * _u_n_u_s_e_d, a sorted list of unused local functions.
+
+          Only BEAM files  that  contain  debug  information  are
+          checked.
+
+     start(xref() [, Options]) -> Return
+
+          Types
+               Options = [Option] | Option
+               Option = {xref_mode, mode()} | term()
+               Return = {ok, pid()} |  {error,  {already_started,
+               pid()}}
+
+          Creates an xref server. The default mode is  _f_u_n_c_t_i_o_n_s.
+          Options  that  are not recognized by xref are passed on
+          to _g_e_n__s_e_r_v_e_r:_s_t_a_r_t/_4.
+
+     set_default(xref(), Option, Value) -> {ok, OldValue} | Error
+     set_default(xref(), OptionValues) -> ok | Error
+
+          Types
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  13
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+               Error = {error, module(), Reason}
+               OptionValues = [OptionValue] | OptionValue
+               OptionValue = {Option, Value}
+               Option = builtins | recurse | verbose | warnings
+               Reason = {invalid_options, term()}
+               Value = bool()
+
+          Sets the default value of  one  or  more  options.  The
+          options that can be set this way are:
+
+            * _b_u_i_l_t_i_n_s, with initial default value _f_a_l_s_e;
+
+            * _r_e_c_u_r_s_e, with initial default value _f_a_l_s_e;
+
+            * _v_e_r_b_o_s_e, with initial default value _t_r_u_e;
+
+            * _w_a_r_n_i_n_g_s, with initial default value _t_r_u_e.
+
+          The initial default values are  set  when  creating  an
+          xref server.
+
+     get_default(xref()) -> [{Option, Value}]
+     get_default(xref(), Option) -> {ok, Value} | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Option = builtins | recurse | verbose | warnings
+               Reason = {invalid_options, term()}
+               Value = bool()
+
+          Returns the default values of one or more options.
+
+     add_release(xref(),  directory()  [,   Options])   ->   {ok,
+     release()} | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Options = [Option] | Option
+               Option = {builtins, bool()} | {name, release()}  |
+               {verbose, bool()} | {warnings, bool()}
+               Reason   =   {application_clash,   {application(),
+               directory(),  directory()}} | {file_error, file(),
+               error()}    |    {invalid_options,    term()}    |
+               {release_clash,  {release(),  directory(),  direc-
+               tory()}} | - see also add_directory -
+
+          Adds a release, the applications of  the  release,  the
+          modules  of  the  applications,  and module data of the
+          modules to an xref server.  The  applications  will  be
+          members of the release, and the modules will be members
+          of the applications. The default is  to  use  the  base
+          name  of the directory as release name, but this can be
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  14
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+          overridden by the _n_a_m_e option. Returns the name of  the
+          release.
+
+          If the given directory has a  subdirectory  named  _l_i_b,
+          the  directories  in  that  directory are assumed to be
+          application directories, otherwise  all  subdirectories
+          of  the  given  directory are assumed to be application
+          directories. If there  are  several  versions  of  some
+          application,  the  one  with  the  highest  version  is
+          chosen.
+
+          If the mode of the xref server is _f_u_n_c_t_i_o_n_s, BEAM files
+          that contain no debug information are ignored.
+
+     add_application(xref(), directory()  [,  Options])  ->  {ok,
+     application()} | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Options = [Option] | Option
+               Option =  {builtins,  bool()}  |  {name,  applica-
+               tion()} | {verbose, bool()} | {warnings, bool()}
+               Reason   =   {application_clash,   {application(),
+               directory(),  directory()}} | {file_error, file(),
+               error()} | {invalid_options, term()} | - see  also
+               add_directory -
+
+          Adds an application, the modules of the application and
+          module  data  of  the  modules  to  an xref server. The
+          modules will be members of the application. The default
+          is  to use the base name of the directory with the ver-
+          sion removed as application name, but this can be over-
+          ridden  by  the  _n_a_m_e  option.  Returns the name of the
+          application.
+
+          If the given directory has a subdirectory  named  _e_b_i_n,
+          modules  (BEAM  files)  are searched for in that direc-
+          tory, otherwise modules are searched for in  the  given
+          directory.
+
+          If the mode of the xref server is _f_u_n_c_t_i_o_n_s, BEAM files
+          that contain no debug information are ignored.
+
+     add_directory(xref(),  directory()  [,  Options])  ->   {ok,
+     Modules} | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Modules = [module()]
+               Options = [Option] | Option
+               Option = {builtins, bool()} | {recurse, bool()}  |
+               {verbose, bool()} | {warnings, bool()}
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  15
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+               Reason   =   {file_error,   file(),   error()}   |
+               {invalid_options,  term()}  |  {unrecognized_file,
+               file()} | - error from beam_lib:chunks/2 -
+
+          Adds the modules found in the given directory  and  the
+          modules   data to an xref server. The default is not to
+          examine subdirectories, but if the option  _r_e_c_u_r_s_e  has
+          the  value  _t_r_u_e, modules are searched for in subdirec-
+          tories on all levels as well as in the given directory.
+          Returns  a  sorted  list  of  the  names  of  the added
+          modules.
+
+          The modules added will not be members of  any  applica-
+          tions.
+
+          If the mode of the xref server is _f_u_n_c_t_i_o_n_s, BEAM files
+          that contain no debug information are ignored.
+
+     add_module(xref(), file() [, Options]) -> {ok,  module()}  |
+     Error
+
+          Types
+               Error = {error, module(), Reason}
+               Options = [Option] | Option
+               Option = {builtins, bool()} | {verbose, bool()}  |
+               {warnings, bool()}
+               Reason   =   {file_error,   file(),   error()}   |
+               {invalid_options,    term()}    |   {module_clash,
+               {module(),  file(),  file()}}  |   {no_debug_info,
+               file()} | - error from beam_lib:chunks/2 -
+
+          Adds a module and its module data  to an  xref  server.
+          The  module  will  not  be  member  of any application.
+          Returns the name of the module.
+
+          If the mode of the xref server is  _f_u_n_c_t_i_o_n_s,  and  the
+          BEAM file contains no debug information, the error mes-
+          sage _n_o__d_e_b_u_g__i_n_f_o is returned.
+
+     replace_application(xref(),  application(),  directory()  [,
+     Options]) -> {ok, application()} | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Options = [Option] | Option
+               Option = {builtins, bool()} | {verbose, bool()}  |
+               {warnings, bool()}
+               Reason = {no_such_application, application()} |  -
+               see also add_application -
+
+          Replaces the  modules  of  an  application  with  other
+          modules  read  from  an  application directory. Release
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  16
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+          membership of the application is  retained.  Note  that
+          the  name  of  the application is kept; the name of the
+          given directory is not used.
+
+     replace_module(xref(), module(), file() [, Options]) -> {ok,
+     module()} | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Options = [Option] | Option
+               Option = {verbose, bool()} | {warnings, bool()}
+               ReadModule = module()
+               Reason = {module_mismatch, module(), ReadModule} |
+               {no_such_module, module()} | - see also add_module
+               -
+
+          Replaces module data of an analyzed  module  with  data
+          read  from  a  BEAM file. Application membership of the
+          module is retained, and so is the value of the _b_u_i_l_t_i_n_s
+          option  of the module. An error is returned if the name
+          of the read module differs from the given module.
+
+          The _u_p_d_a_t_e function  is  an  alternative  for  updating
+          module data of recompiled modules.
+
+     remove_release(xref(), release()) -> ok | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Reason = {no_such_release, release()}
+
+          Removes a release and  its  applications,  modules  and
+          module data from an xref server.
+
+     remove_application(xref(), application()) -> ok | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Reason = {no_such_application, application()}
+
+          Removes an application and its modules and module  data
+          from an xref server.
+
+     remove_module(xref(), module()) -> ok | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Reason = {no_such_module, module()}
+
+          Removes an analyzed module module and its  module  data
+          from an  xref server.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  17
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+     set_library_path(xref(), library_path() [, Options]) -> ok |
+     Error
+
+          Types
+               Error = {error, module(), Reason}
+               Options = [Option] | Option
+               Option = {verbose, bool()}
+               Reason    =    {invalid_options,     term()}     |
+               {invalid_path, term()}
+
+          Sets the library path. If the given path is a  list  of
+          directories,  the  set of library modules is determined
+          by choosing the first module encountered while travers-
+          ing  the  directories  in  the  given  order, for those
+          modules that occur  in  more  than  one  directory.  By
+          default, the library path is an empty list.
+
+          The library path _c_o_d_e__p_a_t_h is used by the functions _m/_1
+          and  _d/_1,  but can also be set explicitly. Note however
+          that the code path will be traversed once for each used
+          library  module  while  setting  up module data. On the
+          other hand, if there are only a few  modules  that  are
+          used  by  not  analyzed,  using _c_o_d_e__p_a_t_h may be faster
+          than setting the library path to _c_o_d_e:_g_e_t__p_a_t_h().
+
+          If the library path is set to  _c_o_d_e__p_a_t_h,  the  set  of
+          library  modules  is not determined, and the _i_n_f_o func-
+          tions will return empty lists of library modules.
+
+     get_library_path(xref()) -> {ok, library_path()}
+
+          Returns the library path.
+
+     info(xref()) -> [Info]
+     info(xref(), Category) -> [{Item, [Info]}]
+     info(xref(), Category, Items) -> [{Item, [Info]}]
+
+          Types
+               Application = [] | [application()]
+               Category = modules |  applications  |  releases  |
+               libraries
+               Info =  {application,  Application}  |  {builtins,
+               bool()}     |     {directory,    directory()}    |
+               {library_path, library_path()} | {mode, mode()}  |
+               {no_analyzed_modules,         integer()}         |
+               {no_applications,    integer()}    |    {no_calls,
+               {NoResolved,  NoUnresolved}} | {no_function_calls,
+               {NoLocal,  NoResolvedExternal,  NoUnresolved}}   |
+               {no_functions,     {NoLocal,     NoExternal}}    |
+               {no_inter_function_calls,       integer()}       |
+               {no_releases,  integer()}  |  {release, Release} |
+               {version, Version}
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  18
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+               Item = module()  |  application()  |  release()  |
+               library()
+               Items = Item | [Item]
+               NoLocal   =   NoExternal   =   NoResolvedExternal,
+               NoResolved = NoUnresolved = integer()
+               Release = [] | [release()]
+               Version = [integer()]
+
+          The _i_n_f_o functions return  information  as  a  list  of
+          pairs  {Tag,  term()} in some order about the state and
+          the module data  of an xref server .
+
+          _i_n_f_o/_1 returns  information  with  the  following  tags
+          (tags  marked  with (*) are available in _f_u_n_c_t_i_o_n_s mode
+          only):
+
+            * _l_i_b_r_a_r_y__p_a_t_h, the library path;
+
+            * _m_o_d_e, the mode;
+
+            * _n_o__r_e_l_e_a_s_e_s, number of releases;
+
+            * _n_o__a_p_p_l_i_c_a_t_i_o_n_s, total number of  applications  (of
+              all releases);
+
+            * _n_o__a_n_a_l_y_z_e_d__m_o_d_u_l_e_s,  total  number   of   analyzed
+              modules;
+
+            * _n_o__c_a_l_l_s  (*),  total  number  of  calls  (in   all
+              modules),  regarding instances of one function call
+              in different lines as separate calls;
+
+            * _n_o__f_u_n_c_t_i_o_n__c_a_l_l_s (*), total number of local calls,
+              resolved external calls and unresolved calls;
+
+            * _n_o__f_u_n_c_t_i_o_n_s  (*),  total  number  of   local   and
+              exported functions;
+
+            * _n_o__i_n_t_e_r__f_u_n_c_t_i_o_n__c_a_l_l_s (*), total number of  calls
+              of the Inter Call Graph.
+
+          _i_n_f_o/_2 and _i_n_f_o/_3 return information about all or  some
+          of  the  analyzed  modules,  applications,  releases or
+          library modules of an xref server. The following infor-
+          mation is returned for each analyzed module:
+
+            * _a_p_p_l_i_c_a_t_i_o_n, an empty list if the module  does  not
+              belong  to any application, otherwise a list of the
+              application name;
+
+            * _b_u_i_l_t_i_n_s, whether calls to BIFs are included in the
+              module s data;
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  19
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+            * _d_i_r_e_c_t_o_r_y, the directory where the  module  s  BEAM
+              file is located;
+
+            * _n_o__c_a_l_l_s (*), number of calls, regarding  instances
+              of one function call in different lines as separate
+              calls;
+
+            * _n_o__f_u_n_c_t_i_o_n__c_a_l_l_s  (*),  number  of  local   calls,
+              resolved external calls and unresolved calls;
+
+            * _n_o__f_u_n_c_t_i_o_n_s (*),  number  of  local  and  exported
+              functions;
+
+            * _n_o__i_n_t_e_r__f_u_n_c_t_i_o_n__c_a_l_l_s (*), number of calls of the
+              Inter Call Graph;
+
+          The following information is returned for each applica-
+          tion:
+
+            * _d_i_r_e_c_t_o_r_y, the directory where  the  modules   BEAM
+              files are located;
+
+            * _n_o__a_n_a_l_y_z_e_d__m_o_d_u_l_e_s, number of analyzed modules;
+
+            * _n_o__c_a_l_l_s (*), number of calls of the application  s
+              modules,  regarding  instances of one function call
+              in different lines as separate calls;
+
+            * _n_o__f_u_n_c_t_i_o_n__c_a_l_l_s  (*),  number  of  local   calls,
+              resolved external calls and unresolved calls of the
+              application s modules;
+
+            * _n_o__f_u_n_c_t_i_o_n_s (*),  number  of  local  and  exported
+              functions of the application s modules;
+
+            * _n_o__i_n_t_e_r__f_u_n_c_t_i_o_n__c_a_l_l_s (*), number of calls of the
+              Inter Call Graph of the application s modules;
+
+            * _r_e_l_e_a_s_e, an empty list if the application does  not
+              belong  to  any  release,  otherwise  a list of the
+              release name;
+
+            * _v_e_r_s_i_o_n, the application s version  as  a  list  of
+              numbers.  For  instance, the directory "kernel-2.6"
+              results in the  application  name  _k_e_r_n_e_l  and  the
+              application version [2,6]; "kernel" yields the name
+              _k_e_r_n_e_l and the version [].
+
+          The following information is returned for each release:
+
+            * _d_i_r_e_c_t_o_r_y, the release directory;
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  20
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+            * _n_o__a_n_a_l_y_z_e_d__m_o_d_u_l_e_s, number of analyzed modules;
+
+            * _n_o__a_p_p_l_i_c_a_t_i_o_n_s, number of applications;
+
+            * _n_o__c_a_l_l_s (*), number of  calls  of  the  release  s
+              modules,  regarding  instances of one function call
+              in different lines as separate calls;
+
+            * _n_o__f_u_n_c_t_i_o_n__c_a_l_l_s  (*),  number  of  local   calls,
+              resolved external calls and unresolved calls of the
+              release s modules;
+
+            * _n_o__f_u_n_c_t_i_o_n_s (*),  number  of  local  and  exported
+              functions of the release s modules;
+
+            * _n_o__i_n_t_e_r__f_u_n_c_t_i_o_n__c_a_l_l_s (*), number of calls of the
+              Inter Call Graph of the release s modules.
+
+          The following information is returned for each  library
+          module:
+
+            * _d_i_r_e_c_t_o_r_y, the directory where the library module s
+              BEAM file is located.
+
+          For each number of calls, functions  etc.  returned  by
+          the  _n_o_  tags,  there  is  a  query returning the same
+          number. Listed below are examples of such queries. Some
+          of  the  queries return the sum of a two or more of the
+          _n_o_ tags numbers. _m_o_d (_a_p_p, _r_e_l) refers to  any  module
+          (application, release).
+
+            * _n_o__a_n_a_l_y_z_e_d__m_o_d_u_l_e_s
+
+                - "# _A_M" (info/1)
+
+                - "# (_M_o_d) _a_p_p:_A_p_p" (application)
+
+                - "# (_M_o_d) _r_e_l:_R_e_l" (release)
+
+            * _n_o__a_p_p_l_i_c_a_t_i_o_n_s
+
+                - "# _A" (info/1)
+
+            * _n_o__c_a_l_l_s. The sum of the  number  of  resolved  and
+              unresolved calls:
+
+                - "# (_L_i_n) _E" (info/1)
+
+                - "# (_L_i_n) (_E | _m_o_d:_M_o_d)" (module)
+
+                - "# (_L_i_n) (_E | _a_p_p:_A_p_p)" (application)
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  21
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+                - "# (_L_i_n) (_E | _r_e_l:_R_e_l)" (release)
+
+            * _n_o__f_u_n_c_t_i_o_n_s. The functions  _m_o_d_u_l_e__i_n_f_o/_0,  _1  are
+              not  counted  by  _i_n_f_o.  Assuming  that  "_E_x_t_r_a  :=
+              _:_m_o_d_u_l_e__i_n_f_o/\"(_0|_1)\" + _:'$_F__E_X_P_R'/_"  has  been
+              evaluated,  the  sum  of  the  number  of local and
+              exported functions are:
+
+                - "# (_F - _E_x_t_r_a)" (info/1)
+
+                - "# (_F * _m_o_d:_M_o_d - _E_x_t_r_a)" (module)
+
+                - "# (_F * _a_p_p:_A_p_p - _E_x_t_r_a)" (application)
+
+                - "# (_F * _r_e_l:_R_e_l - _E_x_t_r_a)" (release)
+
+            * _n_o__f_u_n_c_t_i_o_n__c_a_l_l_s. The sum of the number  of  local
+              calls,   resolved  external  calls  and  unresolved
+              calls:
+
+                - "# _L_C + # _X_C" (info/1)
+
+                - "# _L_C | _m_o_d:_M_o_d + # _X_C | _m_o_d:_M_o_d" (module)
+
+                - "# _L_C | _a_p_p:_A_p_p + # _X_C | _a_p_p:_A_p_p" (application)
+
+                - "# _L_C | _r_e_l:_R_e_l + # _X_C | _m_o_d:_R_e_l" (release)
+
+            * _n_o__i_n_t_e_r__f_u_n_c_t_i_o_n__c_a_l_l_s
+
+                - "# _E_E" (info/1)
+
+                - "# _E_E | _m_o_d:_M_o_d" (module)
+
+                - "# _E_E | _a_p_p:_A_p_p" (application)
+
+                - "# _E_E | _r_e_l:_R_e_l" (release)
+
+            * _n_o__r_e_l_e_a_s_e_s
+
+                - "# _R" (info/1)
+
+     update(xref() [, Options]) -> {ok, Modules} | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Modules = [module()]
+               Options = [Option] | Option
+               Option = {verbose, bool()} | {warnings, bool()}
+               Reason    =    {invalid_options,     term()}     |
+               {module_mismatch,  module(),  ReadModule}  | - see
+               also add_module -
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  22
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+          Replaces the module data of all  analyzed  modules  the
+          BEAM  files of which have been modified since last read
+          by an _a_d_d function or _u_p_d_a_t_e. Application membership of
+          the  modules  is  retained,  and so is the value of the
+          _b_u_i_l_t_i_n_s option. Returns a sorted list of the names  of
+          the replaced modules.
+
+     analyze(xref(), Analysis [,  Options])  ->  {ok,  Answer}  |
+     Error
+
+          Types
+               Analysis     =     undefined_function_calls      |
+               undefined_functions     |     locals_not_used    |
+               exports_not_used  |  {call,  FuncSpec}   |   {use,
+               FuncSpec}  | {module_call, ModSpec} | {module_use,
+               ModSpec}   |   {application_call,    AppSpec}    |
+               {application_use,  AppSpec}  | {release_call, Rel-
+               Spec} | {release_use, RelSpec}
+               Answer = [term()]
+               AppSpec = application() | [application()]
+               Error = {error, module(), Reason}
+               FuncSpec = mfa() | [mfa()]
+               ModSpec = module() | [module()]
+               Options = [Option] | Option
+               Option = {verbose, bool()}
+               RelSpec = release() | [release()]
+               Reason = {invalid_options, term()} | {parse_error,
+               string_position(),  term()}  |  {unknown_analysis,
+               term()}   |   {unknown_constant,    string()}    |
+               {unknown_variable, variable()}
+
+          Evaluates a predefined analysis. Returns a sorted  list
+          without  duplicates  of _c_a_l_l() or _c_o_n_s_t_a_n_t(), depending
+          on the chosen analysis. The predefined analyses,  which
+          operate on all analyzed modules, are:
+
+            _u_n_d_e_f_i_n_e_d__f_u_n_c_t_i_o_n__c_a_l_l_s:
+                Returns a list of calls to undefined functions.
+
+            _u_n_d_e_f_i_n_e_d__f_u_n_c_t_i_o_n:
+                Returns  a  list  of  undefined  functions.  This
+                analysis is available also in the _m_o_d_u_l_e_s mode.
+
+            _l_o_c_a_l_s__n_o_t__u_s_e_d:
+                Returns a list of local functions that  have  not
+                been used locally.
+
+            _e_x_p_o_r_t_s__n_o_t__u_s_e_d:
+                Returns a list of exported  functions  that  have
+                not been used externally.
+
+            {_c_a_l_l, _F_u_n_c_S_p_e_c}:
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  23
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+                Returns a list of functions called by some of the
+                given functions.
+
+            {_u_s_e, _F_u_n_c_S_p_e_c}:
+                Returns a list of functions that use some of  the
+                given functions.
+
+            {_m_o_d_u_l_e__c_a_l_l, _M_o_d_S_p_e_c}:
+                Returns a list of modules called by some  of  the
+                given modules.
+
+            {_m_o_d_u_l_e__u_s_e, _M_o_d_S_p_e_c}:
+                Returns a list of modules that use  some  of  the
+                given modules.
+
+            {_a_p_p_l_i_c_a_t_i_o_n__c_a_l_l, _A_p_p_S_p_e_c}:
+                Returns a list of applications called by some  of
+                the given applications.
+
+            {_a_p_p_l_i_c_a_t_i_o_n__u_s_e, _A_p_p_S_p_e_c}:
+                Returns a list of applications that use  some  of
+                the given applications.
+
+            {_r_e_l_e_a_s_e__c_a_l_l, _R_e_l_S_p_e_c}:
+                Returns a list of releases called by some of  the
+                given releases.
+
+            {_r_e_l_e_a_s_e__u_s_e, _R_e_l_S_p_e_c}:
+                Returns a list of releases that use some  of  the
+                given releases.
+
+     variables(xref() [, Options]) -> {ok, [VariableInfo]}
+
+          Types
+               Options = [Option] | Option
+               Option = predefined | user | {verbose, bool()}
+               Reason = {invalid_options, term()}
+               VariableInfo = {predefined, [variable()]} | {user,
+               [variable()]}
+
+          Returns a sorted lists of the names of the variables of
+          an xref server. The default is to return the user vari-
+          ables only.
+
+     forget(xref()) -> ok
+     forget(xref(), Variables) -> ok | Error
+
+          Types
+               Error = {error, module(), Reason}
+               Reason = {not_user_variable, term()}
+               Variables = [variable()] | variable()
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  24
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+          _f_o_r_g_e_t/_1 and _f_o_r_g_e_t/_2 remove all or some  of  the  user
+          variables of an xref server.
+
+     q(xref(), Query [, Options]) -> {ok, Answer} | Error
+
+          Types
+               Answer = false | [constant()]  |  [Call]  |  [Com-
+               ponent]  |  integer()  |  [DefineAt]  | [CallAt] |
+               [AllLines]
+               Call = call() | ComponentCall
+               ComponentCall = {Component, Component}
+               Component = [constant()]
+               DefineAt = {mfa(), LineNumber}
+               CallAt = {funcall(), LineNumbers}
+               AllLines = {{DefineAt, DefineAt}, LineNumbers}
+               Error = {error, module(), Reason}
+               LineNumbers = [LineNumber]
+               LineNumber = integer()
+               Options = [Option] | Option
+               Option = {verbose, bool()}
+               Query = string() | atom()
+               Reason = {invalid_options, term()} | {parse_error,
+               string_position(),    term()}    |    {type_error,
+               string()} | {type_mismatch, string(), string()}  |
+               {unknown_analysis,  term()}  |  {unknown_constant,
+               string()}  |  {unknown_variable,   variable()}   |
+               {variable_reassigned, string()}
+
+          Evaluates a query in the context of an xref server, and
+          returns  the value of the last statement. The syntax of
+          the value depends on the expression:
+
+            * A set of calls is  represented  by  a  sorted  list
+              without duplicates of _c_a_l_l().
+
+            * A set of constants is represented by a sorted  list
+              without duplicates of _c_o_n_s_t_a_n_t().
+
+            * A set of strongly connected components is a  sorted
+              list without duplicates of _C_o_m_p_o_n_e_n_t.
+
+            * A set of  calls  between  strongly  connected  com-
+              ponents is a sorted list without duplicates of _C_o_m_-
+              _p_o_n_e_n_t_C_a_l_l.
+
+            * A chain of calls is represented by a list  of  _c_o_n_-
+              _s_t_a_n_t().  The list contains the From vertex of each
+              call and the To vertex of the last call.
+
+            * The _o_f operator returns _f_a_l_s_e if no chain of  calls
+              between the given constants can be found.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  25
+
+
+
+
+
+
+xref(3)             ERLANG MODULE DEFINITION              xref(3)
+
+
+
+            * The value of  the  _c_l_o_s_u_r_e  operator  (the  _d_i_g_r_a_p_h
+              representation)  is  represented  by the atom '_c_l_o_-
+              _s_u_r_e()'.
+
+            * A set of line numbered functions is represented  by
+              a sorted list without duplicates of _D_e_f_i_n_e_A_t.
+
+            * A  set  of  line   numbered   function   calls   is
+              represented  by a sorted list without duplicates of
+              _C_a_l_l_A_t.
+
+            * A set of line numbered functions and function calls
+              is  represented by a sorted list without duplicates
+              of _A_l_l_L_i_n_e_s.
+
+          For both _C_a_l_l_A_t and _A_l_l_L_i_n_e_s it holds that for no  list
+          element  is  _L_i_n_e_N_u_m_b_e_r_s  an  empty list; such elements
+          have been removed. The constants of _c_o_m_p_o_n_e_n_t  and  the
+          integers  of  _L_i_n_e_N_u_m_b_e_r_s are sorted and without dupli-
+          cates.
+
+     stop(xref())
+
+          Stops an xref server.
+
+     format_error(Error) -> character_list()
+
+          Types
+               Error = {error, module(), term()}
+
+          Given the  error  returned  by  any  function  of  this
+          module, the function _f_o_r_m_a_t__e_r_r_o_r returns a descriptive
+          string of the error in English. For  file  errors,  the
+          function _f_o_r_m_a_t__e_r_r_o_r/_1 in the _f_i_l_e module is called.
+
+See Also
+     beam_lib(3),   digraph(3),    digraph_utils(3),    exref(3),
+     regexp(3), TOOLS User's Guide
+
+AUTHOR
+     Hans Bolinder - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                  26
+
+
+

@@ -1,0 +1,132 @@
+
+
+
+math(3)             ERLANG MODULE DEFINITION              math(3)
+
+
+
+MODULE
+     math - Mathematical Functions
+
+DESCRIPTION
+     This module provides an interface to a number of  mathemati-
+     cal functions.
+
+
+EXPORTS
+     pi() -> float()
+
+          A useful number.
+
+     sin(X)
+     cos(X)
+     tan(X)
+     asin(X)
+     acos(X)
+     atan(X)
+     atan2(X, Y)
+     sinh(X)
+     cosh(X)
+     tanh(X)
+     asinh(X)
+     acosh(X)
+     atanh(X)
+     exp(X)
+     log(X)
+     log10(X)
+     pow(X, Y)
+     sqrt(X)
+
+          Types
+               X = Y = number()
+
+          A collection of math  functions  which  return  floats.
+          Arguments are numbers.
+
+     erf(X) -> float()
+
+          Types
+               X = number()
+
+          Returns the error function of _X, where
+
+          erf(X) = 2/sqrt(pi)*integral from 0 to X of exp(-t*t) dt.
+
+     erfc(X) -> float()
+
+          Types
+               X = number()
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+math(3)             ERLANG MODULE DEFINITION              math(3)
+
+
+
+          _e_r_f_c(_X) returns _1._0 - _e_r_f(_X), computed by methods  that
+          avoid cancellation for large _X.
+
+Bugs
+     As these are the C library, the bugs are the same.
+
+AUTHOR
+     Mike Williams - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+

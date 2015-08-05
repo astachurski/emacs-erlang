@@ -1,0 +1,198 @@
+
+
+
+snmp(6)           ERLANG APPLICATION DEFINITION           snmp(6)
+
+
+
+APPLICATION
+     snmp - The SNMP Application
+
+DESCRIPTION
+     This chapter describes the _s_n_m_p application in OTP. The SNMP
+     application provides the following services:
+
+       * a multilingual extensible SNMP agent
+
+       * a MIB compiler
+
+       * a simple manager
+
+
+Configuration
+     The following configuration parameters are defined  for  the
+     SNMP  application. Refer to application(3) for more informa-
+     tion about configuration parameters.
+
+    <_o_p_t_i_o_n_a_l>:
+       _a_u_d_i_t__t_r_a_i_l__l_o_g  =   _f_a_l_s_e   |   _w_r_i_t_e__l_o_g   |   _r_e_a_d__w_r_i_t_e__l_o_g
+           Specifies  if  an  audit trail log should be used. The
+           _d_i_s_k__l_o_g module is used to maintain  a  wrap  log.  If
+           _w_r_i_t_e__l_o_g  is specified, only set requests are logged.
+           If _r_e_a_d__w_r_i_t_e__l_o_g, all requests are logged. Default is
+           _f_a_l_s_e.
+
+       _a_u_d_i_t__t_r_a_i_l__l_o_g__d_i_r = _s_t_r_i_n_g() <_o_p_t_i_o_n_a_l>:
+           Specifies where the audit trail log should be  stored.
+           If  _a_u_d_i_t__t_r_a_i_l__l_o_g specifies that logging should take
+           place, this parameter must be defined.
+
+       _a_u_d_i_t__t_r_a_i_l__l_o_g__s_i_z_e = {_M_a_x_B_y_t_e_s, _M_a_x_F_i_l_e_s} <_o_p_t_i_o_n_a_l>:
+           Specifies the size of the audit trail log. This param-
+           eter is sent to _d_i_s_k__l_o_g. If _a_u_d_i_t__t_r_a_i_l__l_o_g specifies
+           that logging should take place, this parameter must be
+           defined.
+
+       _b_i_n_d__t_o__i_p__a_d_d_r_e_s_s = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           If _t_r_u_e the agent binds to the  agent  IP  adress.  If
+           _f_a_l_s_e  the agent listens on any IP address on the host
+           where it is running. Default is _f_a_l_s_e.
+
+       _f_o_r_c_e__c_o_n_f_i_g__l_o_a_d = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           If _t_r_u_e the configuration  files  are  re-read  during
+           startup,  and  the contents of the configuration data-
+           base ignored. Thus, if _t_r_u_e, changes to the configura-
+           tion  database  are  lost  upon  reboot  of the agent.
+           Default is _f_a_l_s_e.
+
+       _n_o__r_e_u_s_e__a_d_d_r_e_s_s = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           If _t_r_u_e the agent does not specify  that  the  IP  and
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   1
+
+
+
+
+
+
+snmp(6)           ERLANG APPLICATION DEFINITION           snmp(6)
+
+
+
+           port  address  should  be reusable. If _f_a_l_s_e the agent
+           the address is set to reusable. Default is _f_a_l_s_e.
+
+       _s_n_m_p__a_g_e_n_t__t_y_p_e = _m_a_s_t_e_r | _s_u_b <_o_p_t_i_o_n_a_l>:
+           If _m_a_s_t_e_r, one master agent is started. Otherwise,  no
+           agents are started. Default is _m_a_s_t_e_r.
+
+       _s_n_m_p__c_o_n_f_i_g__d_i_r = _s_t_r_i_n_g() <_m_a_n_d_a_t_o_r_y>:
+           Defines where the SNMP  configuration  files  and  the
+           compiled master agent MIB files are stored.
+
+       _s_n_m_p__d_b__d_i_r = _s_t_r_i_n_g() <_m_a_n_d_a_t_o_r_y>:
+           Defines where the SNMP internal db files are stored.
+
+       _s_n_m_p__m_a_s_t_e_r__a_g_e_n_t__m_i_b_s = [_s_t_r_i_n_g()] <_o_p_t_i_o_n_a_l>:
+           Specifies a list of MIB names and defines  which  MIBs
+           are initially loaded into the SNMP master agent. These
+           MIBs are loaded from _s_n_m_p__c_o_n_f_i_g__d_i_r.
+
+       _s_n_m_p__m_u_l_t_i__t_h_r_e_a_d_e_d = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           If _t_r_u_e, the agent is multi-threaded, with one  thread
+           for each get request. Default is _f_a_l_s_e.
+
+       _s_n_m_p__p_r_i_o_r_i_t_y = _a_t_o_m() <_o_p_t_i_o_n_a_l>:
+           Defines the Erlang priority for  all  SNMP  processes.
+           Default is _n_o_r_m_a_l.
+
+       _v_1 = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           Defines if the agent shall speak  SNMPv1.  Default  is
+           _t_r_u_e.
+
+       _v_2 = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           Defines if the agent shall speak SNMPv2c.  Default  is
+           _t_r_u_e.
+
+       _v_3 = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           Defines if the agent shall speak  SNMPv3.  Default  is
+           _t_r_u_e.
+
+    <_o_p_t_i_o_n_a_l>:
+       _s_n_m_p__l_o_c_a_l__d_b__a_u_t_o__r_e_p_a_i_r  =  _f_a_l_s_e  |  _t_r_u_e   |   _t_r_u_e__v_e_r_b_o_s_e
+           When starting snmp_local_db it always tries to open an
+           existing database. If _f_a_l_s_e, and some errors occur,  a
+           new  datebase  is  created instead. If _t_r_u_e, erroneous
+           transactions  (in  the  logfile)   are   ignored.   If
+           _t_r_u_e__v_e_r_b_o_s_e,  erroneous transactions (in the logfile)
+           are igored and an error message is written. Default is
+           _t_r_u_e.
+
+       _s_n_m_p__m_i_b_e_n_t_r_y__o_v_e_r_r_i_d_e = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           If this value is false, then when loading a  mib  each
+           mib-  entry  is  checked  prior to installation of the
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   2
+
+
+
+
+
+
+snmp(6)           ERLANG APPLICATION DEFINITION           snmp(6)
+
+
+
+           mib. The perpose of the check is to prevent  that  the
+           same  symbolic  mibentry  name  is  used for different
+           oid's. Default is _f_a_l_s_e.
+
+       _s_n_m_p__t_r_a_p_e_n_t_r_y__o_v_e_r_r_i_d_e = _b_o_o_l() <_o_p_t_i_o_n_a_l>:
+           If this value is false, then when loading a  mib  each
+           trap  is checked prior to installation of the mib. The
+           perpose of the check is to prevent that the same  sym-
+           bolic  trap name is used for different trap's. Default
+           is _f_a_l_s_e.
+
+    _t_r_a_c_e <_o_p_t_i_o_n_a_l>:
+       _s_n_m_p__m_a_s_t_e_r__a_g_e_n_t__v_e_r_b_o_s_i_t_y = _s_i_l_e_n_c_e | _i_n_f_o | _l_o_g  |  _d_e_b_u_g  |
+           Specifies  the  startup  verbosity for the SNMP master
+           agent. Default is _s_i_l_e_n_c_e.
+
+    _t_r_a_c_e <_o_p_t_i_o_n_a_l>:
+       _s_n_m_p__s_y_m_b_o_l_i_c__s_t_o_r_e__v_e_r_b_o_s_i_t_y = _s_i_l_e_n_c_e | _i_n_f_o | _l_o_g | _d_e_b_u_g  |
+           Specifies  the startup verbosity for the SNMP symbolic
+           store. Default is _s_i_l_e_n_c_e.
+
+    _t_r_a_c_e <_o_p_t_i_o_n_a_l>:
+       _s_n_m_p__n_o_t_e__s_t_o_r_e__v_e_r_b_o_s_i_t_y = _s_i_l_e_n_c_e | _i_n_f_o  |  _l_o_g  |  _d_e_b_u_g  |
+           Specifies  the  startup  verbosity  for  the SNMP note
+           store. Default is _s_i_l_e_n_c_e.
+
+    <_o_p_t_i_o_n_a_l>:
+       _s_n_m_p__n_e_t__i_f__v_e_r_b_o_s_i_t_y = _s_i_l_e_n_c_e | _i_n_f_o | _l_o_g |  _d_e_b_u_g  |  _t_r_a_c_e
+           Specifies  the  startup verbosity for the SNMP net if.
+           Default is _s_i_l_e_n_c_e.
+
+    <_o_p_t_i_o_n_a_l>:
+       _s_n_m_p__m_i_b_s_e_r_v_e_r__v_e_r_b_o_s_i_t_y = _s_i_l_e_n_c_e | _i_n_f_o | _l_o_g | _d_e_b_u_g | _t_r_a_c_e
+           Specifies  the  startup  verbosity  for  the  SNMP mib
+           server. Default is _s_i_l_e_n_c_e.
+
+SEE ALSO
+     application(3), disk_log(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   3
+
+
+

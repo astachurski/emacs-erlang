@@ -1,0 +1,132 @@
+
+
+
+CosNotifyChannCeolsANdomtiinf_yESCRthLraAunNcnGteulMrAOedDdmUPiLrnEo_xSDytEPrFuuIscNhtICuTorIneOsdNuPmreorx(y3P)ushConsumer(3)
+
+
+
+MODULE
+     CosNotifyChannelAdmin_StructuredProxyPushConsumer -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     This module also exports the functions described in:
+
+       * CosNotifyComm_NotifyPublish
+
+       * CosNotification_QoSAdmin
+
+       * CosNotifyFilter_FilterAdmin
+
+       * CosNotifyChannelAdmin_ProxyConsumer
+
+
+EXPORTS
+     connect_structured_push_supplier(StructuredProxyPushConsumer,
+     PushSupplier) -> Reply
+
+          Types
+               StructuredProxyPushConsumer = #objref
+               PushSupplier = #objref
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosEventChannelAdmin_AlreadyConnected'{}}
+
+          This operation connects a _P_u_s_h_S_u_p_p_l_i_e_r  to  the  target
+          object.  If a connection already exists an exception is
+          raised.
+
+     push_structured_event(StructuredProxyPushConsumer,    Struc-
+     turedEvent) -> Reply
+
+          Types
+               StructuredProxyPushConsumer = #objref
+               StructuredEvent                                  =
+               #'CosNotification_StructuredEvent'{header,
+               filterable_data, remainder_of_body}
+               header = EventHeader
+               filterable_data                                  =
+               [#'CosNotification_Property'{name, value}]
+               name = string()
+               value = #any
+               remainder_of_body = #any
+               EventHeader                                      =
+               #'CosNotification_EventHeader'{fixed_header,
+               variable_header}
+               fixed_header = FixedEventHeader
+               variable_header = OptionalHeaderFields
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+CosNotifyChannCeolsANdomtiinf_yESCRthLraAunNcnGteulMrAOedDdmUPiLrnEo_xSDytEPrFuuIscNhtICuTorIneOsdNuPmreorx(y3P)ushConsumer(3)
+
+
+
+               FixedEventHeader                                 =
+               #'CosNotification_FixedEventHeader'{event_type,
+               event_name}
+               event_type = EventType
+               event_name = string()
+               EventType                                        =
+               #'CosNotification_EventType'{domain_name,
+               type_name}
+               domain_name = type_name = string()
+               OptionalHeaderFields                             =
+               [#'CosNotification_Property'{name, value}]
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosEventChannelAdmin_Disconnected'{}}
+
+          When a client want to push a new event  to  the  target
+          object this operation must be used.
+
+     disconnect_structured_push_consumer(StructuredProxyPushConsumer)
+     -> ok
+
+          Types
+               StructuredProxyPushConsumer = #objref
+
+          This operation cause the target  object  to  close  the
+          connection and terminate.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+

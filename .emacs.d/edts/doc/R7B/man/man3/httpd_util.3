@@ -1,0 +1,413 @@
+.TH httpd_util 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+httpd_util \- Miscellaneous utility functions to be used when implementing EWSAPI modules\&. 
+.SH DESCRIPTION
+.LP
+This module provides the EWSAPI module programmer with miscellaneous utility functions\&. 
+.SS Warning:
+.LP
+The current implementation of EWSAPI is under review and feedback is welcomed\&. 
+
+
+.SH EXPORTS
+.LP
+.B
+decode_base64(Base64String) -> ASCIIString
+.br
+.RS
+.TP
+Types
+Base64String = ASCIIString = string()
+.br
+.RE
+.RS
+.LP
+\fIdecode_base64/1\fR converts \fIBase64String\fR to the plain ascii string (\fIASCIIString\fR)\&. The string \fI"BAD!"\fR is returned if \fIBase64String\fR is not base64 encoded\&. Read more about base64 encoding in RFC 1521\&. 
+.RE
+.LP
+.B
+decode_hex(HexValue) -> DecValue
+.br
+.RS
+.TP
+Types
+HexValue = DecValue = string()
+.br
+.RE
+.RS
+.LP
+Converts the hexadecimal value \fIHexValue\fR into its decimal equivalent (\fIDecValue\fR)\&. 
+.RE
+.LP
+.B
+day(NthDayOfWeek) -> DayOfWeek
+.br
+.RS
+.TP
+Types
+NthDayOfWeek = 1-7
+.br
+DayOfWeek = string()
+.br
+.RE
+.RS
+.LP
+\fIday/1\fR converts the day of the week (\fINthDayOfWeek\fR) as an integer (1-7) to an abbreviated string, that is: 
+.LP
+1 = "Mon", 2 = "Tue", \&.\&.\&., 7 = "Sat"\&. 
+.RE
+.LP
+.B
+encode_base64(ASCIIString) -> Base64String
+.br
+.RS
+.TP
+Types
+ASCIIString = string()
+.br
+Base64String = string()
+.br
+.RE
+.RS
+.LP
+\fIencode_base64\fR encodes a plain ascii string to a Base64 encoded string\&. See RFC 1521 for a description of Base64 encoding\&. 
+.RE
+.LP
+.B
+header(StatusCode,Date)
+.br
+.B
+header(StatusCode,MimeType,Date) -> HTTPHeader
+.br
+.RS
+.TP
+Types
+StatusCode = integer()
+.br
+Date = rfc1123_date()
+.br
+MimeType = string()
+.br
+.RE
+.RS
+.LP
+\fIheader\fR returns a HTTP 1\&.0 header string\&. The \fIStatusCode\fR is one of the status codes defined in RFC 1945 and the \fIDate\fR string is RFC 1123 compliant\&. (See rfc1123_date/0)\&. 
+.RE
+.LP
+.B
+flatlength(NestedList) -> Size
+.br
+.RS
+.TP
+Types
+NestedList = list()
+.br
+Size = integer()
+.br
+.RE
+.RS
+.LP
+\fIflatlength/1\fR computes the size of the possibly nested list \fINestedList\fR\&. Which may contain binaries\&. 
+.RE
+.LP
+.B
+key1search(TupleList,Key)
+.br
+.B
+key1search(TupleList,Key,Undefined) -> Result
+.br
+.RS
+.TP
+Types
+TupleList = [tuple()]
+.br
+Key = term()
+.br
+Result = term() | undefined | Undefined
+.br
+Undefined = term()
+.br
+.RE
+.RS
+.LP
+\fIkey1search\fR searches the \fITupleList\fR for a tuple whose first element is \fIKey\fR\&. \fIkey1search/2\fR returns \fIundefined\fR and \fIkey1search/3\fR returns \fIUndefined\fR if no tuple is found\&. 
+.RE
+.LP
+.B
+lookup(ETSTable,Key) -> Result
+.br
+.B
+lookup(ETSTable,Key,Undefined) -> Result
+.br
+.RS
+.TP
+Types
+ETSTable = ets_table()
+.br
+Key = term()
+.br
+Result = term() | undefined | Undefined
+.br
+Undefined = term()
+.br
+.RE
+.RS
+.LP
+\fIlookup\fR extracts \fI{Key, Value}\fR tuples from \fIETSTable\fR and returns the \fIValue\fR associated with \fIKey\fR\&. If \fIETSTable\fR is of type \fIbag\fR only the first \fIValue\fR associated with \fIKey\fR is returned\&. \fIlookup/2\fR returns \fIundefined\fR and \fIlookup/3\fR returns \fIUndefined\fR if no \fIValue\fR is found\&. 
+.RE
+.LP
+.B
+lookup_mime(ConfigDB,Suffix)
+.br
+.B
+lookup_mime(ConfigDB,Suffix,Undefined) -> MimeType
+.br
+.RS
+.TP
+Types
+ConfigDB = ets_table()
+.br
+Suffix = string()
+.br
+MimeType = string() | undefined | Undefined
+.br
+Undefined = term()
+.br
+.RE
+.RS
+.LP
+\fIlookup_mime\fR returns the mime type associated with a specific file suffix as specified in the \fImime\&.types\fR file (located in the config directory($SERVER_ROOT/conf/mime\&.types))\&. 
+.RE
+.LP
+.B
+lookup_mime_default(ConfigDB,Suffix)
+.br
+.B
+lookup_mime_default(ConfigDB,Suffix,Undefined) -> MimeType
+.br
+.RS
+.TP
+Types
+ConfigDB = ets_table()
+.br
+Suffix = string()
+.br
+MimeType = string() | undefined | Undefined
+.br
+Undefined = term()
+.br
+.RE
+.RS
+.LP
+\fIlookup_mime_default\fR returns the mime type associated with a specific file suffix as specified in the \fImime\&.types\fR file (located in the config directory($SERVER_ROOT/conf/mime\&.types))\&. If no appropriate association can be found the value of DefaultType is returned\&. 
+.RE
+.LP
+.B
+message(StatusCode,PhraseArgs,ConfigDB) -> Message
+.br
+.RS
+.TP
+Types
+StatusCode = 301 | 400 | 403 | 404 | 500 | 501 | 504
+.br
+PhraseArgs = term()
+.br
+ConfigDB = ets_table
+.br
+Message = string()
+.br
+.RE
+.RS
+.LP
+\fImessage/3\fR returns an informative HTTP 1\&.0 status string in HTML\&. Each \fIStatusCode\fR requires a specific \fIPhraseArgs\fR: 
+.RS 2
+.TP 4
+.B
+\fI301\fR:
+\fIstring()\fR: A URL pointing at the new document position\&.
+.TP 4
+.B
+\fI400 | 401 | 500\fR:
+\fInone\fR (No \fIPhraseArgs\fR)
+.TP 4
+.B
+\fI403 | 404\fR:
+\fIstring()\fR: A \fIRequest-URI\fR as described in RFC 1945\&.
+.TP 4
+.B
+\fI501\fR:
+\fI{Method, RequestURI, HTTPVersion}\fR: The HTTP \fIMethod\fR, \fIRequest-URI\fR and \fIHTTP-Version\fR as defined in RFC 1945\&.
+.TP 4
+.B
+\fI504\fR:
+\fIstring()\fR: A string describing why the service was unavailable\&.
+.RE
+.RE
+.LP
+.B
+month(NthMonth) -> Month
+.br
+.RS
+.TP
+Types
+NthMonth = 1-12
+.br
+Month = string()
+.br
+.RE
+.RS
+.LP
+\fImonth/1\fR converts the month \fINthMonth\fR as an integer (1-12) to an abbreviated string, that is: 
+.LP
+1 = "Jan", 2 = "Feb", \&.\&.\&., 12 = "Dec"\&. 
+.RE
+.LP
+.B
+multi_lookup(ETSTable,Key) -> Result
+.br
+.RS
+.TP
+Types
+ETSTable = ets_table()
+.br
+Key = term()
+.br
+Result = [term()]
+.br
+.RE
+.RS
+.LP
+\fImulti_lookup\fR extracts all \fI{Key, Value}\fR tuples from an \fIETSTable\fR and returns \fIall\fR \fIValues\fR associated with the \fIKey\fR in a list\&. 
+.RE
+.LP
+.B
+reason_phrase(StatusCode) -> Description
+.br
+.RS
+.TP
+Types
+StatusCode = 200 | 201 | 204 | 301 | 302 | 304 | 400 | 401 | 403 | 404 | 500 | 501 | 502 | 504
+.br
+Description = string()
+.br
+.RE
+.RS
+.LP
+\fIreason_phrase\fR returns the \fIDescription\fR of an HTTP 1\&.0 \fIStatusCode\fR, for example 200 is "OK" and 201 is "Created"\&. Read RFC 1945 for further information\&. 
+.RE
+.LP
+.B
+rfc1123_date() -> RFC1123Date
+.br
+.RS
+.TP
+Types
+RFC1123Date = string()
+.br
+.RE
+.RS
+.LP
+\fIrfc1123_date/0\fR returns the current date in RFC 1123 format\&. 
+.RE
+.LP
+.B
+split(String,RegExp,N) -> SplitRes
+.br
+.RS
+.TP
+Types
+String = RegExp = string()
+.br
+SplitRes = {ok, FieldList} | {error, errordesc()}
+.br
+Fieldlist = [string()]
+.br
+N = integer
+.br
+.RE
+.RS
+.LP
+\fIsplit/3\fR splits the \fIString\fR in \fIN\fR chunks using the \fIRegExp\fR\&. \fIsplit/3\fR is is equivalent to \fIregexp:split/2\fR with one exception, that is \fIN\fR defines the number of maximum number of fields in the \fIFieldList\fR\&. 
+.RE
+.LP
+.B
+split_script_path(RequestLine) -> Splitted
+.br
+.RS
+.TP
+Types
+RequestLine = string()
+.br
+Splitted = not_a_script | {Path, PathInfo, QueryString}
+.br
+Path = QueryString = PathInfo = string()
+.br
+.RE
+.RS
+.LP
+\fIsplit_script_path/1\fR is equivalent to \fIsplit_path/1\fR with one exception\&. If the longest possible path is not a regular, accessible and executable file \fInot_a_script\fR is returned\&. 
+.RE
+.LP
+.B
+split_path(RequestLine) -> {Path,QueryStringOrPathInfo}
+.br
+.RS
+.TP
+Types
+RequestLine = Path = QueryStringOrPathInfo = string()
+.br
+.RE
+.RS
+.LP
+\fIsplit_path/1\fR splits the \fIRequestLine\fR in a file reference (\fIPath\fR) and a \fIQueryString\fR or a \fIPathInfo\fR string as specified in RFC 1945\&. A \fIQueryString\fR is isolated from the \fIPath\fR with a question mark (\fI?\fR) and \fIPathInfo\fR with a slash (/)\&. In the case of a \fIQueryString\fR, everything before the \fI?\fR is a \fIPath\fR and everything after a \fIQueryString\fR\&. In the case of a \fIPathInfo\fR the \fIRequestLine\fR is scanned from left-to-right on the hunt for longest possible \fIPath\fR being a file or a directory\&. Everything after the longest possible \fIPath\fR, isolated with a \fI/\fR, is regarded as \fIPathInfo\fR\&. The resulting \fIPath\fR is decoded using \fIdecode_hex/1\fR before delivery\&. 
+.RE
+.LP
+.B
+suffix(FileName) -> Suffix
+.br
+.RS
+.TP
+Types
+FileName = Suffix = string()
+.br
+.RE
+.RS
+.LP
+\fIsuffix/1\fR is equivalent to \fIfilename:extension/1\fR with one exception, that is \fISuffix\fR is returned without a leading dot (\fI\&.\fR)\&. 
+.RE
+.LP
+.B
+to_lower(String) -> ConvertedString
+.br
+.RS
+.TP
+Types
+String = ConvertedString = string()
+.br
+.RE
+.RS
+.LP
+\fIto_lower/1\fR converts upper-case letters to lower-case\&. 
+.RE
+.LP
+.B
+to_upper(String) -> ConvertedString
+.br
+.RS
+.TP
+Types
+String = ConvertedString = string()
+.br
+.RE
+.RS
+.LP
+\fIto_upper/1\fR converts lower-case letters to upper-case\&. 
+.RE
+.SH SEE ALSO
+.LP
+httpd(3) 
+.SH AUTHORS
+.nf
+Joakim Grebeno  - support@erlang.ericsson.se
+Mattias Nilsson  - support@erlang.ericsson.se
+.fi

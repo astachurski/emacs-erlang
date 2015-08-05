@@ -1,0 +1,223 @@
+.TH mesh_lib 3 "mesh  1.1.0" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mesh_lib  \- Measurement Handler library functions\&.
+.SH DESCRIPTION
+.LP
+This module contains the Measurement Handler library functions\&. The purpose of the library is to provide the user with commonly used statistical functions\&. 
+
+.SH EXPORTS
+.LP
+.B
+sum(SampleList) -> Result
+.br
+.RS
+.TP
+Types
+SampleList = [number()]
+.br
+Result = SampleSum | {error, Reason}
+.br
+SampleSum = number()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function adds up a list of measurement samples\&. 
+.RE
+.LP
+.B
+sum_and_squaresum(SampleList) -> Result
+.br
+.RS
+.TP
+Types
+SampleList = [number()]
+.br
+Result = {SampleSum, SampleSquareSum} | {error, Reason}
+.br
+SampleSum = SampleSquareSum = number()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function adds up a list of measurement samples, and also sums the square of each sample\&. 
+.RE
+.LP
+.B
+sample_mean(SampleList) -> Result
+.br
+.RS
+.TP
+Types
+SampleList = [number()]
+.br
+Result = EstimatedSampleMean | {error, Reason}
+.br
+EstimatedSampleMean = number()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Suppose that [X1, X2, X3, \&.\&.\&., Xn] are random variables (observations) with finite population mean u\&.
+.br
+ The sample mean estimation m(n) = (X1 + X2 + X3 + \&.\&.\&. +Xn) / n 
+.RE
+.LP
+.B
+sample_variance(SampleList) -> Result
+.br
+.RS
+.TP
+Types
+SampleList = [number()]
+.br
+Result = EstimatedSampleVariance | {error, Reason}
+.br
+EstimatedSampleVariance = number()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Suppose that [X1, X2, X3, \&.\&.\&., Xn] are random variables (observations) with finite population mean u and finite population variance V, and sample mean estimate m(n)\&. The sample variance estimation S^2(n) = ((X1 - m(n))^2 + (X2 - m(n))^2 + \&.\&.\&. + (Xn - m(n))^2) / (n - 1) =
+.br
+ = (X1^2 + X2^2 + \&.\&.\&. + Xn^2 - (n * m(n)^2)) / (n - 1) 
+.RE
+.LP
+.B
+sample_mean_and_variance(SampleList) -> Result
+.br
+.RS
+.TP
+Types
+SampleList = [number()]
+.br
+Result = {EstimatedSampleMean, EstimatedSampleVariance} | {error, Reason}
+.br
+EstimatedSampleMean = EstimatedSampleVariance = number()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Suppose that [X1, X2, X3, \&.\&.\&., Xn] are random variables (observations) with a finite population mean u with a finite population variance V, and a sample mean estimate m(n)\&. The sample mean estimation m(n) = (X1 + X2 + X3 + \&.\&.\&. +Xn) / n The sample variance estimation S^2(n) = ((X1 - m(n))^2 + (X2 - m(n))^2 + \&.\&.\&. + (Xn - m(n))^2) / (n - 1) =
+.br
+ = (X1^2 + X2^2 + \&.\&.\&. + Xn^2 - (n * m(n)^2)) / (n - 1) 
+.RE
+.LP
+.B
+mean_variance(MeanList) -> Result
+.br
+.RS
+.TP
+Types
+MeanList = [EstimatedMeans]
+.br
+EstimatedMeans = number()
+.br
+Result = MeanVariance | {error, Reason}
+.br
+MeanVariance = number()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Suppose that [X1, X2, X3, \&.\&.\&., Xn] are \fIindependent\fR random variables with a finite population mean u, a finite population variance V, and a sample mean estimate m(n)\&. The variance of the estimated mean may be equated through the formula Var(m(n)) = S^2(n) / n NOTE: This formula is valid only if all Xi\&'s are independent (uncorrelated)!!! This is normally not the case in simulations\&. 
+.RE
+.LP
+.B
+ewma_mean(Xnew, Wn, GP, MTP) -> Result
+.br
+.RS
+.TP
+Types
+Xnew = Wn = GP = MTP = number()
+.br
+Result = EstimatedMean | {error, Reason
+.br
+EstimatedMean = number()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function computes the mean of a number of samples using the Exponentially Weighted Moving Average technique\&. Suppose that [X1, X2, X3, \&.\&.\&., Xn] are random variables (observations) with finite population mean u\&. Assume we have previously equated a mean value estimate Wn (where W0 may have been simply estimated)\&. Let GP denote the granularity period, ie\&., the time elapsed between any two successive sample measurements, and let MTP denote the moving time period, ie\&., the time within which samples are considered\&. (For example, let GP be 5 ms, and MTP 1 s, which means that the EWMA mean will be based on 200 samples\&.) When we receive a new sample Xnew, the new estimate of the mean will be Wnew = f * Xnew + (1 - f) * Wn, where f = 2 * GP / (GP + MTP) 
+.RE
+.LP
+.B
+ewma_variance(Xnew, Wnew, Sn, GP, SMTP) -> Result
+.br
+.RS
+.TP
+Types
+Xnew = Wnew = Sn = GP = SMTP = number()
+.br
+Result = EstimatedVariance | {error, Reason
+.br
+EstimatedVariance = number()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function computes the variance of a number of samples using the Exponentially Weighted Moving Average technique\&. Suppose that [X1, X2, X3, \&.\&.\&., Xn] are random variables (observations) with a finite population mean u\&. Also assume we have previously computed a variance value estimate Sn (where S0 may have been simply calculated)\&. Let GP denote the granularity period, ie\&., the time elapsed between any two successive sample measurements\&. Also, let SMTP denote the second moving time period, ie\&., the effective time interval over which values are scanned to calculate an estimate of the variance\&. When we receive a new sample Xnew, the new estimate of the mean will be Snew = g * (Xnew - Wnew)^2 + (1 - g) * Sn, where g = 2 * GP / (GP + SMTP) NOTE: the bias can be shown to be u = 2*(1-f)^2/(2-f), times the variance of Xnew - Wnew (where f is taken from the ewma_mean formula)\&. This may be used to reduce the bias in the calculations, using the formula S\&'n = Sn / u\&. The manager may decide whether to reduce the bias or ignore it\&. 
+.RE
+.LP
+.B
+uwma_mean(Xnew, SX, Xold, N) -> Result
+.br
+.RS
+.TP
+Types
+Xnew = SX = Xold = N = number()
+.br
+Result = {EstimatedMean, SampleSum} | {error, Reason
+.br
+EstimatedMean = SampleSum = number()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function computes the variance of a number of samples using the Uniformly Weighted Moving Average technique\&. Suppose that [X1, X2, X3, \&.\&.\&., Xn] are random variables (observations) with finite population mean u, and sample sum SX\&. When we receive a new sample Xnew, the new estimate of the mean will be Wnew = Xnew + (SX - Xold) / N, where Xold is the oldest sample used in the calculation of SX (ie\&., the sample that will be replaced by Xnew when calculating Wnew), and N is the number of samples the calculation of Wnew is based on\&. 
+.RE
+.LP
+.B
+uwma_variance(Xnew, SX, SqSX, Xold, N) -> Result
+.br
+.RS
+.TP
+Types
+Xnew = SX = SqSX = Xold = N = number()
+.br
+Result = {EstimatedVariance, SampleSum, SampleSquareSum} | {error, Reason
+.br
+EstimatedVariance = SampleSum = SampleSquareSum = number()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function computes the variance of a number of samples using the Uniformaly Weighted Moving Average technique\&. Suppose that [X1, X2, X3, \&.\&.\&., Xn] are random variables (observations) with finite population mean u and finite population variance V, and sample sum SX, and sample square sum SqSX, When we receive a new sample Xnew, the new estimate of the variance will be Snew = ((Xnew^2 + SqSX - Xold^2) - (Xnew + SX - Xold)^2 / N) / (N - 1), where Xold is the oldest sample used in the calculation of SX (ie\&., the sample that will be replaced by Xnew when calculating Snew), and N is the number of samples the calculation of Snew is based on\&. 
+.RE
+.SH SEE ALSO
+.LP
+mesh(3) 
+.SH AUTHOR
+.nf
+Fredrik Gustafson - support@erlang.ericsson.se
+.fi

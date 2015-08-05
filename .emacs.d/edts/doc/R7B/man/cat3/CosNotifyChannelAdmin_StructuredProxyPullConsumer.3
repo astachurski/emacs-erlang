@@ -1,0 +1,132 @@
+
+
+
+CosNotifyChannCeolsANdomtiinf_yESCRthLraAunNcnGteulMrAOedDdmUPiLrnEo_xSDytEPrFuuIlcNltICuTorIneOsdNuPmreorx(y3P)ullConsumer(3)
+
+
+
+MODULE
+     CosNotifyChannelAdmin_StructuredProxyPullConsumer -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     This module also exports the functions described in:
+
+       * CosNotifyComm_NotifyPublish
+
+       * CosNotification_QoSAdmin
+
+       * CosNotifyFilter_FilterAdmin
+
+       * CosNotifyChannelAdmin_ProxyConsumer
+
+
+EXPORTS
+     connect_structured_pull_supplier(StructuredProxyPullConsumer,
+     PullSupplier) -> Reply
+
+          Types
+               StructuredProxyPullConsumer = #objref
+               PullSupplier = #objref
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosEventChannelAdmin_AlreadyConnected'{}}      |
+               {'EXCEPTION', #'CosEventChannelAdmin_TypeError'{}}
+
+          This operation connects a _P_u_l_l_S_u_p_p_l_i_e_r  to  the  target
+          object.  If  a  connection  already exists or the given
+          client  object   does   not   support   the   functions
+          _p_u_l_l__s_t_r_u_c_t_u_r_e_d__e_v_e_n_t  and _t_r_y__p_u_l_l__s_t_r_u_c_t_u_r_e_d__e_v_e_n_t an
+          exception is raised.
+
+     suspend_connection(StructuredProxyPullConsumer) -> Reply
+
+          Types
+               StructuredProxyPullConsumer = #objref
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosNotifyChannelAdmin_ConnectionAlreadyInactive'{}}
+               |                                    {'EXCEPTION',
+               #'CosNotifyChannelAdmin_NotConnected'{}}
+
+          This operation suspends the connection between the tar-
+          get  object  and its client. If no connection exists or
+          already suspended an exception is raised.
+
+     resume_connection(StructuredProxyPullConsumer) -> Reply
+
+          Types
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+CosNotifyChannCeolsANdomtiinf_yESCRthLraAunNcnGteulMrAOedDdmUPiLrnEo_xSDytEPrFuuIlcNltICuTorIneOsdNuPmreorx(y3P)ullConsumer(3)
+
+
+
+               StructuredProxyPullConsumer = #objref
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosNotifyChannelAdmin_ConnectionAlreadyInactive'{}}
+               |                                    {'EXCEPTION',
+               #'CosNotifyChannelAdmin_NotConnected'{}}
+
+          If the connection have been  suspended  this  operation
+          must  be  used  if we want to resume the connection. If
+          the connection already are active or no connection have
+          been created an exception is raised.
+
+     disconnect_structured_pull_consumer(StructuredProxyPullConsumer)
+     -> ok
+
+          Types
+               StructuredProxyPullConsumer = #objref
+
+          This operation cause the target  object  to  close  the
+          connection and terminate.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+

@@ -1,0 +1,256 @@
+.TH sets 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+sets \- Functions for Manipulating Sets as Ordered Lists 
+.SH DESCRIPTION
+.LP
+Sets are collections of elements with no duplicate elements\&. The representation of a set is not defined\&. 
+
+.SH EXPORTS
+.LP
+.B
+new() -> Set
+.br
+.RS
+.TP
+Types
+Set = set()
+.br
+.RE
+.RS
+.LP
+Returns a new empty ordered set\&. 
+.RE
+.LP
+.B
+is_set(Set) -> bool()
+.br
+.RS
+.TP
+Types
+Set = term()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fISet\fR is an ordered set of elements, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+size(Set) -> int()
+.br
+.RS
+.TP
+Types
+Set = term()
+.br
+.RE
+.RS
+.LP
+Returns the number of elements in \fISet\fR\&. 
+.RE
+.LP
+.B
+to_list(Set) -> List
+.br
+.RS
+.TP
+Types
+Set = set()
+.br
+List = [term()]
+.br
+.RE
+.RS
+.LP
+Returns the elements of \fISet\fR as a list\&. 
+.RE
+.LP
+.B
+from_list(List) -> Set
+.br
+.RS
+.TP
+Types
+List = [term()]
+.br
+Set = set()
+.br
+.RE
+.RS
+.LP
+Returns an ordered set of the elements in \fIList\fR\&. 
+.RE
+.LP
+.B
+is_element(Element, Set) -> bool()
+.br
+.RS
+.TP
+Types
+Element = term()
+.br
+Set = set()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fIElement\fR is an element of \fISet\fR, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+add_element(Element, Set1) -> Set2
+.br
+.RS
+.TP
+Types
+Element = term()
+.br
+Set1 = Set2 = set()
+.br
+.RE
+.RS
+.LP
+Returns a new ordered set formed from \fISet1\fR with \fIElement\fR inserted\&. 
+.RE
+.LP
+.B
+del_element(Element, Set1) -> Set2
+.br
+.RS
+.TP
+Types
+Element = term()
+.br
+Set1 = Set2 = set()
+.br
+.RE
+.RS
+.LP
+Returns \fISet1\fR, but with \fIElement\fR removed\&. 
+.RE
+.LP
+.B
+union(Set1, Set2) -> Set3
+.br
+.RS
+.TP
+Types
+Set1 = Set2 = Set3 = set()
+.br
+.RE
+.RS
+.LP
+Returns the merged (union) set of \fISet1\fR and \fISet2\fR\&. 
+.RE
+.LP
+.B
+union(SetList) -> Set
+.br
+.RS
+.TP
+Types
+SetList = [set()]
+.br
+Set = set()
+.br
+.RE
+.RS
+.LP
+Returns the merged (union) set of the list of sets\&. 
+.RE
+.LP
+.B
+intersection(Set1, Set2) -> Set3
+.br
+.RS
+.TP
+Types
+Set1 = Set2 = Set3 = set()
+.br
+.RE
+.RS
+.LP
+Returns the intersection of \fISet1\fR and \fISet2\fR\&. 
+.RE
+.LP
+.B
+intersection(SetList) -> Set
+.br
+.RS
+.TP
+Types
+SetList = [set()]
+.br
+Set = set()
+.br
+.RE
+.RS
+.LP
+Returns the intersection of the list of sets\&. 
+.RE
+.LP
+.B
+subtract(Set1, Set2) -> Set3
+.br
+.RS
+.TP
+Types
+Set1 = Set2 = Set3 = set()
+.br
+.RE
+.RS
+.LP
+Returns only the elements of \fISet1\fR which are not also elements of \fISet2\fR\&. 
+.RE
+.LP
+.B
+is_subset(Set1, Set2) -> bool()
+.br
+.RS
+.TP
+Types
+Set1 = Set2 = set()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR when every element of \fISet\fR1 is also a member of \fISet2\fR, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+fold(Function, Acc0, Set) -> Acc1
+.br
+.RS
+.TP
+Types
+Function = fun (E, AccIn) -> AccOut
+.br
+Acc0 = Acc1 = AccIn = AccOut = term()
+.br
+Set = set()
+.br
+.RE
+.RS
+.LP
+Fold \fIFunction\fR over every element in \fISet\fR returning the final value of the accumulator\&. 
+.RE
+.LP
+.B
+filter(Pred, Set1) -> Set2
+.br
+.RS
+.TP
+Types
+Pred = fun (E) -> bool()
+.br
+Set1 = Set2 = set()
+.br
+.RE
+.RS
+.LP
+Filter elements in \fISet1\fR with boolean function \fIFun\fR\&. 
+.RE
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

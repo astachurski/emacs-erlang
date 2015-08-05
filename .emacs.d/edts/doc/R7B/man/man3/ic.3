@@ -1,0 +1,369 @@
+.TH ic 3 "ic  4.0.5" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+ic \- The Erlang IDL compiler\&.
+.SH DESCRIPTION
+.LP
+The ic module is an Erlang implementation of an OMG IDL compiler\&. Depending on the choice of back-end the code will map to Erlang or C\&. The compiler generates client stub code and server behaviors\&. 
+.LP
+Two kinds of files are generated for each scope, Erlang/C files and Erlang/C header files\&. Headers are used to store record definitions, while usual Erlang/C files contain the object interface functions, the object server or access functions for records defined in interfaces\&. 
+
+.SH EXPORTS
+.LP
+.B
+ic:gen(FileName) -> Result
+.br
+.B
+ic:gen(FileName, [Option]) -> Result
+.br
+.RS
+.TP
+Types
+Result = ok | error | {ok, [Warning}} | {error, [Warning], [Error]}
+.br
+
+.br
+Option = [ GeneralOption | CodeOption | WarningOption | BackendOption ]
+.br
+
+.br
+GeneralOption = 
+.br
+ {outdir, String()) | {cfgfile, String()} | {use_preproc, bool()} | 
+.br
+ {preproc_cmd, String()} | {preproc_flags, String()} 
+.br
+
+.br
+CodeOption =
+.br
+ {gen_hrl, bool()} | {serv_last_call, exception | exit} | 
+.br
+ {{impl, String()}, String()} | {{this, String()}, bool()} | 
+.br
+ {{handle_info, String()}, bool()} | {timeout, String()} | 
+.br
+ {scoped_op_calls, bool()} | {scl, bool()} 
+.br
+ {precond, {atom(), atom()}} | {{precond, String()} {atom(), atom()}} | 
+.br
+ {postcond, {atom(), atom()}} | {{postcond, String()} {atom(), atom()}} 
+.br
+
+.br
+WarningOption =
+.br
+ {\&'Wall\&', bool()} | {maxerrs, int() | infinity} | 
+.br
+ {maxwarns, int() | infinity} | {nowarn, bool()} | 
+.br
+ {warn_name_shadow, bool()} | {pedantic, bool()} | 
+.br
+ {silent, bool()} 
+.br
+
+.br
+ BackendOption = 
+.br
+ {be, erl_corba | erl_plain | erl_genserv | c_genserv | c_client | c_server } | 
+.br
+
+.br
+DirNAme = string() | atom()
+.br
+
+.br
+FileName = string() | atom()
+.br
+.RE
+.RS
+.LP
+The tuple {\fIOption\fR, true} can be replaced with \fIOption\fR for boolean values\&. 
+.RE
+.SH General options
+.RS 2
+.TP 4
+.B
+\fIoutdir\fR:
+Places all output files in the directory given by the option\&. The directory will be created if it does not already exist\&. 
+.RS 4
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{outdir, "output/generated"}])\fR 
+.RE
+.TP 4
+.B
+\fIcfgfile\fR:
+Uses \fIFileName\fR as configuration file\&. Options will override compiler defaults but can be overridden by command line options\&. Default value is \fI"\&.ic_config"\fR\&. 
+.RS 4
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{cfgfile, "special\&.cfg"}])\fR 
+.RE
+.TP 4
+.B
+\fIuse_preproc\fR:
+Uses a preprocessor\&. Default value is true\&. 
+.TP 4
+.B
+\fIpreproc_cmd\fR:
+Command string to invoke the preprocessor\&. The actual command will be built as \fIpreproc_cmd++preproc_flags++FileName\fR 
+.RS 4
+.LP
+
+.LP
+\fIExample1: ic:gen(x, [{preproc_cmd, "erl"}])\fR 
+.LP
+
+.LP
+\fIExample2: ic:gen(x, [{preproc_cmd, "gcc -x c++ -E"}])\fR 
+.RE
+.TP 4
+.B
+\fIpreproc_flags\fR:
+Flags given to the preprocessor\&. 
+.RS 4
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{preproc_flags, "-I\&.\&./include"\fR 
+.RE
+.RE
+.SH Code options
+.RS 2
+.TP 4
+.B
+\fIgen_hrl\fR:
+Generate header files\&. Default is true\&. 
+.TP 4
+.B
+\fIserv_last_call\fR:
+Makes the last \fIgen_server handle_call\fR either raise a CORBA exception or just exit plainly\&. Default is the exception\&. 
+.TP 4
+.B
+\fI{{impl, IntfName}, ModName}\fR:
+Assumes that the interface with name \fIIntfName\fR is implemented by the module with name \fIModName\fR and will generate calls to the \fIModName\fR module in the server behavior\&. Note that the \fIIntfName\fR must be a fully scoped name as in \fI"M1::I1"\fR\&. 
+.RS 4
+.LP
+
+.LP
+
+.RE
+.TP 4
+.B
+\fIthis\fR:
+Adds the object reference as the first parameter to the object implementation functions\&. This makes the implementation aware of its own object reference\&. 
+.br
+The option comes in three varieties: \fIthis\fR which activates the parameter for all interfaces in the source file, \fI{this, IntfName}\fR which activates the parameter for a specified interface and \fI{{this, IntfName}, false}\fR which deactivates the parameter for a specified interface\&. 
+.RS 4
+.LP
+
+.LP
+\fIExample: ic:gen(x, [this])\fR activates the parameter for all interfaces\&. 
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{this, "M1::I1"}])\fR activates the parameter for all functions of \fIM1::I1\fR\&. 
+.LP
+
+.LP
+\fIExample: ic:gen(x, [this, {{this, "M1::I2"}, false}])\fR activates the parameter for all interfaces except \fIM1::I2\fR\&. 
+.RE
+.TP 4
+.B
+\fIhandle_info\fR:
+Makes the object server call a function \fIhandle_info\fR in the object implementation module on all unexpected messages\&. Useful if the object implementation need to trap exits\&. 
+.RS 4
+.LP
+
+.LP
+\fIExample: ic:gen(x, [handle_info])\fR will activates module implementation \fIhandle_info\fR for all interfaces in the source file\&. 
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{{handle_info, "M1::I1"}, true}\fR will activates module implementation \fIhandle_info\fR for the specified interface\&. 
+.LP
+
+.LP
+\fIExample: ic:gen(x, [handle_info, {{handle_info, "M1::I1"}, false}\fR will generate the \fIhandle_info\fR call for all interfaces except \fIM1::I1\fR\&. 
+.RE
+.TP 4
+.B
+\fItimeout\fR:
+Used to allow a server response time limit to be set by the user\&. This should be a string that represents the scope for the interface which should have an extra variable for wait time initialization\&. 
+.RS 4
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{time_out, "M::I"}])\fR produces server stub which will has an extra timeout parameter in the initialization function for that interface\&. 
+.RE
+.TP 4
+.B
+\fIscoped_op_calls\fR:
+Used to produce more refined request calls to server\&. When this option is set to true, the operation name which was mentioned in the call is scoped\&. This is essential to avoid name coalition when communicating with c-servers\&. This option is available for the c-client, c-server and the Erlang gen_server back ends\&. \fIAll\fR of the parts generated by ic have to agree in the use of this option\&. Default is \fIfalse\fR\&. 
+.RS 4
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{be, c_genserv}, {scoped_op_calls, true}])\fR produces client stub which sends "scoped" requests to the a gen_server or a c-server\&. 
+.RE
+.TP 4
+.B
+\fIscl\fR:
+Used for compatibility with previous compiler versions up to \fI3\&.3\fR\&. Due to better semantic checks on enumerants, the compiler discovers name coalitions between user defined types and enumerant values in the same name space\&. By enabling this option the compiler turns off the extended semantic check on enumerant values\&. Default is \fIfalse\fR\&. 
+.RS 4
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{scl, true}])\fR
+.RE
+.TP 4
+.B
+\fIprecond\fR:
+Adds a precondition call before the call to the operation implementation on the server side\&. 
+.br
+ The option comes in three varieties: \fI{precond, {M, F}}\fR which activates the call for operations in all interfaces in the source file, \fI{{precond, IntfName}, {M, F}}\fR which activates the call for all operations in a specific interface and \fI{{precond, OpName}, {M, F}}\fR which activates the call for a specific operation\&.
+.br
+ The precondition function has the following signature \fIm:f(Module, Function, Args)\fR\&. 
+.RS 4
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{precond, {mod, fun}}])\fR adds the call of m:f for all operations in the idl file\&. 
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{{precond, "M1::I"}, {mod, fun}}])\fR adds the call of \fIm:f\fR for all operations in the interface \fIM1::I1\fR\&. 
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{{precond, "M1::I::Op"}, {mod, fun}}])\fR adds the call of \fIm:f\fR for the operation \fIM1::I::Op\fR\&. 
+.RE
+.TP 4
+.B
+\fIpostcond\fR:
+Adds a postcondition call after the call to the operation implementation on the server side\&. 
+.br
+ The option comes in three varieties: \fI{postcond, {M, F}}\fR which activates the call for operations in all interfaces in the source file, \fI{{postcond, IntfName}, {M, F}}\fR which activates the call for all operations in a specific interface and \fI{{postcond, OpName}, {M, F}}\fR which activates the call for a specific operation\&.
+.br
+ The postcondition function has the following signature \fIm:f(Module, Function, Args, Result)\fR\&. 
+.RS 4
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{postcond, {mod, fun}}])\fR adds the call of m:f for all operations in the idl file\&. 
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{{postcond, "M1::I"}, {mod, fun}}])\fR adds the call of \fIm:f\fR for all operations in the interface \fIM1::I1\fR\&. 
+.LP
+
+.LP
+\fIExample: ic:gen(x, [{{postcond, "M1::I::Op"}, {mod, fun}}])\fR adds the call of \fIm:f\fR for the operation \fIM1::I::Op\fR\&. 
+.RE
+.RE
+.SH Warning options
+.RS 2
+.TP 4
+.B
+\fI\&'Wall\&'\fR:
+The option activates all reasonable warning messages in analogy with the gcc -Wall option\&. Default value is true\&. 
+.TP 4
+.B
+\fImaxerrs\fR:
+The maximum numbers of errors that can be detected before the compiler gives up\&. The option can either have an integer value or the atom \fIinfinity\fR\&. Default number is 10\&. 
+.TP 4
+.B
+\fImaxwarns\fR:
+The maximum numbers of warnings that can be detected before the compiler gives up\&. The option can either have an integer value or the atom \fIinfinity\fR\&. Default value is infinity\&. 
+.TP 4
+.B
+\fInowarn\fR:
+Suppress all warnings\&. Default value is false\&. 
+.TP 4
+.B
+\fIwarn_name_shadow\fR:
+Warning appear whenever names are shadowed due to inheritance, for example, if a type name is redefined from a base interface\&. Note that it is illegal to overload operation and attribute names as this causes an error to be produced\&. Default value is true\&. 
+.TP 4
+.B
+\fIpedantic\fR:
+Activates all warning options\&. Default value is false\&. 
+.TP 4
+.B
+\fIsilent\fR:
+Suppresses compiler printed output\&. Default value is false\&. 
+.RE
+.SH Back-End options
+.LP
+All back-end options are declared as a tuple \fI{be, atom()}\fR, followed eventually by back-end specific options:
+.RS 2
+.TP 4
+.B
+\fIerl_corba\fR:
+This option switches to the IDL generation for CORBA\&. 
+.TP 4
+.B
+\fIerl_plain\fR:
+Will produce plain Erlang modules which contain functions that map to the corresponding interface functions on the input file\&. 
+.TP 4
+.B
+\fIerl_genserv\fR:
+This is an IDL to Erlang generic server generation option\&. 
+.TP 4
+.B
+\fIc_genserv\fR:
+Will produce a C client to the generic Erlang server\&. 
+.TP 4
+.B
+\fIc_client\fR:
+Will produce a C client to the generic Erlang server\&. 
+.RS 4
+.LP
+
+.LP
+Please note that this option have the same action as the c_genserv option\&. It is supposed to gradually replace the c_genserv option\&. For a limited period of time both options will be supported\&. 
+.RE
+.TP 4
+.B
+\fIc_server\fR:
+Will produce a C server switch with functionality of a generic Erlang server\&. 
+.RE
+.LP
+Default back-end option is \fI{be, erl_corba}\&.\fR
+.SH Preprocessor
+.LP
+The IDL compiler allows several preprocessors to be used, the \fIErlang IDL preprocessor\fR or other standard \fIC\fR preprocessors\&. Options can be used to provide extra flags such as include directories to the preprocessor\&. The build in the Erlang IDL preprocessor is used by default, but any standard C preprocessor such as \fIgcc\fR is adequate\&. 
+.LP
+The preprocessor command is formed by appending the prepoc_cmd to the preproc_flags option and then appending the input IDL file name\&. 
+.SH Configuration
+.LP
+The compiler can be configured in two ways: 
+.RS 2
+.TP 4
+1.
+Configuration file
+.TP 4
+2.
+Command line options
+.RE
+.LP
+The configuration file is optional and overrides the compiler defaults and is in turn overridden by the command line options\&. The configuration file shall contain options in the form of Erlang terms\&. The configuration file is read using \fIfile:consult\fR\&. 
+.LP
+An example of a configuration file, note the "\&." after each line\&. 
+
+.nf
+{outdir, gen_dir}\&.
+{{impl, "M1::M2::object"}, "obj"}\&.
+.fi
+.SH Output files
+.LP
+The compiler will produce output in several files depending on scope declarations found in the IDL file\&. At most three file types will be generated for each scope (including the top scope), depending on the compiler back-end and the compiled interface\&. Generally, the output per interface will be a header file (\fI\&.hrl\fR/ \fI\&.h\fR) and one or more Erlang/C files (\fI\&.erl\fR/\fI\&.c\fR)\&. Please look at the language mapping for each back-end for details\&. 
+.LP
+There will be at least one set of files for an IDL file, for the file level scope\&. Modules and interfaces also have their own set of generated files\&. 
+.SH AUTHORS
+.nf
+Peter Lundell - support@erlang.ericsson.se
+Lars Thorsen - support@erlang.ericsson.se
+Babbis Xagorarakis - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,522 @@
+.TH httpd 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+httpd \- An implementation of an HTTP 1\&.0 compliant Web server, as defined in RFC 1945\&. 
+.SH DESCRIPTION
+.LP
+HTTP (Hypertext Transfer Protocol) is an application-level protocol with the lightness and speed necessary for distributed, collaborative and hyper-media information systems\&. The \fIhttpd\fR module handles HTTP 1\&.0 as described in  RFC 1945 with a few exceptions such as  Gateway and  Proxy functionality\&. The same is true for servers written by NCSA and others\&. 
+.LP
+The server implements numerous features such as SSL (Secure Sockets Layer), ESI (Erlang Scripting Interface), CGI (Common Gateway Interface), User Authentication(using Mnesia, dets or plain text database), Common Logfile Format (with or without \fIdisk_log(3)\fR support), URL Aliasing, Action Mappings, Directory Listings and SSI (Server-Side Includes)\&. 
+.LP
+The configuration of the server is done using Apache <http://www\&.apache\&.org>-style run-time configuration directives\&. The goal is to be plug-in compatible with Apache but with enhanced fault-tolerance, scalability and load-balancing characteristics\&. 
+.LP
+All server functionality has been implemented using an especially crafted server API; EWSAPI (Erlang Web Server API)\&. This API can be used to advantage by all who wants to enhance the server core functionality, for example custom logging and authentication\&. 
+
+.SH RUN-TIME CONFIGURATION
+.LP
+All functionality in the server can be configured using Apache-style run-time configuration directives stored in a configuration file\&. Take a look at the example config files in the conf directory($INETS_ROOT/examples/server_root/conf/) of the server root for a complete understanding\&. 
+.LP
+An alphabetical list of all config directives: 
+.RS 2
+.TP 2
+*
+Action
+.TP 2
+*
+Alias
+.TP 2
+*
+allow
+.TP 2
+*
+deny
+.TP 2
+*
+AuthName
+.TP 2
+*
+AuthGroupFile
+.TP 2
+*
+AuthUserFile
+.TP 2
+*
+BindAddress
+.TP 2
+*
+DefaultType
+.TP 2
+*
+<Directory>
+.TP 2
+*
+DirectoryIndex
+.TP 2
+*
+DocumentRoot
+.TP 2
+*
+ErlScriptAlias
+.TP 2
+*
+ErrorLog
+.TP 2
+*
+ErrorDiskLog
+.TP 2
+*
+ErrorDiskLogSize
+.TP 2
+*
+EvalScriptAlias
+.TP 2
+*
+MaxClients
+.TP 2
+*
+Modules
+.TP 2
+*
+Port
+.TP 2
+*
+require
+.TP 2
+*
+ServerAdmin
+.TP 2
+*
+ServerName
+.TP 2
+*
+ServerRoot
+.TP 2
+*
+Script
+.TP 2
+*
+ScriptAlias
+.TP 2
+*
+SocketType
+.TP 2
+*
+SSLCertificateFile
+.TP 2
+*
+SSLCertificateKeyFile
+.TP 2
+*
+SSLVerifyClient
+.TP 2
+*
+KeepAlive
+.TP 2
+*
+KeepAliveTimeout
+.TP 2
+*
+TransferLog
+.TP 2
+*
+TransferDiskLog
+.TP 2
+*
+TransferDiskLogSize
+.RE
+.SH EWSAPI MODULES
+.LP
+All server functionality below has been implemented using EWSAPI (Erlang Web Server API) modules\&. The following modules all have separate manual pages (\fImod_cgi(3)\fR, \fImod_auth(3)\fR, \&.\&.\&.): 
+.RS 2
+.TP 4
+.B
+httpd_core:
+Core features\&.
+.TP 4
+.B
+mod_actions:
+Filetype/method-based script execution\&.
+.TP 4
+.B
+mod_alias:
+Aliases and redirects\&.
+.TP 4
+.B
+mod_auth:
+User authentication using text files, mnesia or dets
+.TP 4
+.B
+mod_cgi:
+Invoking of CGI scripts\&.
+.TP 4
+.B
+mod_dir:
+Basic directory handling\&.
+.TP 4
+.B
+mod_esi:
+Efficient Erlang Scripting\&.
+.TP 4
+.B
+mod_get:
+HTTP GET Method
+.TP 4
+.B
+mod_head:
+HTTP HEAD Method
+.TP 4
+.B
+mod_include:
+Server-parsed documents\&.
+.TP 4
+.B
+mod_log:
+Standard logging in the Common Logfile Format using text files\&.
+.TP 4
+.B
+mod_disk_log:
+Standard logging in the Common Logfile Format using \fIdisk_log(3)\fR\&.
+.RE
+.LP
+The Modules config directive can be used to alter the server behavior, that is to alter the EWSAPI Module Sequence\&. An example module sequence can be found in the example config directory\&. If this needs to be altered read the EWSAPI Module Interaction section below\&. 
+.SH EXPORTS
+.LP
+.B
+start()
+.br
+.B
+start(ConfigFile) -> ServerRet
+.br
+.B
+start_link()
+.br
+.B
+start_link(ConfigFile) -> ServerRet
+.br
+.RS
+.TP
+Types
+ConfigFile = string()
+.br
+ServerRet = {ok, Pid} | ignore | {error, EReason} | {stop, SReason}
+.br
+Pid = pid()
+.br
+EReason = {already_started, Pid} | term()
+.br
+SReason = string()
+.br
+.RE
+.RS
+.LP
+\fIstart/1\fR and \fIstart_link/1\fR starts a server as specified in the given \fIConfigFile\fR\&. The \fIConfigFile\fR supports a number of config directives specified below\&. 
+.LP
+\fIstart/0\fR and \fIstart/0\fR starts a server as specified in a hard-wired config file, that is \fIstart("/var/tmp/server_root/conf/8888\&.conf")\fR\&. Before utilizing \fIstart/0\fR or \fIstart_link/0\fR, copy the example server root($INETS_ROOT/examples/server_root/) to a specific installation directory(/var/tmp/) and you have a server running in no time\&. 
+.LP
+If you copy the example server root to the specific installation directory it is furthermore easy to start an SSL enabled server, that is \fIstart("/var/tmp/server_root/conf/ssl\&.conf")\fR\&. 
+.RE
+.LP
+.B
+restart()
+.br
+.B
+restart(Port) -> ServerRet
+.br
+.B
+restart(ConfigFile) -> ServerRet
+.br
+.B
+restart(Address,Port) -> ServerRet
+.br
+.RS
+.TP
+Types
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+ConfigFile = string()
+.br
+ServerRet = ok | not_started
+.br
+.RE
+.RS
+.LP
+\fIrestart\fR restarts the server and reloads its config file\&. \fIrestart/2\fR restarts the server which listens to the specified \fIPort\fR on \fIAddress\fR\&. \fIrestart(integer())\fR restarts a server which listens to a specific \fIPort\fR\&. \fIrestart(string())\fR extracts \fIBindAddress\fR and \fIPort\fR from the config file and calls \fIrestart/2\fR \fIrestart/0\fR\&. restarts a server which listens to port 8888, that is \fIrestart(8888)\fR\&. 
+.RE
+.LP
+.B
+stop()
+.br
+.B
+stop(Port) -> ServerRet
+.br
+.B
+stop(ConfigFile) -> ServerRet
+.br
+.B
+stop(Address,Port) -> ServerRet
+.br
+.RS
+.TP
+Types
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+ConfigFile = string()
+.br
+ServerRet = ok | not_started
+.br
+.RE
+.RS
+.LP
+\fIstop/2\fR stops the server which listens to the specified \fIPort\fR on \fIAddress\fR\&. \fIstop(integer())\fR stops a server which listens to a specific \fIPort\fR\&. \fIstop(string())\fR extracts \fIBindAddress\fR and \fIPort\fR from the config file and stops the server which listens to the specified \fIPort\fR on \fIAddress\fR\&. \fIstop/0\fR stops a server which listens to port 8888, that is \fIstop(8888)\fR\&. 
+.RE
+.LP
+.B
+parse_query(QueryString) -> ServerRet
+.br
+.RS
+.TP
+Types
+QueryString = string()
+.br
+ServerRet = [{Key, Value}]
+.br
+Key = Value = string()
+.br
+.RE
+.RS
+.LP
+\fIparse_query/1\fR parses incoming data to \fIerl\fR and \fIeval\fR scripts (See mod_esi(3)) as defined in the standard URL format, that is \&'+\&' becomes \&'space\&' and decoding of hexadecimal characters (\fI%xx\fR)\&. 
+.RE
+.SH EWSAPI MODULE PROGRAMMING
+.SS Note:
+.LP
+The Erlang/OTP programming knowledge required to undertake an EWSAPI module is quite high and is not recommended for the average server user\&. It is best to only use it to add core functionality, e\&.g\&. custom authentication or a RFC 2109 <ftp://ftp\&.isi\&.edu/in-notes/rfc2109\&.txt> implementation\&. 
+
+.SS Warning:
+.LP
+The current implementation of EWSAPI is under review and feedback is welcomed\&. 
+
+.LP
+EWSAPI should only be used to add \fIcore\fR functionality to the server\&. In order to generate dynamic content, for example on-the-fly generated HTML, use the standard CGI or ESI facilities instead\&. 
+.LP
+As seen above the major part of the server functionality has been realized as EWSAPI modules (from now on only called modules)\&. If you intend to write your own server extension start with examining the standard modules($INETS_ROOT/src/) \fImod_*\&.erl\fR and note how to they are configured in the example config directory($INETS_ROOT/examples/server_root/conf/)\&. 
+.LP
+Each module implements \fIdo/1\fR (mandatory), \fIload/2\fR, \fIstore/2\fR and \fIremove/1\fR\&. The latter functions are needed only when new config directives are to be introduced (See EWSAPI Module Configuration below)\&. 
+.LP
+A module can choose to export functions to be used by other modules in the EWSAPI Module Sequence (See Modules config directive)\&. This should only be done as an exception! The goal is to keep each module self-sustained thus making it easy to alter the EWSAPI Module Sequence without any unneccesary module dependencies\&. 
+.LP
+A module can furthermore use data generated by previous modules in the EWSAPI Module Sequence or generate data to be used by consecutive EWSAPI modules\&. This is made possible due to an internal list of key-value tuples (See EWSAPI Module Interaction below)\&. 
+.SS Note:
+.LP
+The server executes \fIdo/1\fR (using \fIapply/1\fR) for each module listed in the Modules config directive\&. \fIdo/1\fR takes the record \fImod\fR as an argument, as described below\&. See httpd\&.hrl($INETS_ROOT/src/httpd\&.hrl): 
+
+
+.nf
+-record(mod,{data=[],
+             socket_type=ip_comm,
+             socket,
+             config_db,
+             method,
+             request_uri,
+             http_version,
+             request_line,
+             parsed_header=[],
+             entity_body})\&.
+.fi
+.LP
+The fields of the \fImod\fR record has the following meaning: 
+.RS 2
+.TP 4
+.B
+\fIdata\fR:
+Type \fI[{InteractionKey, InteractionValue}]\fR is used to propagate data between modules (See EWSAPI Module Interaction below)\&. Depicted \fIinteraction_data()\fR in function type declarations\&.
+.TP 4
+.B
+\fIsocket_type\fR:
+Type \fIip_comm | ssl\fR, that is the socket type\&.
+.TP 4
+.B
+\fIsocket\fR:
+The actual socket in \fIip_comm\fR or \fIssl\fR format depending on the \fIsocket_type\fR\&.
+.TP 4
+.B
+\fIconfig_db\fR:
+The config file directives stored as key-value tuples in an ETS-table\&. Depicted \fIconfig_db()\fR in function type declarations\&.
+.TP 4
+.B
+\fImethod\fR:
+Type \fI"GET" | "POST" | "DELETE" | "PUT"\fR, that is the HTTP method\&.
+.TP 4
+.B
+\fIrequest_uri\fR:
+The \fIRequest-URI\fR as defined in RFC 1945, for example \fI"/cgi-bin/find\&.pl?person=jocke"\fR
+.TP 4
+.B
+\fIrequest_line\fR:
+The \fIRequest-Line\fR as defined in RFC 1945, for example \fI"GET /cgi-bin/find\&.pl?person=jocke HTTP/1\&.0"\fR\&.
+.TP 4
+.B
+\fIparsed_header\fR:
+Type \fI[{HeaderKey, HeaderValue}]\fR, that is all HTTP header fields stored in a list of key-value tuples\&. See RFC 1945 for a listing of all header fields, for example \fI{date, "Wed, 15 Oct 1997 14:35:17 GMT"}\fR\&.
+.TP 4
+.B
+\fIentity_body\fR:
+The \fIEntity-Body\fR as defined in RFC 1945, for example data sent from a CGI-script using the POST method\&.
+.RE
+.LP
+A \fIdo/1\fR function typically uses a restricted set of the \fImod\fR record\&'s fields to do its stuff and then returns a term depending on the outcome, that is \fI{proceed, NewData} | {break, NewData} | done\fR which has the following meaning (\fIOldData\fR refers to the \fIdata\fR field in the incoming \fImod\fR record): 
+.RS 2
+.TP 4
+.B
+\fI{proceed, OldData}\fR:
+Proceed to next module as nothing happened\&.
+.TP 4
+.B
+\fI{proceed, [{response, {StatusCode, Response}}|OldData]}\fR:
+A generated response (\fIResponse\fR) should be sent back to the client including a status code (\fIStatusCode\fR) as defined in RFC 1945\&.
+.TP 4
+.B
+\fI{proceed, [{response, {already_sent, StatusCode, Size}}|OldData]}\fR:
+A generated response has already manually been sent back to the client, using the \fIsocket\fR provided by the \fImod\fR record (see above), including a valid status code (\fIStatusCode\fR) as defined in RFC 1945 and the size (\fISize\fR) of the response in bytes\&.
+.TP 4
+.B
+\fI{proceed, [{status, {StatusCode, PhraseArgs, Reason}}}|OldData]}\fR:
+A generic status message should be sent back to the client (if the next module in the EWSAPI Module Sequence does not think otherwise!) including at status code (\fIStatusCode\fR) as defined in RFC 1945, a term describing how the client will be informed (\fIPhraseArgs\fR) and a reason (\fIReason\fR) to why it happened\&. Read more about \fIPhraseArgs\fR in httpd_util:message/3\&.
+.TP 4
+.B
+\fI{break, NewData}\fR:
+Has the same semantics as \fIproceed\fR above but with one important exception; No more modules in the EWSAPI Module Sequence are executed\&. Use with care!
+.TP 4
+.B
+\fIdone\fR:
+No more modules in the EWSAPI Module Sequence are executed and no response should be sent back to the client\&. If no response is sent back to the client, using the \fIsocket\fR provided by the \fImod\fR record, the client will typically get a \fI"Document contains no data\&.\&.\&."\fR\&.
+.RE
+.SS Warning:
+.LP
+Each consecutive module in the EWSAPI Module Sequence \fIcan\fR choose to ignore data returned from the previous module either by trashing it or by "enhancing" it\&. 
+
+.LP
+Keep in mind that there exist numerous utility functions to help you as an EWSAPI module programmer, e\&.g\&. nifty lookup of data in ETS-tables/key-value lists and socket utilities\&. You are well advised to read httpd_util(3) and httpd_socket(3)\&. 
+.SH EWSAPI MODULE CONFIGURATION
+.LP
+An EWSAPI module can define new config directives thus making it configurable for a server end-user\&. This is done by implementing \fIload/2\fR (mandatory), \fIstore/2\fR and \fIremove/1\fR\&. 
+.LP
+The config file is scanned twice (\fIload/2\fR and \fIstore/2\fR) and a cleanup is done (\fIremove/1\fR) during server shutdown\&. The reason for this is: "A directive A can be dependent upon another directive B which occur either before or \fIafter\fR directive A in the config file"\&. If a directive does not depend upon other directives; \fIstore/2\fR can be left out\&. Even \fIremove/1\fR can be left out if neither \fIload/2\fR nor \fIstore/2\fR open files or create ETS-tables etc\&. 
+.LP
+\fIload/2\fR takes two arguments\&. The first being a row from the config file, that is a config directive in string format such as \fI"Port 80"\fR\&. The second being a list of key-value tuples (which can be empty!) defining a context\&. A context is needed because there are directives which defines inner contexts, that is directives within directives, such as <Directory>\&. \fIload/2\fR is expected to return: 
+.RS 2
+.TP 4
+.B
+\fIeof\fR:
+End-of-file found\&.
+.TP 4
+.B
+\fIok\fR:
+Ignore the directive\&.
+.TP 4
+.B
+\fI{ok, ContextList}\fR:
+Introduces a new context by adding a tuple to the context list or reverts to a previous context by removing a tuple from the context list\&. See <Directory> which introduces a new context and </Directory> which reverts to a previous one (Advice: Look at the source code for \fImod_auth:load/2\fR)\&.
+.TP 4
+.B
+\fI{ok, ContextList, [{DirectiveKey, DirectiveValue}]}\fR:
+Introduces a new context (see above) and defines a new config directive, e\&.g\&. \fI{port, 80}\fR\&.
+.TP 4
+.B
+\fI{ok, ContextList, [{DirectiveKey, DirectiveValue}]}\fR:
+Introduces a new context (see above) and defines a several new config directives, e\&.g\&. \fI[{port, 80}, {foo, on}]\fR\&.
+.TP 4
+.B
+\fI{error, Reason}\fR:
+An invalid directive\&.
+.RE
+.LP
+A naive example from \fImod_log\&.erl\fR: 
+
+.nf
+load([$T,$r,$a,$n,$s,$f,$e,$r,$L,$o,$g,$ |TransferLog],[]) ->
+  {ok,[],{transfer_log,httpd_conf:clean(TransferLog)}};
+load([$E,$r,$r,$o,$r,$L,$o,$g,$ |ErrorLog],[]) ->
+  {ok,[],{error_log,httpd_conf:clean(ErrorLog)}}\&.
+.fi
+.LP
+\fIstore/2\fR takes two arguments\&. The first being a tuple describing a directive (\fI{DirectiveKey, DirectiveValue}\fR) and the second argument a list of tuples describing all directives (\fI[{DirectiveKey, DirectiveValue}]\fR)\&. This makes it possible for directive A to be dependent upon the value of directive B\&. \fIstore/2\fR is expected to return: 
+.RS 2
+.TP 4
+.B
+\fI{ok, {DirectiveKey, NewDirectiveValue}}\fR:
+Introduces a new value for the specified directive replacing the old one generated by \fIload/2\fR\&.
+.TP 4
+.B
+\fI{ok, [{DirectiveKey, NewDirectiveValue}]}\fR:
+Introduces new values for the specified directives replacing the old ones generated by \fIload/2\fR\&.
+.TP 4
+.B
+\fI{error, Reason}\fR:
+An invalid directive\&.
+.RE
+.LP
+A naive example from \fImod_log\&.erl\fR: 
+
+.nf
+store({error_log,ErrorLog},ConfigList) ->
+  case create_log(ErrorLog,ConfigList) of
+    {ok,ErrorLogStream} ->
+      {ok,{error_log,ErrorLogStream}};
+    {error,Reason} ->
+      {error,Reason}
+  end\&.
+.fi
+.LP
+\fIremove/1\fR takes the ETS-table representation of the config-file as input\&. It is up to you to cleanup anything you opened or created in \fIload/2\fR or \fIstore/2\fR\&. \fIremove/1\fR is expected to return: 
+.RS 2
+.TP 4
+.B
+\fIok\fR:
+If the cleanup was successful\&.
+.TP 4
+.B
+\fI{error, Reason}\fR:
+If the cleanup failed\&.
+.RE
+.LP
+A naive example from \fImod_log\&.erl\fR: 
+
+.nf
+remove(ConfigDB) ->
+  lists:foreach(fun([Stream]) -> file:close(Stream) end,
+                ets:match(ConfigDB,{transfer_log,\&'$1\&'})),
+  lists:foreach(fun([Stream]) -> file:close(Stream) end,
+                ets:match(ConfigDB,{error_log,\&'$1\&'})),
+  ok\&.
+.fi
+.LP
+Keep in mind that there exists numerous utility functions to help you as an EWSAPI module programmer, e\&.g\&. nifty lookup of data in ETS-tables/key-value lists and configure utilities\&. You are well advised to read httpd_conf(3) and httpd_util(3)\&. 
+.SH EWSAPI MODULE INTERACTION
+.LP
+Modules in the EWSAPI Module Sequence uses the \fImod\fR record\&'s \fIdata\fR field to propagate responses and status messages, as seen above\&. This data type can be used in a more versatile fashion\&. A module can prepare data to be used by subsequent EWSAPI modules, for example the mod_alias module appends the tuple \fI{real_name, string()}\fR to inform subsequent modules about the actual file system location for the current URL\&. 
+.LP
+Before altering the EWSAPI Modules Sequence you are well advised to observe what types of data each module uses and propagates\&. Read the "EWSAPI Interaction" section for each module\&. 
+.LP
+An EWSAPI module can furthermore export functions to be used by other EWSAPI modules but also for other purposes, for example mod_alias:path/3 and mod_auth:add_user/5\&. These functions should be described in the module documentation\&. 
+.SS Note:
+.LP
+When designing an EWSAPI module \fItry\fR to make it self-contained, that is avoid being dependent on other modules both concerning exchange of interaction data and the use of exported functions\&. If you are dependent on other modules do state this clearly in the module documentation! 
+
+.LP
+You are well advised to read httpd_util(3) and httpd_conf(3)\&. 
+.SH BUGS
+.LP
+If a Web browser connect itself to an SSL enabled server using a URL \fInot\fR starting with \fIhttps://\fR the server will hang due to an ugly bug in the SSLeay package! 
+.SH SEE ALSO
+.LP
+httpd_core(3), httpd_conf(3), httpd_socket(3), httpd_util(3), inets(6), mod_actions(3), mod_alias(3), mod_auth(3), mod_security(3), mod_cgi(3), mod_dir(3), mod_disk_log(3), mod_esi(3), mod_include(3), mod_log(3) 
+.SH AUTHORS
+.nf
+Joakim Grebeno  - support@erlang.ericsson.se
+Torbjorn Tornkvist  - support@erlang.ericsson.se
+Joe Armstrong  - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,111 @@
+.TH epp 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+epp \- An Erlang Code Preprocessor
+.SH DESCRIPTION
+.LP
+The Erlang code preprocessor includes functions which are used by \fIcompile\fR to preprocess macros and include files before the actual parsing takes place\&. 
+
+.SH EXPORTS
+.LP
+.B
+open(FileName, IncludePath) -> {ok,Epp} | {error, ErrorDescriptor}
+.br
+.B
+open(FileName, IncludePath, PredefMacros) -> {ok,Epp} | {error, ErrorDescriptor}
+.br
+.RS
+.TP
+Types
+FileName = atom() | string()
+.br
+IncludePath = [DirectoryName]
+.br
+DirectoryName = atom() | string()
+.br
+PredefMacros = [{atom(), term()}]
+.br
+Epp = pid() -- handle to the epp server
+.br
+ErrorDescriptor = term()
+.br
+.RE
+.RS
+.LP
+Opens a file for preprocessing\&. 
+.RE
+.LP
+.B
+close(Epp) -> ok
+.br
+.RS
+.TP
+Types
+Epp = pid() -- handle to the epp server
+.br
+.RE
+.RS
+.LP
+Closes the preprocessing of a file\&. 
+.RE
+.LP
+.B
+parse_erl_form(Epp) -> {ok, AbsForm} | {eof, Line} | {error, ErrorInfo}
+.br
+.RS
+.TP
+Types
+Epp = pid()
+.br
+AbsForm = term()
+.br
+Line = integer()
+.br
+ErrorInfo = see separate description below\&.
+.br
+.RE
+.RS
+.LP
+Returns the next Erlang form from the opened Erlang source file\&. The tuple \fI{eof, Line}\fR is returned at end-of-file\&. The first form corresponds to an implicit attribute \fI-file(File, 1)\&.\fR, where \fIFile\fR is the name of the file\&. 
+.RE
+.LP
+.B
+parse_file(FileName,IncludePath,PredefMacro) -> {ok,[Form]} | {error,OpenError}
+.br
+.RS
+.TP
+Types
+FileName = atom() | string()
+.br
+IncludePath = [DirectoryName]
+.br
+DirectoryName = atom() | string()
+.br
+PredefMacros = [{atom(), term()}]
+.br
+Form = term() -- same as returned by erl_parse:parse_form
+.br
+.RE
+.RS
+.LP
+Preprocesses and parses an Erlang source file\&. Note that the tuple \fI{eof, Line}\fR returned at end-of-file is included as a "form"\&. 
+.RE
+.SH Error Information
+.LP
+The \fIErrorInfo\fR mentioned above is the standard \fIErrorInfo\fR structure which is returned from all IO modules\&. It has the following format: 
+
+.nf
+    {ErrorLine, Module, ErrorDescriptor}
+.fi
+.LP
+A string which describes the error is obtained with the following call: 
+
+.nf
+apply(Module, format_error, ErrorDescriptor)
+.fi
+.SH See Also
+.LP
+erl_parse 
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

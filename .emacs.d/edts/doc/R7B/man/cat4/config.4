@@ -1,0 +1,66 @@
+
+
+
+config(4)                     FILES                     config(4)
+
+
+
+NAME
+     config - Configuration file
+
+DESCRIPTION
+     A  _c_o_n_f_i_g_u_r_a_t_i_o_n  _f_i_l_e  contains  values  for  configuration
+     parameters  for  the applications in the system. The command
+     _e_r_l -_c_o_n_f_i_g _N_a_m_e tells the system to use data in the  system
+     configuration  file  _N_a_m_e._c_o_n_f_i_g  to  override the arguments
+     contained in the application resource files for the  set  of
+     applications used by this system.
+
+     An  application  should  call  application:get_env(ApplName,
+     Parameter)  to  retrieve  the  values  for the configuration
+     parameters.
+
+     The parameters can also be overridden from the command line:
+
+            erl -ApplName Par1 Val1 Par2 Val2 ...
+
+  Note:
+     Each term should be an Erlang term.  However,  in  the  Unix
+     shell,  the term must be enclosed in single quotation marks.
+     For example: '{file, "a.log"}'.
+
+
+
+FILE SYNTAX
+     The configuration file is called _N_a_m_e._c_o_n_f_i_g where  _N_a_m_e  is
+     the name of the application.
+
+     The file has the following syntax:
+
+     [{AppName, [{Par, Val}]}].
+
+     There is one tuple for each application. The second  element
+     in  each  tuple  is  a  list of configuration parameters and
+     their values.
+
+       * _A_p_p_N_a_m_e = _a_t_o_m() is the name of the application.
+
+       * _P_a_r = _a_t_o_m() is the name of a configuration parameter.
+
+       * _V_a_l = _t_e_r_m() is the value of the  configuration  parame-
+         ter.
+
+SEE ALSO
+     application(3), systools(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+

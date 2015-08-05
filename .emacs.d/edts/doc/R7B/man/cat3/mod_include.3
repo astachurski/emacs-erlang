@@ -1,0 +1,264 @@
+
+
+
+mod_include(3)      ERLANG MODULE DEFINITION       mod_include(3)
+
+
+
+MODULE
+     mod_include - Server-parsed documents.
+
+DESCRIPTION
+     This module makes it possible to expand "macros" embedded in
+     HTML  pages before they are delivered to the client, that is
+     Server-Side Includes (SSI). To make this possible the server
+     parses  HTML  pages  on-the-fly  and optionally includes the
+     current date, the requested file's last modification date or
+     the  size (or last modification date) of other files. In its
+     more advanced form, it can include output from embedded  CGI
+     and /_b_i_n/_s_h scripts.
+
+  Note:
+     Having the server parse HTML pages is a double edged  sword!
+     It  can  be  costly  for  a heavily loaded server to perform
+     parsing of HTML pages while sending  them.  Furthermore,  it
+     can be considered a security risk to have average users exe-
+     cuting commands in the name of the Erlang node  user.  Care-
+     fully  consider  these  items  before activating server-side
+     includes.
+
+
+
+SERVER-SIDE INCLUDES (SSI) SETUP
+     The server must be told which filename extensions to be used
+     for  the  parsed  files.  These files, while very similar to
+     HTML, are not HTML and are thus not treated the same. Inter-
+     nally,  the  server  uses the magic MIME type _t_e_x_t/_x-_s_e_r_v_e_r-
+     _p_a_r_s_e_d-_h_t_m_l to identify parsed documents. It will then  per-
+     form a format conversion to change these files into HTML for
+     the client. Update the _m_i_m_e._t_y_p_e_s file, as described in  the
+     Mime  Type  Settings section of _h_t_t_p_d(_3), to tell the server
+     which extension to use for parsed files, for example:
+
+     text/x-server-parsed-html shtml shtm
+
+     This makes files ending with ._s_h_t_m_l and  ._s_h_t_m  into  parsed
+     files.  Alternatively, if the performance hit is not a prob-
+     lem, _a_l_l HTML pages can be marked as parsed:
+
+     text/x-server-parsed-html html htm
+
+SERVER-SIDE INCLUDES (SSI) FORMAT
+     All server-side include directives to the server are format-
+     ted  as  SGML comments within the HTML page. This is in case
+     the document should ever find itself in the  client's  hands
+     unparsed. Each directive has the following format:
+
+     <!--#command tag1="value1" tag2="value2" -->
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+mod_include(3)      ERLANG MODULE DEFINITION       mod_include(3)
+
+
+
+     Each command takes different arguments, most only accept one
+     tag at a time. Here is a breakdown of the commands and their
+     associated tags:
+
+       _c_o_n_f_i_g:
+           The config directive controls various aspects  of  the
+           file parsing. There are two valid tags:
+
+             _e_r_r_m_s_g:
+                 controls the message sent back to the client  if
+                 an  error  occurred  while parsing the document.
+                 All errors are logged in the server's error log.
+
+             _s_i_z_e_f_m_t:
+                 determines the format used to display  the  size
+                 of  a  file.  Valid choices are _b_y_t_e_s or _a_b_b_r_e_v.
+                 _b_y_t_e_s for a formatted byte count or  _a_b_b_r_e_v  for
+                 an  abbreviated version displaying the number of
+                 kilobytes.
+
+       _i_n_c_l_u_d_e:
+           will insert the text of a  document  into  the  parsed
+           document. This command accepts two tags:
+
+             _v_i_r_t_u_a_l:
+                 gives a  virtual  path  to  a  document  on  the
+                 server. Only normal files and other parsed docu-
+                 ments can be accessed in this way.
+
+             _f_i_l_e:
+                 gives a pathname relative to the current  direc-
+                 tory.  ../  cannot be used in this pathname, nor
+                 can absolute paths. As above, you can send other
+                 parsed   documents,  but  you  cannot  send  CGI
+                 scripts.
+
+       _e_c_h_o:
+           prints the value  of  one  of  the  include  variables
+           (defined below). The only valid tag to this command is
+           _v_a_r, whose value is the name of the variable you  wish
+           to echo.
+
+       _f_s_i_z_e:
+           prints the size of the specified file. Valid tags  are
+           the  same  as  with the _i_n_c_l_u_d_e command. The resulting
+           format of this  command  is  subject  to  the  _s_i_z_e_f_m_t
+           parameter to the _c_o_n_f_i_g command.
+
+       _f_l_a_s_t_m_o_d:
+           prints the last modification  date  of  the  specified
+           file. Valid tags are the same as with the _i_n_c_l_u_d_e com-
+           mand.
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+
+
+
+
+mod_include(3)      ERLANG MODULE DEFINITION       mod_include(3)
+
+
+
+       _e_x_e_c:
+           executes a given shell command or  CGI  script.  Valid
+           tags are:
+
+             _c_m_d:
+                 executes the given string using /_b_i_n/_s_h. All  of
+                 the variables defined below are defined, and can
+                 be used in the command.
+
+             _c_g_i:
+                 executes the given virtual path to a CGI  script
+                 and  includes  its  output.  The server does not
+                 perform error checking on the script output.
+
+SERVER-SIDE INCLUDES (SSI) ENVIRONMENT VARIABLES
+     A number of variables are made  available  to  parsed  docu-
+     ments.  In  addition  to the CGI variable set, the following
+     variables are made available:
+
+       _D_O_C_U_M_E_N_T__N_A_M_E:
+           The current filename.
+
+       _D_O_C_U_M_E_N_T__U_R_I:
+           The  virtual  path   to   this   document   (such   as
+           /_d_o_c_s/_t_u_t_o_r_i_a_l_s/_f_o_o._s_h_t_m_l).
+
+       _Q_U_E_R_Y__S_T_R_I_N_G__U_N_E_S_C_A_P_E_D:
+           The unescaped version of any search query  the  client
+           sent,  with  all shell-special characters escaped with
+           \.
+
+       _D_A_T_E__L_O_C_A_L:
+           The current date, local time zone.
+
+       _D_A_T_E__G_M_T:
+           Same as DATE_LOCAL but in Greenwich mean time.
+
+       _L_A_S_T__M_O_D_I_F_I_E_D:
+           The last modification date of the current document.
+
+EWSAPI MODULE INTERACTION
+     Uses the following EWSAPI interaction data, if available:
+
+       {_r_e_a_l__n_a_m_e, {_P_a_t_h, _A_f_t_e_r_P_a_t_h}}:
+           as defined in mod_alias(3).
+
+       {_r_e_m_o_t_e__u_s_e_r, _R_e_m_o_t_e_U_s_e_r}:
+           as defined in mod_auth(3)
+
+     Exports the following EWSAPI interaction data, if possible:
+
+       {_m_i_m_e__t_y_p_e, _M_i_m_e_T_y_p_e}:
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   3
+
+
+
+
+
+
+mod_include(3)      ERLANG MODULE DEFINITION       mod_include(3)
+
+
+
+           The file suffix of the  incoming  URL  mapped  into  a
+           _M_i_m_e_T_y_p_e  as defined in the Mime Type Settings section
+           of _h_t_t_p_d__c_o_r_e(_3).
+
+     Uses the following EWSAPI functions:
+
+       * mod_cgi:env/3
+
+       * mod_alias:path/3
+
+       * mod_alias:real_name/3
+
+       * mod_alias:real_script_name/3
+
+SEE ALSO
+     httpd(3),   mod_alias(3),   mod_auth(3),    mod_security(3),
+     mod_cgi(3)
+
+AUTHORS
+     Joakim Grebeno  - support@erlang.ericsson.se
+     Mattias Nilsson  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   4
+
+
+

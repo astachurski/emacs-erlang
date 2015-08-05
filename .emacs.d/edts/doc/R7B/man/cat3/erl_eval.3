@@ -1,0 +1,198 @@
+
+
+
+erl_eval(3)         ERLANG MODULE DEFINITION          erl_eval(3)
+
+
+
+MODULE
+     erl_eval - The Erlang Meta Interpreter
+
+DESCRIPTION
+     This module provides an interpreter for Erlang  expressions.
+     The  expressions  are  in the abstract syntax as returned by
+     _e_r_l__p_a_r_s_e,   the   Erlang   parser,    or    a    call    to
+     _i_o:_p_a_r_s_e__e_r_l__e_x_p_r_s/_2.
+
+
+EXPORTS
+     exprs(Expressions, Bindings) -> {value, Value, NewBindings}
+     exprs(Expressions,   Bindings,   LocalFunctionHandler)    ->
+     {value, Value, NewBindings}
+
+          Types
+               Expressions  =  as  returned   by   erl_parse   or
+               io:parse_erl_exprs/2
+               Bindings = as returned by bindings/1
+               LocalFunctionHandler  =  {value,  Func}  |  {eval,
+               Func} | none
+
+          Evaluates _E_x_p_r_e_s_s_i_o_n_s with the set  of  bindings  _B_i_n_d_-
+          _i_n_g_s,  where  _E_x_p_r_e_s_s_i_o_n_s  is a sequence of expressions
+          (in abstract syntax) of a type which may be returned by
+          _i_o:_p_a_r_s_e__e_r_l__e_x_p_r_s/_2.  See  below for an explanation of
+          how and when to use the argument _L_o_c_a_l_F_u_n_c_t_i_o_n_H_a_n_d_l_e_r.
+
+          Returns {_v_a_l_u_e, _V_a_l_u_e, _N_e_w_B_i_n_d_i_n_g_s}
+
+     expr(Expression, Bindings) -> { value, Value, NewBindings }
+     expr(Expression, Bindings, LocalFunctionHandler) -> { value,
+     Value, NewBindings }
+
+          Types
+               Expression = as returned  by  io:parse_erl_form/2,
+               for example
+               Bindings = as returned by bindings/1
+               LocalFunctionHandler  =  {value,  Func}  |  {eval,
+               Func} | none
+
+          Evaluates _E_x_p_r_e_s_s_i_o_n with the set of bindings _B_i_n_d_i_n_g_s.
+          _E_x_p_r_e_s_s_i_o_n  is  an expression (in abstract syntax) of a
+          type which may be returned by _i_o:_p_a_r_s_e__e_r_l__f_o_r_m/_2.  See
+          below  for  an  explanation  of how and when to use the
+          argument _L_o_c_a_l_F_u_n_c_t_i_o_n_H_a_n_d_l_e_r.
+
+          Returns {_v_a_l_u_e, _V_a_l_u_e, _N_e_w_B_i_n_d_i_n_g_s}.
+
+     expr_list(ExpressionList, Bindings) -> {ValueList,  NewBind-
+     ings}
+     expr_list(ExpressionList, Bindings, LocalFunctionHandler) ->
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+erl_eval(3)         ERLANG MODULE DEFINITION          erl_eval(3)
+
+
+
+     {ValueList, NewBindings}
+
+          Evaluates a list of expressions in parallel, using  the
+          same initial bindings for each expression. Attempts are
+          made to merge the bindings returned from  each  evalua-
+          tion.   This  function  is  useful  in  the  _L_o_c_a_l_F_u_n_c_-
+          _t_i_o_n_H_a_n_d_l_e_r. See below.
+
+          Returns {_V_a_l_u_e_L_i_s_t, _N_e_w_B_i_n_d_i_n_g_s}.
+
+     new_bindings() -> BindingStruct
+
+          Returns an empty binding structure.
+
+     bindings(BindingStruct) -> Bindings
+
+          Returns the list of bindings contained in  the  binding
+          structure.
+
+     binding(Name, BindingStruct) -> Binding
+
+          Returns the binding of _N_a_m_e in _B_i_n_d_i_n_g_S_t_r_u_c_t.
+
+     add_binding(Name, Value, Bindings) -> BindingStruct
+
+          Adds the binding _N_a_m_e = _V_a_l_u_e to _B_i_n_d_i_n_g_s.  Returns  an
+          updated binding structure.
+
+     del_binding(Name, Bindings) -> BindingStruct
+
+          Removes the binding of _N_a_m_e  in  _B_i_n_d_i_n_g_s.  Returns  an
+          updated binding structure.
+
+Local Function Handler
+     During evaluation of a function, no calls  can  be  made  to
+     local  functions.  An undefined function error would be gen-
+     erated. However, the optional argument  _L_o_c_a_l_F_u_n_c_t_i_o_n_H_a_n_d_l_e_r
+     may  be used to define a function which is called when there
+     is a call to a local function. The  argument  can  have  the
+     following formats:
+
+       {_v_a_l_u_e, _F_u_n_c}:
+           This defines a local function handler which is  called
+           with:
+
+           Func(Name, Arguments)
+
+           _N_a_m_e is the name of the local function  and  _A_r_g_u_m_e_n_t_s
+           is  a  list  of  the _e_v_a_l_u_a_t_e_d arguments. The function
+           handler returns the value of the  local  function.  In
+           this  case,  it  is not possible to access the current
+           bindings. To signal an  error,  the  function  handler
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+erl_eval(3)         ERLANG MODULE DEFINITION          erl_eval(3)
+
+
+
+           just calls _e_x_i_t/_1 with a suitable exit value.
+
+       {_e_v_a_l, _F_u_n_c}:
+           This defines a local function handler which is  called
+           with:
+
+           Func(Name, Arguments, Bindings)
+
+           _N_a_m_e is the name of the local function, _A_r_g_u_m_e_n_t_s is a
+           list  of  the  _u_n_e_v_a_l_u_a_t_e_d arguments, and _B_i_n_d_i_n_g_s are
+           the current variable bindings.  The  function  handler
+           returns:
+
+           {value,Value,NewBindings}
+
+           _V_a_l_u_e is the value of the local function and  _N_e_w_B_i_n_d_-
+           _i_n_g_s  are the updated variable bindings. In this case,
+           the function handler  must  itself  evaluate  all  the
+           function  arguments and manage the bindings. To signal
+           an error, the function handler just calls _e_x_i_t/_1  with
+           a suitable exit value.
+
+       _n_o_n_e:
+           There is no local function handler.
+
+Bugs
+     The evaluator is not complete.  _r_e_c_e_i_v_e  cannot  be  handled
+     properly.
+
+     Any undocumented functions in _e_r_l__e_v_a_l should not be used.
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+

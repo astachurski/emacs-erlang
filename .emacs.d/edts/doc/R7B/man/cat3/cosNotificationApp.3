@@ -1,0 +1,198 @@
+
+
+
+cosNotificationApp(3)ERLANG MODULE DEFINITIONcosNotificationApp(3)
+
+
+
+MODULE
+     cosNotificationApp -  The main module of the cosNotification
+     application
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     This module contains the functions for starting and stopping
+     the application.
+
+
+EXPORTS
+     install() -> Return
+
+          Types
+               Return = ok | {'EXCEPTION', E}
+
+          This operation installs  the  cosNotification  applica-
+          tion.
+
+     install(Seconds) -> Return
+
+          Types
+               Return = ok | {'EXCEPTION', E}
+
+          This operation installs the cosNotification application
+          using _S_e_c_o_n_d_s delay between each block, currently 6, of
+          IFR-registrations. This approach spreads the IFR  data-
+          base access over a period of time to allow other appli-
+          cations to run smother.
+
+     install_event() -> Return
+
+          Types
+               Return = ok | {'EXCEPTION', E}
+
+          This operation installs the necessary  cosEvent  inter-
+          faces.  If cosEvent is already installed this operation
+          may not be used.
+
+     install_event(Seconds) -> Return
+
+          Types
+               Return = ok | {'EXCEPTION', E}
+
+          This operation installs the necessary  cosEvent  inter-
+          faces  using  _S_e_c_o_n_d_s  delay between each block of IFR-
+          registrations. If cosEvent is  already  installed  this
+          operation may not be used.
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+cosNotificationApp(3)ERLANG MODULE DEFINITIONcosNotificationApp(3)
+
+
+
+     uninstall() -> Return
+
+          Types
+               Return = ok | {'EXCEPTION', E}
+
+          This operation uninstalls the cosNotification  applica-
+          tion.
+
+     uninstall(Seconds) -> Return
+
+          Types
+               Return = ok | {'EXCEPTION', E}
+
+          This operation uninstalls the cosNotification  applica-
+          tion  using _S_e_c_o_n_d_s delay between each block, currently
+          6, of IFR-unregistrations. This  approach  spreads  the
+          IFR  database  access  over  a  period of time to allow
+          other applications to run smother.
+
+     uninstall_event() -> Return
+
+          Types
+               Return = ok | {'EXCEPTION', E}
+
+          This  operation  uninstalls  the  inherrited   cosEvent
+          interfaces. If cosEvent is in use this function may not
+          be used.
+
+     uninstall_event(Seconds) -> Return
+
+          Types
+               Return = ok | {'EXCEPTION', E}
+
+          This  operation  uninstalls  the  inherrited   cosEvent
+          interfaces,  using  _S_e_c_o_n_d_s delay between each block of
+          IFR-unregistrations. If cosEvent is in use  this  func-
+          tion may not be used.
+
+     start() -> Return
+
+          Types
+               Return = ok | {error, Reason}
+
+          This operation starts the cosNotification application.
+
+     stop() -> Return
+
+          Types
+               Return = ok | {error, Reason}
+
+          This operation stops the cosNotification application.
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+
+
+
+
+cosNotificationApp(3)ERLANG MODULE DEFINITIONcosNotificationApp(3)
+
+
+
+     start_factory() -> ChannelFactory
+
+          Types
+               ChannelFactory = #objref
+
+          This operation creates a  Event  Channel  Factory.  The
+          Factory is used to create a new channel.
+
+     start_factory(Options) -> ChannelFactory
+
+          Types
+               Options = [Option]
+               Option = {pullInterval, Seconds} | {filterOp,  Op}
+               |   {gcTime,   Seconds}  |  {gcLimit,  Percent}  |
+               {timeService, #objref}
+               ChannelFactory = #objref
+
+          This operation creates a  Event  Channel  Factory.  The
+          Factory is used to create a new channel.
+
+     stop_factory(ChannelFactory) -> Reply
+
+          Types
+               ChannelFactory = #objref
+               Reply = ok | {'EXCEPTION', E}
+
+          This operation stop the target channel factory.
+
+     start_filter_factory() -> FilterFactory
+
+          Types
+               FilterFactory = #objref
+
+          This operation creates a Filter Factory. The Factory is
+          used to create a new Filter's and MappingFilter's.
+
+     stop_filter_factory(FilterFactory) -> Reply
+
+          Types
+               FilterFactory = #objref
+               Reply = ok | {'EXCEPTION', E}
+
+          This operation stop the target filter factory.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              3
+
+
+

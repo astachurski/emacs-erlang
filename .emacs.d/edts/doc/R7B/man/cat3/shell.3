@@ -1,0 +1,462 @@
+
+
+
+shell(3)            ERLANG MODULE DEFINITION             shell(3)
+
+
+
+MODULE
+     shell - The Erlang Shell
+
+DESCRIPTION
+     The module _s_h_e_l_l implements an Erlang shell.
+
+     The shell is a user interface program for  entering  expres-
+     sion sequences. The expressions are evaluated and a value is
+     returned. A history mechanism saves  previous  commands  and
+     their  values,  which can then be incorporated in later com-
+     mands.
+
+     Variable bindings,  and  local  process  dictionary  changes
+     which  are  generated in user expressions, are preserved and
+     the variables can be used in later commands to access  their
+     values.  The bindings can also be forgotten so the variables
+     can be re-used.
+
+     The special shell commands all have the  syntax  of  (local)
+     function  calls. They are evaluated as normal function calls
+     and many commands can be used in one expression sequence.
+
+     If a command (local function call) is not recognized by  the
+     shell,  an attempt is first made to find the function in the
+     module _u_s_e_r__d_e_f_a_u_l_t, where customized local commands can  be
+     placed. If found, then the function is evaluated. Otherwise,
+     an attempt is made to evaluate the function  in  the  module
+     _s_h_e_l_l__d_e_f_a_u_l_t.  The  module  _u_s_e_r__d_e_f_a_u_l_t must be explicitly
+     loaded.
+
+     The shell also permits the user to start multiple concurrent
+     jobs.  A job can be regarded as a set of processes which can
+     communicate with the shell.
+
+     The shell runs in two modes:
+
+       * _N_o_r_m_a_l mode, in which commands can be edited and expres-
+         sions evaluated
+
+       * Job Control Mode _J_C_L, in  which  jobs  can  be  started,
+         killed, detached and connected.
+
+     Only the currently connected job can 'talk' to the shell.
+
+
+Shell Commands
+       _b():
+           Prints the current variable bindings.
+
+       _f():
+           Removes all variable bindings.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+shell(3)            ERLANG MODULE DEFINITION             shell(3)
+
+
+
+       _f(_X):
+           Removes the binding of variable _X.
+
+       _h():
+           Prints the history list.
+
+       _e(_N):
+           Repeats the command _N, if _N  is  positive.  If  it  is
+           negative,  the  _Nth previous command is repeated (i.e.
+           _e(-_1) repeats the previous command).
+
+       _v(_N):
+           Uses the return value of the command _N in the  current
+           command.
+
+       _h_e_l_p():
+           Evaluates _s_h_e_l_l__d_e_f_a_u_l_t:_h_e_l_p().
+
+       _c(_F_i_l_e):
+           Evaluates  _s_h_e_l_l__d_e_f_a_u_l_t:_c(_F_i_l_e).  This  compiles  and
+           loads code in _F_i_l_e and purges old versions of code, if
+           necessary. Assumes that the file and module names  are
+           the same.
+
+Example
+     The following example is a long  dialogue  with  the  shell.
+     Commands  starting with > are inputs to the shell. All other
+     lines are output from the shell. All commands in this  exam-
+     ple are explained at the end of the dialogue. .
+
+     strider 1>erl
+     Erlang (BEAM) emulator version 4.9
+
+     Eshell V4.9  (abort with ^G)
+     1> Str = "abcd".
+     "abcd"
+     2>L = length(Str).
+     4
+     3>Descriptor = {L, list_to_atom(Str)}.
+     {4,abcd}
+     4>L.
+     4
+     5>b().
+     Descriptor = {4,abcd}
+     L =4
+     Str = "abcd"
+     ok
+     6>f(L).
+     ok
+     7>b().
+     Descriptor = {4,abcd}
+     Str = "abcd"
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+shell(3)            ERLANG MODULE DEFINITION             shell(3)
+
+
+
+     ok
+     8>f(L).
+     ok
+     9>{L, _} = Descriptor.
+     {4,abcd}
+     10>L.
+     4
+     11>{P, Q, R} = Descriptor.
+     ** exited: {{badmatch,{4,abcd}},{erl_eval,expr,3}} **
+     12>P.
+     ** exited: {{unbound,'P'},{erl_eval,expr,3}} **
+     13>Descriptor.
+     {4,abcd}
+     14> {P, Q} = Descriptor.
+     {4,abcd}
+     15>P.
+     4
+     16>f().
+     ok
+     17>put(aa, hello).
+     undefined
+     18>get(aa).
+     hello
+     19>Y = test1:demo(1).
+     11
+     20>get().
+     [{aa,worked}]
+     21>put(aa, hello).
+     worked
+     22>Z = test1:demo(2).
+     ** exited: {{badmatch,1},{test1,demo,[2]}} **
+
+     =ERROR REPORT==== 24-Jan-1997::07:48:46 ===
+     !!! Error in process <0.22.0> with exit value: {{badmatch,1}
+     ,{test1,demo,[2]}}
+     23>Z.
+     ** exited: {{unbound,'Z'},{erl_eval,expr,3}} **
+     24>get(aa).
+     hello
+     25>erase(), put(aa, hello).
+     undefined
+     26>spawn(test1, demo, [1]).
+     <0.25.0>
+     27>get(aa).
+     hello
+     28>io:format("hello hello\n").
+     hello hello
+     ok
+     29>e(28).
+     hello hello
+     ok
+     30> v(28).
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+shell(3)            ERLANG MODULE DEFINITION             shell(3)
+
+
+
+     ok
+     31>test1:loop(0).
+     Hello Number: 0
+     Hello Number: 1
+     Hello Number: 2
+     Hello Number: 3
+
+     User switch command
+      --> i
+      --> c
+     .
+     .
+     .
+     Hello Number: 3374
+     Hello Number: 3375
+     Hello Number: 3376
+     Hello Number: 3377
+     Hello Number: 3378
+     ** exited: killed **
+     32>halt().
+     strider 2>
+
+Comments
+     Command 1 sets the variable _S_t_r to the string "_a_b_c_d".
+
+     Command 2 sets _L to the length of the string evaluating  the
+     BIF _a_t_o_m__t_o__l_i_s_t.
+
+     Command 3 builds the tuple _D_e_s_c_r_i_p_t_o_r.
+
+     Command 4 prints the value of the variable _L.
+
+     Command 5 evaluates the internal shell command _b(), which is
+     an abbreviation of "bindings". This prints the current shell
+     variables and their bindings. The  _o_k  at  the  end  is  the
+     return value of the _b() function.
+
+     Command 6 _f(_L) evaluates the  internal  shell  command  _f(_L)
+     (abbreviation  of  "forget"). The value of the variable _L is
+     removed.
+
+     Command 7 prints the new bindings.
+
+     Command 8 shows that the value of _L has disappeared from the
+     bindings.
+
+     Command 9 performs a pattern matching operation on  _D_e_s_c_r_i_p_-
+     _t_o_r, binding a new value to _L.
+
+     Command 10 prints the current value of _L.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+shell(3)            ERLANG MODULE DEFINITION             shell(3)
+
+
+
+     Command 11 tries to match {_P, _Q, _R} against _D_e_s_c_r_i_p_t_o_r which
+     is  {_4,  _a_b_c}. The match fails and none of the new variables
+     become bound. The printout starting with "** _e_x_i_t_e_d:" is not
+     the  value  of  the  expression (the expression had no value
+     because its evaluation failed), but rather a warning printed
+     by the system to inform the user that an error has occurred.
+     The values  of  the  other  variables  (_L,  _S_t_r,  etc.)  are
+     unchanged.
+
+     Commands 12 and 13 show that _P is unbound because the previ-
+     ous command failed, and that _D_e_s_c_r_i_p_t_o_r has not changed.
+
+     Commands 14 and 15 show a correct match where _P  and  _Q  are
+     bound.
+
+     Command 16 clears all bindings.
+
+     The next few commands assume that _t_e_s_t_1:_d_e_m_o(_X)  is  defined
+     in the following way:
+
+     demo(X) ->
+         put(aa, worked),
+         X = 1,
+         X + 10.
+
+     Commands 17 and 18 set and inspect the value of the item  _a_a
+     in the process dictionary.
+
+     Command 19 evaluates _t_e_s_t_1:_d_e_m_o(_1). The evaluation  succeeds
+     and  the changes made in the process dictionary become visi-
+     ble to the shell. The new value of the  dictionary  item  _a_a
+     can be seen in command 20.
+
+     Commands 21 and 22 change the value of the  dictionary  item
+     _a_a to _h_e_l_l_o and call _t_e_s_t_1:_d_e_m_o(_2). Evaluation fails and the
+     changes made to the dictionary in _t_e_s_t_1:_d_e_m_o(_2), before  the
+     error occurred, are discarded.
+
+     Commands 23 and 24 show that _Z was not bound  and  that  the
+     dictionary item _a_a has retained its original value.
+
+     Commands 25,  26  and  27  show  the  effect  of  evaluating
+     _t_e_s_t_1:_d_e_m_o(_1)  in  the background. In this case, the expres-
+     sion is evaluated in a newly spawned  process.  Any  changes
+     made  in  the  process  dictionary  are  local  to the newly
+     spawned process and therefore not visible to the shell.
+
+     Commands 28, 29 and 30 use the  history  facilities  of  the
+     shell.
+
+     Command 29 is _e(_2_8). This re-evaluates command  28.  Command
+     30  is _v(_2_8). This uses the value (result) of command 28. In
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+shell(3)            ERLANG MODULE DEFINITION             shell(3)
+
+
+
+     the cases of a  pure  function  (a  function  with  no  side
+     effects),  the  result is the same. For a function with side
+     effects, the result can be different.
+
+     For the next command, it is assumed  that  _t_e_s_t_1:_l_o_o_p(_N)  is
+     defined in the following way:
+
+     loop(N) ->
+         io:format("Hello Number: ~w~n", [N]),
+         loop(N+1).
+
+     Command 31 evaluates _t_e_s_t_1:_l_o_o_p(_0), which  puts  the  system
+     into  an infinite loop. At this point the user types _C_o_n_t_r_o_l
+     _G, which suspends output from the current process, which  is
+     stuck  in  a  loop,  and activates _J_C_L mode. In _J_C_L mode the
+     user can start and stop jobs.
+
+     In this particular case, the _i command ("interrupt") is used
+     to  terminate the looping program, and the _c command is used
+     to connect to the shell again. Since the process was running
+     in  the  background  before we killed it, there will be more
+     printouts before the  "**  _e_x_i_t_e_d:  _k_i_l_l_e_d  **"  message  is
+     shown.
+
+     The _h_a_l_t() command exits the Erlang runtime system.
+
+JCL Mode
+     When the shell starts, it starts a single evaluator process.
+     This  process,  together  with  any local processes which it
+     spawns, is referred to as a _j_o_b. Only the current job, which
+     is  said  to be _c_o_n_n_e_c_t_e_d, can perform operations with stan-
+     dard IO. All other jobs, which are said to be _d_e_t_a_c_h_e_d,  are
+     _b_l_o_c_k_e_d if they attempt to use standard IO.
+
+     All jobs which do not use standard IO run in the normal way.
+
+     ^_G (Control G) detaches the current  job  and  JCL  mode  is
+     activated.  The _J_C_L mode prompt is "-->". If  "?" is entered
+     at the prompt, the following help message is displayed:
+
+               --> ?
+               c [nn]   - connect to job
+               i [nn]   - interrupt job
+               k [nn]   - kill job
+               j        - list all jobs
+               s        - start local shell
+               r [node] - start remote shell
+               q        - quit Erlang
+               ?  | h   - this message
+
+     The _J_C_L commands have the following meaning:
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+
+
+
+
+shell(3)            ERLANG MODULE DEFINITION             shell(3)
+
+
+
+       _c [_n_n]:
+           Connects to job number <_n_n> or the  current  job.  The
+           standard  shell is resumed. Operations which use stan-
+           dard IO by the current job will  be  interleaved  with
+           user inputs to the shell.
+
+       _i [_n_n]:
+           Stops the current evaluator process for job number  _n_n
+           or  the  current job, but does not kill the shell pro-
+           cess. Accordingly, any variable bindings and the  pro-
+           cess  dictionary  will be preserved and the job can be
+           connected again. This command can be used to interrupt
+           an endless loop.
+
+       _k [_n_n]:
+           Kills job number _n_n or the current  job.  All  spawned
+           processes  in  the  job are killed, provided they have
+           not evaluated the _g_r_o_u_p__l_e_a_d_e_r/_1 BIF and  are  located
+           on  the  local  machine.  Processes  spawned on remote
+           nodes will not be killed.
+
+       _j:  Lists all jobs. A list of all known jobs  is  printed.
+           The current job name is prefixed with '*'.
+
+       _s:  Starts a new job. This will be assigned the new  index
+           [_n_n] which can be used in references.
+
+       _r [_n_o_d_e]:
+           Starts a remote job on _n_o_d_e. This is used  in  distri-
+           buted  Erlang  to allow a shell running on one node to
+           control a number of applications running on a  network
+           of nodes.
+
+       _q:  Quits Erlang.
+
+       ?:  Displays this message.
+
+Bugs
+     There is no way of changing the length of the  history  list
+     or saving it between sessions.
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  7
+
+
+

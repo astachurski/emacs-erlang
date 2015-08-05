@@ -1,0 +1,410 @@
+.TH orber 3 "orber  3.1.8" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+orber \- The main module of the Orber application
+.SH DESCRIPTION
+.LP
+This module contains the functions for starting and stopping the application\&. It also has some utility functions to get some of the configuration information from running application\&. 
+
+.SH EXPORTS
+.LP
+.B
+start() -> ok
+.br
+.RS
+.LP
+Starts the Orber application (it also starts mnesia if it is not running)\&. 
+.RE
+.LP
+.B
+start_lightweight() -> ok
+.br
+.RS
+.LP
+Starts the Orber application as lightweight\&. 
+.LP
+Preconditions: 
+.RS 2
+.TP 2
+*
+Erlang started on the node using the option -orber lightweight, e\&.g\&., erl -orber lightweight Addresses\&.
+.TP 2
+*
+The \fIAddresses\fR must be a list of \fIRemoteModifiers\fR, equal to the \fIorber:resolve_initial_references_remote/2\fR argument\&. The list must contain Orber nodes addresses, to which we have access and are not started as lightweight\&.
+.RE
+.RE
+.LP
+.B
+start_lightweight(Addresses) -> ok
+.br
+.RS
+.TP
+Types
+Addresses = [Address]
+.br
+Address = 
+.br
+RetVal = ok | exit()
+.br
+.RE
+.RS
+.LP
+Starts the Orber application as lightweight\&. 
+.LP
+Preconditions: 
+.RS 2
+.TP 2
+*
+If Erlang is started using the configuration parameter -orber lightweight, e\&.g\&., erl -orber lightweight Address, the argument supplied to this function will override the configuration parameter\&. Hence, this function must be used carefully\&.
+.TP 2
+*
+The \fIAddresses\fR must be a list of \fIRemoteModifiers\fR, equal to the \fIorber:resolve_initial_references_remote/2\fR argument\&. The list must contain Orber nodes addresses, to which we have access and are not started as lightweight\&.
+.RE
+.RE
+.LP
+.B
+stop() -> ok
+.br
+.RS
+.LP
+Stops the Orber application\&. 
+.RE
+.LP
+.B
+is_lightweight() -> boolean()
+.br
+.RS
+.LP
+This function returns the true if Orber is started as lightweight, false otherwise\&. 
+.RE
+.LP
+.B
+get_lightweight_nodes() -> RemoteModifierList | false
+.br
+.RS
+.LP
+This function returns false if Orber is not started as lightweight, otherwise a list of Remote Modifiers\&. 
+.RE
+.LP
+.B
+get_ORBInitRef() -> string() | undefined
+.br
+.RS
+.LP
+This function returns undefined if we will resolve references locally, otherwise a string describing which host we will contact if the Key given to \fIcorba:resolve_initial_references/1\fR matches the Key set in this configuration variable\&. For more information see the user\&'s guide\&. 
+.RE
+.LP
+.B
+get_ORBDefaultInitRef() -> string() | undefined
+.br
+.RS
+.LP
+This function returns undefined if we will resolve references locally, otherwise a string describing which host, or hosts, from which we will try to resolve the Key given to \fIcorba:resolve_initial_references/1\fR\&. For more information see the user\&'s guide\&. 
+.RE
+.LP
+.B
+domain() -> string()
+.br
+.RS
+.LP
+This function returns the domain name of the current Orber domain as a string\&. 
+.RE
+.LP
+.B
+iiop_port() -> int()
+.br
+.RS
+.LP
+This function returns the port-number, which is used by the IIOP protocol\&. It can be configured by setting the application variable \fIiiop_port\fR, if it is not set it will have the default number 4001\&. 
+.RE
+.LP
+.B
+iiop_ssl_port() -> int()
+.br
+.RS
+.LP
+This function returns the port-number, which is used by the secure IIOP protocol\&. It can be configured by setting the application variable \fIiiop_ssl_port\fR, if it is not set it will have the default number 4002 if Orber is to configured to run in secure mode\&. Otherwise it returns -1\&. 
+.RE
+.LP
+.B
+iiop_timeout() -> int() (milliseconds)
+.br
+.RS
+.LP
+This function returns the timeout value after which outgoing IIOP requests terminate\&. It can be configured by setting the application variable \fIiiop_timeout TimeVal (seconds)\fR, if it is not set it will have the default value \fIinfinity\fR\&. If a request times out a \fICOMM_FAILURE\fR exception is raised\&. 
+.LP
+Note: the iiop_timeout configuration parameter (TimeVal) may only range between 0 and 1000000 seconds\&. Otherwise, the default value is used\&. 
+.LP
+Note: IC supply the compile option \fIic:gen(IdlFile, [{timeout, "module::interface"}])\fR, which allow the user to add an extra timeout parameter, e\&.g\&., \fImodule_interface(ObjRef, Timeout, \&.\&.\&. Arguments \&.\&.\&.)\fR, instead of \fImodule_interface(ObjRef, \&.\&.\&. Arguments \&.\&.\&.)\fR\&. If, a stub is compiled with the timeout option, the extra Timeout argument will override the configuration parameter \fIiiop_timeout\fR\&. It is, however, not possible to use \fIinfinity\fR to override the Timeout parameter\&. The Timeout option is also valid for objects which resides within the same Orber domain\&. 
+.RE
+.LP
+.B
+iiop_connection_timeout() -> int() (milliseconds)
+.br
+.RS
+.LP
+This function returns the timeout value after which outgoing IIOP connections terminate\&. It can be configured by setting the application variable \fIiiop_connection_timeout TimeVal (seconds)\fR, if it is not set it will have the default value \fIinfinity\fR\&. The connection will not be terminated if there are pending requests\&. 
+.LP
+Note: the iiop_connection_timeout configuration parameter (TimeVal) may only range between 0 and 1000000 seconds\&. Otherwise, the default value is used\&. 
+.RE
+.LP
+.B
+secure() -> no | ssl
+.br
+.RS
+.LP
+This function returns the security mode Orber is running in, which is either no if it is an insecure domain or the type of security mechanism used\&. For the moment the only security mechanism is ssl\&. This is configured by setting the application variable \fIsecure\fR\&. 
+.RE
+.LP
+.B
+ssl_server_certfile() -> string()
+.br
+.RS
+.LP
+This function returns a path to a file containing a chain of PEM encoded certificates for the Orber domain as server\&. This is configured by setting the application variable \fIssl_server_certfile\fR\&. 
+.RE
+.LP
+.B
+ssl_client_certfile() -> string()
+.br
+.RS
+.LP
+This function returns a path to a file containing a chain of PEM encoded certificates used in outgoing calls in the current process\&. The default value is configured by setting the application variable \fIssl_client_certfile\fR\&. 
+.RE
+.LP
+.B
+set_ssl_client_certfile(Path) -> ok
+.br
+.RS
+.TP
+Types
+Path = string()
+.br
+.RE
+.RS
+.LP
+This function takes a path to a file containing a chain of PEM encoded certificates as parameter and sets it for the current process\&. 
+.RE
+.LP
+.B
+ssl_server_verify() -> 0 | 1 | 2
+.br
+.RS
+.LP
+This function returns the type of verification used by SSL during authentication of the other peer for incoming calls\&. It is configured by setting the application variable \fIssl_server_verify\fR\&. 
+.RE
+.LP
+.B
+ssl_client_verify() -> 0 | 1 | 2
+.br
+.RS
+.LP
+This function returns the type of verification used by SSL during authentication of the other peer for outgoing calls\&. The default value is configured by setting the application variable \fIssl_client_verify\fR\&. 
+.RE
+.LP
+.B
+set_ssl_client_verify(Value) -> ok
+.br
+.RS
+.TP
+Types
+Value = 0 | 1 | 2
+.br
+.RE
+.RS
+.LP
+This function sets the SSL verification type for the other peer of outgoing calls\&. 
+.RE
+.LP
+.B
+ssl_server_depth() -> int()
+.br
+.RS
+.LP
+This function returns the SSL verification depth for incoming calls\&. It is configured by setting the application variable \fIssl_server_depth\fR\&. 
+.RE
+.LP
+.B
+ssl_client_depth() -> int()
+.br
+.RS
+.LP
+This function returns the SSL verification depth for outgoing calls\&. The default value is configured by setting the application variable \fIssl_client_depth\fR\&. 
+.RE
+.LP
+.B
+set_ssl_client_depth(Depth) -> ok
+.br
+.RS
+.TP
+Types
+Depth = int()
+.br
+.RE
+.RS
+.LP
+This function sets the SSL verification depth for the other peer of outgoing calls\&. 
+.RE
+.LP
+.B
+objectkeys_gc_time() -> int() (seconds)
+.br
+.RS
+.LP
+This function returns the timeout value after which after which terminated object keys, related to servers started with the configuration parameter \fI{persistent, true}\fR, will be removed\&. It can be configured by setting the application variable \fIobjectkeys_gc_time TimeVal (seconds)\fR, if it is not set it will have the default value \fIinfinity\fR\&. 
+.LP
+Objects terminating with reason \fInormal\fR or \fIshutdown\fR are removed automatically\&. 
+.LP
+Note: the objectkeys_gc_time configuration parameter (TimeVal) may only range between 0 and 1000000 seconds\&. Otherwise, the default value is used\&. 
+.RE
+.LP
+.B
+bootstrap_port() -> int()
+.br
+.RS
+.LP
+This function returns the port-number, which is used by the CORBA bootstrapping protocol\&. This protocol is used to fetch an initial reference from another ORB\&. It can be configured by setting the application variable \fIbootstrap_port\fR, if it is not set it will use the iiop port\&. 
+.LP
+Note: In the future it will use the port number which is set in the standard (the suggestion is 900)\&. Because the standard is not ready in this area we in the meantime uses a port number, which do not require root permissions in Unix\&. 
+.RE
+.LP
+.B
+orber_nodes() -> RetVal
+.br
+.RS
+.TP
+Types
+RetVal = [node()]
+.br
+.RE
+.RS
+.LP
+This function returns the list of node names that this orber domain consists of\&. 
+.RE
+.LP
+.B
+install(NodeList) -> ok
+.br
+.B
+install(NodeList, Options) -> ok
+.br
+.RS
+.TP
+Types
+NodeList = [node()]
+.br
+Options = [Option]
+.br
+ Option = {install_timeout, Timeout} | {ifr_storage_type, TableType} 
+.br
+ Timeout = infinity | integer() 
+.br
+ TableType = disc_copies | ram_copies 
+.br
+.RE
+.RS
+.LP
+This function installs all the necessary mnesia tables and load default data in some of them\&. If one or more Orber tables already exists the installation fails\&. The function \fIuninstall\fR may be used, if it is safe, i\&.e\&., no other application is running Orber\&. 
+.LP
+Preconditions: 
+.RS 2
+.TP 2
+*
+a mnesia schema must exist before the installation
+.TP 2
+*
+mnesia is running on the other nodes if the new installation shall be a multi node domain
+.RE
+.LP
+Mnesia will be started by the function if it is not already running on the installation node and if it was started it will be stopped afterwards\&. 
+.LP
+The options that can be sent to the installation program is: 
+.RS 2
+.TP 2
+*
+\fI{install_timeout, Timeout}\fR - this timeout is how long we will wait for the tables to be created\&. The Timeout value can be \fIinfinity\fR or an integer number in milliseconds\&. Default is infinity\&.
+.TP 2
+*
+\fI{ifr_storage_type, TableType}\fR - this option sets the type of tables used for the interface repository\&. The TableType can be disc_copies or ram_copies\&. Default is disc_copies\&. (All other tables in Orber are ram copies)\&.
+.RE
+.RE
+.LP
+.B
+uninstall() -> ok
+.br
+.RS
+.LP
+This function stops the Orber application, terminates all server objects and removes all Orber related mnesia tables\&. 
+.LP
+Note: Since other applications may be running on the same node using mnesia \fIuninstall\fR will not stop the mnesia application\&. 
+.RE
+.LP
+.B
+add_node(Node, StorageType) -> RetVal
+.br
+.RS
+.TP
+Types
+Node = node()
+.br
+StorageType = disc_copies | ram_copies
+.br
+RetVal = ok | exit()
+.br
+.RE
+.RS
+.LP
+This function add given node to a existing Orber node group and starts Orber on the new node\&. \fIorber:add_node\fR is called from a member in the Orber node group\&. 
+.LP
+Preconditions for new node: 
+.RS 2
+.TP 2
+*
+Erlang started on the new node using the option \fI-mnesia extra_db_nodes\fR, e\&.g\&., \fIerl -sname new_node_name -mnesia extra_db_nodes ConnectToNodes_List\fR
+.TP 2
+*
+Mnesia is running on the new node (no new schema created)\&.
+.TP 2
+*
+If the new node will use \fIdisc_copies\fR the schema type must be changed using: \fImnesia:change_table_copy_type(schema, node(), disc_copies)\fR
+.RE
+.LP
+Orber will be started by the function on the new node\&. 
+.LP
+Fails if: 
+.RS 2
+.TP 2
+*
+Orber already installed on given node
+.TP 2
+*
+Mnesia not started as described above on the new node
+.TP 2
+*
+Impossible to copy data in Mnesia tables to the new node
+.TP 2
+*
+Not able to start Orber on the new node\&.
+.RE
+.LP
+The function do not remove already copied tables after a failure\&. Use \fIorber:remove_node\fR to remove these tables\&. 
+.RE
+.LP
+.B
+remove_node(Node) -> RetVal
+.br
+.RS
+.TP
+Types
+Node = node()
+.br
+RetVal = ok | exit()
+.br
+.RE
+.RS
+.LP
+This function removes given node from a Orber node group\&. The Mnesia application is not stopped\&. 
+.RE
+.SH AUTHOR
+.nf
+Lars Thorsen - support@erlang.ericsson.se
+.fi

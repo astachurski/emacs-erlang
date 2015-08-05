@@ -1,0 +1,396 @@
+
+
+
+compile(3)          ERLANG MODULE DEFINITION           compile(3)
+
+
+
+MODULE
+     compile  - Erlang Compiler
+
+DESCRIPTION
+     This module provides an interface  to  the  standard  Erlang
+     compiler.  It  can generate either a new file which contains
+     the object code, or return a  binary  which  can  be  loaded
+     directly.
+
+
+EXPORTS
+     file(File)
+
+          Is the  same  as  _f_i_l_e(_F_i_l_e,  [_v_e_r_b_o_s_e,  _r_e_p_o_r_t__e_r_r_o_r_s,
+          _r_e_p_o_r_t__w_a_r_n_i_n_g_s]).
+
+     file(File, Options) -> CompRet
+
+          Types
+               CompRet = ModRet | BinRet | ErrRet
+               ModRet = {ok, ModuleName} | {ok, ModuleName, Warn-
+               ings}
+               BinRet = {ok, ModuleName,  Binary}  |  {ok,  Modu-
+               leName, Binary, Warnings}
+               ErrRet = error | {error, Errors, Warnings}
+
+          Compiles the code in the file _F_i_l_e, which is an  Erlang
+          source  code  file  without the ._e_r_l extension. _O_p_t_i_o_n_s
+          determine the behavior of the compiler.
+
+          Returns {_o_k, _M_o_d_u_l_e_N_a_m_e} if  successful,  or  _e_r_r_o_r  if
+          there are errors. An object code file is created if the
+          compilation succeeds with no errors.
+
+          As a step in the compilation of Erlang  code,  _e_r_l__l_i_n_t
+          is  run,  resulting  in  warning and error messages, if
+          appropriate. The options relevant to the syntactic  and
+          semantic  controls  of _e_r_l__l_i_n_t are listed in the docu-
+          mentation of the module _e_r_l__l_i_n_t.
+
+          The elements of _O_p_t_i_o_n_s can be selected as follows:
+
+            _b_i_n_a_r_y:
+                Causes the compiler to return the object code  in
+                a  binary  instead of creating an object file. If
+                successful, the compiler returns {_o_k, _M_o_d_u_l_e_N_a_m_e,
+                _B_i_n_a_r_y}
+
+            '_P':
+                Produces a  listing  of  the  parsed  code  after
+                preprocessing  and  parse transforms, in the file
+                <_F_i_l_e>._P. No object file is produced.
+
+
+
+Ericsson UtvecklingsLaAsBt change: compiler  3.0.1                 1
+
+
+
+
+
+
+compile(3)          ERLANG MODULE DEFINITION           compile(3)
+
+
+
+            '_E':
+                Produces a listing of the code after  all  source
+                code  transformations have been performed, in the
+                file <_F_i_l_e>._E. No object file is produced.
+
+            '_S':
+                Produces a listing of the assembler code  in  the
+                file <_F_i_l_e>._S. No object file is produced.
+
+            _r_e_p_o_r_t__e_r_r_o_r_s/_r_e_p_o_r_t__w_a_r_n_i_n_g_s:
+                Causes errors/warnings  to  be  printed  as  they
+                occur.
+
+            _r_e_p_o_r_t:
+                This is a short form for both  _r_e_p_o_r_t__e_r_r_o_r_s  and
+                _r_e_p_o_r_t__w_a_r_n_i_n_g_s.
+
+            _r_e_t_u_r_n__e_r_r_o_r_s:
+                If this flag is set, then {_e_r_r_o_r, _E_r_r_o_r_L_i_s_t, _W_a_r_-
+                _n_i_n_g_L_i_s_t} is returned when there are errors.
+
+            _r_e_t_u_r_n__w_a_r_n_i_n_g_s:
+                If this flag is set, then an extra field contain-
+                ing  _W_a_r_n_i_n_g_L_i_s_t  is added to the tuples returned
+                on success.
+
+            _r_e_t_u_r_n:
+                This is a short form for both  _r_e_t_u_r_n__e_r_r_o_r_s  and
+                _r_e_t_u_r_n__w_a_r_n_i_n_g_s.
+
+            _v_e_r_b_o_s_e:
+                Causes more verbose information from the compiler
+                describing what it is doing.
+
+            {_o_u_t_d_i_r, _D_i_r}:
+                Sets a new directory for  the  object  code.  The
+                current directory is used for output, except when
+                a directory has been specified with this option.
+
+            _e_x_p_o_r_t__a_l_l:
+                Causes  all  functions  in  the  module   to   be
+                exported.
+
+            {_i, _D_i_r}:
+                Add _D_i_r to the list of directories to be searched
+                when including a file.
+
+            {_d, _M_a_c_r_o}:
+
+            {_d, _M_a_c_r_o, _V_a_l_u_e}:
+                Defines a macro _M_a_c_r_o to have  the  value  _V_a_l_u_e.
+                The default is _t_r_u_e).
+
+
+
+Ericsson UtvecklingsLaAsBt change: compiler  3.0.1                 2
+
+
+
+
+
+
+compile(3)          ERLANG MODULE DEFINITION           compile(3)
+
+
+
+            {_p_a_r_s_e__t_r_a_n_s_f_o_r_m, _M_o_d_u_l_e}:
+                Causes   the   parse   transformation    function
+                _M_o_d_u_l_e:_p_a_r_s_e__t_r_a_n_s_f_o_r_m/_2  to  be  applied  to the
+                parsed  code  before  the  code  is  checked  for
+                errors.
+
+            _a_s_m:
+                The input file is expected to be  assembler  code
+                (default  file suffix ".S"). Note that the format
+                of assembler files is  not  documented,  and  may
+                change  between  releases  -  this option is pri-
+                marily for internal debugging use.
+
+          Note that all the options except the include  path  can
+          also  be  given  in  the  file with a -_c_o_m_p_i_l_e([_O_p_t_i_o_n,
+          ...]). attribute.
+
+          For debugging of the compiler, or for  pure  curiosity,
+          the  intermediate  code generated by each compiler pass
+          can be inspected. A complete list  of  the  options  to
+          produce   list   files   can   be   printed  by  typing
+          _c_o_m_p_i_l_e:_o_p_t_i_o_n_s()  at  the  Erlang  shell  prompt.  The
+          options  will  be  printed in order that the passes are
+          executed. If more than one listing option is used,  the
+          one representing the earliest pass takes effect.
+
+          _U_n_r_e_c_o_g_n_i_z_e_d _o_p_t_i_o_n_s _a_r_e _i_g_n_o_r_e_d.
+
+          Both _W_a_r_n_i_n_g_L_i_s_t and _E_r_r_o_r_L_i_s_t have the following  for-
+          mat:
+
+          [{FileName,[ErrorInfo]}].
+
+          _E_r_r_o_r_I_n_f_o is described below. The file  name  has  been
+          included  here  as  the  compiler  uses the Erlang pre-
+          processor _e_p_p, which allows the code to be included  in
+          other  files.  For this reason, it is important to know
+          to _w_h_i_c_h file an error or warning line number refers.
+
+     forms(Forms)
+
+          Is the same  as  _f_o_r_m_s(_F_i_l_e,  [_v_e_r_b_o_s_e,  _r_e_p_o_r_t__e_r_r_o_r_s,
+          _r_e_p_o_r_t__w_a_r_n_i_n_g_s]).
+
+     forms(Forms, Options) -> CompRet
+
+          Types
+               Forms = [Form]
+               CompRet = ModRet | BinRet | ErrRet
+               ModRet = {ok, ModuleName} | {ok, ModuleName, Warn-
+               ings}
+               BinRet  =  {ok,   ModuleName,   Binary}   |   {ok,
+
+
+
+Ericsson UtvecklingsLaAsBt change: compiler  3.0.1                 3
+
+
+
+
+
+
+compile(3)          ERLANG MODULE DEFINITION           compile(3)
+
+
+
+               ModuleName, Binary, Warnings}
+               ErrRet = error | {error, Errors, Warnings}
+
+          Analogous to _f_i_l_e/_1, but takes a list of forms (in  the
+          Erlang  abstract  format representation) as first argu-
+          ment. The option _b_i_n_a_r_y is implicit;  i.e.,  no  object
+          code  file  is produced. If the options indicate that a
+          listing file should be produced (e.g., 'E'), the module
+          name is taken as the file name.
+
+     format_error(ErrorDescriptor) -> string()
+
+          Types
+               ErrorDescriptor = errordesc()
+
+          Uses an _E_r_r_o_r_D_e_s_c_r_i_p_t_o_r  and  returns  a  string  which
+          describes  the  error.  This function is usually called
+          implicitly when an _E_r_r_o_r_I_n_f_o  structure  is  processed.
+          See below.
+
+Default compiler options
+     The   (host   operating   system)    environment    variable
+     _E_R_L__C_O_M_P_I_L_E_R__O_P_T_I_O_N_S  can  be  used to give default compiler
+     options. Its value must be a valid Erlang term. If the value
+     is  a  list,  it will be used as is. If it is not a list, it
+     will be put into a list. The list will be  appended  to  any
+     options given to _f_i_l_e/_2 or _f_o_r_m_s/_2.
+
+Inlining
+     The compiler can now do function inlining within  an  Erlang
+     module. Inlining means that a call to a function is replaced
+     with the function body with the arguments replaced with  the
+     actual values. The semantics are preserved, except if excep-
+     tions are generated in the inlined code. Exceptions will  be
+     reported  as  occurring in the function the body was inlined
+     into. Also, _f_u_n_c_t_i_o_n__c_l_a_u_s_e exceptions will be converted  to
+     similar _c_a_s_e__c_l_a_u_s_e exceptions.
+
+     When a function is inlined, the  original  function  may  be
+     kept  as  a  separate  function as well, because there might
+     still be calls to  it.  Therefore,  inlining  almost  always
+     increases code size.
+
+     Inlining does not necessarily improve  running  time,  espe-
+     cially  if  large  functions are inlined. The increased code
+     size may cause the code to run the slower (because of  worse
+     CPU  cache  performance).  Also,  inlining may increase Beam
+     stack usage which will probably be  detrimental  to  perfor-
+     mance for recursive functions.
+
+     Inlining is never default; it  must  be  explicitly  enabled
+     with  a  compiler  option or a '-_c_o_m_p_i_l_e()' attribute in the
+
+
+
+Ericsson UtvecklingsLaAsBt change: compiler  3.0.1                 4
+
+
+
+
+
+
+compile(3)          ERLANG MODULE DEFINITION           compile(3)
+
+
+
+     source module.
+
+     There are two distinct ways to enable inlining (which may be
+     combined).
+
+     The first way is to explicitly  list  the  functions  to  be
+     inlined  at all call places. The syntax is {_i_n_l_i_n_e, [{_F, _A},
+     ...]}, where _F is a function name and _A its arity.
+
+     Example from an Erlang module:
+
+     -compile({inline,[{mkop,3},{mkop,2},{line,1}]}).
+
+     Here the  functions  _m_k_o_p/_3,  _m_k_o_p/_2,  and  _l_i_n_e/_1  will  be
+     inlined every time they are used.
+
+     This type of unconditional inlining  is  useful  for  small,
+     simple  functions as an alternative to macros. The functions
+     mentioned in the example are defined like this:
+
+     mkop(L, {Op,Pos}, R) -> {op,Pos,Op,L,R}.
+     mkop({Op,Pos}, A) -> {op,Pos,Op,A}.
+     line(Tup) -> element(2, Tup).
+
+     There  are  other  benefits  when  using  explicit  inlining
+     instead  of  macros.  The  arguments  will only be evaluated
+     once, which can be critical if they contain side effects  or
+     are  large  computations,  and it also makes it easy to have
+     local variables, which is difficult with macros.
+
+     The other type of inlining is conditional inlining. The com-
+     piler  will  search  for candiates suitable for inlining. It
+     does this by calculating a weight  for  each  function.  The
+     weight  is roughly proportional to the size of the function.
+     Given the weight for each function, the compiler  will  only
+     inline  functions  lighter than calling function and below a
+     given threshold value.
+
+     To enable conditional inlining, you  can  use  the  '_i_n_l_i_n_e'
+     option,  which  sets  a  threshold  value  of 10, or you can
+     explicitly give a threshold value like this: {_i_n_l_i_n_e, _T_h_r_e_s_-
+     _h_o_l_d}.
+
+     Example:
+
+     -compile({inline,1000}).
+
+     A threshold of 1000 would inline most functions (except  for
+     extremly  large),  provided  that  the functions are lighter
+     than the functions they are inlined into. It  is  not  clear
+     that this is a good idea. It all depends on your code.
+
+
+
+
+Ericsson UtvecklingsLaAsBt change: compiler  3.0.1                 5
+
+
+
+
+
+
+compile(3)          ERLANG MODULE DEFINITION           compile(3)
+
+
+
+  Warning:
+     Conditional inlining should be used with caution,  since  it
+     may  actually increase the execution time and make debugging
+     harder. You should only use it for modules that are known to
+     be bottle-necks and measure execution times with and without
+     inlining.
+
+
+Parse Transformations
+     Parse transformations are used when a  programmer  wants  to
+     use Erlang syntax but with different semantics. The original
+     Erlang code is then transformed into other Erlang code.
+
+Error Information
+     The _E_r_r_o_r_I_n_f_o mentioned  above  is  the  standard  _E_r_r_o_r_I_n_f_o
+     structure  which is returned from all IO modules. It has the
+     following format
+
+         {ErrorLine, Module, ErrorDescriptor}
+
+     A string describing the error is obtained with the following
+     call:
+
+     apply(Module, format_error, ErrorDescriptor)
+
+See Also
+     epp, erl_id_trans, erl_lint
+
+AUTHOR
+     Bjorn Gustavsson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLaAsBt change: compiler  3.0.1                 6
+
+
+

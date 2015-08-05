@@ -1,0 +1,72 @@
+.TH asn1rt 3 "asn1  1.2.9.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+asn1rt \- ASN\&.1 runtime support functions
+.SH DESCRIPTION
+.LP
+This module is the interface module for the ASN\&.1 runtime support functions\&. To encode and decode ASN\&.1 types in runtime the functions in this module should be used\&. 
+
+.SH EXPORTS
+.LP
+.B
+encode(Module,{Type,Value})-> {ok,Bytes}| {error,Reason}
+.br
+.B
+encode(Module,Type,Value)-> {ok,Bytes} | {error,Reason}
+.br
+.RS
+.TP
+Types
+Module = Type = atom()
+.br
+Value = term()
+.br
+Bytes = [Int] when integer(Int), Int >= 0, Int =< 255
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Encodes \fIValue\fR of \fIType\fR defined in the ASN\&.1 module \fIModule\fR\&. Returns a list of bytes if successful\&. To get as fast execution as possible the encode function only performs rudimentary tests that the input \fIValue\fR is a correct instance of \fIType\fR\&. The length of strings is for example not always checked\&. 
+.RE
+.LP
+.B
+decode(Module,Type,Bytes) -> {ok,Value}|{error,Reason}
+.br
+.RS
+.TP
+Types
+Module = Type = atom()
+.br
+Value = Reason = term()
+.br
+Bytes = [Int] when integer(Int), Int >= 0, Int =< 255
+.br
+.RE
+.RS
+.LP
+Decodes \fIType\fR from \fIModule\fR from the list of bytes \fIBytes\fR\&. Returns \fI{ok, Value}\fR if successful\&. 
+.RE
+.LP
+.B
+validate(Module,{Type,Value}) -> ok | {error,Reason}
+.br
+.B
+validate(Module,Type,Value) -> ok | {error,Reason}
+.br
+.RS
+.TP
+Types
+Module = Type = atom()
+.br
+Value = term()
+.br
+.RE
+.RS
+.LP
+Validates that \fIValue\fR conforms to \fIType\fR from \fIModule\fR\&. \fINot implemented in this version of the ASN\&.1 application\&.\fR 
+.RE
+.SH AUTHOR
+.nf
+Kenneth Lundin - support@erlang.ericsson.se
+.fi

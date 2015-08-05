@@ -1,0 +1,29 @@
+.TH tv 3 "tv  2.0.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+tv \-  The Table Visualizer graphically examines ETS and Mnesia tables\&. 
+.SH DESCRIPTION
+.LP
+The Table Visualizer enables the user to examine ETS and Mnesia tables\&. Once a certain table has been opened in the tool, the content may be viewed at various levels of detail\&. The content viewed may also be sorted, using any element as key\&. The table may be polled anytime; either regularly at specified intervals, or manually\&. New and deleted objects, as well as those altered, are marked with characteristic colors\&. 
+
+.SH EXPORTS
+.LP
+.B
+start() -> Pid
+.br
+.RS
+.TP
+Types
+Pid = pid() 
+.br
+.RE
+.RS
+.LP
+\fIstart/0\fR starts the Table Visualizer\&. 
+.RE
+.SH See Also
+.LP
+For a complete description of the Table Visualizer, please see the TV User\&'s Guide\&. 
+.SH AUTHOR
+.nf
+Fredrik Gustafson - support@erlang.ericsson.se
+.fi

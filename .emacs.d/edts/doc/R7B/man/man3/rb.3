@@ -1,0 +1,159 @@
+.TH rb 3 "sasl  1.9" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+rb \- The Report Browser Tool
+.SH DESCRIPTION
+.LP
+The Report Browser (RB) tool makes it possible to browse and format error reports written by the error logger handler \fIlog_mf_h\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+grep(RegExp)
+.br
+.RS
+.TP
+Types
+RegExp = string()
+.br
+.RE
+.RS
+.LP
+All reports containing the regular expression \fIRegExp\fR are printed\&. 
+.LP
+\fIRegExp\fR is a string containing the regular expression\&. Refer to the module \fIregexp\fR in the STDLIB reference manual for a definition of valid regular expressions\&. They are essentially the same as the UNIX command \fIegrep\fR\&. 
+.RE
+.LP
+.B
+h()
+.br
+.B
+help()
+.br
+.RS
+.LP
+Prints the on-line help information\&. 
+.RE
+.LP
+.B
+list()
+.br
+.B
+list(Type)
+.br
+.RS
+.TP
+Types
+Type = type()
+.br
+type() = crash_report | supervisor_report | error | progress
+.br
+.RE
+.RS
+.LP
+This function lists all reports loaded in the \fIrb_server\fR\&. Each report is given a unique number that can be used as a reference to the report in the \fIshow/1\fR function\&. 
+.LP
+If no \fIType\fR is given, all reports are listed\&. 
+.RE
+.LP
+.B
+rescan()
+.br
+.B
+rescan(Options)
+.br
+.RS
+.TP
+Types
+Options = [opt()]
+.br
+.RE
+.RS
+.LP
+Rescans the report directory\&. \fIOptions\fR is the same as for \fIstart()\fR\&. 
+.RE
+.LP
+.B
+show()
+.br
+.B
+show(Report)
+.br
+.RS
+.TP
+Types
+Report = int() | type()
+.br
+.RE
+.RS
+.LP
+If a type argument is given, all loaded reports of this type are printed\&. If an integer argument is given, the report with this reference number is printed\&. If no argument is given, all reports are shown\&. 
+.RE
+.LP
+.B
+start()
+.br
+.B
+start(Options)
+.br
+.RS
+.TP
+Types
+Options = [opt()]
+.br
+opt() = {start_log, FileName} | {max, MaxNoOfReports} | {report_dir, DirString} | {type, ReportType}
+.br
+FileName = string() | standard_io
+.br
+MaxNoOfReports = int() | all
+.br
+DirString = string()
+.br
+ReportType = type() | [type()] | all
+.br
+.RE
+.RS
+.LP
+The function \fIstart/1\fR starts the \fIrb_server\fR with the specified options, while \fIstart/0\fR starts with default options\&. The \fIrb_server\fR must be started before reports can be browsed\&. When the \fIrb_server\fR is started, the files in the specified directory are scanned\&. The other functions assume that the server has started\&. 
+.LP
+\fI{start_log, FileName}\fR starts logging to file\&. All reports will be printed to the named file\&. The default is \fIstandard_io\fR\&. 
+.LP
+\fI{max, MaxNoOfReports}\fR\&. Controls how many reports the \fIrb_server\fR should read on start-up\&. This option is useful as the directory may contain 20\&.000 reports\&. If this option is given, the \fIMaxNoOfReports\fR latest reports will be read\&. The default is \&'all\&'\&. 
+.LP
+\fI{report_dir, DirString}\fR\&. Defines the directory where the error log files are located\&. The default is \fI{sasl, error_logger_mf_dir}\fR\&. 
+.LP
+\fI{type, ReportType}\fR\&. Controls what kind of reports the \fIrb_server\fR should read on start-up\&. \fIReportType\fR is a supported type, \&'all\&', or a list of supported types\&. The default is \&'all\&'\&. 
+.RE
+.LP
+.B
+start_log(FileName)
+.br
+.RS
+.TP
+Types
+FileName = string()
+.br
+.RE
+.RS
+.LP
+Redirects all report output from the RB tool to the specified file\&. 
+.RE
+.LP
+.B
+stop()
+.br
+.RS
+.LP
+Stops the \fIrb_server\fR\&. 
+.RE
+.LP
+.B
+stop_log()
+.br
+.RS
+.LP
+Closes the log file\&. The output from the RB tool will be directed to \fIstandard_io\fR\&. 
+.RE
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

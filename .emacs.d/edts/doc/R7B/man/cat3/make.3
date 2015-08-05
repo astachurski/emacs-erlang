@@ -1,0 +1,132 @@
+
+
+
+make(3)             ERLANG MODULE DEFINITION              make(3)
+
+
+
+MODULE
+     make - Functions Similar to UNIX Type Make Program.
+
+DESCRIPTION
+     These functions are similar to the UNIX type _M_a_k_e functions.
+     They  can  be  used  to  develop  programs  which consist of
+     several files. _m_a_k_e can also be  used  to  recompile  entire
+     directories.  If updates are made, _m_a_k_e exits with the value
+     _u_p__t_o__d_a_t_e.
+
+
+EXPORTS
+     all() -> up_to_date | error
+
+          This function is the same as _a_l_l([]).
+
+     all(Options) -> up_to_date | error
+
+          Checks all Erlang files in the  current  directory  and
+          compiles those files which have been modified after the
+          creation of the object file._O_p_t_i_o_n_s is a list of  valid
+          options  for _m_a_k_e, together with valid options for _c_o_m_-
+          _p_i_l_e.
+
+          Compares time stamps of ._e_r_l and object code files.  If
+          the  time  stamp  of  the source file is later than the
+          object file, or the object file is missing, the  source
+          file is recompiled.
+
+          The list of files to be compared is taken from the file
+          _E_m_a_k_e_f_i_l_e, if it exists. Failing this, it is taken from
+          the current directory.
+
+          This function returns _e_r_r_o_r if  compilation  fails  for
+          any file.
+
+          The elements of _O_p_t_i_o_n_s can be:
+
+            _n_o_e_x_e_c:
+                No execution mode. It  just  specifies  that  the
+                files should be compiled.
+
+            _l_o_a_d:
+                Load mode. Loads all recompiled files.
+
+            _n_e_t_l_o_a_d:
+                Net load mode. Loads all recompiled files on  the
+                compiling  node,  and all other nodes in the net-
+                work, with _n_e_t:_b_r_o_a_d_c_a_s_t/_3,
+
+            _p_a_r:
+                _m_a_k_e is used in parallel on all nodes included in
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   1
+
+
+
+
+
+
+make(3)             ERLANG MODULE DEFINITION              make(3)
+
+
+
+                the expression (_n_o_d_e () | _n_o_d_e_s ()
+
+          For example:
+
+                  1> make:all ([par, netload, trace]).
+
+          _m_a_k_e is used in parallel on  all  nodes.  This  ensures
+          that  the produced object files are loaded on all nodes
+          and the _t_r_a_c_e flag is passed to the compiler. This pro-
+          duces traceable code.
+
+     files(FileList) -> up_to_date
+
+     files(FileList, Options) -> up_to_date | error
+
+          This is the same as _a_l_l/_0 and _a_l_l/_1, but with an expli-
+          cit list of files.
+
+          This function returns _e_r_r_o_r if  compilation  fails  for
+          any file or if a non-existing file is specified.
+
+Files
+     This program assumes that a file named _E_m_a_k_e_f_i_l_e exists  and
+     that  it  is located in the current directory. The file must
+     be named _E_m_a_k_e_f_i_l_e and it must  contain  the  names  of  the
+     files  concerned  as  atoms,  each followed by a period. For
+     example:
+
+          file1.
+          file2.
+          '../foo/file3'.
+          'File4'.
+                  ^ (a new line )
+
+     If the _E_m_a_k_e_f_i_l_e does not exist, all  Erlang  files  in  the
+     current  directory  are  used  as input. This is useful when
+     recompiling entire directories.
+
+AUTHORS
+     Claes Wikstrom - support@erlang.ericsson.se
+     Joe Armstrong - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   2
+
+
+

@@ -1,0 +1,198 @@
+
+
+
+memsup(3)           ERLANG MODULE DEFINITION            memsup(3)
+
+
+
+MODULE
+     memsup - A memory Supervisor Process
+
+DESCRIPTION
+     _m_e_m_s_u_p is part of the _o_s__m_o_n application and all  configura-
+     tion  parameters  are defined in the reference documentation
+     for the _o_s__m_o_n application.
+
+     _m_e_m_s_u_p is a process which supervises the  memory  usage  for
+     the system and for individual processes, as follows:
+
+       * If more than _s_y_s_t_e_m__m_e_m_o_r_y__h_i_g_h__w_a_t_e_r_m_a_r_k  of  available
+         system  memory is allocated, as reported by the underly-
+         ing       operating       system,       the        alarm
+         _s_y_s_t_e_m__m_e_m_o_r_y__h_i_g_h__w_a_t_e_r_m_a_r_k is set.
+
+       * If any Erlang process in the system has  allocated  more
+         than   _p_r_o_c_e_s_s__m_e_m_o_r_y__h_i_g_h__w_a_t_e_r_m_a_r_k   of  total  system
+         memory, the alarm _p_r_o_c_e_s_s__m_e_m_o_r_y__h_i_g_h__w_a_t_e_r_m_a_r_k is set.
+
+     The total system memory reported under UNIX is the number of
+     physical pages of memory times the page size, and the avail-
+     able memory is the number of available physical pages  times
+     the  page  size.  This  is  a reasonable measure as swapping
+     should be avoided anyway, but the  task  of  defining  total
+     memory  and available memory is difficult because of virtual
+     memory and swapping.
+
+     The _m_e_m_s_u_p process defines two alarms which are set  by  the
+     _a_l_a_r_m__h_a_n_d_l_e_r:_s_e_t__a_l_a_r_m(_A_l_a_r_m)  function.  _A_l_a_r_m  is defined
+     as:
+
+       {_s_y_s_t_e_m__m_e_m_o_r_y__h_i_g_h__w_a_t_e_r_m_a_r_k, []}.:
+           This alarm is set when the used system memory  exceeds
+           _s_y_s_t_e_m__m_e_m_o_r_y__h_i_g_h__w_a_t_e_r_m_a_r_k  of  the  total available
+           memory.
+
+       {_p_r_o_c_e_s_s__m_e_m_o_r_y__h_i_g_h__w_a_t_e_r_m_a_r_k, _P_i_d}.:
+           This alarm is  set  when  an  Erlang  process  exceeds
+           _p_r_o_c_e_s_s__m_e_m_o_r_y__h_i_g_h__w_a_t_e_r_m_a_r_k  of  the total available
+           memory.
+
+     These alarms are cleared automatically when the alarm  cause
+     is no longer valid.
+
+     There is also a interface to system dependent  memory  data,
+     _g_e_t__s_y_s_t_e_m__m_e_m_o_r_y__d_a_t_a/_0.  The output is highly dependent on
+     the underlying operating system and the  interface  is  tar-
+     geted  primarily  for  systems  without virtual memory (e.g.
+     VxWorks). The output  on  other  systems  is  however  still
+     valid, although sparse.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  1
+
+
+
+
+
+
+memsup(3)           ERLANG MODULE DEFINITION            memsup(3)
+
+
+
+     A call to _g_e_t__s_y_s_t_e_m__m_e_m_o_r_y__d_a_t_a/_0 is  more  costly  than  a
+     call to _g_e_t__m_e_m_o_r_y__d_a_t_a/_0 as data is collected synchronously
+     when this function is called.
+
+
+EXPORTS
+     get_check_interval() -> Time
+
+          Types
+               Time = integer()
+
+          A time interval, in  milliseconds,  which  defines  how
+          often  memory  is checked. The _g_e_t__s_y_s_t_e_m__m_e_m_o_r_y__d_a_t_a()
+          function is in no way affected by this interval.
+
+     get_memory_data() -> MemData
+
+          Types
+               MemData = {TotalMemorySize, AllocatedBytes,  {Lar-
+               gestPid, PidAllocatedBytes}}
+               TotalMemorySize = integer()
+               AllocatedBytes = integer()
+               LargestPid = pid()
+               PidAllocatedBytes = integer()
+
+          Returns data about the memory in the system. _L_a_r_g_e_s_t_P_i_d
+          is the Pid of the largest Erlang process in the system.
+          _P_i_d_A_l_l_o_c_a_t_e_d_B_y_t_e_s is the amount of memory the  _L_a_r_g_e_s_t_-
+          _P_i_d has allocated.
+
+     get_system_memory_data() -> MemDataList
+
+          Types
+               MemDataList = [TaggedValue ...]
+               TaggedValue = {Tag, Value}
+               Value = integer()
+               Tag = atom()
+
+          Gets  system  dependent  memory  data.  The  result  is
+          returned  as a list containing tagged tuples, where the
+          tag can be one of the following:
+
+            _t_o_t_a_l__m_e_m_o_r_y:
+                The total amount of memory (in  bytes)  available
+                to  the  Erlang emulator, allocated and free. May
+                or may not be equal to the amount of memory  con-
+                figured in the system.
+
+            _f_r_e_e__m_e_m_o_r_y:
+                The amount of free memory available to the Erlang
+                emulator for allocation.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  2
+
+
+
+
+
+
+memsup(3)           ERLANG MODULE DEFINITION            memsup(3)
+
+
+
+            _s_y_s_t_e_m__t_o_t_a_l__m_e_m_o_r_y:
+                The amount  of  memory  available  to  the  whole
+                operating  system.  This  may  well  be  equal to
+                _t_o_t_a_l__m_e_m_o_r_y but not necessarily.
+
+            _l_a_r_g_e_s_t__f_r_e_e:
+                The size of the largest  contiguous  free  memory
+                block available to the Erlang emulator.
+
+            _n_u_m_b_e_r__o_f__f_r_e_e:
+                The number of free blocks available to the Erlang
+                runtime  system.  This gives a fair indication of
+                how fragmented the memory is.
+
+          As with _g_e_t__m_e_m_o_r_y__d_a_t_a(), the values on Unix-like sys-
+          tems  indicate  the  amount  of _p_h_y_s_i_c_a_l memory that is
+          configured   and    free.    The    _l_a_r_g_e_s_t__f_r_e_e    and
+          _n_u_m_b_e_r__o_f__f_r_e_e  tags  are  currently only returned on a
+          VxWorks system.
+
+          All memory sizes are presented as number of _b_y_t_e_s.
+
+     get_procmem_high_watermark() -> integer()
+
+          Threshold as a percentage of the total available system
+          memory.  It  specifies how much memory can be allocated
+          by one Erlang process before an alarm is sent.
+
+     get_sysmem_high_watermark() -> integer()
+
+          Threshold as a percentage of the total available system
+          memory.  It  specifies how much memory can be allocated
+          by the system before an alarm is sent.
+
+See Also
+     alarm_handler(3), os_mon(3)
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Peter Hogfeldt - support@erlang.ericsson.se
+     Patrik Nyblom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  3
+
+
+

@@ -1,0 +1,48 @@
+.TH appup 4 "sasl  1.9" "Ericsson Utvecklings AB" "FILES"
+.SH NAME
+appup \- Application upgrade file
+.SH DESCRIPTION
+.LP
+The \fIapplication upgrade file\fR defines how an application is upgraded in a running system\&. 
+.LP
+This file is used by \fIsystools\fR to generate release upgrade files\&. 
+
+.SH FILE SYNTAX
+.LP
+Applications can be upgraded and the instructions to do this are placed in the \fI\&.appup\fR file for the application\&. For example, for the \fIsnmp\fR application these instructions are placed in the \fIsnmp\&.appup\fR file\&. The \fI\&.appup\fR file looks as follows: 
+.LP
+The application upgrade file is called \fIName\&.appup\fR where \fIName\fR is the name of the application\&. The file should be located in the \fIebin\fR directory for the application\&. 
+.LP
+The \fI\&.appup\fR file contains one single Erlang term, which defines the instructions used to upgrade the application\&. The file has the following syntax: 
+
+.nf
+{Vsn,
+    [{UpFromVsn, UpFromScript}, \&.\&.\&.],
+    [{DownToVsn, DownToScript}, \&.\&.\&.]}\&.
+.fi
+.RS 2
+.TP 2
+*
+\fIVsn = string()\fR is the current version of the application\&.
+.TP 2
+*
+\fIUpFromVsn = string()\fR is a version we can upgrade from\&.
+.TP 2
+*
+\fIUpFromScript\fR is the script which describes the sequence of release upgrade instructions\&. Refer to the section Release Handling Instructions in the SASL User\&'s Guide for a description of this script\&.
+.TP 2
+*
+\fIDownToVsn = string()\fR is a version to which we can downgrade\&.
+.TP 2
+*
+\fIDownToScript\fR is the script which describes the sequence of downgrade instructions\&. Refer to the section Release Handling Instructions in the SASL User\&'s Guide for a description of this script\&.
+.RE
+.LP
+In the case of \fIUpFromScript\fR and \fIDownFromScript\fR, the scripts typically contain one line for each module in the application\&. 
+.SH SEE ALSO
+.LP
+app(4), relup(4), systools(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

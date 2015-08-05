@@ -1,0 +1,66 @@
+
+
+
+CosTransactions_SubtCroasEnTRsrLaaAcnNtsGiaocMntOAiDwoUanLrsEe_RSDeuEsbFotIurNraIcnTesI(aO3cN)tionAwareResource(3)
+
+
+
+MODULE
+     CosTransactions_SubtransactionAwareResource -
+
+DESCRIPTION
+     This interface inherits the CosTransactions::Resource inter-
+     face.  Hence, it must also support all operations defined in
+     the Resource interface.
+
+     To get access to the record definitions for  the  structures
+     use:
+      -
+     _i_n_c_l_u_d_e__l_i_b("_c_o_s_T_r_a_n_s_a_c_t_i_o_n_s/_i_n_c_l_u_d_e/_C_o_s_T_r_a_n_s_a_c_t_i_o_n_s._h_r_l").
+
+
+EXPORTS
+     commit_subtransaction(SubtransactionAwareResource, Coordina-
+     tor) -> Return
+
+          Types
+               SubtransactionAwareResource = #objref
+               Coordinator = #objref
+               Return = ok
+
+          If the _S_u_b_t_r_a_n_s_a_c_t_i_o_n_A_w_a_r_e_R_e_s_o_u_r_c_e have been registered
+          with    a    _s_u_b_t_r_a_n_s_a_c_t_i_o_n    using    the   operation
+          _C_o_s_T_r_a_n_s_a_c_t_i_o_n_s__C_o_o_r_d_i_n_a_t_o_r:_r_e_g_i_s_t_e_r__s_u_b_t_r_a_n__a_w_a_r_e/_2,
+          it will be notified when the transaction has committed.
+
+  Note:
+     The results of a commited subtransaction are reltive to  the
+     completion  of  its  ancestor  transactions,  that is, these
+     results can be undone if any ancestor transaction is  rolled
+     back.
+
+
+     rollback_subtransaction(SubtransactionAwareResource)      ->
+     Return
+
+          Types
+               SubtransactionAwareResource = #objref
+               Return = ok
+
+          If the _S_u_b_t_r_a_n_s_a_c_t_i_o_n_A_w_a_r_e_R_e_s_o_u_r_c_e have been registered
+          with     a    transactions    using    the    operation
+          _C_o_s_T_r_a_n_s_a_c_t_i_o_n_s__C_o_o_r_d_i_n_a_t_o_r:_r_e_g_i_s_t_e_r__s_u_b_t_r_a_n__a_w_a_r_e/_2 it
+          will be notified when the transaction has rolled back.
+
+AUTHOR
+     Niclas Eklund - support@erlang.ericsson.se
+
+
+
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             1
+
+
+

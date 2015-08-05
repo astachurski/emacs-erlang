@@ -1,0 +1,89 @@
+.TH mod_cgi 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mod_cgi \- Invoking of CGI scripts\&. 
+.SH DESCRIPTION
+.LP
+This module makes it possible to execute vanilla CGI (Common Gateway Interface) scripts in the server\&. A file that matches the definition of a ScriptAlias config directive is treated as a CGI script\&. A CGI script is executed by the server and its output is returned to the client\&. 
+.LP
+Support for CGI-1\&.1 is implemented in accordance with the CGI-1\&.1 specification <http://hoohoo\&.ncsa\&.uiuc\&.edu/cgi/>\&. 
+.SS Note:
+.LP
+CGI is currently available for Erlang/OTP running on a UNIX platform\&. These number of platforms will be increased\&. 
+
+
+.SH EWSAPI MODULE INTERACTION
+.LP
+Uses the following EWSAPI interaction data, if available: 
+.RS 2
+.TP 4
+.B
+\fI{new_request_uri, NewRequestURI}\fR:
+as defined in mod_actions(3)\&.
+.TP 4
+.B
+\fI{remote_user, RemoteUser}\fR:
+as defined in mod_auth(3)\&.
+.RE
+.LP
+Uses the following EWSAPI functions: 
+.RS 2
+.TP 2
+*
+mod_alias:real_name/3
+.TP 2
+*
+mod_alias:real_script_name/3
+.TP 2
+*
+mod_cgi:env/3
+.TP 2
+*
+mod_cgi:status_code:env/1
+.RE
+.LP
+This module furthermore exports a batch of functions to be used by other EWSAPI modules: 
+.SH EXPORTS
+.LP
+.B
+env(Info,Script,AfterScript) -> EnvString
+.br
+.RS
+.TP
+Types
+Info = mod_record()
+.br
+Script = AfterScript = EnvString = string()
+.br
+.RE
+.RS
+.SS Note:
+.LP
+This function should only be used when implementing CGI-1\&.1 functionality on UNIX platforms\&. 
+
+.LP
+\fIopen_port/2\fR is normally used to start and interact with CGI scripts\&. \fIopen_port/2\fR takes an external program as input; \fIenv(1)\fR (GNU Shell Utility) is typically used in the case of a CGI script\&. \fIenv(1)\fR execute the CGI script in a modified environment and takes the CGI script and a string of environment variables as input\&. \fIenv/3\fR returns an appropriate CGI-1\&.1 environment variable string to be used for this purpose\&. The environment variables in the string are those defined in the CGI-1\&.1 specification <http://hoohoo\&.ncsa\&.uiuc\&.edu/cgi/>\&. \fImod_record()\fR is a record as defined in the EWSAPI Module Programming section of \fIhttpd(3)\fR\&. 
+.RE
+.LP
+.B
+status_code(CGIOutput) -> {ok,StatusCode} | {error,Reason}
+.br
+.RS
+.TP
+Types
+CGIOutput = Reason = string()
+.br
+StatusCode = integer()
+.br
+.RE
+.RS
+.LP
+Certain output from CGI scripts has a special meaning, as described in the CGI specification <http://hoohoo\&.ncsa\&.uiuc\&.edu/cgi/>, for example if \fI"Location: http://www\&.yahoo\&.com\\n\\n"\fR is returned from a CGI script the client gets automatically redirected to Yahoo! <http://www\&.yahoo\&.com>, using the HTTP 302 status code (RFC 1945)\&. 
+.RE
+.SH SEE ALSO
+.LP
+httpd(3), mod_auth(3), mod_security(3), mod_alias(3), mod_esi(3), mod_include(3) 
+.SH AUTHORS
+.nf
+Joakim Grebeno  - support@erlang.ericsson.se
+Mattias Nilsson  - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,198 @@
+
+
+
+os(3)               ERLANG MODULE DEFINITION                os(3)
+
+
+
+MODULE
+     os - Operating System Specific Functions
+
+DESCRIPTION
+     The functions in this module are operating system  specific.
+     Careless use of these functions will result in programs that
+     will only run on a specific platform.  On  the  other  hand,
+     with  careful use these functions can be of help in enabling
+     a program to run on most platforms.
+
+
+EXPORTS
+     cmd(Command) -> string()
+
+          Types
+               Command = string() | atom()
+
+          Executes _C_o_m_m_a_n_d in a command shell of  the  target  OS
+          and  returns the result as a string. This function is a
+          replacement of the previous _u_n_i_x:_c_m_d/_1; on a Unix plat-
+          form they are equivalent.
+
+          Examples:
+
+          LsOut = os:cmd("ls"), % on unix platform
+          DirOut = os:cmd("dir"), % on Win32 platform
+
+     find_executable(Name) -> Filename | false
+     find_executable(Name, Path) -> Filename | false
+
+          Types
+               Name = string()
+               Path = string()
+               Filename = string()
+
+          These two functions look up an executable program given
+          its  name  and  a  search  path, in the same way as the
+          underlying operating system. find_executable/1 uses the
+          current  execution path (i.e., the environment variable
+          PATH on Unix and Windows). _P_a_t_h, if given, should  con-
+          form  to the syntax of execution paths on the operating
+          system. The absolute filename of the executable program
+          _N_a_m_e  is  returned,  or  _f_a_l_s_e  if  the program was not
+          found.
+
+     getenv() -> List
+
+          Types
+               List = list() of string
+
+          Returns a list  of  all  environement  variables.  Each
+          environment variable is a single string, containing the
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+os(3)               ERLANG MODULE DEFINITION                os(3)
+
+
+
+          name of the variable, followed by =,  followed  by  the
+          value.
+
+     getenv(VarName) -> Value | false
+
+          Types
+               Varname = string()
+               Value = string()
+
+          Returns the _V_a_l_u_e of the environment variable  _V_a_r_N_a_m_e,
+          or _f_a_l_s_e if the environment variable is undefined.
+
+     getpid() -> Value
+
+          Types
+               Value = string()
+
+          Returns the process identifier of  the  current  Erlang
+          emulator  in  the  format  most  commonly  used  by the
+          operating system environment. _V_a_l_u_e is  returned  as  a
+          string  containing  the  (usually) numerical identifier
+          for a process. On Unix, this is  typically  the  return
+          value  of  the  _g_e_t_p_i_d() system call. On VxWorks, _V_a_l_u_e
+          contains the task id (decimal notation) of  the  Erlang
+          task.  On  Windows,  the  process id as returned by the
+          _G_e_t_C_u_r_r_e_n_t_P_r_o_c_e_s_s_I_d() system call is used.
+
+     putenv(VarName, Value) -> true
+
+          Types
+               Varname = string()
+               Value = string()
+
+          Sets a new _V_a_l_u_e for the environment variable _V_a_r_N_a_m_e.
+
+     type() -> {Osfamily,Osname} | Osfamily
+
+          Types
+               Osfamily = atom() = win32 | unix | vxworks
+               Osname = atom()
+
+          Returns the _O_s_f_a_m_i_l_y and, in some cases, _O_s_n_a_m_e of  the
+          current operating system.
+
+          On Unix, _O_s_n_a_m_e will  be  same  string  that  _u_n_a_m_e  -_s
+          returns,  but in lower case. For instance, on Solaris 1
+          and 2, the atom _s_u_n_o_s will be returned.
+
+          In Windows, _O_s_n_a_m_e will be either _n_t (on  Windows  NT),
+          or  _w_i_n_d_o_w_s  (on Windows 95). On VxWorks _O_s_f_a_m_i_l_y alone
+          is returned, i.e. the atom _v_x_w_o_r_k_s.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+os(3)               ERLANG MODULE DEFINITION                os(3)
+
+
+
+  Note:
+     Think twice before using this  function.  Use  the  _f_i_l_e_n_a_m_e
+     module if you want to inspect or build file names in a port-
+     able way. Avoid matching on the _O_s_n_a_m_e atom.
+
+
+     version() -> {Major, Minor, Release} | VersionString
+
+          Types
+               Major = Minor = Release = integer()
+               VersionString = string()
+
+          Returns the operating system version. On most  systems,
+          this  function  returns  a  tuple, but a string will be
+          returned instead if the system has versions which  can-
+          not be expressed as three numbers.
+
+  Note:
+     Think twice before using this function. If you still need to
+     use it, always _c_a_l_l _o_s:_t_y_p_e() first.
+
+
+AUTHOR
+     Bjorn Gustavsson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+

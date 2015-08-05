@@ -1,0 +1,173 @@
+.TH mod_alias 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mod_alias \- This module creates aliases and redirections\&. 
+.SH DESCRIPTION
+.LP
+This module makes it possible to map different parts of the host file system into the document tree\&. The following config directives are described: 
+.RS 2
+.TP 2
+*
+Alias
+.TP 2
+*
+DirectoryIndex
+.TP 2
+*
+ScriptAlias
+.RE
+
+.SH DIRECTIVE: "Alias"
+.LP
+\fISyntax:\fR \fIAlias\fR url-path directory-filename
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_alias(3) 
+.LP
+The Alias directive allows documents to be stored in the local file system instead of the DocumentRoot location\&. URLs with a path that begins with \fIurl-path\fR is mapped to local files that begins with \fIdirectory-filename\fR, for example: 
+
+.nf
+Alias /image /ftp/pub/image
+.fi
+.LP
+and an access to \fIhttp://your\&.server\&.org/image/foo\&.gif\fR would refer to the file \fI/ftp/pub/image/foo\&.gif\fR\&. 
+.SH DIRECTIVE: "DirectoryIndex"
+.LP
+\fISyntax:\fR \fIDirectoryIndex\fR file file \&.\&.\&.
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_alias(3) 
+.LP
+\fIDirectoryIndex\fR specifies a list of resources to look for if a client requests a directory using a \fI/\fR at the end of the directory name\&. \fIfile\fR depicts the name of a file in the directory\&. Several files may be given, in which case the server will return the first it finds, for example: 
+
+.nf
+DirectoryIndex index\&.html
+.fi
+.LP
+and access to \fIhttp://your\&.server\&.org/docs/\fR would return \fIhttp://your\&.server\&.org/docs/index\&.html\fR if it existed\&. 
+.SH DIRECTIVE: "ScriptAlias"
+.LP
+\fISyntax:\fR \fIScriptAlias\fR url-path directory-filename
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_alias(3) 
+.LP
+The ScriptAlias directive has the same behavior as the Alias directive, except that it also marks the target directory as containing CGI scripts\&. URLs with a path beginning with \fIurl-path\fR are mapped to scripts beginning with \fIdirectory-filename\fR, for example: 
+
+.nf
+ScriptAlias /cgi-bin/ /web/cgi-bin/
+.fi
+.LP
+and an access to \fIhttp://your\&.server\&.org/cgi-bin/foo\fR would cause the server to run the script \fI/web/cgi-bin/foo\fR\&. 
+.SH EWSAPI MODULE INTERACTION
+.LP
+Exports the following EWSAPI interaction data, if possible: 
+.RS 2
+.TP 4
+.B
+\fI{real_name, {Path, AfterPath}}\fR:
+\fIPath\fR and \fIAfterPath\fR is as defined in httpd_util:split_path/1 with one exception - \fIPath\fR has been run through default_index/2\&.
+.RE
+.LP
+Uses the following exported EWSAPI functions: 
+.RS 2
+.TP 2
+*
+mod_alias:default_index/2
+.TP 2
+*
+mod_alias:path/3
+.TP 2
+*
+mod_alias:real_name/3
+.RE
+.LP
+This module furthermore exports a batch of functions to be used by other EWSAPI modules: 
+.SH EXPORTS
+.LP
+.B
+default_index(ConfigDB,Path) -> NewPath
+.br
+.RS
+.TP
+Types
+ConfigDB = config_db()
+.br
+Path = NewPath = string()
+.br
+.RE
+.RS
+.LP
+If \fIPath\fR is a directory, \fIdefault_index/2\fR, it starts searching for resources or files that are specified in the config directive DirectoryIndex\&. If an appropriate resource or file is found, it is appended to the end of \fIPath\fR and then returned\&. \fIPath\fR is returned unaltered, if no appropriate file is found, or if \fIPath\fR is not a directory\&. \fIconfig_db()\fR is the server config file in ETS table format as described in httpd(3)\&. 
+.RE
+.LP
+.B
+path(Data,ConfigDB,RequestURI) -> Path
+.br
+.RS
+.TP
+Types
+Data = interaction_data()
+.br
+ConfigDB = config_db()
+.br
+RequestURI = Path = string()
+.br
+.RE
+.RS
+.LP
+\fIpath/3\fR returns the actual file \fIPath\fR in the \fIRequestURI\fR (See RFC 1945)\&. If the interaction data \fI{real_name, {Path, AfterPath}}\fR has been exported by mod_alias(3); \fIPath\fR is returned\&. If no interaction data has been exported, ServerRoot is used to generate a file \fIPath\fR\&. \fIconfig_db()\fR and \fIinteraction_data()\fR are as defined in httpd(3)\&. 
+.RE
+.LP
+.B
+real_name(ConfigDB,RequestURI,Aliases) -> Ret
+.br
+.RS
+.TP
+Types
+ConfigDB = config_db()
+.br
+RequestURI = string()
+.br
+Aliases = [{FakeName, RealName}]
+.br
+Ret = {ShortPath, Path, AfterPath}
+.br
+ShortPath = Path = AfterPath = string()
+.br
+.RE
+.RS
+.LP
+\fIreal_name/3\fR traverses \fIAliases\fR, typically extracted from \fIConfigDB\fR, and matches each \fIFakeName\fR with \fIRequestURI\fR\&. If a match is found \fIFakeName\fR is replaced with \fIRealName\fR in the match\&. The resulting path is split into two parts, that is \fIShortPath\fR and \fIAfterPath\fR as defined in httpd_util:split_path/1\&. \fIPath\fR is generated from \fIShortPath\fR, that is the result from default_index/2 with \fIShortPath\fR as an argument\&. \fIconfig_db()\fR is the server config file in ETS table format as described in httpd(3)\&. 
+.RE
+.LP
+.B
+real_script_name(ConfigDB,RequestURI,ScriptAliases) -> Ret
+.br
+.RS
+.TP
+Types
+ConfigDB = config_db()
+.br
+RequestURI = string()
+.br
+ScriptAliases = [{FakeName, RealName}]
+.br
+Ret = {ShortPath, AfterPath} | not_a_script
+.br
+ShortPath = AfterPath = string()
+.br
+.RE
+.RS
+.LP
+\fIreal_name/3\fR traverses \fIScriptAliases\fR, typically extracted from \fIConfigDB\fR, and matches each \fIFakeName\fR with \fIRequestURI\fR\&. If a match is found \fIFakeName\fR is replaced with \fIRealName\fR in the match\&. If the resulting match is not an executable script \fInot_a_script\fR is returned\&. If it is a script the resulting script path is in two parts, that is \fIShortPath\fR and \fIAfterPath\fR as defined in httpd_util:split_script_path/1\&. \fIconfig_db()\fR is the server config file in ETS table format as described in httpd(3)\&. 
+.RE
+.SH SEE ALSO
+.LP
+httpd(3) 
+.SH AUTHOR
+.nf
+Joakim Grebeno  - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,89 @@
+.TH eva_log_snmp 3 "eva  2.0.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+eva_log_snmp  \- Implements an SNMP Interface to EVA log
+.SH DESCRIPTION
+.LP
+This module implements an SNMP interface to EVA LOG\&. The MIB implemented by this adaptation is OTP-EVA-LOG-MIB\&. The MIB is located in the directory \fImibs\fR in the distribution\&. 
+
+.SH EXPORTS
+.LP
+.B
+create_tables(Nodes) -> void()
+.br
+.RS
+.TP
+Types
+Nodes = [node()]
+.br
+.RE
+.RS
+.LP
+This function creates the necessary Mnesia tables for the eva log SNMP implementation\&. \fINodes\fR is a list of nodes where the tables should be replicated\&. This list of nodes should specify the same nodes where the application EVA can be run distributed, so that EVA can always have local access to the tables\&. 
+.LP
+This function should be called once when installing the EVA application in the system\&. 
+.RE
+.LP
+.B
+start_link(LogDir, MaxSize) -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.TP
+Types
+LogDir = string()
+.br
+MaxDirSize = integer()
+.br
+.RE
+.RS
+.LP
+Starts the EVA LOG SNMP implementation\&. This function can be used to include the service in a supervisor\&. Normally, functions in the supervisor \fIeva_sup\fR can be used instead\&. 
+.LP
+\fILogDir\fR is a directory where all manager created logs are stored\&. The directory must exist\&. 
+.LP
+\fIMaxDirSize\fR is the maximum total space the logs manager created logs are allowed to use\&. 
+.LP
+The function \fIcreate_tables/1\fR must be called before the server is started\&. 
+.RE
+.SH Instrumentation Functions for the OTP-EVA-LOG-MIB
+.LP
+In some cases, other adaptations may need access to the SNMP specific data in EVA LOG\&. To do this, the instrumentation functions for the SNMP objects can be used\&. These instrumentation functions takes the arguments and return the values defined in the application \fIsnmp\fR\&. 
+.SH EXPORTS
+.LP
+.B
+log_discr_table(Op, RowIndex, Cols) -> InstrumRet
+.br
+.RS
+.LP
+Instrumentation function for \fIlogDiscriminatorTable\fR\&. This function assumes that access checks are made according to the MIB\&. It may crash if, for example, \fIlogDiscrRowStatus\fR is set no \fInotReady\fR\&. 
+.RE
+.LP
+.B
+log_table(Op, RowIndex, Cols) -> InstrumRet
+.br
+.RS
+.LP
+Instrumentation function for \fIlogTable\fR\&. This function assumes that access checks are made according to the MIB\&. It may crash if, for example, \fIlogOperStatus\fR is set\&. 
+.RE
+.LP
+.B
+log_total_max_allowed(get) -> InstrumRet
+.br
+.RS
+.LP
+Instrumentation function for \fIlogTotalMaxAllowedSize\fR\&. 
+.RE
+.LP
+.B
+log_total_max_size(get) -> InstrumRet
+.br
+.RS
+.LP
+Instrumentation function for \fIlogTotalMaxSize\fR\&. 
+.RE
+.SH SEE ALSO
+.LP
+eva_log(3), eva_sup(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

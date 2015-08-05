@@ -1,0 +1,132 @@
+
+
+
+mnesia_registry(3)  ERLANG MODULE DEFINITION   mnesia_registry(3)
+
+
+
+MODULE
+     mnesia_registry   -   Dump   support   for   registries   in
+     erl_interface.
+
+DESCRIPTION
+     The module _m_n_e_s_i_a__r_e_g_i_s_t_r_y is usually part of _e_r_l__i_n_t_e_r_f_a_c_e,
+     but  for the time being, it is a part of the Mnesia applica-
+     tion.
+
+     _m_n_e_s_i_a__r_e_g_i_s_t_r_y is mainly an module  intended  for  internal
+     usage within OTP, but it has two functions that are exported
+     for public use.
+
+     On C-nodes _e_r_l__i_n_t_e_r_f_a_c_e has support  for  registry  tables.
+     These  reside  in  RAM  on  the  C-node but they may also be
+     dumped into Mnesia tables. By default, the dumping of regis-
+     try  tables  via _e_r_l__i_n_t_e_r_f_a_c_e causes a corresponding Mnesia
+     table to be created with  _m_n_e_s_i_a__r_e_g_i_s_t_r_y:_c_r_e_a_t_e__t_a_b_l_e/_1  if
+     necessary.
+
+     The tables that are created  with  these  functions  can  be
+     administered  as  all  other  Mnesia  tables.  They  may  be
+     included in backups or replicas may be added etc. The tables
+     are  in  fact  normal Mnesia tables owned by the user of the
+     corresponding _e_r_l__i_n_t_e_r_f_a_c_e registries.
+
+
+EXPORTS
+     create_table(Tab) -> ok | exit(Reason)
+
+          This is a wrapper  function  for  _m_n_e_s_i_a:_c_r_e_a_t_e__t_a_b_l_e/_2
+          which  creates  a table (if there is no existing table)
+          with an appropriate set of _a_t_t_r_i_b_u_t_e_s. The  table  will
+          only reside on the local node and its storage type will
+          be the same as the _s_c_h_e_m_a table on the local node,  ie.
+          {_r_a_m__c_o_p_i_e_s, [_n_o_d_e()]} or {_d_i_s_c__c_o_p_i_e_s, [_n_o_d_e()]}.
+
+          It is this function that is used  by  _e_r_l__i_n_t_e_r_f_a_c_e  to
+          create the Mnesia table if it did not already exist.
+
+     create_table(Tab, TabDef) -> ok | exit(Reason)
+
+          This is a wrapper  function  for  _m_n_e_s_i_a:_c_r_e_a_t_e__t_a_b_l_e/_2
+          which  creates  a table (if there is no existing table)
+          with an appropriate set of _a_t_t_r_i_b_u_t_e_s.  The  attributes
+          and  _T_a_b_D_e_f are forwarded to _m_n_e_s_i_a:_c_r_e_a_t_e__t_a_b_l_e/_2. For
+          example, if the table should reside as _d_i_s_c__o_n_l_y__c_o_p_i_e_s
+          on all nodes a call would look like:
+
+                    TabDef = [{{disc_only_copies, node()|nodes()]}],
+                    mnesia_registry:create_table(my_reg, TabDef)
+
+
+
+
+Ericsson UtvecklingsLAaBst change: mnesia  3.9.2                  1
+
+
+
+
+
+
+mnesia_registry(3)  ERLANG MODULE DEFINITION   mnesia_registry(3)
+
+
+
+See Also
+     mnesia(3), erl_interface(3)
+
+AUTHORS
+      Dan Gudmundsson - support@erlang.ericsson.se
+      Hakan Mattsson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: mnesia  3.9.2                  2
+
+
+

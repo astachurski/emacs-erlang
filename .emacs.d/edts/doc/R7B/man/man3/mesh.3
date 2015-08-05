@@ -1,0 +1,1519 @@
+.TH mesh 3 "mesh  1.1.0" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mesh  \- Client API for Mesh\&.
+.SH DESCRIPTION
+.LP
+This module contains the client API to the Measurement Handler application Mesh\&. Mesh is a distributed global application, which means that clients can access the Mesh functionality from any connected node\&. There is a globally registered server called \fImesh_server\fR to which all requests are sent\&. Currently all functions (except the \fImeasurement_report\fR and \fImeasurement_terminated\fR functions) are synchronous\&. This means that the function call fails if no acknowledgment is returned by the server\&. Should this happen, the client application has to decide what actions to take\&. (It may, for example, wait a few seconds for another node to take over the Mesh application, and then try again\&.) 
+.LP
+Mesh stores data about measurement types and measurement objects in the Mnesia tables \fImesh_type\fR and \fImesh_meas\fR, respectively\&. They are replicated to disk and RAM on each node that may run the Mesh application\&. 
+.LP
+Mesh uses an EVA functionality to send and to log generated events and alarms\&. The logs used can be examined by a manager at a later time\&.
+.br
+ However, the configuration and start of EVA is left to the client application programmer, see section \fIRequirements\fR below\&. Mesh does not supervise EVA, which essentially means that the client application programmer must be aware of EVA\&. For performance reasons, it is desired that EVA runs on the same node as the Measurement Handler to reduce internal traffic\&. 
+.LP
+Commonly used statistical functions may be found in the module \fImesh_lib\fR\&. 
+
+.SH Starting and Stopping Mesh
+.LP
+The Mesh application is controlled through the \fIapplication\fR module API; Mesh is started by the function call \fIapplication:start(mesh)\fR,
+.br
+ and stopped by the function call
+.br
+ \fIapplication:stop(mesh)\fR\&. 
+.SH Requirements
+.LP
+The Mesh application requires the following applications to be started: 
+.RS 2
+.TP 2
+*
+SASL
+.TP 2
+*
+Mnesia
+.TP 2
+*
+EVA
+.RE
+.LP
+When starting Mnesia, a schema must be created on each of the nodes where the Mesh application will be running; see for example function \fImnesia:create_schema/1\fR\&. 
+.LP
+Before EVA is started, the Mnesia tables needed by the basic EVA service and the EVA log service have to be created on each node where the Mesh application will be running; see example function \fIeva_sup:create_tables_log/1\fR\&. 
+.br
+ Also, EVA should be started with a default log, which first must be created, see for example functions \fIdisk_log:open/1\fR and \fIeva:start_link_log/1\fR\&. 
+.LP
+Before Mesh is started, the Mnesia tables needed by the Mesh application have to be created on each of the nodes where the Mesh application is supposed to be will be running; see example function \fImesh:create_tables/1\fR\&. 
+.SH Call back Module Usage
+.LP
+While the Measurement Handler application takes care of common tasks, user dependent, implementation specific issues are handled through the \fImeasurement type interface modules\fR\&. These modules are (through the measurement type registration) associated with a specific measurement type\&. When Mesh is ordered to perform certain tasks, concerning a certain measurement type, one or more of the functions in the associated interface module may be called\&. 
+.LP
+The functions that have to be present in each interface module are (please also see the section \fIInterface Module Functions\fR): 
+.RS 2
+.TP 2
+*
+init/1
+.TP 2
+*
+terminate/1
+.TP 2
+*
+create_measurement/3
+.TP 2
+*
+delete_measurement/3
+.TP 2
+*
+start_measurement/3
+.TP 2
+*
+stop_measurement/2
+.TP 2
+*
+reset_measurement/3
+.RE
+.LP
+The following functions are optional for each interface module: 
+.RS 2
+.TP 2
+*
+set_upper_threshold/5
+.TP 2
+*
+set_lower_threshold/5
+.TP 2
+*
+remove_threshold/3
+.TP 2
+*
+enable_threshold/3
+.TP 2
+*
+disable_threshold/3
+.RE
+.LP
+The purpose of these latter functions are to provide the user with the possibility to implement the threshold supervising functionality\&. For example, a measurement object may just supervise a measurement value, reporting nothing until a threshold has been triggered\&. The measurement object in question may then report directly to the manager or EVA\&. Alternatively, the measurement object can send a normal measurement report to Mesh, containing the measurement value that triggered the threshold\&. In the latter case the threshold set in Mesh will be triggered, and an alarm will be sent to EVA\&. 
+.LP
+The figure below describes how function calls to Mesh result (or may result) in calls to the corresponding measurement type interface\&. 
+.LP
+Sometimes a function may be called more than once, for example, the \fIdelete_measurement\fR in the interface module is called for each measurement object\&. This is not indicated in the figure\&. Similarly, sometimes a function may \fInot\fR be called, depending on the context; this is also not indicated\&. 
+
+.nf
+Mesh                              Interface Module
+----                              ----------------
+      
+mesh:register_type        ---->   IM:init/1
+
+
+mesh:unregister_type      ---->   IM:delete_measurement
+                                  IM:terminate
+
+
+mesh:lock_type            ---->   IM:delete_measurement
+
+
+mesh:create_measurement   ---->   IM:create_measurement
+
+
+mesh:delete_measurement   ---->   IM:delete_measurement
+
+
+mesh:revive_measurement   ---->   IM:create_measurement
+
+
+mesh_start_measurement    ---->   IM:start_measurement
+
+
+mesh:stop_measurement     ---->   IM:stop_measurement
+
+
+mesh:reset_measurement    ---->   IM:reset_measurement
+
+
+mesh:set_upper_threshold  ---->   IM:set_upper_threshold
+
+
+mesh:set_lower_threshold  ---->   IM:set_lower_threshold
+
+
+mesh:remove_threshold     ---->   IM:remove_threshold
+
+
+mesh:enable_threshold     ---->   IM:enable_threshold
+
+
+mesh:disable_threshold    ---->   IM:disable_threshold
+.fi
+.SH Measurement Responsible Processes
+.LP
+A Measurement Responsible Process (MRP) is one or more processes enabling communication between the measurement type interface and the actual processes implementing, eg\&. measurement objects\&. Since the measurement type interface is stateless, it has to be supplied with the identifiers of these processes, which is done by the Measurement Handler, whenever it calls a measurement type interface function\&. The measurement type interface must ensure the correct process is contacted\&. 
+.LP
+Basically, there are two MRP design possibilities: 
+.RS 2
+.TP 2
+*
+each measurement object is its own MRP\&.
+.TP 2
+*
+one process, working as a server, keeps track of one or more measurement objects, forwarding the messages received to the correct measurement object/process\&.
+.RE
+.LP
+Whatever alternative has been chosen, an MRP has the following four responsibilities: 
+.RS 2
+.TP 2
+*
+supervise one or more measurement objects\&.
+.TP 2
+*
+map the measurement object identifier to the correct process identifier, thereby enabling communication with measurement objects\&.
+.TP 2
+*
+keep track of the available resources, mapping new measurement objects to the correct resource\&.
+.TP 2
+*
+ensure Mesh that the user supplied supervision scheme is still working\&. That is, Mesh only supervises the MRP (and the node it resides on); the MRP will supervise the individual measurement objects, reporting to Mesh whenever one of them gets disabled (and order revival, if that is desired)\&.
+.RE
+.LP
+Should an MRP terminate, Mesh will assume that the corresponding measurement objects will also terminate\&. This implies that MRPs have to be very robust, ie\&. they have to trap exits, even internally\&. 
+.SH Events and Alarms
+.LP
+The alarms that may be sent to EVA are: 
+.RS 2
+.TP 2
+*
+\fImeshThresholdTriggered\fR\&. This alarm is sent whenever a threshold has been triggered\&. The alarm class is \fIqos\fR, and the severity \fIindeterminate\fR\&. Other fields of interest in the alarm are: 
+.RS 2
+
+.nf
+Field        Value
+-----        -----
+sender       mesh_server
+cause        {upper_threshold_triggered, {value, number()}}  |
+             {lower_threshold_triggered, {value, number()}}
+extra        {{meas, MeasId}, {id, ThreshId}}
+.fi
+.RE
+.TP 2
+*
+\fImeshTooManyTypes\fR\&. This alarm is sent by the watchdog if the total number of registered measurement types exceeds the maximum number allowed\&. The alarm class is \fIprocessing\fR, and the severity \fIwarning\fR\&. Other fields of interest in the alarm are: 
+.RS 2
+
+.nf
+Field        Value
+-----        -----
+sender       mesh_server
+cause        {{allowed,number()},{currently,number()}}
+extra        ""
+.fi
+.RE
+.TP 2
+*
+\fImeshTooManyMeasurements\fR\&. This alarm is sent by the watchdog if the total number of created measurement objects exceeds the maximum number allowed\&. The alarm class is \fIprocessing\fR, and the severity \fIwarning\fR\&. Other fields of interest in the alarm are: 
+.RS 2
+
+.nf
+Field        Value
+-----        -----
+sender       mesh_server
+cause        {{allowed,number()}, {currently,number()}} 
+extra        ""
+.fi
+.RE
+.TP 2
+*
+\fImeshTypeCapacityExceeded\fR\&. This alarm is sent when the number of measurement objects belonging to a certain measurement type exceeds the measurement type capacity\&. The alarm class is \fIprocessing\fR, and the severity \fIwarning\fR\&. Other fields of interest in the alarm are: 
+.RS 2
+
+.nf
+Field        Value
+-----        -----
+sender       mesh_server
+cause        {{type,TypeId}, {allowed,number()}, 
+              {currently,number()}}
+extra        "Capacity decreased"
+.fi
+.RE
+.RE
+.LP
+The events that may be sent to EVA are: 
+.RS 2
+.TP 2
+*
+\fImeshTypeFailure\fR\&. This event is sent whenever a measurement type MRP has terminated\&. The \fIextra\fR field in the event contains the following information:
+.br
+ \fI{MeasId, FailureReason, FailureTime}\fR\&.
+.TP 2
+*
+\fImeshMeasurementTerminated\fR\&. This event is sent whenever the Measurement Handler has noticed that a measurement object has been disabled\&. The \fIextra\fR field in the event contains the following information:
+.br
+ \fI{MeasId, TypeId, TerminationReason, TerminationTime}\fR\&.
+.TP 2
+*
+\fImeshNodeUp\fR\&. This event is sent whenever a node (where an MRP is residing), comes up again after having been down\&. The \fIextra\fR field in the event contains the following information:
+.br
+ \fI{NodeName, ConnectionTime}\fR\&.
+.TP 2
+*
+\fImeshNodeDown\fR\&. This event is sent whenever a node (where an MRP is residing),goes down\&. The \fIextra\fR field in the event contains the following information:
+.br
+ \fI{NodeName, CrashTime}\fR\&.
+.TP 2
+*
+\fImeshTypeUnconnected\fR\&. This event is sent when the status of an MRP is indeterminate, for example when the connection to the corresponding node has been lost, but no crash report has been received\&. The \fIextra\fR field in the event contains the following information:
+.br
+ \fI{TypeId, nodedown, Time}\fR\&.
+.TP 2
+*
+\fImeshMeasurementUnconnected\fR\&. This event is sent when the status of a measurement object is indeterminate, for example when the connection to the corresponding node has been lost, but no crash report has been received\&. The \fIextra\fR field in the event contains the following information:
+.br
+ \fI{MeasId, TypeId, nodedown, Time}\fR\&.
+.TP 2
+*
+\fImeshTypeConnected\fR\&. This event is sent when a previously unconnected MRP reconnects\&. For example, if the node where the MRP had resided is reconnected, and the MRP is found to still be present\&. The \fIextra\fR field in the event contains the following information:
+.br
+ \fI{TypeId, nodeup, ConnectionTime}\fR\&.
+.TP 2
+*
+\fImeshMeasurementConnected\fR\&. This event is sent when a previously unconnected measurement object reconnects\&. For example, if the node where the measurement object resided is reconnected, and the measurement object is found to still be present\&. The \fIextra\fR field in the event contains the following information:
+.br
+ \fI{MeasId, TypeId, nodeup, ConnectionTime}\fR\&.
+.TP 2
+*
+\fImeshMeasurementReport\fR\&. This event is sent whenever the Measurement Handler receives a measurement report from any measurement object\&. The \fIextra\fR field in the event contains the following information:
+.br
+ \fI{{name, MeasId}, {value, number()}, {time, Time}, {info, MeasInfo}}\fR\&.
+.RE
+.SH Adaptations
+.LP
+The Mesh services are management protocol independent\&. However, for a manager to access the Mesh services, a management protocol is required, ie\&. \fIadaptations\fR must be written, mapping Mesh services to the desired protocol\&. 
+.LP
+
+.SH EXPORTS
+.LP
+.B
+create_tables(NodeList) -> Result
+.br
+.RS
+.TP
+Types
+NodeList = [NodeName]
+.br
+NodeName = atom()
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Creates the Mnesia tables the Mesh application needs, with disc and RAM replicas on every node specified in \fINodeList\fR\&.
+.br
+ This function will only be called once, before starting the Mesh application\&. 
+.LP
+Note: it is important that the schema created is consistent with the specified list of nodes\&. 
+.RE
+.LP
+.B
+register_type(TypeId, Extra, InterfaceMod, NofInst) -> Result
+.br
+.B
+register_type(TypeId, Extra, InterfaceMod, NofInst, AdminState) -> Result
+.br
+.RS
+.TP
+Types
+TypeId = atom()
+.br
+Extra = term()
+.br
+InterfaceMod = atom()
+.br
+NofInst = integer()
+.br
+AdminState = unlocked | shutting_down | locked
+.br
+Result = {registered, TypeId} | {reregistered, TypeId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function registers (or reregisters) a measurement type in the Measurement Handler\&. The main purpose of this function is to associate the \fIInterfaceMod\fR interface module with the \fITypeId\fR identifier\&. (It should be noted that the \fITypeId\fR identifier cannot be reused, since it solely identifies a measurement type, and therefore must be unique\&.)
+.br
+ The \fIExtra\fR argument is used for the benefit of the user, ie\&. it must contain all information describing the measurement type, but this information will only be used by the manager and never forwarded to any MRP or measurement object\&.
+.br
+ The registration function will also call the \fIinit/1\fR function in the interface module, thereby enabling the user to perform necessary initializations\&. (The init function may, for example, start a MRP\&.)
+.br
+ The \fINofInst\fR parameter sets the measurement type capacity, i\&.e\&., the number of measurement objects (belonging to the specified measurement type) that may be created\&. 
+.br
+ The \fIAdminState\fR sets the initial administrative state of the the measurement type\&. 
+.LP
+It is possible to re-register a measurement type, \fIprovided that the same interface module is specified\fR\&. This allows changes in capacity, e\&.g\&., the number of measurement objects that may be created\&.
+.br
+ However, in the case of a capacity decrease, no measurement objects will be disabled, but an alarm will be sent to EVA\&.
+.br
+ When re-registration has been approved by Mesh, the \fIinit/1\fR function in the interface module will once again be called to restart possible existing MRPs\&. 
+.LP
+Should the type capacity be exceeded, a \fImeshTypeCapacityExceeded\fR alarm will be sent to EVA\&. Once the number of existing measurement objects falls below the type capacity, the alarm will be cleared\&. 
+.RE
+.LP
+.B
+unregister_type(TypeId) -> Result
+.br
+.B
+unregister_type(TypeId, StopArgs) -> Result
+.br
+.RS
+.TP
+Types
+TypeId = atom()
+.br
+StopArgs = [term()]
+.br
+Result = {unregistered, TypeId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function unregisters a measurement type in the Measurement Handler\&. Any existing measurement objects will be deleted, and the interface module will no longer be associated with the \fITypeId\fR identifier\&. For each existing measurement object, the \fIdelete_measurement/3\fR function in the measurement type interface will be called, with \fIStopArgs\fR as one of the arguments\&. Finally, the \fIterminate1\fR function in the measurement type interface will be called; this is to enable clean-up actions\&.
+.br
+ \fINote:\fR The \fIStopArgs\fR are only passed on to the \fIdelete_measurement\fR function, not to the \fIterminate\fR function! 
+.RE
+.LP
+.B
+list_types() -> Result
+.br
+.RS
+.TP
+Types
+Result = [TypeInfo] | {error, Reason}
+.br
+TypeInfo = {TypeId, [{extra, Extra}, {interface_mod, InterfaceMod}, {instances, CurrNofInst}, {max_instances, MaxNofInst}, {administrative_state, CurrAdminState}]}
+.br
+TypeId = atom()
+.br
+Extra = term()
+.br
+InterfaceMod = atom()
+.br
+CurrNofInst = integer()
+.br
+MaxNofInst = integer()
+.br
+CurrAdminState = unlocked | shutting_down | locked
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function lists all the measurement types currently registered in the Measurement Handler, including information about settings and the current state of each of the types\&. 
+.RE
+.LP
+.B
+lock_type(TypeId) -> Result
+.br
+.B
+lock_type(TypeId, StopArgs) -> Result
+.br
+.RS
+.TP
+Types
+TypeId = atom()
+.br
+StopArgs = [term()]
+.br
+Result = {locked, TypeId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function locks the specified measurement type, ie\&. prevents further usage until it becomes unlocked\&. After locking the measurement type, it will be impossible to create any new measurement objects, and existing measurement objects will be deleted, using the \fIdelete_measurement/3\fR function in the measurement type interface; the \fIStopArgs\fR will be passed on to this latter function, thereby enabling soft measurement object termination\&. (Unless otherwise stated, \fIStopArgs\fR will be set to the empty list\&.) 
+.RE
+.LP
+.B
+unlock_type(TypeId) -> Result
+.br
+.RS
+.TP
+Types
+TypeId = atom()
+.br
+Result = {unlocked, TypeId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function unlocks the specified measurement type\&. Once activated, it is possible to create measurement objects (provided that the type capacity is not exceeded)\&. 
+.RE
+.LP
+.B
+shut_down_type(TypeId) -> Result
+.br
+.RS
+.TP
+Types
+TypeId = atom()
+.br
+Result = {shutting_down, TypeId} | {locked, TypeId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function shuts down the specified measurement type\&. Once effective, no measurement objects can be created and measurement objects cannot be revived, once they have been disabled\&.
+.br
+ Existing measurement objects are allowed to continue to exist, but once all measurement objects (belonging to the specified type) have been disabled or deleted, the measurement type is automatically locked\&. 
+.RE
+.LP
+.B
+create_measurement(MeasId, TypeId, Extra, ResId) -> Result
+.br
+.B
+create_measurement(MeasId, TypeId, Extra, ResId, AdminState) -> Result
+.br
+.B
+create_measurement(MeasId, TypeId, Extra, ResId, AdminState, StartArgs) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+TypeId = atom()
+.br
+Extra = term()
+.br
+ResId = term()
+.br
+AdminState = started | stopped
+.br
+StartArgs = [term()]
+.br
+Result = {created, MeasId} | {error, Reason}
+.br
+.RE
+.RS
+.LP
+This function creates a new measurement object belonging to the specified measurement type, provided the type capacity is not exceeded\&. The \fIcreate_measurement/5\fR function in the type interface will be called, with some of the supplied arguments, as a result of this function call\&. Please see below, and the section relating to \fIInterface Module Functions\fR\&.
+.br
+ The \fIMeasId\fR identifier, during the lifetime of the object, is used to uniquely identify the object\&. It follows that there can only be one measurement object with a unique measurement identifier\&.
+.br
+ The \fITypeId\fR identifier tells the measurement type which interface module to use when creating the object and communicating with it; the \fITypeId\fR identifier is the same as was given when the measurement type was registered\&.
+.br
+ The \fIExtra\fR argument is any additional information about the measurement object the user chooses to supply; this information is \fInot\fR forwarded to the measurement object itself\&.
+.br
+ The \fIResId\fR argument is any term telling the new measurement object which resources to use; the interpretation of this term is solely a user issue!
+.br
+ The \fIAdminState\fR tells the original administrative state of the new measurement object, ie\&. whether it should be \fIstarted\fR or \fIstopped\fR\&. The default administrative state is \fIstarted\fR\&.
+.br
+ \fIStartArgs\fR is any list of terms the user wants to forward to the new measurement object as start arguments, setting the original state, eg\&. the sampling interval and the algorithm, to use when evaluating samples are collected\&. Unless specified by the user, \fIStartArgs\fR will be set to the empty list when forwarded to the measurement object\&. 
+.LP
+\fINote:\fR the \fIStartArgs\fR list has to have the same format in the functions \fIcreate_measurement\fR, \fIstart_measurement\fR and \fIreset_measurement\fR, see the description of function \fIrevive_measurement\fR for further information\&. 
+.RE
+.LP
+.B
+delete_measurement(MeasId) -> Result
+.br
+.B
+delete_measurement(MeasId, StopArgs) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+StopArgs = [term()]
+.br
+Result = {deleted, MeasId} | {error, Reason}
+.br
+.RE
+.RS
+.LP
+This function deletes the specified measurement object\&. As a result of this function call, the \fIdelete_measurement/3\fR function in the measurement type interface will be called, with some of the supplied arguments\&. Please see below and section \fIInterface Module Functions\fR for further information\&.
+.br
+ \fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fIStopArgs\fR is any list of terms the user wants to forward to the measurement object, thereby enabling a soft termination; the default is the empty list\&.
+.br
+ \fINote:\fR it is the responsibility of the user to ensure that all resources and applications used by the measurement object are terminated and/or freed in a controlled manner when an object is terminated\&. 
+.RE
+.LP
+.B
+measurement_terminated(MeasId, Reason) -> ok
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function is used to inform the Measurement Handler about terminated/disabled measurement objects\&. Since the Measurement Handler only supervises the Measurement Responsible Processes (MRPs), it is strictly necessary that each MRP reports to Mesh about terminated/disabled measurement objects\&. The operation of the Measurement Handler is not guaranteed, should the MRPs neglect this reporting\&.
+.br
+ Should the measurement object itself be an MRP, not supervising any other measurement objects, the Measurement Handler will notice automatically (since it is linked to each MRP) if the measurement object terminates, and no specific reporting is needed in this case\&. In all other cases the MRPs \fImust\fR report each measurement object termination to Mesh, using this function\&. 
+.RE
+.LP
+.B
+list_measurements(TypeId) -> Result
+.br
+.RS
+.TP
+Types
+TypeId = atom()
+.br
+Result = [MeasInfo] | {error, Reason}
+.br
+MeasInfo = {MeasId, [{extra, Extra}, {resources, ResId}, {initial_arguments, StartArgs}, {operability_state, CurrOperState}, {administrative_state, CurrAdminState}]}
+.br
+MeasId = atom()
+.br
+Extra = term()
+.br
+ResId = term()
+.br
+StartArgs = [term()]
+.br
+CurrOperState = enabled | disabled
+.br
+CurrAdminState = started | stopped
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function lists all measurement objects belonging to the specified measurement type\&. The listing includes information about the resources used, the initial state (ie\&. the last known start arguments), the current operability state (ie\&. whether the measurement object is enabled or disabled), and the administrative state (ie\&. whether the measurement object is started or stopped)\&. 
+.LP
+\fINote:\fR the \fIStartArgs\fR is the list of start arguments as given in any (ie\&. the latest) of the functions \fIcreate_measurement\fR, \fIstart_measurement\fR and \fIreset_measurement\fR\&. 
+.RE
+.LP
+.B
+revive_measurement(MeasId) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+Result = {revived, MeasId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function tries to revive a disabled measurement object, using the last known settings, including set thresholds\&. 
+.LP
+Please noted that the last known start arguments will be used when trying to revive a measurement object\&. These start arguments consist of the latest known \fIStartArgs\fR list; this list may be specified in any of these three function calls: 
+.RS 2
+.TP 2
+*
+create_measurement
+.TP 2
+*
+start_measurement
+.TP 2
+*
+reset_measurement
+.RE
+.LP
+Therefore, the \fIStartArgs\fR list must have the same format in these three functions\&. 
+.LP
+The last step in the revival procedure, resetting the measurement object, is ordered by Mesh to ensure consistent states in the Measurement Handler and the measurement object\&. 
+.RE
+.LP
+.B
+start_measurement(MeasId) -> Result
+.br
+.B
+start_measurement(MeasId, StartArgs) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+StartArgs = [term()]
+.br
+Result = {started, MeasId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function orders a specified measurement object to start running (ie\&. to enter a working state)\&. As a result of this function call, the \fIstart_measurement/3\fR function in the measurement type interface will be called, with some of the supplied arguments\&. Please see below and section \fIInterface Module Functions\fR for further information\&. No resetting takes place, with the exception of thresholds set: if previously triggered, they are restored to an un-triggered state\&. (This applies only to the Measurement Handler, if the user has implemented thresholds in the measurement object, it is their own responsibility to ensure they are set to a consistent state\&.) 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fIStartArgs\fR is any list of terms the user wants to forward to the measurement object, thereby changing its internal state\&. The default is set to the empty list\&.
+.br
+ 
+.LP
+\fINote:\fR the \fIStartArgs\fR list must have the same format in the functions \fIcreate_measurement\fR, \fIstart_measurement\fR and \fIreset_measurement\fR, see the description of function \fIrevive_measurement\fR for further information\&. 
+.RE
+.LP
+.B
+stop_measurement(MeasId) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+Result = {stopped, MeasId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function orders the specified measurement object to stop running and become idle\&. As a result of this function call, the \fIstop_measurement/2\fR function in the measurement type interface will be called, please see section \fIInterface Module Functions\fR\&. No resetting takes place in the Measurement Handler, and all thresholds set remain set\&. However, no measurement reports will be accepted from a stopped measurement object\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ 
+.RE
+.LP
+.B
+reset_measurement(MeasId) -> Result
+.br
+.B
+reset_measurement(MeasId, StartArgs) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+StartArgs = [term()]
+.br
+Result = {reset, MeasId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function orders the specified measurement object to reset its internal state, and resets in the Measurement Handler all measurement information stored about the measurement object\&. All thresholds set will remain set, but if previously triggered, they are restored to an un-triggered state\&.
+.br
+ As a result of this function call, the \fIreset_measurement/2\fR function in the measurement type interface will be called, please see section \fIInterface Module Functions\fR\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fIStartArgs\fR is any list of terms the user wants to forward to the measurement object, thereby changing its internal state\&. Default is set to the empty list\&.
+.br
+ 
+.LP
+\fINote:\fR the \fIStartArgs\fR list has to have the same format in the functions \fIcreate_measurement\fR, \fIstart_measurement\fR and \fIreset_measurement\fR, see the description of function \fIrevive_measurement\fR for further information\&. 
+.RE
+.LP
+.B
+measurement_report(MeasId, Value, TimeStamp) -> ok
+.br
+.B
+measurement_report(MeasId, Value, TimeStamp, MeasInfo) -> ok
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+Value = number()
+.br
+TimeStamp = term()
+.br
+MeasInfo = term()
+.br
+.RE
+.RS
+.LP
+This function is used to report a measurement value, obtained by any measurement object, to the Measurement Handler\&. The Measurement Handler will update the tidemarks and compare the received value to the thresholds set, and when required, forward the measurement report to EVA\&. The measurement value will also be stored (internally) in the Measurement Handler, until a new measurement report is received from the same measurement object\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fIValue\fR is the measurement value the measurement object has obtained\&.
+.br
+ \fITimeStamp\fR is any (user specified) term describing the time and date the measurement value and/or report was obtained or sent\&.
+.br
+ \fIMeasInfo\fR is any (user specified) term describing the measurement report and/or providing extra information to the manager\&. 
+.RE
+.LP
+.B
+get_measurement_report(MeasId) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+Result = {MeasId, Value, TimeStamp, MeasInfo} | {error, Reason}
+.br
+Value = number()
+.br
+TimeStamp = term()
+.br
+MeasInfo = term()
+.br
+Reason = term
+.br
+.RE
+.RS
+.LP
+This function gets the most recently reported measurement value from a specified measurement object\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fIValue\fR is the measurement value reported by the measurement object\&.
+.br
+ \fITimeStamp\fR is any (user specified) term describing the time and date the measurement value and/or report was obtained or sent\&.
+.br
+ \fIMeasInfo\fR is any (user specified) term describing the measurement report and/or providing extra information to the manager\&. 
+.RE
+.LP
+.B
+set_upper_threshold(MeasId, ThreshId, Value) -> Result
+.br
+.B
+set_upper_threshold(MeasId, ThreshId, Value, Status) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+ThreshId = atom()
+.br
+Value = number() | {ValueHi, ValueLo}
+.br
+ValueHi = ValueLo = number()
+.br
+Status = enabled | disabled
+.br
+Result = {threshold_set, {MeasId, ThreshId}} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function sets an upper threshold in the Measurement Handler\&. Thus, when a threshold has been exceeded an alarm will be triggered\&. The specified measurement object also receives the threshold information, using the measurement type interface function \fIset_upper_threshold/5\fR, to allow the user to implement the threshold functionality on their own\&. However, it should be noted that the \fIset_upper_threshold\fR function in the measurement type interface is purely optional\&. The Measurement Handler will not crash, should the function not be present, because, Mesh will not check the return value\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fIThreshId\fR is the threshold identifier, which is used \fItogether\fR with the measurement identifier to uniquely identify a threshold\&. Therefore, two different measurement objects may use the same threshold identifier\&.
+.br
+ \fIValue\fR is a single number or a pair of numbers, specifying the threshold level\&. In the case of a pair of numbers, the first one is assumed to specify the level (value) any measurement value has to exceed in order for the threshold to be triggered\&. The second number is the value any measurement value has to fall below in order for a previously triggered threshold to be cleared (untriggered)\&.
+.br
+ If only one value is given, the two levels are assumed to be the same\&.
+.br
+ \fIStatus\fR specifies whether the threshold will be enabled or disabled when created\&. Only enabled thresholds can be triggered\&. 
+.LP
+A triggered threshold will issue a \fImeshThresholdTriggered\fR alarm to EVA\&. When the threshold becomes untriggered, the alarm is cleared\&. 
+.RE
+.LP
+.B
+set_lower_threshold(MeasId, ThreshId, Value) -> Result
+.br
+.B
+set_lower_threshold(MeasId, ThreshId, Value, Status) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+ThreshId = atom()
+.br
+Value = number() | {ValueLo, ValueHi}
+.br
+ValueHi = ValueLo = number()
+.br
+Status = enabled | disabled
+.br
+Result = {threshold_set, {MeasId, ThreshId}} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function sets a lower threshold in the Measurement Handler\&. Therefore, an obtained measurement value must fall below the lower threshold in order for the threshold alarm to be triggered\&. The specified measurement object also receives the threshold information, using the measurement type interface function \fIset_lower_threshold/5\fR, should the user want to implement the threshold functionality on their own\&. However, it should be noted that the \fIset_lower_threshold\fR function in the measurement type interface is purely optional\&. The Measurement Handler will not crash, should the function not be present, because, Mesh does not check the return value\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fIThreshId\fR is the threshold identifier, which is used \fItogether\fR with the measurement identifier to uniquely identify a threshold\&. Thus, two different measurement objects may use the same threshold identifier\&.
+.br
+ \fIValue\fR is a single number or a pair of numbers, specifying the threshold level\&. In the case of a pair of numbers, the first one is assumed to specify the level (value) any measurement value has to fall below in order for the threshold to be triggered\&. The second number is the value any measurement value has to exceed in order for a previously triggered threshold to be cleared (untriggered)\&.
+.br
+ If only one value is given, the two levels are assumed to be the same\&.
+.br
+ \fIStatus\fR specifies whether the threshold will be enabled or disabled when created\&. Only enabled thresholds can be triggered\&. 
+.LP
+A triggered threshold will activate a \fImeshThresholdTriggered\fR alarm to EVA\&. When the threshold becomes untriggered, the alarm is cleared\&. 
+.RE
+.LP
+.B
+remove_threshold(MeasId, ThreshId) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+ThreshId = atom()
+.br
+Result = {threshold_removed, {MeasId, ThreshId}} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function removes a specified threshold from the specified measurement object\&. The specified measurement object also receives the threshold removal order, via the measurement type interface function \fIremove_threshold/3\fR, should the user want to implement the threshold functionality on his own\&. However, it should be noted that the \fIremove_threshold\fR function in the measurement type interface is purely optional\&. The Measurement Handler will not crash, should the function not be present because, Mesh does not check the return value\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fIThreshId\fR is the threshold identifier, which is used \fItogether\fR with the measurement identifier to uniquely identify a threshold\&. 
+.RE
+.LP
+.B
+remove_thresholds(MeasId) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+Result = {thresholds_removed, MeasId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function removes all existing thresholds from the specified measurement object\&. The specified measurement object also receives the threshold removal order, via (repetitive calls to) the measurement type interface function \fIremove_threshold/3\fR, should the user want to implement the threshold functionality on their own\&. However, it should be noted that the \fIremove_threshold\fR function in the measurement type interface is purely optional\&. The Measurement Handler will not crash, should the function not be present because, Mesh will not even check the return value\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&. 
+.RE
+.LP
+.B
+list_thresholds(MeasId) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+Result = {MeasId, {upper_thresholds, [ThreshInfo]}, {lower_thresholds, [ThreshInfo]}} | {error, Reason}
+.br
+ThreshInfo = {ThreshId, Status, Value}
+.br
+ThreshId = atom()
+.br
+Status = enabled | disabled
+.br
+Value = number() | {number(), number()}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function lists all existing thresholds set for the specified measurement object\&. The thresholds are divided into the two categories \fIupper thresholds\fR and \fIlower thresholds\fR\&. For each threshold, the current status is specified (\fIenabled\fR or \fIdisabled\fR), as well as the threshold value(s) set\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&. 
+.RE
+.LP
+.B
+enable_threshold(MeasId, ThreshId) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+ThreshId = atom()
+.br
+Result = {threshold_enabled, {MeasId, ThreshId}} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function enables the specified threshold\&. Only enabled thresholds may be triggered\&. The specified measurement object also receives the enable threshold order, via the measurement type interface function \fIenable_threshold/3\fR, should the user want to implement the threshold functionality on his own\&. However, it should be noted that the \fIenable_threshold\fR function in the measurement type interface is purely optional\&. The Measurement Handler will not crash, should the function not be present because, Mesh will not even check the return value\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fIThreshId\fR is the threshold identifier, which is used \fItogether\fR with the measurement identifier to uniquely identify a threshold\&. 
+.RE
+.LP
+.B
+disable_threshold(MeasId, ThreshId) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+ThreshId = atom()
+.br
+Result = {threshold_disabled, {MeasId, ThreshId}} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function disables a specified threshold\&. Disabled thresholds cannot be triggered\&. The specified measurement object also receives the disable threshold order, via the measurement type interface function \fIdisable_threshold/3\fR, should the user want to implement the threshold functionality on his own\&. However, it should be noted that the \fIdisable_threshold\fR function in the measurement type interface is purely optional The Measurement Handler will not crash, should the function not be present because, Mesh will not even check the return value\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fIThreshId\fR is the threshold identifier, which is used \fItogether\fR with the measurement identifier to uniquely identify a threshold\&. 
+.RE
+.LP
+.B
+report_tidemarks(MeasId) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+Result = {MeasId, TypeId, MaxTideMark, MinTideMark} | {error, Reason}
+.br
+TypeId = atom()
+.br
+MaxTideMark = {max_tidemark, [{current, CurrValue}, {previous, PrevValue}, {reset, ResetTime}]}
+.br
+MinTideMark = {min_tidemark, [{current, CurrValue}, {previous, PrevValue}, {reset, ResetTime}]}
+.br
+CurrValue = PrevValue = number()
+.br
+ResetTime = {Date, Time}
+.br
+Date = {Year, Month, Day}
+.br
+Time = {Hour, Minute, Second}
+.br
+Year = Month = Day = Hour = Minute = Second = int()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function reports the current values of the maximum and minimum tide-marks associated with the specified measurement object\&.
+.br
+ Each tide-mark contains the maximum (or minimum) value reached since the last time the tide-mark was reset, and also the maximum (or minimum) value reached in the period prior to the last reset\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ \fITypeId\fR is the measurement type identifier\&. 
+.LP
+Note: the time is given using the Universal Coordinated Time time zone (sometimes denoted Greenwich Mean Time or GMT)\&. 
+.RE
+.LP
+.B
+reset_tidemarks(MeasId) -> Result
+.br
+.RS
+.TP
+Types
+MeasId = atom()
+.br
+Result = {tidemarks_reset, MeasId} | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function resets the maximum and minimum tide-marks associated with a specified measurement object\&. Resetting consists of storing the current value as the previous current value, replacing the current value with the atom \&'undefined\&', and noting the reset time\&. 
+.LP
+\fIMeasId\fR is the measurement identifier used to identify the measurement object\&.
+.br
+ 
+.RE
+.LP
+.B
+watchdog_setup(NofTypes, NofMeas) -> Result
+.br
+.RS
+.TP
+Types
+NofTypes = NofMeas = int()
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This functions handles the set-up of the Measurement Handler watchdog\&. The purpose of the watchdog is to keep track of the \fItotal\fR number of measurement types registered, as well as the total number of measurement objects created\&. Should the number of types exceed the number specified using this function, the alarm \fImeshTooManyTypes\fR is sent to EVA, however, the alarm \fImeshTooManyMeasurements\fR is sent if the number of allowed measurement objects is exceeded\&.
+.br
+ It should be noted that the alarms issued are just warnings and it is still possible to register new measurement types, and also to create new measurement objects (provided that the associated measurement type capacity is not exceeded)\&. 
+.RE
+.SH Functions used to control the various logs
+.LP
+Mesh uses three logs: 
+.RS 2
+.TP 2
+*
+\fIalarms\fR are logged in the \fImesh_alarms\fR log\&.
+.TP 2
+*
+\fIevents\fR are logged in the \fImesh_events\fR log\&.
+.TP 2
+*
+\fImeasurement reports\fR are logged in the \fImesh_measurements\fR log\&.
+.RE
+.LP
+The user may freely choose to replace the filter function used by each log, using a user defined filter function instead, or to restore the original filter function\&. 
+.SH EXPORTS
+.LP
+.B
+set_alarm_filter(Func) -> Result
+.br
+.RS
+.TP
+Types
+Func = {Mod, Fcn, Args}
+.br
+Mod = Fcn = atom()
+.br
+Args = [term()]
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function replaces the default filter with the user specified\&. (The default filter ensures that only alarms are recorded in this log, but does not perform any other action\&.) 
+.RE
+.LP
+.B
+set_event_filter(Func) -> Result
+.br
+.RS
+.TP
+Types
+Func = {Mod, Fcn, Args}
+.br
+Mod = Fcn = atom()
+.br
+Args = [term()]
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function replaces the default filter with a user specified filter\&. The default filter ensures that only events, with the exception of measurement report events, are logged in this log, but will not perform any other action\&. 
+.RE
+.LP
+.B
+set_measurement_filter(Func) -> Result
+.br
+.RS
+.TP
+Types
+Func = {Mod, Fcn, Args}
+.br
+Mod = Fcn = atom()
+.br
+Args = [term()]
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function replaces the default filter with the user specified filter\&. The default filter ensures that only measurement report events are recorded in this log, but will not perform any other action\&. 
+.RE
+.LP
+.B
+reset_alarm_filter() -> Result
+.br
+.RS
+.TP
+Types
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function restores the filter used to the default one\&. 
+.RE
+.LP
+.B
+reset_event_filter() -> Result
+.br
+.RS
+.TP
+Types
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function restores the filter used to the default one\&. 
+.RE
+.LP
+.B
+reset_measurement_filter() -> Result
+.br
+.RS
+.TP
+Types
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function restores the filter used to the default one\&. 
+.RE
+.SH Interface Module Functions
+.LP
+The Measurement Handler application calls a number of functions in each \fImeasurement type interface\fR module\&. Only if explicitly stated below is it optional to export a specific function\&. 
+.br
+ The absence of a required function will not cause the Measurement Handler to crash, but it will severely limit the possibilities when handling the corresponding measurement types and measurement objects\&. 
+.SH EXPORTS
+.LP
+.B
+InterfaceMod:init(TypeId) -> Result
+.br
+.RS
+.TP
+Types
+TypeId = atom()
+.br
+Result = MRP | {error, Reason}
+.br
+MRP = pid() | undefined
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function takes care of the user application specific initialization\&. Should there be an MRP responsible for a number of measurement objects, it has to be started by this function, in which case the PID of the MRP will have the return value of the function\&. If no MRP is started, the atom \&'undefined\&' will be returned\&. 
+.RE
+.LP
+.B
+InterfaceMod:terminate(MRP) -> Result
+.br
+.RS
+.TP
+Types
+MRP = pid() | undefined
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function is responsible for user specific termination and clean-up\&. If resources have to be freed, and/or applications terminated, this function has to handle it\&. 
+.LP
+The \fIMRP\fR argument is the identifier once returned from the \fIInterfaceMod:init\fR function\&. 
+.RE
+.LP
+.B
+InterfaceMod:create_measurement(MRP1, TypeId, MeasId, ResId, StartArgs) -> Result
+.br
+.RS
+.TP
+Types
+MRP1 = pid() | undefined
+.br
+TypeId = atom()
+.br
+MeasId = atom()
+.br
+ResId = term()
+.br
+StartArgs = [term()]
+.br
+Result = MRP2 | {error, Reason}
+.br
+MRP2 = pid()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function handles the actual creation of a measurement object\&. It is the user\&'s responsibility to make sure that the created object uses the correct resources, and performs measurements as intended\&. 
+.LP
+The \fIMRP1\fR argument is the identifier once returned from the \fIInterfaceMod:init\fR function\&. This identifier may be a pid, or it may be the atom \&'undefined\&'\&. However, the return value of the function has to be a PID, namely the process identifier of the process supervising the measurement object (which actually may be the measurement object itself)\&. 
+.RE
+.LP
+.B
+InterfaceMod:start_measurement(MRP, MeasId, StartArgs) -> Result
+.br
+.RS
+.TP
+Types
+MRP = pid()
+.br
+MeasId = atom()
+.br
+StartArgs = [term()]
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function handles a measurement object start\&. 
+.LP
+The \fIMRP\fR argument is the identifier returned from the \fIInterfaceMod:create_measurement\fR function\&. 
+.RE
+.LP
+.B
+InterfaceMod:stop_measurement(MRP, MeasId) -> Result
+.br
+.RS
+.TP
+Types
+MRP = pid()
+.br
+MeasId = atom()
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function handles a measurement object stop\&. 
+.LP
+The \fIMRP\fR argument is the identifier returned from the \fIInterfaceMod:create_measurement\fR function\&. 
+.RE
+.LP
+.B
+InterfaceMod:reset_measurement(MRP, MeasId, StartArgs) -> Result
+.br
+.RS
+.TP
+Types
+MRP = pid()
+.br
+MeasId = atom()
+.br
+StartArgs = [term()]
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function is responsible for the resetting of a measurement object\&. 
+.LP
+The \fIMRP\fR argument is the identifier returned from the \fIInterfaceMod:create_measurement\fR function\&. 
+.RE
+.LP
+.B
+InterfaceMod:delete_measurement(MRP, MeasId, StopArgs) -> Result
+.br
+.RS
+.TP
+Types
+MRP = pid()
+.br
+MeasId = atom()
+.br
+StopArgs = [term()]
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function deletes the specified measurement object\&. 
+.LP
+The \fIMRP\fR argument is the identifier returned from the \fIInterfaceMod:create_measurement\fR function\&. 
+.RE
+.LP
+.B
+InterfaceMod:set_upper_threshold(MRP, MeasId, ThreshId, Value, Status) -> Result
+.br
+.RS
+.TP
+Types
+MRP = pid()
+.br
+MeasId = atom()
+.br
+ThreshId = atom()
+.br
+Value = number() | {ValueHi, ValueLo}
+.br
+ValueHi = ValueLo = number()
+.br
+Status = enabled | disabled
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function sets an upper threshold in a measurement object\&. 
+.LP
+The \fIMRP\fR argument is the identifier returned from the \fIInterfaceMod:create_measurement\fR function\&. 
+.LP
+\fINote:\fR the existence of this function is optional! 
+.RE
+.LP
+.B
+InterfaceMod:set_lower_threshold(MRP, MeasId, ThreshId, Value, Status) -> Result
+.br
+.RS
+.TP
+Types
+MRP = pid()
+.br
+MeasId = atom()
+.br
+ThreshId = atom()
+.br
+Value = number() | {ValueLo, ValueHi}
+.br
+ValueLo = ValueHi = number()
+.br
+Status = enabled | disabled
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function sets a lower threshold in a measurement object\&. 
+.LP
+The \fIMRP\fR argument is the identifier returned from the \fIInterfaceMod:create_measurement\fR function\&. 
+.LP
+\fINote:\fR the existence of this function is optional\&. 
+.RE
+.LP
+.B
+InterfaceMod:remove_threshold(MRP, MeasId, ThreshId) -> Result
+.br
+.RS
+.TP
+Types
+MRP = pid()
+.br
+MeasId = atom()
+.br
+ThreshId = atom()
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function removes a specified threshold in a measurement object\&. 
+.LP
+The \fIMRP\fR argument is the identifier returned from the \fIInterfaceMod:create_measurement\fR function\&. 
+.LP
+\fINote:\fR the existence of this function is optional\&. 
+.RE
+.LP
+.B
+InterfaceMod:enable_threshold(MRP, MeasId, ThreshId) -> Result
+.br
+.RS
+.TP
+Types
+MRP = pid()
+.br
+MeasId = atom()
+.br
+ThreshId = atom()
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function enables a specified threshold in a measurement object\&. 
+.LP
+The \fIMRP\fR argument is the identifier returned from the \fIInterfaceMod:create_measurement\fR function\&. 
+.LP
+\fINote:\fR the existence of this function is optional\&. 
+.RE
+.LP
+.B
+InterfaceMod:disable_threshold(MRP, MeasId, ThreshId) -> Result
+.br
+.RS
+.TP
+Types
+MRP = pid()
+.br
+MeasId = atom()
+.br
+ThreshId = atom()
+.br
+Result = ok | {error, Reason}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+This function disables a specified threshold in a measurement object\&. 
+.LP
+The \fIMRP\fR argument is the identifier returned from the \fIInterfaceMod:create_measurement\fR function\&. 
+.LP
+\fINote:\fR the existence of this function is optional\&. 
+.RE
+.SH SEE ALSO
+.LP
+mesh_lib(3), mesh_snmp(3), application(3), disk_log(3), eva(3), eva_log(3), eva_sup(3), mnesia(3) 
+.SH AUTHOR
+.nf
+Fredrik Gustafson - support@erlang.ericsson.se
+.fi

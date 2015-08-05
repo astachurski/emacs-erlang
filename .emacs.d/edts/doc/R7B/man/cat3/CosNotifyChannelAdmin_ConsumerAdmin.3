@@ -1,0 +1,264 @@
+
+
+
+CosNotifyChannelAdmin_ECRoLnAsNuGmCeoMrsOANDdoUmtLiiEnf(yD3CE)hFIaNnInTeIlOANdmin_ConsumerAdmin(3)
+
+
+
+MODULE
+     CosNotifyChannelAdmin_ConsumerAdmin -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     This module also exports the functions described in:
+
+       * CosNotification_QoSAdmin
+
+       * CosNotifyComm_NotifySubscribe
+
+       * CosNotifyFilter_FilterAdmin
+
+
+EXPORTS
+     _get_MyID(ConsumerAdmin) -> AdminID
+
+          Types
+               ConsumerAdmin = #objref
+               AdminID = long()
+
+          The ID returned by the creating channel is equal to the
+          value encapsulated by this readonly attribute.
+
+     _get_MyChannel(ConsumerAdmin) -> Channel
+
+          Types
+               ConsumerAdmin = #objref
+               Channel = #objref
+
+          The creating channel's reference is maintained by  this
+          readonly attribute.
+
+     _get_MyOperator(ConsumerAdmin) -> OpType
+
+          Types
+               ConsumerAdmin = #objref
+               OpType = 'AND_OP' | 'OR_OP'
+
+          When _C_o_n_s_u_m_e_r_A_d_m_i_n'_s are  created  an  operation  type,
+          i.e.,  '_A_N_D__O_P'  or  '_O_R__O_P', is supplied, which deter-
+          mines the semantics used by the target object  concern-
+          ing evaluation against any associated _F_i_l_t_e_r objects.
+
+     _get_priority_filter(ConsumerAdmin) -> MappingFilter
+
+          Types
+               ConsumerAdmin = MappingFilter = #objref
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+CosNotifyChannelAdmin_ECRoLnAsNuGmCeoMrsOANDdoUmtLiiEnf(yD3CE)hFIaNnInTeIlOANdmin_ConsumerAdmin(3)
+
+
+
+          If set, this operation returns the associated  priority
+          _M_a_p_p_i_n_g_F_i_l_t_e_r,  otherwise  a  _N_I_L  object  reference is
+          returned.
+
+     _set_priority_filter(ConsumerAdmin, MappingFilter) -> ok
+
+          Types
+               ConsumerAdmin = MappingFilter = #objref
+
+          To associate a priority _M_a_p_p_i_n_g_F_i_l_t_e_r with  the  target
+          object this operation must be used.
+
+     _get_lifetime_filter(ConsumerAdmin) -> MappingFilter
+
+          Types
+               ConsumerAdmin = MappingFilter = #objref
+
+          Unless a lifetime _M_a_p_p_i_n_g_F_i_l_t_e_r  have  been  associated
+          with  the  target  object  a  _N_I_L  object  reference is
+          returned by this operation.
+
+     _set_priority_filter(ConsumerAdmin, MappingFilter) -> ok
+
+          Types
+               ConsumerAdmin = MappingFilter = #objref
+
+          This operation associate a lifetime _M_a_p_p_i_n_g_F_i_l_t_e_r  with
+          the target object.
+
+     _get_pull_suppliers(ConsumerAdmin) -> ProxyIDSeq
+
+          Types
+               ConsumerAdmin = #objref
+               ProxyIDSeq = [ProxyID]
+               ProxyID = long()
+
+          This readonly attribute  maintains  the  Id's  for  all
+          _P_u_l_l_P_r_o_x_i_e_s  created  by  the  target  object and still
+          alive.
+
+     _get_push_suppliers(ConsumerAdmin) -> ProxyIDSeq
+
+          Types
+               ConsumerAdmin = #objref
+               ProxyIDSeq = [ProxyID]
+               ProxyID = long()
+
+          This attribute is similar  to  the  __g_e_t__p_u_l_l__s_u_p_p_l_i_e_r_s
+          attribute  but  maintains  the Id's for all _P_u_s_h_P_r_o_x_i_e_s
+          created by the target object and still alive.
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+
+
+
+
+CosNotifyChannelAdmin_ECRoLnAsNuGmCeoMrsOANDdoUmtLiiEnf(yD3CE)hFIaNnInTeIlOANdmin_ConsumerAdmin(3)
+
+
+
+     get_proxy_supplier(ConsumerAdmin, ProxyID) -> Reply
+
+          Types
+               ConsumerAdmin = #objref
+               ProxyID = long()
+               Reply      =      Proxy      |       {'EXCEPTION',
+               #'CosNotifyChannelAdmin_ProxyNotFound'{}}
+               Proxy = #objref
+
+          If a proxy with the given Id exists  the  reference  to
+          the  object  is  returned,  but if the object have ter-
+          minated, or an incorrect Id is supplied,  an  exception
+          is raised.
+
+     obtain_notification_pull_supplier(ConsumerAdmin,   Consumer-
+     Type) -> Reply
+
+          Types
+               ConsumerAdmin = #objref
+               ConsumerType = 'ANY_EVENT' | 'STRUCTURED_EVENT'  |
+               'SEQUENCE_EVENT'
+               Reply = {Proxy, ProxyID}
+               Proxy = #objref
+               ProxyID = long()
+
+          Determined by the parameter _C_o_n_s_u_m_e_r_T_y_p_e, a proxy which
+          will  accept  events  of  the  defined type is created.
+          Along with the object reference an Id is returned.
+
+     obtain_pull_supplier(ConsumerAdmin) -> Proxy
+
+          Types
+               ConsumerAdmin = #objref
+               Proxy = #objref
+
+          This operation creates a new proxy which accepts #_a_n_y{}
+          events.
+
+     obtain_notification_push_supplier(ConsumerAdmin,   Consumer-
+     Type) -> Reply
+
+          Types
+               ConsumerAdmin = #objref
+               ConsumerType = 'ANY_EVENT' | 'STRUCTURED_EVENT'  |
+               'SEQUENCE_EVENT'
+               Reply = {Proxy, ProxyID}
+               Proxy = #objref
+               ProxyID = long()
+
+          A proxy which accepts events of the type  described  by
+          the  parameter  _C_o_n_s_u_m_e_r_T_y_p_e  is created by this opera-
+          tion. A unique Id is returned as an out parameter.
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              3
+
+
+
+
+
+
+CosNotifyChannelAdmin_ECRoLnAsNuGmCeoMrsOANDdoUmtLiiEnf(yD3CE)hFIaNnInTeIlOANdmin_ConsumerAdmin(3)
+
+
+
+     obtain_push_supplier(ConsumerAdmin) -> Proxy
+
+          Types
+               ConsumerAdmin = #objref
+               Proxy = #objref
+
+          The object created by this function is  a  proxy  which
+          accepts #_a_n_y{} events.
+
+     destroy(ConsumerAdmin) -> ok
+
+          Types
+               ConsumerAdmin = #objref
+
+          To terminate the target object this operation should be
+          used. The associated _C_h_a_n_n_e_l will be notified.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              4
+
+
+

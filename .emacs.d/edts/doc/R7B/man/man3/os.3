@@ -1,0 +1,158 @@
+.TH os 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+os \- Operating System Specific Functions
+.SH DESCRIPTION
+.LP
+The functions in this module are operating system specific\&. Careless use of these functions will result in programs that will only run on a specific platform\&. On the other hand, with careful use these functions can be of help in enabling a program to run on most platforms\&. 
+
+.SH EXPORTS
+.LP
+.B
+cmd(Command) -> string()
+.br
+.RS
+.TP
+Types
+Command = string() | atom()
+.br
+.RE
+.RS
+.LP
+Executes \fICommand\fR in a command shell of the target OS and returns the result as a string\&. This function is a replacement of the previous \fIunix:cmd/1\fR; on a Unix platform they are equivalent\&. 
+.LP
+Examples: 
+
+.nf
+LsOut = os:cmd("ls"), % on unix platform
+DirOut = os:cmd("dir"), % on Win32 platform
+.fi
+.RE
+.LP
+.B
+find_executable(Name) -> Filename | false
+.br
+.B
+find_executable(Name, Path) -> Filename | false
+.br
+.RS
+.TP
+Types
+Name = string()
+.br
+Path = string()
+.br
+Filename = string()
+.br
+.RE
+.RS
+.LP
+These two functions look up an executable program given its name and a search path, in the same way as the underlying operating system\&. find_executable/1 uses the current execution path (i\&.e\&., the environment variable PATH on Unix and Windows)\&. \fIPath\fR, if given, should conform to the syntax of execution paths on the operating system\&. The absolute filename of the executable program \fIName\fR is returned, or \fIfalse\fR if the program was not found\&. 
+.RE
+.LP
+.B
+getenv() -> List
+.br
+.RS
+.TP
+Types
+List = list() of string 
+.br
+.RE
+.RS
+.LP
+Returns a list of all environement variables\&. Each environment variable is a single string, containing the name of the variable, followed by \fI=\fR, followed by the value\&. 
+.RE
+.LP
+.B
+getenv(VarName) -> Value | false
+.br
+.RS
+.TP
+Types
+Varname = string() 
+.br
+Value = string()
+.br
+.RE
+.RS
+.LP
+Returns the \fIValue\fR of the environment variable \fIVarName\fR, or \fIfalse\fR if the environment variable is undefined\&. 
+.RE
+.LP
+.B
+getpid() -> Value 
+.br
+.RS
+.TP
+Types
+Value = string()
+.br
+.RE
+.RS
+.LP
+Returns the process identifier of the current Erlang emulator in the format most commonly used by the operating system environment\&. \fIValue\fR is returned as a string containing the (usually) numerical identifier for a process\&. On Unix, this is typically the return value of the \fIgetpid()\fR system call\&. On VxWorks, \fIValue\fR contains the task id (decimal notation) of the Erlang task\&. On Windows, the process id as returned by the \fIGetCurrentProcessId()\fR system call is used\&. 
+.RE
+.LP
+.B
+putenv(VarName, Value) -> true
+.br
+.RS
+.TP
+Types
+Varname = string() 
+.br
+Value = string()
+.br
+.RE
+.RS
+.LP
+Sets a new \fIValue\fR for the environment variable \fIVarName\fR\&. 
+.RE
+.LP
+.B
+type() -> {Osfamily,Osname} | Osfamily
+.br
+.RS
+.TP
+Types
+Osfamily = atom() = win32 | unix | vxworks
+.br
+Osname = atom()
+.br
+.RE
+.RS
+.LP
+Returns the \fIOsfamily\fR and, in some cases, \fIOsname\fR of the current operating system\&. 
+.LP
+On Unix, \fIOsname\fR will be same string that \fIuname -s\fR returns, but in lower case\&. For instance, on Solaris 1 and 2, the atom \fIsunos\fR will be returned\&. 
+.LP
+In Windows, \fIOsname\fR will be either \fInt\fR (on Windows NT), or \fIwindows\fR (on Windows 95)\&. On VxWorks \fIOsfamily\fR alone is returned, i\&.e\&. the atom \fIvxworks\fR\&. 
+.SS Note:
+.LP
+Think twice before using this function\&. Use the \fIfilename\fR module if you want to inspect or build file names in a portable way\&. Avoid matching on the \fIOsname\fR atom\&. 
+
+.RE
+.LP
+.B
+version() -> {Major, Minor, Release} | VersionString
+.br
+.RS
+.TP
+Types
+Major = Minor = Release = integer()
+.br
+VersionString = string()
+.br
+.RE
+.RS
+.LP
+Returns the operating system version\&. On most systems, this function returns a tuple, but a string will be returned instead if the system has versions which cannot be expressed as three numbers\&. 
+.SS Note:
+.LP
+Think twice before using this function\&. If you still need to use it, always \fIcall os:type()\fR first\&. 
+
+.RE
+.SH AUTHOR
+.nf
+Bjorn Gustavsson - support@erlang.ericsson.se
+.fi

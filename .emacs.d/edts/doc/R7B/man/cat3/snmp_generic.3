@@ -1,0 +1,330 @@
+
+
+
+snmp_generic(3)     ERLANG MODULE DEFINITION      snmp_generic(3)
+
+
+
+MODULE
+     snmp_generic  -  Generic  Functions  for  Implementing  SNMP
+     Objects in a Database
+
+DESCRIPTION
+     The  module  _s_n_m_p__g_e_n_e_r_i_c  contains  generic  functions  for
+     implementing  tables (and variables) using the SNMP built-in
+     database or Mnesia. These default functions are used  if  no
+     instrumentation function is provided for a managed object in
+     a MIB. Sometimes, it might be  necessary  to  customize  the
+     behaviour  of  the  default  functions. For example, in some
+     situations a trap should be sent if  a  row  is  deleted  or
+     modified,  or some hardware is to be informed, when informa-
+     tion is changed.
+
+     The overall structure is shown in the following figure:
+
+              +---------------+
+              |   SNMP Agent  |
+              +- - - - - - - -+
+              |      MIB      |
+              +---------------+
+                      |
+              Association file       (associates a MIB object with
+                      |               snmp_generic:table_funct
+                      |               snmp_generic:variable_func)
+     +--------------------------------+
+     |           snmp_generic         |  Support for get-next,
+     |                                |  RowStatus operations
+     +----------------+---------------+
+     | snmp_local_db  |    Mnesia     |  Database
+     +----------------+---------------+
+     |     pets       |                  Adds Persistent
+     +----------------+                         properties to ets
+     |      ets       |                  The standard Erlang
+     +----------------+                                    module
+
+     Each function takes the argument _N_a_m_e_D_b, which  is  a  tuple
+     {_N_a_m_e,  _D_b}, to identify which database the functions should
+     use. _N_a_m_e is the symbolic name  of  the  managed  object  as
+     defined  in  the MIB, and _D_b is either _v_o_l_a_t_i_l_e, _p_e_r_s_i_s_t_e_n_t,
+     or _m_n_e_s_i_a. If it is _m_n_e_s_i_a, all variables are stored in  the
+     Mnesia  table  _s_n_m_p__v_a_r_i_a_b_l_e_s which must be a table with two
+     attributes (not a Mnesia SNMP table). The  SNMP  tables  are
+     stored  in  Mnesia  tables  with  the same names as the SNMP
+     tables. All functions assume that a Mnesia table exists with
+     the  correct  name  and  attributes.  It is the programmer's
+     responsibility to ensure this.  Specifically,  if  variables
+     are  stored  in  Mnesia,  the  table  _s_n_m_p__v_a_r_i_a_b_l_e_s must be
+     created by the programmer. The record  definition  for  this
+     table is defined in the file _s_n_m_p/_i_n_c_l_u_d_e/_s_n_m_p__t_y_p_e_s._h_r_l.
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   1
+
+
+
+
+
+
+snmp_generic(3)     ERLANG MODULE DEFINITION      snmp_generic(3)
+
+
+
+     If an instrumentation function in the association file for a
+     variable  _m_y_V_a_r  does not have a name when compiling an MIB,
+     the compiler generates an entry.
+
+     {myVar, {snmp_generic, variable_func, [{myVar, Db]}}.
+
+     And for a table:
+
+     {myTable, {snmp_generic, table_func, [{myTable, Db]}}.
+
+     In the functions defined  below,  the  following  types  are
+     used:
+
+     _N_a_m_e_D_b = {_N_a_m_e, _D_b}, _N_a_m_e = _a_t_o_m(), _D_b  =  _v_o_l_a_t_i_l_e  |  _p_e_r_-
+     _s_i_s_t_e_n_t | _m_n_e_s_i_a
+
+     _R_o_w_I_n_d_e_x = [_i_n_t()]
+
+     _C_o_l_s = [_C_o_l] | [{_C_o_l, _V_a_l_u_e}], _C_o_l = _i_n_t(), _V_a_l_u_e = _t_e_r_m()
+
+     _R_o_w_I_n_d_e_x denotes the last part of the  OID  which  specifies
+     the  index  of  the row in the table (see RFC1212, 4.1.6 for
+     more information about INDEX). _C_o_l_s  is  a  list  of  column
+     numbers in the case of a _g_e_t operation, and a list of column
+     numbers and values in the case of a _s_e_t operation. _C_o_l_s is a
+     list  of  column  numbers  in case of a get operation, and a
+     list of column numbers and values in case of  a  set  opera-
+     tion.
+
+
+EXPORTS
+     get_status_col(Name,Cols)
+     get_status_col(NameDb,Cols) -> {ok, StatusVal} | false
+
+          Gets the value of the status column from _C_o_l_s.
+
+          This function can be used in instrumentation  functions
+          for  _i_s__s_e_t__o_k,  _u_n_d_o  or  _s_e_t  to  check if the status
+          column of a table is modified.
+
+     table_func(Op1,NameDb)
+     table_func(Op2,RowIndex,Cols,NameDb) -> Ret
+
+          Types
+               Op1 = new | delete
+               Op2 = get | next | is_set_ok | set | undo
+
+          This  is  the  default  instrumentation  function   for
+          tables.
+
+            * The _n_e_w function creates the table if it  does  not
+              exist,  but  only  if  the  database  is  the  SNMP
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   2
+
+
+
+
+
+
+snmp_generic(3)     ERLANG MODULE DEFINITION      snmp_generic(3)
+
+
+
+              internal db.
+
+            * The _d_e_l_e_t_e function does not delete the table  from
+              the database since unloading an MIB does not neces-
+              sarily mean that the table should be destroyed.
+
+            * The _i_s__s_e_t__o_k function checks that a row  which  is
+              to  be  modified  or deleted exists, and that a row
+              which is to be created does not exist.
+
+            * The _u_n_d_o function does nothing.
+
+            * The _s_e_t function checks if it has  enough  informa-
+              tion  to  make  the  row  change  its  status  from
+              _n_o_t_R_e_a_d_y to _n_o_t_I_n_S_e_r_v_i_c_e (when a row has been  been
+              set   to   _c_r_e_a_t_e_A_n_d_W_a_i_t).  If  a  row  is  set  to
+              _c_r_e_a_t_e_A_n_d_W_a_i_t, columns without a value are  set  to
+              _n_o_i_n_i_t. If Mnesia is used, the set functionality is
+              handled within a transaction.
+
+          If it is possible for a manager  to  create  or  delete
+          rows in the table, there must be a _R_o_w_S_t_a_t_u_s column for
+          _i_s__s_e_t__o_k, _s_e_t and _u_n_d_o to work properly.
+
+          The function returns according to the specification  of
+          an instrumentation function.
+
+     table_get_elements(NameDb,RowIndex,Cols) -> Values
+
+          Types
+               Values = [term() | noinit]
+
+          Returns a list with values for all columns in _C_o_l_s.  If
+          a column is undefined, its value is _n_o_i_n_i_t.
+
+     table_next(NameDb,RestOid) -> RowIndex | endOfTable
+
+          Types
+               RestOid = [int()]
+
+          Finds the indices of the next row in the table. _R_e_s_t_O_i_d
+          does not have to specify an existing row.
+
+     table_row_exists(NameDb,RowIndex) -> bool()
+
+          Checks if a row in a table exists.
+
+     table_set_elements(NameDb,RowIndex,Cols) -> bool()
+
+          Sets the elements in  _C_o_l_s  to  the  row  specified  by
+          _R_o_w_I_n_d_e_x. No checks are performed on the new values.
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   3
+
+
+
+
+
+
+snmp_generic(3)     ERLANG MODULE DEFINITION      snmp_generic(3)
+
+
+
+          If the Mnesia database is  used,  this  function  calls
+          _m_n_e_s_i_a:_w_r_i_t_e  to store the values. This means that this
+          function must  be  called  from  within  a  transaction
+          (_m_n_e_s_i_a:_t_r_a_n_s_a_c_t_i_o_n/_1 or _m_n_e_s_i_a:_d_i_r_t_y/_1).
+
+     variable_func(Op1,NameDb)
+     variable_func(Op2,Val,NameDb) -> Ret
+
+          Types
+               Op1 = new | delete | get
+               Op2 = is_set_ok | set | undo
+
+          This is the default instrumentation function for  vari-
+          ables.
+
+          The _n_e_w function creates a new variable in the database
+          with  a  default value as defined in the MIB, or a zero
+          value (depending on the type). The _d_e_l_e_t_e function does
+          not delete the variable from the database. The function
+          returns according to the specification of an instrumen-
+          tation function.
+
+     variable_get(NameDb) -> {value, Value} | undefined
+
+          Types
+               Value = term()
+
+          Gets the value of a variable.
+
+     variable_set(NameDb,NewVal) -> true | false
+
+          Types
+               NewVal = term()
+
+          Sets a new value to a variable. The variable is created
+          if it does not exist. No checks are made on the type of
+          the new value. Returns _f_a_l_s_e if the _N_a_m_e_D_b argument  is
+          incorrectly specified, otherwise _t_r_u_e.
+
+Example
+     The following example shows an  implementation  of  a  table
+     which is stored in Mnesia, but with some checks performed at
+     set-request operations.
+
+     myTable_func(new, NameDb) ->   % pass unchanged
+       snmp_generic:table_func(new, NameDb).
+
+     myTable_func(delete, NameDb) ->   % pass unchanged
+       snmp_generic:table_func(delete, NameDb).
+
+     %% change row
+     myTable_func(is_set_ok, RowIndex, Cols, NameDb) ->
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   4
+
+
+
+
+
+
+snmp_generic(3)     ERLANG MODULE DEFINITION      snmp_generic(3)
+
+
+
+       case snmp_generic:table_func(is_set_ok, RowIndex,
+                                    Cols, NameDb) of
+         {noError, 0} ->
+           myApplication:is_set_ok(RowIndex, Cols);
+         Err ->
+           Err
+       end;
+
+     myTable_func(set, RowIndex, Cols, NameDb) ->
+       case snmp_generic:table_func(set, RowIndex, Cols,
+                                    NameDb),
+         {noError, 0} ->
+           % Now the row is updated, tell the application
+           myApplication:update(RowIndex, Cols);
+         Err ->
+           Err
+       end;
+
+     myTable_func(Op, RowIndex, Cols, NameDb) ->   % pass unchanged
+       snmp_generic:table_func(Op, RowIndex, Cols, NameDb).
+
+     The ._f_u_n_c_s file would look like:
+
+     {myTable, {myModule, myTable_func, [{myTable, mnesia}]}}.
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Klas Eriksson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   5
+
+
+

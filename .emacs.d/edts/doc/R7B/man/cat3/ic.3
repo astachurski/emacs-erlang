@@ -1,0 +1,462 @@
+
+
+
+ic(3)               ERLANG MODULE DEFINITION                ic(3)
+
+
+
+MODULE
+     ic - The Erlang IDL compiler.
+
+DESCRIPTION
+     The ic module is an Erlang implementation of an OMG IDL com-
+     piler. Depending on the choice of back-end the code will map
+     to Erlang or C. The compiler generates client stub code  and
+     server behaviors.
+
+     Two kinds of files are generated for  each  scope,  Erlang/C
+     files  and  Erlang/C header files. Headers are used to store
+     record definitions, while usual Erlang/C files  contain  the
+     object  interface  functions,  the  object  server or access
+     functions for records defined in interfaces.
+
+
+EXPORTS
+     ic:gen(FileName) -> Result
+     ic:gen(FileName, [Option]) -> Result
+
+          Types
+               Result = ok | error | {ok,  [Warning}}  |  {error,
+               [Warning], [Error]}
+
+               Option = [ GeneralOption | CodeOption | WarningOp-
+               tion | BackendOption ]
+
+               GeneralOption =
+                {outdir,  String())  |  {cfgfile,   String()}   |
+               {use_preproc, bool()} |
+                {preproc_cmd,   String()}    |    {preproc_flags,
+               String()}
+
+               CodeOption =
+                {gen_hrl, bool()} | {serv_last_call, exception  |
+               exit} |
+                {{impl, String()}, String()} | {{this, String()},
+               bool()} |
+                {{handle_info,  String()},  bool()}  |  {timeout,
+               String()} |
+                {scoped_op_calls, bool()} | {scl, bool()}
+                {precond,   {atom(),   atom()}}   |    {{precond,
+               String()} {atom(), atom()}} |
+                {postcond,  {atom(),   atom()}}   |   {{postcond,
+               String()} {atom(), atom()}}
+
+               WarningOption =
+                {'Wall', bool()} | {maxerrs, int() | infinity} |
+                {maxwarns, int() | infinity} | {nowarn, bool()} |
+                {warn_name_shadow, bool()} | {pedantic, bool()} |
+                {silent, bool()}
+
+
+
+
+Ericsson Utvecklings ABLast change: ic  4.0.5                    1
+
+
+
+
+
+
+ic(3)               ERLANG MODULE DEFINITION                ic(3)
+
+
+
+                BackendOption =
+                {be,  erl_corba  |  erl_plain  |  erl_genserv   |
+               c_genserv | c_client | c_server } |
+
+               DirNAme = string() | atom()
+
+               FileName = string() | atom()
+
+          The tuple {_O_p_t_i_o_n, true} can be  replaced  with  _O_p_t_i_o_n
+          for boolean values.
+
+General options
+       _o_u_t_d_i_r:
+           Places all output files in the directory given by  the
+           option.  The  directory will be created if it does not
+           already exist.
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [{_o_u_t_d_i_r, "_o_u_t_p_u_t/_g_e_n_e_r_a_t_e_d"}])
+
+       _c_f_g_f_i_l_e:
+           Uses _F_i_l_e_N_a_m_e  as  configuration  file.  Options  will
+           override  compiler  defaults  but can be overridden by
+           command line options. Default value is "._i_c__c_o_n_f_i_g".
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [{_c_f_g_f_i_l_e, "_s_p_e_c_i_a_l._c_f_g"}])
+
+       _u_s_e__p_r_e_p_r_o_c:
+           Uses a preprocessor. Default value is true.
+
+       _p_r_e_p_r_o_c__c_m_d:
+           Command string to invoke the preprocessor. The  actual
+           command         will         be        built        as
+           _p_r_e_p_r_o_c__c_m_d++_p_r_e_p_r_o_c__f_l_a_g_s++_F_i_l_e_N_a_m_e
+
+           _E_x_a_m_p_l_e_1: _i_c:_g_e_n(_x, [{_p_r_e_p_r_o_c__c_m_d, "_e_r_l"}])
+
+           _E_x_a_m_p_l_e_2: _i_c:_g_e_n(_x, [{_p_r_e_p_r_o_c__c_m_d, "_g_c_c -_x _c++ -_E"}])
+
+       _p_r_e_p_r_o_c__f_l_a_g_s:
+           Flags given to the preprocessor.
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [{_p_r_e_p_r_o_c__f_l_a_g_s, "-_I../_i_n_c_l_u_d_e"
+
+Code options
+       _g_e_n__h_r_l:
+           Generate header files. Default is true.
+
+       _s_e_r_v__l_a_s_t__c_a_l_l:
+           Makes the last _g_e_n__s_e_r_v_e_r _h_a_n_d_l_e__c_a_l_l either  raise  a
+           CORBA  exception  or just exit plainly. Default is the
+           exception.
+
+
+
+
+Ericsson Utvecklings ABLast change: ic  4.0.5                    2
+
+
+
+
+
+
+ic(3)               ERLANG MODULE DEFINITION                ic(3)
+
+
+
+       {{_i_m_p_l, _I_n_t_f_N_a_m_e}, _M_o_d_N_a_m_e}:
+           Assumes that  the  interface  with  name  _I_n_t_f_N_a_m_e  is
+           implemented  by  the module with name _M_o_d_N_a_m_e and will
+           generate calls to the _M_o_d_N_a_m_e  module  in  the  server
+           behavior.  Note  that  the  _I_n_t_f_N_a_m_e  must  be a fully
+           scoped name as in "_M_1::_I_1".
+
+       _t_h_i_s:
+           Adds the object reference as the  first  parameter  to
+           the  object  implementation  functions. This makes the
+           implementation aware of its own object reference.
+           The  option  comes  in  three  varieties:  _t_h_i_s  which
+           activates  the  parameter  for  all  interfaces in the
+           source file,  {_t_h_i_s,  _I_n_t_f_N_a_m_e}  which  activates  the
+           parameter   for  a  specified  interface  and  {{_t_h_i_s,
+           _I_n_t_f_N_a_m_e}, _f_a_l_s_e} which deactivates the parameter  for
+           a specified interface.
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [_t_h_i_s]) activates the parameter for
+           all interfaces.
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [{_t_h_i_s, "_M_1::_I_1"}])  activates  the
+           parameter for all functions of _M_1::_I_1.
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [_t_h_i_s, {{_t_h_i_s, "_M_1::_I_2"},  _f_a_l_s_e}])
+           activates  the  parameter  for  all  interfaces except
+           _M_1::_I_2.
+
+       _h_a_n_d_l_e__i_n_f_o:
+           Makes the object server call a function _h_a_n_d_l_e__i_n_f_o in
+           the  object  implementation  module  on all unexpected
+           messages. Useful if the object implementation need  to
+           trap exits.
+
+           _E_x_a_m_p_l_e:  _i_c:_g_e_n(_x,  [_h_a_n_d_l_e__i_n_f_o])   will   activates
+           module  implementation  _h_a_n_d_l_e__i_n_f_o for all interfaces
+           in the source file.
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x,  [{{_h_a_n_d_l_e__i_n_f_o,  "_M_1::_I_1"},  _t_r_u_e}
+           will  activates  module implementation _h_a_n_d_l_e__i_n_f_o for
+           the specified interface.
+
+           _E_x_a_m_p_l_e:   _i_c:_g_e_n(_x,   [_h_a_n_d_l_e__i_n_f_o,    {{_h_a_n_d_l_e__i_n_f_o,
+           "_M_1::_I_1"},  _f_a_l_s_e}  will generate the _h_a_n_d_l_e__i_n_f_o call
+           for all interfaces except _M_1::_I_1.
+
+       _t_i_m_e_o_u_t:
+           Used to allow a server response time limit to  be  set
+           by  the  user. This should be a string that represents
+           the scope for the interface which should have an extra
+           variable for wait time initialization.
+
+
+
+
+Ericsson Utvecklings ABLast change: ic  4.0.5                    3
+
+
+
+
+
+
+ic(3)               ERLANG MODULE DEFINITION                ic(3)
+
+
+
+           _E_x_a_m_p_l_e:  _i_c:_g_e_n(_x,  [{_t_i_m_e__o_u_t,  "_M::_I"}])   produces
+           server  stub which will has an extra timeout parameter
+           in the initialization function for that interface.
+
+       _s_c_o_p_e_d__o_p__c_a_l_l_s:
+           Used to produce more refined request calls to  server.
+           When  this  option  is set to true, the operation name
+           which was mentioned in the call  is  scoped.  This  is
+           essential  to  avoid name coalition when communicating
+           with c-servers. This option is available  for  the  c-
+           client,  c-server and the Erlang gen_server back ends.
+           _A_l_l of the parts generated by ic have to agree in  the
+           use of this option. Default is _f_a_l_s_e.
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [{_b_e, _c__g_e_n_s_e_r_v}, {_s_c_o_p_e_d__o_p__c_a_l_l_s,
+           _t_r_u_e}])  produces  client  stub  which  sends "scoped"
+           requests to the a gen_server or a c-server.
+
+       _s_c_l:
+           Used for compatibility with previous compiler versions
+           up   to   _3._3.   Due  to  better  semantic  checks  on
+           enumerants, the  compiler  discovers  name  coalitions
+           between user defined types and enumerant values in the
+           same name space. By enabling this option the  compiler
+           turns  off  the  extended  semantic check on enumerant
+           values. Default is _f_a_l_s_e.
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [{_s_c_l, _t_r_u_e}])
+
+       _p_r_e_c_o_n_d:
+           Adds a precondition call before the call to the opera-
+           tion implementation on the server side.
+            The option comes in three  varieties:  {_p_r_e_c_o_n_d,  {_M,
+           _F}}  which  activates  the  call for operations in all
+           interfaces in the source file,  {{_p_r_e_c_o_n_d,  _I_n_t_f_N_a_m_e},
+           {_M, _F}} which activates the call for all operations in
+           a specific interface and {{_p_r_e_c_o_n_d, _O_p_N_a_m_e},  {_M,  _F}}
+           which activates the call for a specific operation.
+            The precondition function has the following signature
+           _m:_f(_M_o_d_u_l_e, _F_u_n_c_t_i_o_n, _A_r_g_s).
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [{_p_r_e_c_o_n_d, {_m_o_d, _f_u_n}}])  adds  the
+           call of m:f for all operations in the idl file.
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [{{_p_r_e_c_o_n_d, "_M_1::_I"}, {_m_o_d, _f_u_n}}])
+           adds  the call of _m:_f for all operations in the inter-
+           face _M_1::_I_1.
+
+           _E_x_a_m_p_l_e:  _i_c:_g_e_n(_x,  [{{_p_r_e_c_o_n_d,  "_M_1::_I::_O_p"},  {_m_o_d,
+           _f_u_n}}])  adds  the  call  of  _m:_f  for  the  operation
+           _M_1::_I::_O_p.
+
+
+
+
+Ericsson Utvecklings ABLast change: ic  4.0.5                    4
+
+
+
+
+
+
+ic(3)               ERLANG MODULE DEFINITION                ic(3)
+
+
+
+       _p_o_s_t_c_o_n_d:
+           Adds a postcondition call after the call to the opera-
+           tion implementation on the server side.
+            The option comes in three varieties:  {_p_o_s_t_c_o_n_d,  {_M,
+           _F}}  which  activates  the  call for operations in all
+           interfaces in the source file, {{_p_o_s_t_c_o_n_d,  _I_n_t_f_N_a_m_e},
+           {_M, _F}} which activates the call for all operations in
+           a specific interface and {{_p_o_s_t_c_o_n_d, _O_p_N_a_m_e}, {_M,  _F}}
+           which activates the call for a specific operation.
+            The postcondition function has the  following  signa-
+           ture _m:_f(_M_o_d_u_l_e, _F_u_n_c_t_i_o_n, _A_r_g_s, _R_e_s_u_l_t).
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x, [{_p_o_s_t_c_o_n_d, {_m_o_d, _f_u_n}}]) adds  the
+           call of m:f for all operations in the idl file.
+
+           _E_x_a_m_p_l_e:  _i_c:_g_e_n(_x,   [{{_p_o_s_t_c_o_n_d,   "_M_1::_I"},   {_m_o_d,
+           _f_u_n}}]) adds the call of _m:_f for all operations in the
+           interface _M_1::_I_1.
+
+           _E_x_a_m_p_l_e: _i_c:_g_e_n(_x,  [{{_p_o_s_t_c_o_n_d,  "_M_1::_I::_O_p"},  {_m_o_d,
+           _f_u_n}}])  adds  the  call  of  _m:_f  for  the  operation
+           _M_1::_I::_O_p.
+
+Warning options
+       '_W_a_l_l':
+           The option activates all reasonable  warning  messages
+           in analogy with the gcc -Wall option. Default value is
+           true.
+
+       _m_a_x_e_r_r_s:
+           The maximum numbers of errors  that  can  be  detected
+           before  the  compiler  gives up. The option can either
+           have an integer value or the  atom  _i_n_f_i_n_i_t_y.  Default
+           number is 10.
+
+       _m_a_x_w_a_r_n_s:
+           The maximum numbers of warnings that can  be  detected
+           before  the  compiler  gives up. The option can either
+           have an integer value or the  atom  _i_n_f_i_n_i_t_y.  Default
+           value is infinity.
+
+       _n_o_w_a_r_n:
+           Suppress all warnings. Default value is false.
+
+       _w_a_r_n__n_a_m_e__s_h_a_d_o_w:
+           Warning appear whenever  names  are  shadowed  due  to
+           inheritance,  for example, if a type name is redefined
+           from a base interface. Note  that  it  is  illegal  to
+           overload  operation and attribute names as this causes
+           an error to be produced. Default value is true.
+
+       _p_e_d_a_n_t_i_c:
+
+
+
+Ericsson Utvecklings ABLast change: ic  4.0.5                    5
+
+
+
+
+
+
+ic(3)               ERLANG MODULE DEFINITION                ic(3)
+
+
+
+           Activates all warning options. Default value is false.
+
+       _s_i_l_e_n_t:
+           Suppresses compiler printed output. Default  value  is
+           false.
+
+Back-End options
+     All back-end options are declared as a tuple  {_b_e,  _a_t_o_m()},
+     followed eventually by back-end specific options:
+
+       _e_r_l__c_o_r_b_a:
+           This option switches to the IDL generation for CORBA.
+
+       _e_r_l__p_l_a_i_n:
+           Will produce plain Erlang modules which contain  func-
+           tions  that  map  to the corresponding interface func-
+           tions on the input file.
+
+       _e_r_l__g_e_n_s_e_r_v:
+           This is an IDL to  Erlang  generic  server  generation
+           option.
+
+       _c__g_e_n_s_e_r_v:
+           Will produce a C client to the generic Erlang server.
+
+       _c__c_l_i_e_n_t:
+           Will produce a C client to the generic Erlang server.
+
+           Please note that this option have the same  action  as
+           the  c_genserv  option.  It  is  supposed to gradually
+           replace the c_genserv option. For a limited period  of
+           time both options will be supported.
+
+       _c__s_e_r_v_e_r:
+           Will produce a C server switch with functionality of a
+           generic Erlang server.
+
+     Default back-end option is {_b_e, _e_r_l__c_o_r_b_a}.
+
+Preprocessor
+     The IDL compiler allows several preprocessors  to  be  used,
+     the  _E_r_l_a_n_g  _I_D_L _p_r_e_p_r_o_c_e_s_s_o_r or other standard _C preproces-
+     sors. Options can be used to provide  extra  flags  such  as
+     include  directories  to  the preprocessor. The build in the
+     Erlang IDL preprocessor is used by default, but any standard
+     C preprocessor such as _g_c_c is adequate.
+
+     The  preprocessor  command  is  formed  by   appending   the
+     prepoc_cmd  to  the  preproc_flags option and then appending
+     the input IDL file name.
+
+
+
+
+
+Ericsson Utvecklings ABLast change: ic  4.0.5                    6
+
+
+
+
+
+
+ic(3)               ERLANG MODULE DEFINITION                ic(3)
+
+
+
+Configuration
+     The compiler can be configured in two ways:
+
+       1.  Configuration file
+
+       2.  Command line options
+
+     The configuration file is optional and  overrides  the  com-
+     piler defaults and is in turn overridden by the command line
+     options. The configuration file shall contain options in the
+     form  of  Erlang terms. The configuration file is read using
+     _f_i_l_e:_c_o_n_s_u_l_t.
+
+     An example of a configuration file, note the "." after  each
+     line.
+
+     {outdir, gen_dir}.
+     {{impl, "M1::M2::object"}, "obj"}.
+
+Output files
+     The compiler will produce output in several files  depending
+     on  scope  declarations found in the IDL file. At most three
+     file types will be generated for each scope  (including  the
+     top  scope), depending on the compiler back-end and the com-
+     piled interface. Generally, the output per interface will be
+     a  header  file  (._h_r_l/  ._h)  and one or more Erlang/C files
+     (._e_r_l/._c). Please look at  the  language  mapping  for  each
+     back-end for details.
+
+     There will be at least one set of files for an IDL file, for
+     the file level scope. Modules and interfaces also have their
+     own set of generated files.
+
+AUTHORS
+     Peter Lundell - support@erlang.ericsson.se
+     Lars Thorsen - support@erlang.ericsson.se
+     Babbis Xagorarakis - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: ic  4.0.5                    7
+
+
+

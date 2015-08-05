@@ -1,0 +1,330 @@
+
+
+
+digraph_utils(3)    ERLANG MODULE DEFINITION     digraph_utils(3)
+
+
+
+MODULE
+     digraph_utils - Algorithms for Directed Graphs
+
+DESCRIPTION
+     The _d_i_g_r_a_p_h__u_t_i_l_s module implements some algorithms based on
+     depth-first  traversal  of  directed graphs. See the _d_i_g_r_a_p_h
+     module for basic functions on directed graphs.
+
+     A _d_i_r_e_c_t_e_d _g_r_a_p_h (or just "graph") is a pair  (V,  E)  of  a
+     finite  set  V  of  _v_e_r_t_i_c_e_s  and a finite set E of _d_i_r_e_c_t_e_d
+     _e_d_g_e_s (or just "edges"). The set of edges E is a subset of V
+     V (the Cartesian product of V with itself).
+
+     Graphs can be annotated with  additional  information.  Such
+     information may be attached to the vertices and to the edges
+     of the graph. A graph which has been annotated is  called  a
+     _l_a_b_e_l_e_d  _g_r_a_p_h,  and the information attached to a vertex or
+     an edge is called a _l_a_b_e_l.
+
+     An edge e = (v, w) is said to _e_m_a_n_a_t_e from vertex v  and  to
+     be  _i_n_c_i_d_e_n_t on vertex w. If there is an edge emanating from
+     v and incident on w, then  w  is  is  said  to  be  an  _o_u_t-
+     _n_e_i_g_h_b_o_u_r of v. A _p_a_t_h P from v[1] to v[k] in a graph (V, E)
+     is a non-empty sequence v[1], v[2], ..., v[k] of vertices in
+     V such that there is an edge (v[i],v[i+1]) in E for 1 <= i <
+     k. The _l_e_n_g_t_h of the path P is k-1. P  is  a  _c_y_c_l_e  if  the
+     length  of  P is not zero and v[1] = v[k]. A _l_o_o_p is a cycle
+     of length one. An _a_c_y_c_l_i_c _g_r_a_p_h  is  a  graph  that  has  no
+     cycles.
+
+     A _d_e_p_t_h-_f_i_r_s_t _t_r_a_v_e_r_s_a_l of a directed graph can be viewed as
+     a  process that visits all vertices of the graph. Initially,
+     all vertices are marked as unvisited. The  traversal  starts
+     with  an  arbitrarily  chosen  vertex,  which  is  marked as
+     visited, and follows an edge to an unmarked vertex,  marking
+     that  vertex.  The  search then proceeds from that vertex in
+     the same fashion, until there  is  no  edge  leading  to  an
+     unvisited  vertex. At that point the process backtracks, and
+     the traversal continues as  long  as  there  are  unexamined
+     edges.  If  there  remain  unvisited vertices when all edges
+     from the first vertex  have  been  examined,  some  hitherto
+     unvisited vertex is chosen, and the process is repeated.
+
+     A _p_a_r_t_i_a_l _o_r_d_e_r_i_n_g of a set S is a transitive, antisymmetric
+     and reflexive relation between the objects of S. The problem
+     of _t_o_p_o_l_o_g_i_c_a_l _s_o_r_t_i_n_g is to find a total ordering of S that
+     is a superset of the partial ordering. A graph G = (V, E) is
+     equivalent to a relation E on V (we neglect  the  fact  that
+     the  version  of  directed graphs implemented in the _d_i_g_r_a_p_h
+     module allows multiple edges between vertices). If the graph
+     has  no cycles of length two or more, then the reflexive and
+     transitive closure of E is a partial ordering.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+digraph_utils(3)    ERLANG MODULE DEFINITION     digraph_utils(3)
+
+
+
+     A _s_u_b_g_r_a_p_h G  of G is a graph whose vertices and edges  form
+     subsets  of  the vertices and edges of G. G  is _m_a_x_i_m_a_l with
+     respect to a property P if all other subgraphs that  include
+     the  vertices  of  G  do not have the property P. A _s_t_r_o_n_g_l_y
+     _c_o_n_n_e_c_t_e_d _c_o_m_p_o_n_e_n_t is a maximal subgraph such that there is
+     a  path between each pair of vertices. A _c_o_n_n_e_c_t_e_d _c_o_m_p_o_n_e_n_t
+     is a maximal subgraph such that there is a path between each
+     pair of vertices, considering all edges undirected.
+
+
+EXPORTS
+     components(Graph) -> [Component]
+
+          Types
+               Graph = graph()
+               Component = [vertex()]
+
+          Returns a list of connected components. Each  component
+          is  represented  by its vertices. The order of vertices
+          and the order of components are arbitrary. Each  vertex
+          of the graph is occurs in exactly one component.
+
+     strong_components(Graph) -> [StrongComponent]
+
+          Types
+               Graph = graph()
+               StrongComponent = [vertex()]
+
+          Returns a list of strongly connected  components.  Each
+          strongly  component is represented by its vertices. The
+          order of vertices and the order of components are arbi-
+          trary.  Each  vertex  of the graph is occurs in exactly
+          one strong component.
+
+     cyclic_strong_components(Graph) -> [StrongComponent]
+
+          Types
+               Graph = graph()
+               StrongComponent = [vertex()]
+
+          Returns a list of strongly connected  components.  Each
+          strongly  component is represented by its vertices. The
+          order of vertices and the order of components are arbi-
+          trary.  Only  vertices  that are included in some cycle
+          are returned, otherwise the returned list is  equal  to
+          that returned by _s_t_r_o_n_g__c_o_m_p_o_n_e_n_t_s/_1.
+
+     reachable(Vertices, Graph) -> Vertices
+
+          Types
+               Graph = graph()
+               Vertices = [vertex()]
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+digraph_utils(3)    ERLANG MODULE DEFINITION     digraph_utils(3)
+
+
+
+          Returns an unsorted list of graph  vertices  such  that
+          for  each vertex in the list, there is a path from some
+          of the given vertices to  the  vertex.  In  particular,
+          since  paths  may  have length zero, all the given ver-
+          tices are included in the returned list.
+
+     reachable_neighbours(Vertices, Graph) -> Vertices
+
+          Types
+               Graph = graph()
+               Vertices = [vertex()]
+
+          Returns an unsorted list of graph  vertices  such  that
+          for  each vertex in the list, there is a path of length
+          one or more from some of the given vertices to the ver-
+          tex. As a consequence, only those of the given vertices
+          that are included in some cycle are returned.
+
+     reaching(Vertices, Graph) -> Vertices
+
+          Types
+               Graph = graph()
+               Vertices = [vertex()]
+
+          Returns an unsorted list of graph  vertices  such  that
+          for  each  vertex in the list, there is a path from the
+          vertex to some of the given  vertices.  In  particular,
+          since  paths  may  have length zero, all the given ver-
+          tices are included in the returned list.
+
+     reaching_neighbours(Vertices, Graph) -> Vertices
+
+          Types
+               Graph = graph()
+               Vertices = [vertex()]
+
+          Returns an unsorted list of graph  vertices  such  that
+          for  each vertex in the list, there is a path of length
+          one or more from the vertex to some of the  given  ver-
+          tices.  As  a consequence, only those of the given ver-
+          tices that are included in some cycle are returned.
+
+     topsort(Graph) -> Vertices | false
+
+          Types
+               Graph = graph()
+               Vertices = [vertex()]
+
+          Returns a topological ordering of all the graph s  ver-
+          tices  if such an ordering exists, _f_a_l_s_e otherwise. For
+          each vertex in the list, there  are  no  out-neighbours
+          that occur earlier in the list.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+digraph_utils(3)    ERLANG MODULE DEFINITION     digraph_utils(3)
+
+
+
+     is_acyclic(Graph) -> bool()
+
+          Types
+               Graph = graph()
+
+          Returns _t_r_u_e if and only if the graph is acyclic.
+
+     loop_vertices(Graph) -> Vertices
+
+          Types
+               Graph = graph()
+               Vertices = [vertex()]
+
+          Returns a list of all vertices  that  are  included  in
+          some loop.
+
+     subgraph(Graph, Vertices, Options)  ->  Subgraph  |  {error,
+     Reason}
+     subgraph(Graph, Vertices) -> Subgraph | {error, Reason}
+
+          Types
+               Graph = Subgraph = graph()
+               Options  =  [{type,  SubgraphType},  {keep_labels,
+               bool()}]
+               Reason = {invalid_option, term()} | {unknown_type,
+               term()}
+               SubgraphType = inherit | type()
+               Vertices = [vertex()]
+
+          Creates a maximal subgraph of _G_r_a_p_h having as  vertices
+          those vertices of _G_r_a_p_h that are mentioned in _V_e_r_t_i_c_e_s.
+
+          If the value of the option _t_y_p_e is  _i_n_h_e_r_i_t,  which  is
+          the  default,  then  the  type of _G_r_a_p_h is used for the
+          subgraph as well. Otherwise the option value of _t_y_p_e is
+          used as argument to _d_i_g_r_a_p_h:_n_e_w/_1.
+
+          If the value of the option _k_e_e_p__l_a_b_e_l_s is  _t_r_u_e,  which
+          is  the  default, then the labels of vertices and edges
+          of _G_r_a_p_h are used for the  subgraph  as  well.  If  the
+          value is _f_a_l_s_e, then the default label, [], is used for
+          the subgraph s vertices and edges.
+
+          _s_u_b_g_r_a_p_h(_G_r_a_p_h,    _V_e_r_t_i_c_e_s)    is    equivalent     to
+          _s_u_b_g_r_a_p_h(_G_r_a_p_h, _V_e_r_t_i_c_e_s, []).
+
+     condensation(Graph) -> CondensedGraph
+
+          Types
+               Graph = CondensedGraph = graph()
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+digraph_utils(3)    ERLANG MODULE DEFINITION     digraph_utils(3)
+
+
+
+          Creates a graph where the  vertices  are  the  strongly
+          connected      components      as      returned      by
+          _s_t_r_o_n_g__c_o_m_p_o_n_e_n_t_s/_1. If X and Y are strongly  connected
+          components, and there exist vertices x and y in X and Y
+          respectively such that there is an edge emanating  from
+          x  and incident on y, then an edge emanating from X and
+          incident on Y is created.
+
+          The created graph has the same type as _G_r_a_p_h. All  ver-
+          tices and edges have the default label [].
+
+          Each and every cycle is included in some strongly  con-
+          nected  component,  which  implies  that  there  always
+          exists a topological ordering of the created graph.
+
+     preorder(Graph) -> Vertices
+
+          Types
+               Graph = graph()
+               Vertices = [vertex()]
+
+          Returns all vertices of the graph. The order  is  given
+          by  a  depth-first  traversal  of the graph, collecting
+          visited vertices in pre-order.
+
+     postorder(Graph) -> Vertices
+
+          Types
+               Graph = graph()
+               Vertices = [vertex()]
+
+          Returns all vertices of the graph. The order  is  given
+          by  a  depth-first  traversal  of the graph, collecting
+          visited vertices in postorder. More precisely, the ver-
+          tices  visited  while  searching  from  an  arbitrarily
+          chosen vertex are collected in postorder, and all those
+          collected  vertices  are placed before the subsequently
+          visited vertices.
+
+See Also
+     digraph(3)
+
+AUTHOR
+     Hans Bolinder - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+

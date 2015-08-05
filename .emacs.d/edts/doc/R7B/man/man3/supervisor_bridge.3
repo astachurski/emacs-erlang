@@ -1,0 +1,81 @@
+.TH supervisor_bridge 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+supervisor_bridge \- A Behaviour for Connecting Processes To a Supervision Tree
+.SH DESCRIPTION
+.LP
+It can sometimes be useful to connect a process or a sub-system, which has not been designed with the supervision principles in mind, to a supervisor tree\&. This can be accomplished by using an instance of the \fIsupervisor_bridge\fR behaviour\&. A supervisor bridge is a process which sits in between a supervisor and the sub-system\&. It behaves like a real supervisor to its own supervisor, but has a different interface than a real supervisor to the sub-system\&. Note, however, that it does not allow the use of the sophisticated code changing mechanisms to the sub-system\&. 
+.LP
+An instance of the \fIsupervisor_bridge\fR behaviour can be debugged with the module \fIsys\fR\&. 
+.LP
+In the following, \fIModule\fR is the name of the callback module that implements the supervisor bridge behaviour\&. 
+
+.SH EXPORTS
+.LP
+.B
+start_link(Module,StartArgs) -> {ok, Pid} | ignore | {error, Reason}
+.br
+.B
+start_link(Name,Module,StartArgs) -> {ok, Pid} | ignore | {error, Reason}
+.br
+.RS
+.TP
+Types
+Name = {local, atom()} | {global, atom()}
+.br
+Module = atom()
+.br
+StartArgs = term()
+.br
+.RE
+.RS
+.LP
+Starts a new supervisor bridge process synchronously\&. The function \fIModule:init(StartArgs)\fR is called (see below)\&. 
+.LP
+If the supervisor bridge is started with \fIName\fR, the name is registered locally or globally\&. 
+.RE
+.SH Callback Functions
+.LP
+The following functions should be exported from a \fIsupervisor_bridge\fR callback module\&. 
+.SH EXPORTS
+.LP
+.B
+Module:init(StartArgs) -> {ok, Pid, State} | ignore | {error, Reason}
+.br
+.RS
+.TP
+Types
+StartArgs = term()
+.br
+State = term()
+.br
+.RE
+.RS
+.LP
+This function starts the sub-system and returns the \fIPid\fR of the main process in the sub-system, and a \fIState\fR\&. The \fIState\fR can be any term and it is sent to the \fIModule:terminate/2\fR function (see below)\&. 
+.RE
+.LP
+.B
+Module:terminate(Reason, State) -> void()
+.br
+.RS
+.TP
+Types
+Reason = term()
+.br
+State = term()
+.br
+.RE
+.RS
+.LP
+This function terminates the sub-system\&. The return value is ignored\&. 
+.RE
+.SH System Events
+.LP
+The \fIsupervisor_bridge\fR behaviour generates the same system events as the \fIgen_server\fR behaviour\&. System events are handled by the \fIsys\fR module\&.
+.SH See Also
+.LP
+gen_server(3), supervisor(3), sys(3)
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

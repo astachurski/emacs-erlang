@@ -1,0 +1,396 @@
+
+
+
+httpd_core(3)       ERLANG MODULE DEFINITION        httpd_core(3)
+
+
+
+MODULE
+     httpd_core - The core functionality of the Web server.
+
+DESCRIPTION
+     This manual page summarize the core features of  the  server
+     not  being implemented as EWSAPI modules. The following core
+     config directives are described:
+
+       * BindAddress
+
+       * DefaultType
+
+       * DocumentRoot
+
+       * MaxClients
+
+       * Modules
+
+       * Port
+
+       * ServerAdmin
+
+       * ServerName
+
+       * ServerRoot
+
+       * SocketType
+
+       * SSLCertificateFile
+
+       * SSLCertificateKeyFile
+
+       * SSLVerifyClient
+
+       * KeepAlive
+
+       * KeepAliveTimeout
+
+
+SECURE SOCKETS LAYER (SSL)
+     The   SSL   support   is   realized   using    the    SSLeay
+     <http://psych.psy.uq.oz.au/~ftp/Crypto/>   package.   Please
+     refer to _s_s_l(_3).
+
+     SSLeay is an  implementation  of  Netscape's  Secure  Socket
+     Layer  specification  -  the  software  encryption  protocol
+     specification behind the  Netscape  Secure  Server  and  the
+     Netscape Navigator Browser.
+
+     The SSL Protocol can negotiate an encryption  algorithm  and
+     session  key  as  well  as  authenticate a server before the
+     application protocol transmits or receives its first byte of
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+httpd_core(3)       ERLANG MODULE DEFINITION        httpd_core(3)
+
+
+
+     data.  All  of  the application protocol data is transmitted
+     encrypted, ensuring privacy.
+
+     The SSL protocol provides "channel security" which has three
+     basic properties:
+
+       * The channel is private. Encryption is used for all  mes-
+         sages  after  a  simple  handshake  is  used to define a
+         secret key.
+
+       * The channel is authenticated. The  server  end-point  of
+         the  conversation  is  always  authenticated,  while the
+         client endpoint is optionally authenticated.
+
+       * The channel is reliable. The message transport  includes
+         a message integrity check (using a MAC).
+
+     The SSL mechanism can be enabled in the server by using  the
+     SSLCertificateFile,  SSLCertificateKeyFile  and  the SSLVer-
+     ifyClient config directives.
+
+MIME TYPE SETTINGS
+     Files delivered to the client are  MIME typed  according  to
+     RFC 1590. File suffixes are mapped to MIME types before file
+     delivery.
+
+     The mapping between file suffixes and MIME types are  speci-
+     fied  in  the  _m_i_m_e._t_y_p_e_s file. The _m_i_m_e._t_y_p_e_s reside within
+     the _c_o_n_f directory of the ServerRoot. Refer to  the  example
+     server  root($INETS_ROOT/examples/server_root).  MIME  types
+     may be added as required to  the  _m_i_m_e._t_y_p_e_s  file  and  the
+     DefaultType  config  directive  can  be  used  to  specify a
+     default mime type.
+
+DIRECTIVE: BindAddress
+     _S_y_n_t_a_x: _B_i_n_d_A_d_d_r_e_s_s address
+      _D_e_f_a_u_l_t: _B_i_n_d_A_d_d_r_e_s_s *
+      _M_o_d_u_l_e: httpd_core(3)
+
+     _B_i_n_d_A_d_d_r_e_s_s defines which address the server will listen to.
+     If  the  argument  is  *  then  the  server  listens  to all
+     addresses otherwise the  server  will  only  listen  to  the
+     address  specified.  Address  can  be  given either as an IP
+     address or a hostname.
+
+DIRECTIVE: DefaultType
+     _S_y_n_t_a_x: _D_e_f_a_u_l_t_T_y_p_e mime-type
+      _D_e_f_a_u_l_t: - None - _M_o_d_u_l_e: httpd_core(3)
+
+     When the server is asked to provide a  document  type  which
+     cannot  be  determined by the MIME Type Settings, the server
+     must inform the client about the content type  of  documents
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+
+
+
+
+httpd_core(3)       ERLANG MODULE DEFINITION        httpd_core(3)
+
+
+
+     and _m_i_m_e-_t_y_p_e is used if an unknown type is encountered.
+
+DIRECTIVE: DocumentRoot
+     _S_y_n_t_a_x: _D_o_c_u_m_e_n_t_R_o_o_t directory-filename
+      _D_e_f_a_u_l_t: - Mandatory - _M_o_d_u_l_e: httpd_core(3)
+
+     _D_o_c_u_m_e_n_t_R_o_o_t points the Web server  to  the  document  space
+     from  which  to  serve  documents  from. Unless matched by a
+     directive like Alias, the server appends the path  from  the
+     requested  URL  to  the _D_o_c_u_m_e_n_t_R_o_o_t to make the path to the
+     document, for example:
+
+     DocumentRoot /usr/web
+
+     and an  access  to  _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g/_i_n_d_e_x._h_t_m_l  would
+     refer to /_u_s_r/_w_e_b/_i_n_d_e_x._h_t_m_l.
+
+DIRECTIVE: MaxClients
+     _S_y_n_t_a_x: _M_a_x_C_l_i_e_n_t_s number
+      _D_e_f_a_u_l_t: _M_a_x_C_l_i_e_n_t_s _1_5_0 _M_o_d_u_l_e: httpd_core(3)
+
+     _M_a_x_C_l_i_e_n_t_s limits the _n_u_m_b_e_r of simultaneous  requests  that
+     can  be  supported. No more than this _n_u_m_b_e_r of child server
+     processes can be created.
+
+DIRECTIVE: Modules
+     _S_y_n_t_a_x: _M_o_d_u_l_e_s module module ...
+      _D_e_f_a_u_l_t: _M_o_d_u_l_e_s _m_o_d__g_e_t _m_o_d__h_e_a_d _m_o_d__l_o_g
+      _M_o_d_u_l_e: httpd_core(3)
+
+     _M_o_d_u_l_e_s defines  which  EWSAPI  modules  to  be  used  in  a
+     specific  server  setup. _m_o_d_u_l_e is a module in the code path
+     of the server which has been written in accordance with  the
+     EWSAPI  (Erlang  Web  Server API). The server executes func-
+     tionality in each module, from left to right  (from  now  on
+     called _E_W_S_A_P_I _M_o_d_u_l_e _S_e_q_u_e_n_c_e).
+
+     Before altering the EWSAPI Modules Sequence  please  observe
+     what types of data each module uses and propagates. Read the
+     "EWSAPI Interaction" section for each module and the  EWSAPI
+     Module Interaction description in _h_t_t_p_d(_3).
+
+DIRECTIVE: Port
+     _S_y_n_t_a_x: _P_o_r_t number
+      _D_e_f_a_u_l_t: _P_o_r_t _8_0
+      _M_o_d_u_l_e: httpd_core(3)
+
+     _P_o_r_t defines which port _n_u_m_b_e_r the server should use  (0  to
+     65535).  Certain  port  numbers  are reserved for particular
+     protocols,        i.e.        examine        your         OS
+     characteristics(/etc/services) for a list of reserved ports.
+     The standard port for HTTP is 80.
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   3
+
+
+
+
+
+
+httpd_core(3)       ERLANG MODULE DEFINITION        httpd_core(3)
+
+
+
+     All ports numbered below 1024 are reserved  for  system  use
+     and  regular  (non-root)  users cannot use them, i.e. to use
+     port 80 you must start the Erlang node as  root.  (sic!)  If
+     you do not have root access choose an unused port above 1024
+     typically 8000, 8080 or 8888.
+
+DIRECTIVE: ServerAdmin
+     _S_y_n_t_a_x: _S_e_r_v_e_r_A_d_m_i_n email-address
+      _D_e_f_a_u_l_t: _S_e_r_v_e_r_A_d_m_i_n _u_n_k_n_o_w_n@_u_n_k_n_o_w_n
+      _M_o_d_u_l_e: httpd_core(3)
+
+     _S_e_r_v_e_r_A_d_m_i_n defines the _e_m_a_i_l-_a_d_d_r_e_s_s of the server adminis-
+     trator, to be included in any error messages returned by the
+     server. It may be worth setting up a dedicated user for this
+     because  clients  do not always state which server they have
+     comments about, for example:
+
+     ServerAdmin www-admin@white-house.com
+
+DIRECTIVE: ServerName
+     _S_y_n_t_a_x: _S_e_r_v_e_r_N_a_m_e fully-qualified domain name
+      _D_e_f_a_u_l_t: - Mandatory -
+      _M_o_d_u_l_e: httpd_core(3)
+
+     _S_e_r_v_e_r_N_a_m_e sets  the  _f_u_l_l_y-_q_u_a_l_i_f_i_e_d  _d_o_m_a_i_n  _n_a_m_e  of  the
+     server.
+
+DIRECTIVE: ServerRoot
+     _S_y_n_t_a_x: _S_e_r_v_e_r_R_o_o_t directory-filename
+      _D_e_f_a_u_l_t: - Mandatory -
+      _M_o_d_u_l_e: httpd_core(3)
+
+     _S_e_r_v_e_r_R_o_o_t defines a _d_i_r_e_c_t_o_r_y-_f_i_l_e_n_a_m_e where the server has
+     its  operational home, e.g. used to store log files and sys-
+     tem icons. Relative paths specified in the config file refer
+     to this _d_i_r_e_c_t_o_r_y-_f_i_l_e_n_a_m_e (See mod_log(3)).
+
+DIRECTIVE: SocketType
+     _S_y_n_t_a_x: _S_o_c_k_e_t_T_y_p_e type
+      _D_e_f_a_u_l_t: _S_o_c_k_e_t_T_y_p_e _i_p__c_o_m_m
+      _M_o_d_u_l_e: httpd_core(3)
+
+     _S_o_c_k_e_t_T_y_p_e defines which underlying communication _t_y_p_e to be
+     used. Valid socket types are:
+
+       _i_p__c_o_m_m:
+           the default and preferred communication type.  ip_comm
+           is also used for all remote message passing in Erlang.
+
+       _s_s_l:
+           the communication type to be used to support SSL (Read
+           more about Secure Sockets Layer (SSL) in _h_t_t_p_d(_3)).
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   4
+
+
+
+
+
+
+httpd_core(3)       ERLANG MODULE DEFINITION        httpd_core(3)
+
+
+
+DIRECTIVE: SSLCertificateFile
+     _S_y_n_t_a_x: _S_S_L_C_e_r_t_i_f_i_c_a_t_e_F_i_l_e filename
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: httpd_core(3)
+
+     _S_S_L_C_e_r_t_i_f_i_c_a_t_e_F_i_l_e points at a PEM encoded certificate. Read
+     more  about  PEM encoded certificates in the SSL application
+     documentation.         The         dummy         certificate
+     server.pem($INETS/examples/server_root/ssl/),  in  the Inets
+     distribution, can be used for test purposes. Read more about
+     PEM  encoded  certificates in the SSL application documenta-
+     tion.
+
+DIRECTIVE: SSLCertificateKeyFile
+     _S_y_n_t_a_x: _S_S_L_C_e_r_t_i_f_i_c_a_t_e_K_e_y_F_i_l_e filename
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: httpd_core(3)
+
+     _S_S_L_C_e_r_t_i_f_i_c_a_t_e_K_e_y_F_i_l_e is used to point at a certificate  key
+     file.  This  directive  should only be used if a certificate
+     key has not been bundled with the certificate  file  pointed
+     at by SSLCertificateFile.
+
+DIRECTIVE: SSLVerifyClient
+     _S_y_n_t_a_x: _S_S_L_V_e_r_i_f_y_C_l_i_e_n_t type
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: httpd_core(3)
+
+     Set _t_y_p_e to:
+
+       0:  if no client certificate is required.
+
+       1:  if the client _m_a_y present a valid certificate.
+
+       2:  if the client _m_u_s_t present a valid certificate.
+
+       3:  if the client _m_a_y present a valid certificate  but  it
+           is _n_o_t required to have a valid CA.
+
+     Read more about SSL in the application documentation.
+
+DIRECTIVE: KeepAlive
+     _S_y_n_t_a_x: _K_e_e_p_A_l_i_v_e max-requests
+      _D_e_f_a_u_l_t: - Disabled -
+      _M_o_d_u_l_e: httpd_core(3)
+
+     This directive enables Keep-Alive support. Set  _m_a_x-_r_e_q_u_e_s_t_s
+     to  the  maximum  number  of requests you want the server to
+     serve per connection. A limit is imposed to prevent a client
+     from  hogging  your  server resources. To disable Keep-Alive
+     support, do not set this directive.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   5
+
+
+
+
+
+
+httpd_core(3)       ERLANG MODULE DEFINITION        httpd_core(3)
+
+
+
+     The Keep-Alive extension to HTTP, as defined by the HTTP/1.1
+     draft,  allows persistent connections. These long-lived HTTP
+     sessions allow multiple requests to be sent  over  the  same
+     TCP  connection, and in some cases have been shown to result
+     in almost 50% speedup in latency times  for  HTML  documents
+     with lots of images.
+
+DIRECTIVE: KeepAliveTimeout
+     _S_y_n_t_a_x: _K_e_e_p_A_l_i_v_e_T_i_m_e_o_u_t seconds
+      _D_e_f_a_u_l_t: - Disabled -
+      _M_o_d_u_l_e: httpd_core(3)
+
+     The number of seconds the server will wait for a  subsequent
+     request before closing the connection.
+
+SEE ALSO
+     httpd(3)
+
+AUTHOR
+     Joakim Grebeno  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   6
+
+
+

@@ -1,0 +1,39 @@
+.TH OrberEventChannel 3 "cosEvent  1.0.1.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+OrberEventChannel \-  The OrberEventChannel defines an interface that enables the user to create event channel objects\&. 
+.SH DESCRIPTION
+.LP
+
+.LP
+There is only one interface supported in the service: 
+.RS 2
+.TP 2
+*
+EventChannelFactory
+.RE
+.LP
+IDL specification for OrberEventChannel: 
+
+.nf
+#ifndef _EVENT_CHANNEL_FACTORY_IDL
+#define _EVENT_CHANNEL_FACTORY_IDL
+
+#include "OrberEventChannelAdmin\&.idl"
+
+#pragma prefix "omg\&.org"
+
+module OrberEventChannel
+{
+  interface EventChannelFactory
+  {
+     OrberEventChannelAdmin::EventChannel create_event_channel();
+ };
+};
+
+#endif
+.fi
+
+.SH AUTHOR
+.nf
+Helen Airiyan - support@erlang.ericsson.se
+.fi

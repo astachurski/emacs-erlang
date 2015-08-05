@@ -1,0 +1,202 @@
+.TH asn1ct 3 "asn1  1.2.9.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+asn1ct \- ASN\&.1 compiler and compile-time support functions
+.SH DESCRIPTION
+.LP
+The ASN\&.1 compiler takes an ASN\&.1 module as input and genarates a corresponding Erlang module which can encode and decode the datatypes specified\&. There are also some generic functions which can be used in during development of applications which handles ASN\&.1 data (encoded as BER or PER)\&. 
+
+.SH EXPORTS
+.LP
+.B
+compile(Asn1module) -> ok | {error,Reason}
+.br
+.B
+compile(Asn1module , Options) -> ok | {error,Reason}
+.br
+.RS
+.TP
+Types
+Asn1module = atom() | string()
+.br
+Options = [Option]
+.br
+Option = ber|per|noobj|{outdir, Dir}|{i, IncludeDir}
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Compiles the ASN\&.1 module \fIAsn1module\fR and generates an Erlang module \fIAsn1module\&.erl\fR with encode decode functions for the types defined in \fIAsn1module\fR\&. For each ASN\&.1 value defined in the module an Erlang function which returns the value in Erlang representation is generated\&. 
+.LP
+If \fIAsn1module\fR is a filename without extension first \fI"\&.asn"\fR is assumed and then \fI"\&.py"\fR (to be compatible with the old ASN\&.1 compiler)\&. Of course \fIAsn1module\fR can be a full pathname (relative or absolute) including filename with (or without) extension\&. 
+.LP
+\fIOptions\fR is a list with some of the following available options: 
+.RS 2
+.TP 4
+.B
+\fIber | per\fR:
+The encoding rule to be used\&. EncodingRule is \fIber\fR or \fIper\fR\&. If this option is omitted \fIber\fR is the default\&. The \fIper\fR option means the aligned variant, the unaligned variant of PER is not supported in this version of the compiler\&. The generated Erlang module always gets the same name as the ASN\&.1 module and as a consequnce of this only one encoding rule per ASN\&.1 module can be used at runtime\&. 
+.TP 4
+.B
+\fI{i, IncludeDir}\fR:
+Adds \fIIncludeDir\fR to the search-path for \fI\&.asn1db\fR files\&. The compiler tries to open a \fI\&.asn1db\fR file when a module imports definitions from another ASN\&.1 module\&. Several \fI{i, IncludeDir}\fR can be given\&. 
+.TP 4
+.B
+\fInoobj\fR:
+Do not compile (i\&.e do not produce object code) the generated \fI\&.erl\fR file\&. If this option is omitted the generated Erlang module will be compiled\&. 
+.TP 4
+.B
+\fI{out_dir, Dir}\fR:
+Specifies the directory \fIDir\fR where all generated files shall be placed\&. If omitted the files are placed in the current directory\&. 
+.RE
+.LP
+The compiler generates the following files: 
+.RS 2
+.TP 2
+*
+\fIAsn1module\&.hrl\fR (if any SET or SEQUENCE is defined) 
+.TP 2
+*
+\fIAsn1module\&.erl\fR the Erlang module with encode, decode and value functions\&. 
+.TP 2
+*
+\fIAsn1module\&.asn1db\fR intermediate format used by the compiler when modules IMPORTS definitions from each other\&. 
+.RE
+.RE
+.LP
+.B
+encode(Module,{Type,Value})-> {ok,Bytes}| {error,Reason}
+.br
+.B
+encode(Module,Type,Value)-> {ok,Bytes} | {error,Reason}
+.br
+.RS
+.TP
+Types
+Module = Type = atom()
+.br
+Value = term()
+.br
+Bytes = [Int] when integer(Int), Int >= 0, Int =< 255
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Encodes \fIValue\fR of \fIType\fR defined in the ASN\&.1 module \fIModule\fR\&. Returns a list of bytes if successful\&. To get as fast execution as possible the encode function only performs rudimentary tests that the input \fIValue\fR is a correct instance of \fIType\fR\&. The length of strings is for example not always checked\&. Returns \fI{ok, Bytes}\fR if successful or \fI{error, Reason}\fR if an error occured\&. 
+.RE
+.LP
+.B
+decode(Module,Type,Bytes) -> {ok,Value}|{error,Reason}
+.br
+.RS
+.TP
+Types
+Module = Type = atom()
+.br
+Value = Reason = term()
+.br
+Bytes = [Int] when integer(Int), Int >= 0, Int =< 255
+.br
+.RE
+.RS
+.LP
+Decodes \fIType\fR from \fIModule\fR from the list of bytes \fIBytes\fR\&. Returns \fI{ok, Value}\fR if successful\&. 
+.RE
+.LP
+.B
+validate(Module,{Type,Value}) -> ok | {error,Reason}
+.br
+.B
+validate(Module,Type,Value) -> ok | {error,Reason}
+.br
+.RS
+.TP
+Types
+Module = Type = atom()
+.br
+Value = term()
+.br
+.RE
+.RS
+.LP
+Validates that \fIValue\fR conforms to \fIType\fR from \fIModule\fR\&. \fINot implemented in this version of the ASN\&.1 application\&.\fR 
+.RE
+.LP
+.B
+start(IncludePaths) -> ok | already_started
+.br
+.RS
+.TP
+Types
+IncludePaths = [IncludeDirectory]
+.br
+IncludeDirectory = string()
+.br
+.RE
+.RS
+.LP
+Starts the ASN\&.1 database server and initiates it with \fIIncludePaths\fR\&. \fIIncludePaths\fR is a list of directories where the data base server should search for \fI\&.asn1db\fR files when a new module should be loaded into the database\&. 
+.RE
+.LP
+.B
+stop() -> void
+.br
+.RS
+.LP
+Stops the ASN\&.1 database server\&. The database server is only used by the compile-time functions\&. 
+.RE
+.LP
+.B
+value(Module ,Type) -> {ok,Value} | {error,Reason}
+.br
+.RS
+.TP
+Types
+Module = Type = atom()
+.br
+Value = term()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Returns an Erlang term which is an example of a valid Erlang representation of a value of the ASN\&.1 type \fIType\fR\&. The value is a random value and subsequent calls to this function will for most types return different values\&. 
+.RE
+.LP
+.B
+test(Module) -> ok | {error,Reason}
+.br
+.B
+test(Module,Type) -> ok | {error,Reason}
+.br
+.B
+test(Module,Type,Value) -> ok | {error,Reason}
+.br
+.RS
+.LP
+Performs a test of encode and decode of all types in \fIModule\fR\&. The generated functions are called by this function\&. This function is useful during test to secure that the generated encode and decode functions and the general runtime support work as expected\&.
+.br
+ \fItest/1\fR iterates over all types in \fIModule\fR\&.
+.br
+ \fItest/2\fR tests type \fIType\fR with a random value\&.
+.br
+ \fItest/3 tests type <c>Type\fR with \fIValue\fR\&.
+.br
+ Schematically the following happens for each type in the module\&.
+.LP
+
+
+.nf
+{ok,Value} = asn1ct:value(Module,Type),
+{ok,Bytes} = asn1ct:encode(Module,Type,Value),
+{ok,Value} = asn1:decode(Module,Type,Bytes)\&.
+.fi
+.RE
+.SH AUTHOR
+.nf
+Kenneth Lundin - support@erlang.ericsson.se
+.fi

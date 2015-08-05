@@ -1,0 +1,264 @@
+
+
+
+etk(3)              ERLANG MODULE DEFINITION               etk(3)
+
+
+
+MODULE
+     etk -  Tk toolkit interface
+
+DESCRIPTION
+     Erlang/Tk (ETK) is an adoption of the Tcl/Tk  (4.2)  to  the
+     Erlang  environment.  Erlang  only  uses  the Tk part of the
+     Tcl/Tk. This means that the tcl part of the widgets are  re-
+     implemented (ported) to Erlang.
+
+
+Introduction
+     Erlang/Tk is an adoption of the Tcl/Tk (4.2) to  the  Erlang
+     environment.  Erlang  only  uses  the Tk part of the Tcl/Tk.
+     This means  that  the  tcl  part  of  the  widgets  are  re-
+     implemented (ported) to Erlang.
+
+     Furthermore, in order to be able  to  effectively  use  this
+     library,  understanding  the  GUI  programming  concepts  of
+     tcl/tk is absolutely essential.  Therefore  we  recommend  a
+     good  book  on tcl/tk such as "Effective Tcl/Tk Programming"
+     by "Mark Harrisson  and  Michael  McLennan,  Addison  Wesley
+     1998" as an introductory text to the "etk" library.
+
+     Since Tcl is string based language, the  syntax  had  to  be
+     changed somewhat. Instead of writing
+
+     <Command> <Path> -option value ..
+
+     In erlang we write :
+
+
+     Command Path [{option,value},...]).
+
+     This syntax will be more familiar to the erlang  programmer.
+     In  the  same  time  the binding is straight forward, if you
+     used tcl/tk before it will be a matter of  pattern  matching
+     to  convert an existing Tcl/Tk program into a Erlang/Tk pro-
+     gram.
+
+     In this first release of etk, the documentation is  somewhat
+     poor. The best way to get going with this initial release of
+     etk is to use the widget tour that can be found in the exam-
+     ples  directory.  The widget tour must be run in the "wtour"
+     directory itself.
+
+     % cd etk/examples/wtour
+     % erl
+     Eshell V47.4.1  (abort with ^G)
+     1>  make:all()
+
+     ......
+     2> wtour:start().
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    1
+
+
+
+
+
+
+etk(3)              ERLANG MODULE DEFINITION               etk(3)
+
+
+
+     To create a widget we use  the  syntax  _e_t_k:<_w_i_d_g_e_t>(_F_a_t_h_e_r,
+     _O_p_t_i_o_n_s) Options) where options is a list of {_O_p_t_i_o_n, _V_a_l_u_e}
+     or Value. This will hopefully become clear as  we  introduce
+     some examples.
+
+     A script in erlang is a fun. Depending on how and where  the
+     fun  is bound it must match the correct arity, this is where
+     some understanding of tk is needed. For example, to create a
+     button  and bind a function to it that will be executed when
+     the button is pressed we write:
+
+     Butt = etk:button(Top, [{text,"My Button"},
+                             {command, fun() -> io:format("Action\n") end}]).
+
+     One common thing to do is to let the function send a message
+     to some controlling process such as in:
+
+     Self = self(),
+     Butt = etk:button(Top, [{text,"My Button"},
+                             {command, fun() -> Self ! my_button end}]).
+
+     The function is evaluated in a different process  than  then
+     process that defines the binding, thus the _s_e_l_f() expression
+     must be evaluated before the binding is created.
+
+     If we want  to  bind  a  function  to  the  button  that  is
+     evaluated whenever the mouse enters the button, we have:
+
+     tk:bind(Butt, "<Enter>", ['%W'],
+              fun(W) -> io:format("Enter\n") end)
+
+     Events are evaluated in the widget context. When  an  event,
+     mouse  click  etc  enters the system, a widget is looked up.
+     Event functions bound to that widget are  searched  for  and
+     executed in the order given by bindtags. The default binding
+     order is "all class instance". By returning the  atom  _b_r_e_a_k
+     from an event function the evaluation chain is stopped.
+
+     Most  (if  not  all)  of  the  _e_t_k  api  functions  have   a
+     corresponding  detailed  description  in the original tk 4.2
+     documentation. Whenever appropriate, we provide a a link  to
+     the original documentation.
+
+     The module _e_t_k exports an API which is mainly  widget  crea-
+     tion  where  a new widget path is automatically created, the
+     main API is found in the _t_k module.
+
+The difference between the etk module
+     The _e_t_k module it self can be handy  when  creating  widgets
+     since it automatically creates a new path which is the cate-
+     nation of the parent widget with the type of the new widget.
+     For  example  when  we  create  a  new button or frame it is
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    2
+
+
+
+
+
+
+etk(3)              ERLANG MODULE DEFINITION               etk(3)
+
+
+
+     convenient to not have to explicitly specify the new path to
+     the  new widget. Thus, etk exports a number of function that
+     both generate a new path as well as create the new widget in
+     a manner similar to:
+
+
+     W = tk:mkpath(Parent,WidgetType),
+     tk:Widget(W, Opts),
+     W.
+
+     In particular we have _e_t_k functions to create the  following
+     widgets with a generated widget path.
+
+       * _t_o_p_l_e_v_e_l
+
+       * _b_u_t_t_o_n
+
+       * _c_a_n_v_a_s
+
+       * _c_h_e_c_k_b_u_t_t_o_n
+
+       * _e_n_t_r_y
+
+       * _f_r_a_m_e
+
+       * _l_a_b_e_l
+
+       * _l_i_s_t_b_o_x
+
+       * _m_e_n_u
+
+       * _m_e_n_u_b_u_t_t_o_n
+
+       * _m_e_s_s_a_g_e
+
+       * _r_a_d_i_o_b_u_t_t_o_n
+
+       * _s_c_a_l_e
+
+       * _s_c_r_o_l_l_b_a_r
+
+       * _t_e_x_t
+
+     One of the few case where  it  is  necessary  to  explicitly
+     create  the  new  path to a widget, by hand is when we setup
+     the scrollbar to an other widget. Example:
+
+     Top = etk:toplevel([]),
+     tk:wm([title,Top,"Widget tour"]),
+     Self = self(),
+     Text = Top ++ ".txt",
+     ScrollY = Top ++ ".sy",
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    3
+
+
+
+
+
+
+etk(3)              ERLANG MODULE DEFINITION               etk(3)
+
+
+
+     tk:text(Text,
+           [{yscrollcommand,
+             fun(From,To) -> tk:cmd(ScrollY, ["set",From,To]) end}]).
+
+AUTHOR
+     Tony Rogvall - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: etk  0.9.3                    4
+
+
+

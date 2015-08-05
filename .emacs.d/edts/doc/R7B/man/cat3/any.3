@@ -1,0 +1,132 @@
+
+
+
+any(3)              ERLANG MODULE DEFINITION               any(3)
+
+
+
+MODULE
+     any - the corba any type
+
+DESCRIPTION
+     This module contains functions that gives  an  interface  to
+     the Corba any type.
+
+     Note that the _a_n_y interface in orber does not contain a des-
+     troy  function  because  the  any  type is represented as an
+     Erlang record and therefor will be removed  by  the  garbage
+     collector when not in use.
+
+     The type _T_C used below describes an IDL type and is a  tuple
+     according to the to the Erlang language mapping.
+
+     The type _A_n_y used below is defined as:
+
+           -record(any, {typecode, value}).
+
+     where _t_y_p_e_c_o_d_e is a TC tuple and _v_a_l_u_e is an Erlang term  of
+     the type defined by the typecode field.
+
+
+EXPORTS
+     create() -> Result
+     create(Typecode, Value) -> Result
+
+          Types
+               Typecode = TC
+               Value = term()
+               Result = Any
+
+          The create/0 function creates an empty any  record  and
+          the create/2 function creates an initialized record.
+
+     set_typecode(A, Typecode) -> Result
+
+          Types
+               A = Any
+               Typecode = TC
+               Result = Any
+
+          This function sets the typecode of _A and returns a  new
+          any record.
+
+     get_typecode(A) -> Result
+
+          Types
+               A = Any
+               Result = TC
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   1
+
+
+
+
+
+
+any(3)              ERLANG MODULE DEFINITION               any(3)
+
+
+
+          This function returns the typecode of _A.
+
+     set_value(A, Value) -> Result
+
+          Types
+               A = Any
+               Value = term()
+               Result = Any
+
+          This function sets the value of _A and returns a new any
+          record.
+
+     get_value(A) -> Result
+
+          Types
+               A = Any
+               Result = term()
+
+          This function returns the value of _A.
+
+AUTHOR
+     Lars Thorsen - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   2
+
+
+

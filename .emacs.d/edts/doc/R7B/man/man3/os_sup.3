@@ -1,0 +1,117 @@
+.TH os_sup 3 "os_mon  1.3.9" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+os_sup \- This module, together with some dedicated UNIX processes, implements a message passing service from the Solaris operating system to the error logger in the Erlang runtime system\&. The Solaris (SunOS 5\&.x) messages are retrieved from the syslog-daemon, syslogd\&. 
+.SH DESCRIPTION
+.LP
+This module starts a server written in Erlang (and later referenced only as server), which receives messages from the Solaris operating system\&. The messages are tagged with an atom and subsequently forwarded to the \fIerror_logger\fR in the Erlang runtime system\&. If the atom is \fIstd_error\fR, the messages are handled the same way as the bulk of internal error messages in the Erlang runtime system\&. 
+.LP
+This module, together with the dedicated UNIX-processes, makes a number of reconfigurations to the Solaris operating system when the service is enabled\&. These configurations include:
+.RS 2
+.TP 2
+*
+the installation of a new configuration file for \fIsyslogd\fR
+.TP 2
+*
+the creation of a named pipe
+.TP 2
+*
+the start of a port program\&.
+.RE
+.LP
+As a consequence of these modifications:
+.RS 2
+.TP 4
+1.
+\fIsyslogd\fR writes messages of interest to the named pipe
+.TP 4
+2.
+the port program reads messages from the named pipe and forwards them to the server
+.TP 4
+3.
+the server delivers them to the error logger of the Erlang runtime system\&.
+.RE
+.LP
+When the service is disabled, the original configuration is restored\&. 
+
+.SH EXPORTS
+.LP
+.B
+start() -> Result
+.br
+.RS
+.TP
+Types
+Result = {ok, Pid} | {error, {already_started, Pid}}
+.br
+Pid = pid()
+.br
+.RE
+.RS
+.LP
+This function starts the server together with its dedicated UNIX processes\&. It returns \fI{ok, Pid}\fR if the start was successful, otherwise \fI{error, already_started}\fR\&. 
+.RE
+.LP
+.B
+start_link() -> Result
+.br
+.RS
+.TP
+Types
+Result = {ok, Pid} | {error, {already_started, Pid}}
+.br
+Pid = pid()
+.br
+.RE
+.RS
+.LP
+This function starts the server together with its dedicated UNIX processes\&. The caller is also linked to the server\&. It returns \fI{ok, Pid}\fR if the start was successful, otherwise \fI{error, already_started}\fR \&. 
+.RE
+.LP
+.B
+stop() -> Result
+.br
+.RS
+.TP
+Types
+Result = ok | not_started
+.br
+.RE
+.RS
+.LP
+This function stops the server and restores the original configuration of the operating system\&. It returns \fIok\fR if successful, otherwise \fInot_started\fR\&. 
+.RE
+.SH Operation
+.RS 2
+.TP 4
+1.
+This module is normally started by the \fIsupervisor\fR and \fIsupervisor_bridge\fR behaviours\&. Consequently, the user should not call the functions described above\&. 
+.TP 4
+2.
+This module cannot be run in multiple instances on the same hardware\&. Special care must be taken if two or more Erlang nodes execute on the same hardware platform so that only one node uses this service \fIin any one instance\&.\fR 
+.TP 4
+3.
+This module requires that a number of actions be been taken prior to starting it\&. These actions must be performed with \fIroot\fR privileges on SunOS 5 and include change of ownership and file privileges of an executable binary file, and copying and creating a modified copy of the configuration file for the syslog-daemon \fIsyslogd\fR\&. In addition, a the following configuration parameters must be set\&. 
+.RS 4
+.RS 2
+.TP 4
+(A)
+implement the server using \fIgen_server\fR\&.
+.TP 4
+(B)
+implement protection against starting two or more instances of the service on the same hardware platform\&.
+.RE
+.RE
+.RE
+.SH See also
+.RS 2
+.TP 2
+*
+os_mon(3), error_logger(3), Installation Guide for your platform\&.
+.TP 2
+*
+syslogd(1M), syslog\&.conf(4) in the Solaris documentation\&.
+.RE
+.SH AUTHOR
+.nf
+Mats Nilsson - support@erlang.ericsson.se
+.fi

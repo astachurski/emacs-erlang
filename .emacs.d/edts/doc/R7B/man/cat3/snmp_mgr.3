@@ -1,0 +1,330 @@
+
+
+
+snmp_mgr(3)         ERLANG MODULE DEFINITION          snmp_mgr(3)
+
+
+
+MODULE
+     snmp_mgr - SNMP Manager
+
+DESCRIPTION
+     The module _s_n_m_p__m_g_r provides a simple SNMP  (Simple  Network
+     Management  Protocol)  manager. It is used for test purposes
+     during agent development. There are two modes of  operation.
+     First,  it  can  be  used  as a simple command line manager.
+     Second, it can be used to write test suites for testing  the
+     MIB implementation in the SNMP agent.
+
+     The manager supports SNMPv1, SNMPv2c and  SNMPv3,  including
+     authentication and privacy.
+
+     The command line manager uses the Erlang shell. It  supports
+     all  SNMPv1, v2 and v3 requests, i.e. _s_e_t, _g_e_t, _g_e_t-_n_e_x_t and
+     _g_e_t-_b_u_l_k. For example, _s_n_m_p__m_g_r:_s([{[_1, _2, _3, _0],  "_h_e_j"}]),
+     sends  a  set request to the agent and _s_n_m_p__m_g_r:_g([[_1, _2, _3,
+     _0], [_m_y_V_a_r, _0]]) gets two values. The manager operates asyn-
+     chronously. This implies that the return value of most func-
+     tions is nonsense. When the manager gets a response  message
+     from the agent, it is echoed to the display.
+
+     The start-up option _q_u_i_e_t tells the manager not  to  display
+     incoming  SNMP  responses,  traps  and informs. Messages are
+     sent to the Erlang process that started  the  manager.  This
+     makes  it  possible to process them from an application or a
+     test suite.
+
+     Use the _e_x_p_e_c_t function (that operates on the message queue)
+     to  write test suites. Examples of how to write a test suite
+     can be found in _s_n_m_p__m_g_r__t_e_s_t_s._e_r_l.
+
+     MIBs (Management Information Base)  can  be  loaded  in  the
+     manager.  There are two reasons for doing this. OBJECT IDEN-
+     TIFIERs (Oids) can be entered  in  symbolic  form.  Example:
+     instead of [1,3,6,1,2,1,1,1], the symbolic name _s_y_s_D_e_s_c_r can
+     be used. The other reason is to take advantage of  the  type
+     information in the MIB when sending _s_e_t requests.
+
+     An _O_i_d is represented as a  list.  For  convenience,  nested
+     lists  are allowed. There is one exception though. If an oid
+     is entered in symbolic form, this symbol must be  the  first
+     item in the list. A symbolic name includes the complete path
+     from the top of the global naming tree. Accordingly, an  oid
+     can only contain _o_n_e symbolic name.
+
+     Examples of  valid  Oids  are:  [myVar,  0],  [1,2,3,4,5,0],
+     [myColumn, 95], [myTable, 4, 123, [5|"eklas"]].
+
+     The last example refers to column 4 of the row with the  two
+     keys 123 and [5|"eklas"] of table myTable.
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   1
+
+
+
+
+
+
+snmp_mgr(3)         ERLANG MODULE DEFINITION          snmp_mgr(3)
+
+
+
+     Known bug: There is not yet a {timeout, Msecs} option.
+
+
+EXPORTS
+     expect(Id, What) -> ok | {error, Id, Reason}
+     expect(Id, ErrorStatus,ErrorIndex,Varbinds)
+     expect(Id, trap, Enterp, Generic, Specific, Varbinds)
+     expect(Id, v2trap, Varbinds)
+     expect(Id, report, Varbinds)
+     expect(Id, {inform, InformReply}, Varbinds)
+
+          Types
+               Id = term()
+               What = any|trap|timeout|Varbinds|ErrorStatus
+               ErrorIndex = integer()
+               Enterp = oid()
+               Generic = integer()
+               Specific = integer()
+               InformReply = true | false | {error,  ErrorStatus,
+               ErrorIndex}
+
+            * _I_d is used to help identifying this particular test
+              in  a  long  test  suite.  It  is  not  used by the
+              manager.
+
+            * The  atom  _a_n_y  makes  the  test  succeed  for  any
+              response.
+
+            * _t_i_m_e_o_u_t succeeds if the message queue is empty  for
+              3.5  seconds.  This  can  be used to ensure that no
+              messages are pending.
+
+            * _E_r_r_o_r_S_t_a_t_u_s is an atom  which  describes  an  error
+              message. See documentation for the SNMP agent.
+
+            * _V_a_r_b_i_n_d_s is a list of {Oid, Value}|{Oid,any}.
+
+          If a response other than the expected one is  received,
+          an  error message is displayed and and {_e_r_r_o_r, _I_d, _R_e_a_-
+          _s_o_n} is returned. A call to _e_x_p_e_c_t is normally directly
+          preceeded by sending a message.
+
+          The reply to a received  Inform  request  can  be  con-
+          trolled.  If  _I_n_f_o_r_m_R_e_p_l_y  is  _t_r_u_e, a _n_o_E_r_r_o_r reply is
+          sent. If it is _f_a_l_s_e no reply is sent. If it is {_e_r_r_o_r,
+          _E_r_r_o_r_S_t_a_t_u_s,  _E_r_r_o_r_I_n_d_e_x}, a reply indicating the error
+          is sent.
+
+     g(Oids) -> void()
+
+          Types
+               Oids = [oid()]
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   2
+
+
+
+
+
+
+snmp_mgr(3)         ERLANG MODULE DEFINITION          snmp_mgr(3)
+
+
+
+          Sends a _g_e_t-_r_e_q_u_e_s_t.
+
+     gb(NonRepeaters, MaxRepetitions, Oids) -> void()
+
+          Types
+               NonRepeaters = integer()
+               MaxRepetitions = integer()
+               Oids = [oid()]
+
+          Sends a _g_e_t-_b_u_l_k-_r_e_q_u_e_s_t (See RFC1905).
+
+     gn(Oids) -> void()
+
+          Types
+               Oids = [oid()]
+
+          Sends a _g_e_t-_n_e_x_t-_r_e_q_u_e_s_t.
+
+     gn() -> void()
+
+          Sends yet another get-next-request constructed from the
+          previous  response. This is a nice feature for manually
+          traversing a MIB.
+
+     gn(N) -> void()
+
+          Types
+               N = integer()
+
+          Sends N _g_e_t-_n_e_x_t-_r_e_q_u_e_s_t requests.
+
+          The last response is used as  the  start  value.  Works
+          somewhat like a _g_e_t-_b_u_l_k-_r_e_q_u_e_s_t (see SNMPv2).
+
+     r() -> void()
+
+          Resends the last request.
+
+     s(Varbinds) -> void()
+
+          Types
+               Varbinds = [varbind()]
+
+          Sends a _s_e_t-_r_e_q_u_e_s_t.
+
+          Varbind is:
+
+            * {Oid, Value} if the object with Oid _O_i_d  is  loaded
+              by the manager.
+
+            * {Oid,  TypeTag,  Value}  where  TypeTag  is   _s|_o|_i
+              (String, Oid, Integer). This syntax is used if this
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   3
+
+
+
+
+
+
+snmp_mgr(3)         ERLANG MODULE DEFINITION          snmp_mgr(3)
+
+
+
+              object is not  defined  in  a  MIB  loaded  by  the
+              manager.  (Or  if  you  explicitly  want  to send a
+              request of wrongly typed data.)
+
+     start(Options)
+     start_link(Options) -> void()
+
+          Types
+               Options = [options()]
+
+          Starts the SNMP manager.
+
+          Mandatary options are:
+
+            * {agent, Agent} - where Agent is the IP  address  of
+              the  agent {int(),int(),int(),int()} or the name of
+              the host (string()).
+
+          Optional options are:
+
+            * {_a_g_e_n_t__u_d_p, _i_n_t()} - the UDP port  that  the  agent
+              listens to. Default is 4000.
+
+            * {_t_r_a_p__u_d_p, _i_n_t()} - the UDP port where the  manager
+              will receive traps. Default is 5000.
+
+            * {_c_o_m_m_u_n_i_t_y, _s_t_r_i_n_g()} - the community  string  that
+              is  sent  in the requests from the manager. Default
+              is "public".
+
+            * {_c_o_n_t_e_x_t, _s_t_r_i_n_g()} - the context that is  sent  in
+              v3 requests from the manager. Default is "".
+
+            * {_u_s_e_r, _s_t_r_i_n_g()} - the USM user name that  is  sent
+              in  v3  requests from the manager. Default is "ini-
+              tial".
+
+            * {_e_n_g_i_n_e__i_d, _s_t_r_i_n_g()} - the engine ID of the agent.
+              Used in v3 only. Default is "agentEngine".
+
+            * {_c_o_n_t_e_x_t__e_n_g_i_n_e__i_d, _s_t_r_i_n_g()} - the context  engine
+              ID  used  in  v3  requests.  Default is the same as
+              _e_n_g_i_n_e__i_d.
+
+            * {_s_e_c__l_e_v_e_l, _n_o_A_u_t_h_N_o_P_r_i_v + _a_u_t_h_N_o_P_r_i_v | _a_u_t_h_P_r_i_v} -
+              the  requested  security  level.  Used  in v3 only.
+              Default is _n_o_A_u_t_h_N_o_P_r_i_v.
+
+            * {_d_i_r, _s_t_r_i_n_g()} -  the  directory  where  the  file
+              _u_s_m._c_o_n_f is located. This file is only needed if v3
+              is used. The  file  has  the  same  syntax  as  the
+              usm.conf file for the agent.
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   4
+
+
+
+
+
+
+snmp_mgr(3)         ERLANG MODULE DEFINITION          snmp_mgr(3)
+
+
+
+            * {_m_i_b_s, _L_i_s_t _o_f _f_i_l_e_n_a_m_e} - MIBs to be loaded in the
+              manager.  Default is no MIBs. The MIBs must be com-
+              piled.
+
+            * {_r_e_c_e_i_v_e__t_y_p_e, _p_d_u | _m_s_g} - defines the  format  of
+              delivered messages. Default is _p_d_u.
+
+            * _q_u_i_e_t - incoming responses are not displayed.  Mes-
+              sages  are  sent to the Erlang process that started
+              the manager. The format of the message  depends  on
+              the  value  of  _r_e_c_e_i_v_e__t_y_p_e.  If  the value is _p_d_u
+              (default),the message is {snmp_pdu, PDU} where  PDU
+              is  a  pdu()  or  a  trappdu()  record  defined  in
+              _s_n_m_p__t_y_p_e_s._h_r_l. If the value is _m_s_g, the message is
+              {_s_n_m_p__m_s_g,  _M_s_g,  _I_p, _U_d_p}. Default is, this option
+              is not present,  i.e.  all  incoming  requests  are
+              displayed. This option must be present when running
+              test suites.
+
+            * _v_1|_v_2|_v_3 - what SNMP version to use. Default is v1.
+
+     stop() -> void()
+
+          Stops the SNMP manager.
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Klas Eriksson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   5
+
+
+

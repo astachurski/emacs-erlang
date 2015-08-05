@@ -1,0 +1,354 @@
+.TH Mnemosyne 3 "mnemosyne  1.2.5" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mnemosyne \- The query language support for the DBMS Mnesia
+.SH DESCRIPTION
+.LP
+\fIQueries\fR are used for accessing the data in a Database Management System\&. The query specifies a relation (possibly complicated) to all of the selected data\&. This could involve several tables as well as conditions such as \&'<\&' (less than), function calls and similar\&. 
+.LP
+Mnesia has two query interfaces which are used together:
+.RS 2
+.TP 2
+*
+Mnemosyne, which is this module
+.TP 2
+*
+\fIquery list comprehensions\fR, an Erlang language construct for the queries\&.
+.RE
+.LP
+The exact syntax of query list comprehensions are described in a separate section of this document\&. 
+.LP
+The query list comprehensions only define the query and the syntax of the solutions to be returned\&. The actual evaluation is determined by calling different functions with a handle obtained by the list comprehension\&. For example: 
+
+.nf
+      -record(person, {name,age})\&.
+      Handle = 
+           query
+               [ P\&.name || P <- table(person) ]
+           end,
+      L = mnesia:transaction(
+           fun() ->
+               mnemosyne:eval(Handle)
+           end)
+.fi
+.LP
+The example above matches a list of all names in the table "person" with the variable \fIL\fR\&. Note the following points: 
+.RS 2
+.TP 2
+*
+Each database table must have a corresponding record declaration\&.
+.TP 2
+*
+A \fIquery\fR is declared with 
+.RS 2
+
+.nf
+          query [ <pattern> || <body> ] end
+.fi
+.LP
+
+.LP
+where \fI<pattern>\fR is an Erlang term without function calls\&. The notation \fIP\&.name\fR means that \fIP\fR is a variable and it has an associated record with a field \fIname\fR which we use\&. The \fI<body>\fR is a sequence of conditions separated by commas\&. In the example, we have \fI P <- table(person) \fR which means: "\fIP\fR is taken from the table \fIperson\fR"\&. 
+.LP
+The whole query could therefore be read as follows: "Make the list of all names of \fIP\fR such that \fIP\fR is taken from the table \fIperson\fR"\&. 
+.LP
+However, the query list comprehension does not return the answers but a \fIhandle\fR\&. This handle is used as an argument for different evaluation functions which do the actual query processing\&. In the example we used the simplest, \fIeval/1\fR, which evaluates the query and returns all the answers\&.
+.RE
+.TP 2
+*
+Some parts of the query must be evaluated in a Mnesia transaction or by utilizing an alternative Mnesia access context\&. These functions are marked in the function descriptions below\&. 
+.RE
+.LP
+After obtaining a handle from a query list comprehension, the query can be evaluated in three different ways: 
+.RS 2
+.TP 2
+*
+A simple all-answer query as in the example shown above\&. This function is \fIeval/1\fR\&. 
+.TP 2
+*
+Getting the answers in small or large chunks\&. The query may be aborted when enough solutions have been obtained\&. These are called \fIcursors\fR\&. The functions are \fIcursor/1\fR, \fIcursor/2\fR, \fInext_answers/1\fR, \fInext_answers/3\fR, \fIall_answers/1\fR, \fIall_answers/3\fR, and \fIdelete_cursor/1\fR\&. 
+.TP 2
+*
+An even more sophisticated cursor version where the time consuming part of the cursor creation can be done in advance\&. The functions are \fIsetup_query/1\fR, \fI init_query/1\fR, \fIinit_query/2\fR, \fInext_answers/1\fR, \fInext_answers/3\fR, \fIall_answers/1\fR, \fIall_answers/3\fR, and \fIdelete_query/1\fR\&. 
+.RE
+.LP
+Let us reconsider the previous example, this time with cursors\&. In the following example, we will get just five names \fIwithout evaluating all of the answers\fR: 
+
+.nf
+      -record(person, {name,age})\&.
+      Handle =
+           query
+               [ P\&.name || P <- table(person) ]
+           end,
+      L = mnesia:transaction(
+           fun() ->
+               Cursor = mnemosyne:cursor(Handle),
+               As = mnemosyne:next_answers(Cursor, 5, 5),
+               mnemosyne:delete_cursor(Cursor),
+               As
+           end)
+.fi
+.LP
+The third way of evaluating a query is by a further division of the query process\&. The \fIcursor/1\fR function is now split into two\&. The reason for this is that we can set up the query when there is plenty of time and initialize it when answers are needed quickly\&. As in the previous example, we will get just five names: 
+
+.nf
+      -record(person, {name,age})\&.
+      
+      Handle = 
+           query
+               [ P\&.name || P <- table(person) ]
+           end,
+      
+      QuerySetup = mnemosyne:setup_query(Handle),
+      L = mnesia:transaction(
+           fun() ->
+               Cursor = mnemosyne:init_query(QuerySetup),
+               mnemosyne:next_answers(Cursor, 5, 5)
+           end),
+      
+      % Here we may call more init_query-next_answers constructions
+      % with the same Handle
+      mnemosyne:delete_query(QuerySetup)
+.fi
+
+.SH EXPORTS
+.LP
+.B
+all_answers(Cursor) -> Answer
+.br
+.RS
+.LP
+Returns all remaining answers from the query identified by \fICursor\fR\&. It can be applied after \fInext_answers\fR to obtain all answers that are left\&. 
+.LP
+\fI Note:\fR This must be evaluated inside a transaction\&. 
+.RE
+.LP
+.B
+cursor(Handle) -> Cursor
+.br
+.B
+cursor(Handle,Nprefetch) -> Cursor
+.br
+.RS
+.LP
+Sets up a query for evaluation and starts an answer pre-fetch\&. \fINprefetch\fR gives the number of answers to pre-fetch and must be greater than 0\&. The default value is 1\&. A pre-fetch is the first part of a query evaluation\&. It is placed in a separate process which may on some occasions speed up the subsequent collection of answers\&. 
+.LP
+\fI Note:\fR This must be evaluated inside a transaction\&. 
+.RE
+.LP
+.B
+delete_cursor(Cursor)
+.br
+.RS
+.LP
+Deletes the Cursor and associated query evaluation\&. 
+.LP
+\fI Note:\fR This must be evaluated inside a transaction\&. 
+.RE
+.LP
+.B
+delete_query(QuerySetup)
+.br
+.RS
+.LP
+Deletes a query setup\&. 
+.RE
+.LP
+.B
+eval(Handle) -> Answers
+.br
+.RS
+.LP
+Starts a query evaluation according to the \fIHandle\fR and collects all answers in one operation\&. 
+.LP
+\fI Note:\fR This must be evaluated inside a transaction\&. 
+.RE
+.LP
+.B
+init_query(QuerySetup) -> Cursor
+.br
+.B
+init_query(QuerySetup,Nprefetch) -> Cursor
+.br
+.RS
+.LP
+Performs the last short step in starting a query from \fIQuerySetup\fR\&. \fINprefetch\fR defines the number of answers to pre-fetch as in \fIcursor/2\fR\&. The default value is 1\&. 
+.LP
+\fI Note:\fR This must be evaluated inside a transaction\&. 
+.RE
+.LP
+.B
+next_answers(Cursor) -> Answers
+.br
+.B
+next_answers(Cursor,Nmin,Nmax) -> Answers
+.br
+.RS
+.LP
+Fetches the next answers from the query evaluation identified by \fICursor\fR\&. At least \fINmin\fR and at most \fINmax\fR answers are collected\&. If less than \fINmin\fR answers are returned; for example, 0, there are no more answers\&. If enough answers are not available, but more are expected, the functions wait for them\&. 
+.LP
+\fI Note:\fR This must be evaluated inside a transaction\&. 
+.RE
+.LP
+.B
+reoptimize(Handle) -> Handle
+.br
+.RS
+.LP
+Re-optimizes a query\&. Queries are always optimized, but the optimization takes into account the dynamic table statistics like size, attribute distribution etc\&. If a table has changed after obtaining the \fIHandle\fR from a query list comprehension, the query execution plan will no longer be appropriate (although semantically correct)\&. This function will rearrange the execution plan according to the current statistics from the database\&. 
+.RE
+.LP
+.B
+setup_query(Handle) -> QuerySetup
+.br
+.RS
+.LP
+Creates a query setup, that is, performs most of a query evaluation without actually initiating the actual evaluation\&. 
+.RE
+.LP
+.B
+version() -> String
+.br
+.RS
+.LP
+Returns the current module version\&. 
+.RE
+.SH List Comprehension
+.LP
+There must be a directive in the Erlang file telling the compiler how to treat queries\&. This directive is: 
+
+.nf
+-include_lib("mnemosyne/include/mnemosyne\&.hrl")\&.
+.fi
+.LP
+A list comprehension consists of: 
+
+.nf
+                query [ <pattern> || <body> ] end
+.fi
+.LP
+The \fI<pattern>\fR is a description of the terms that are returned by a query\&. Details of how to obtain the actual values in the \fI<pattern>\fR is given by the \fI<body>\fR\&. 
+.LP
+The \fI<pattern>\fR is an Erlang term without function calls\&. It typically has one or more variables from the \fI<body>\fR which are instantiated for each answer produced\&. Every element in the returned list is composed by instantiating this \fI<pattern>\fR and then adding it to the answers\&. 
+.LP
+The \fI<body>\fR takes a sequence of \fIgoals\fR separated by ","\&. The possible goals are: 
+.RS 2
+.TP 2
+*
+\fI<logical-variable> <- table( <table-name> [ , <table-type> ] )\fR 
+.TP 2
+*
+\fI<logical-variable> <- rule( <rule-name> )\fR 
+.TP 2
+*
+\fI<logical-variable> <- rule( <module> : <rule-name> )\fR 
+.TP 2
+*
+\fI<logical-variable> <- <erlang-list-expression>\fR 
+.TP 2
+*
+\fI<expression> <relop> <expression>\fR 
+.TP 2
+*
+\fI<erlang-test-expression>\fR 
+.RE
+.LP
+A \fI<logical-variable>\fR is written exactly as an Erlang variable\&. The \fI<table-name>\fR, \fI<table-type>\fR, \fI<rule-name>\fR and \fI<module>\fR are atoms\&. The \fI<table-name>\fR and \fI<table-type>\fR may be an Erlang variable which must be bound at runtime\&. The logical variables are local to a list comprehension and shadows any Erlang variables with the same name\&. 
+.LP
+An \fI<expression>\fR is any Erlang expression which may include function calls and \fI<logical-variable>\fR\&. The variants \fI<erlang-list-expression>\fR is an \fI<expression>\fR which must produce lists where all elements are records of the same type\&. The \fI<logical-variable>\fR must have the same associated record\&. The \fI<erlang-test-expression>\fR is an \fI<expression>\fR which only has the values \fItrue\fR or \fIfalse\fR\&. 
+.LP
+Erlang variables are allowed in all variants of \fI<expression>\fR and in \fI<pattern>\fR\&. They must always be bound in the query list comprehension\&. 
+.LP
+\fIlogical variables\fR is local to a query list comprehension and have an associated Erlang record\&. The associated record can in most cases be inferred by the query compiler\&. Therefore, the normal notation for the field \fIf1\fR in variable \fIX\fR is just \fIX\&.f1\fR\&. The query compiler notifies when it cannot deduce the corresponding record\&. The explicit form is \fIX#r\&.f1\fR as in ordinary Erlang\&. If the type of the record is not deducable at Erlang compile time, it is more efficient to use the explicit form as a help to the compiler\&. A variable receiving values from a table will have the record with the same name as the table\&. 
+.LP
+Erlang variables are allowed in \fI<expression>\fR and in some places as described above\&. They must always be bound in the query list comprehension\&. 
+.LP
+Errors in the description are reported as exceptions in the Erlang standard format as follows: 
+
+.nf
+      {error, {Line,Module,Msg}}
+.fi
+.LP
+The descriptive English text is returned by calling 
+
+.nf
+      Module:format_error(Msg)
+.fi
+
+.br
+.SS Note:
+.LP
+A function used in a query list comprehension must \fInever\fR directly or indirectly: 
+.RS 2
+.TP 4
+1.
+have side effects 
+.TP 4
+2.
+access the database either by a query
+.br
+ or by Mnesia functions 
+.TP 4
+3.
+spawn processes 
+.TP 4
+4.
+send or receive messages 
+.RE
+
+.SH Rules (views)
+.LP
+A \fIrule\fR (or \fIview\fR) is a declaration of how to combine data from sources as a kind of "subroutine"\&. Assume that we have the following query list comprehension: 
+
+.nf
+      query
+          [ Employee || Employee <- table(employee),
+                        Employee\&.department = sales  ]
+      end
+.fi
+.LP
+This retrieves a list of all sales employees\&. This could be formulated in the following rule: 
+
+.nf
+      sales(E, employee) :-
+              E <- table(employee),
+              E\&.salary = sales\&.
+.fi
+.LP
+The \fIemployee\fR declaration in the head of the rule forces the rule argument to associate the \fIemployee\fR record\&. If we omit the declaration, then the associated record would be the rule name, in this case \fIsales\fR\&. Note that the syntax used in previous versions of Mnemosyne by using an separate \fIargtype\fR declaration still works, but the above method is prefered\&. 
+.LP
+The \fIsales\fR rule may now be used in a query list comprehension: 
+
+.nf
+      query
+          [ SalesPerson || SalesPerson <- rule(sales) ]
+      end
+.fi
+.LP
+The SalesPerson is an \fIemployee\fR record because of the declaration of the rule above\&. Another example lists the names of all female sales people: 
+
+.nf
+      query
+          [ SalesPerson\&.name || SalesPerson <- rule(sales),
+                                SalesPerson\&.sex = female   ]
+      end
+.fi
+.LP
+The rule must have one argument when used\&. Although the declaration of a rule looks similar to an ordinary function, no function of that name is constructed\&. Hence the name of the rule can be used for another function\&. All rules are automatically exported so they could be referred in other modules by the usual notation \fImodule:name\fR\&. After the \fI:-\fR, there is the usual \fI<body>\fR as in the query list comprehension\&. 
+.SH Generated functions\&.
+.LP
+When compiling queries some extra (hidden) functions are automatically generated and exported\&. Thus, there cannot be other functions with the same name and arity within the module\&. Three such generated functions exist\&. They are: 
+.RS 2
+.TP 2
+*
+\fIMNEMOSYNE QUERY/2\fR
+.TP 2
+*
+\fIMNEMOSYNE RECFUNDEF/1\fR
+.TP 2
+*
+\fIMNEMOSYNE RULE/1\fR
+.RE
+.SH AUTHOR
+.nf
+Hans Nilsson - support@erlang.ericsson.se
+.fi

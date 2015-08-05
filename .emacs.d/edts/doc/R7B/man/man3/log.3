@@ -1,0 +1,192 @@
+.TH log 3 "eva  2.0.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+log \- Client API for the log functionality in the EVA application
+.SH DESCRIPTION
+.LP
+This module contains client functions to the generic Log Control services in the EVA application\&. There are two services available; log monitoring and log transfer\&. The logs are controlled by a log server, and each log may be transfered with FTP to a remote host\&. 
+.LP
+The log server has a list of all active logs in the system\&. An application that wants to make a log controllable with this functionality, must register the log in the log server\&. Each log is implemented as a \fIdisk_log\fR log\&. The application stores its log records using the ordinary functions in \fIdisk_log\fR\&. The following picture illustrates the idea: 
+
+.nf
+ +------+     tell     +-------+
+ | Appl |   -------->  | log   |
+ +------+              | server|  
+    |                _ +-------+  
+    |open,          /   
+    |log*,         /control      
+    |close        /
+    |    +---------+
+    +--->| disk_log|
+         +---------+
+.fi
+.LP
+First, the application opens the log\&. Thenit registers the log in the log server, which makes the log server control the log\&. The application can store log records in the log, until it eventually closes the log, and tells the log server about it\&. 
+.LP
+Each log has an administrative and an operational status, that both can be either \fIup\fR or \fIdown\fR\&. The administrative status is configurable, and reflects the desired operational status\&. Normally they are both the same\&. If the administrative status is set to \fIup\fR, the operational status will be \fIup\fR as well\&. However, if the log for some reason does not work, for example if the disk partition is full, the operational status will be \fIdown\fR\&. When the operational status is down, no records are stored in the log\&. 
+
+.SH Alarms
+.LP
+Two EVA alarms are defined in the \fIlog\fR service, \fIlog_file_error\fR and \fIlog_wrap_too_often\fR\&. 
+.RS 2
+.TP 2
+*
+\fIlog_file_error\fR\&. This alarm is generated if there is a file error when an item should be logged\&. Default severity is \fIcritical\fR\&. The cause for this alarm can be any \fIReason\fR as returned from \fIfile:write\fR in case of error (it returns \fI{error, Reason}\fR)\&. The alarm is cleared if the file system starts working again\&. 
+.TP 2
+*
+\fIlog_wrap_too_often\fR\&. This alarm is generated when the log wraps more often than the wrap time\&. Default severity is \fImajor\fR\&. The cause for this alarm is undefined\&. The alarm is cleared if the log wraps within the wrap time, the next time it wraps\&. 
+.RE
+.SH EXPORTS
+.LP
+.B
+close(Name) -> ok
+.br
+.RS
+.TP
+Types
+Name = string()
+.br
+.RE
+.RS
+.LP
+Use this function to remove a log from the log server\&. 
+.RE
+.LP
+.B
+get_logs() -> [Log]
+.br
+.RS
+.TP
+Types
+Log = #log
+.br
+.RE
+.RS
+.LP
+Returns all logs known to \fIlog_server\fR\&. The record \fI#log\fR is defined in the file \fIlog\&.hrl\fR\&. 
+.RE
+.LP
+.B
+open(Name,Type,WrapTime)
+.br
+.RS
+.TP
+Types
+Name = string()
+.br
+Type = term()
+.br
+WrapTime = integer()
+.br
+.RE
+.RS
+.LP
+Makes \fIlog_server\fR aware of the log \fIName\fR\&. The log must be an open \fIdisk_log\fR log\&. 
+.LP
+The type argument is there for information to a manager\&. 
+.LP
+If the log is a wrap log, \fIlog_server\fR generates the \fIlog_wrap_too_often\fR alarm if the log wraps more often than \fIWrapTime\fR seconds\&. In this context, wraps means that \fIdisk_log\fR switches to a previously used file, and some log items are lost\&. 
+.RE
+.LP
+.B
+set_admin_status(Name, AdminStatus) -> OperStatus | {error, Reason}
+.br
+.RS
+.TP
+Types
+Name = string()
+.br
+AdminStatus = OperStatus = up | down
+.br
+Reason = {error, {no_such_log, Name}}
+.br
+.RE
+.RS
+.LP
+Sets the desired state of the log\&. Returns the new operational status of the log\&. If the administrative status is set to \fIup\fR, and the operational status is \fIdown\fR, there is some error with the logging mechanism, for example if the disk partition is full\&. 
+.LP
+If the operational status of the log is \fIdown\fR, no log records will be stored in the log\&. This function uses the functions \fIdisk_log:block/unblock\fR to change the operational status\&. 
+.RE
+.LP
+.B
+transfer(Host,User,Passwd,DestFile,SearchFunc) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Host = ip_address()
+.br
+User = string()
+.br
+Passwd = string()
+.br
+DestFile = string()
+.br
+SearchFunc = {M, F, A}
+.br
+Reason = ftp_bad_address | ftp_login_error | ftp_write_error | ftp_tranfer_error | {bad_search_result, term()}
+.br
+ip_address() = string() | {int(), int(), int(), int()}
+.br
+M = F = atom()
+.br
+A = list()
+.br
+M:F(Continuation | A) -> SearchResult
+.br
+SearchResult = eof | {NewContinuation, Bytes} | {error, R}
+.br
+Continuation = start | cont()
+.br
+NewContinuation = cont()
+.br
+Bytes = binary()
+.br
+R = term()
+.br
+.RE
+.RS
+.LP
+This function is used to transfer a log with FTP to a remote host, for example a mangement station\&. It could be triggered from for example SNMP or from a web interface to the system\&. This log is received as one contiguous file, although it is stored as several files in the underlying \fIdisk_log\fR log\&. It is possible to filter the log for certain log records, and to format the log records\&. Thus, log records can be efficiently stored by not formatting them when they are written, but later when the log is actually needed\&. Of course, to further improve performance, the log records can be transferred unformatted as well, and later formatted off-line at the management station\&. 
+.LP
+The \fIHost\fR argument is either a string or a four-tuple representing the IP address of the host\&. The string can be the name of the host, or the IP address in dotted decimal notation, for example "150\&.236\&.14\&.136"\&. 
+.LP
+The \fISearchFunc\fR argument specifies a function that will be called by the transfer session to get a chunk of log records to transfer\&. At the first call, the atom \fIstart\fR is used as an initial continuation\&. Each time the function is called, it is supposed to return a new continuation and a binary that contains the bytes to be transferred (the formatted log records)\&. When the end of the log is reached, \fIeof\fR is returned by the function\&. The return values of the \fISearchFunc\fR is chosen to match those of \fIdisk_log:chunk/2\fR\&. The extra arguments (\fIA\fR) to the functions can be used to pass filtering information to the search function\&. An example of a search function: 
+
+.nf
+-module(my_log)\&.
+
+f(Cont, Time) ->
+    case disk_log:chunk("my_log", Cont) of
+        eof ->
+            eof;
+        {error, R} ->
+            {error, R};
+        {NCont, ListOfTerms} ->
+            List = lists:map(fun(Term) ->
+                                format(Term, Time)
+                             end, ListOfTerms),
+            Bin = list_to_binary(List),
+            {NCont, Bin}
+    end\&.
+
+%% Each log record is a tuple: {LogTime, LogData}
+format({LogTime, LogData}, Time) when LogTime > Time ->
+    io_lib:format("time: ~p data: ~p~n", [LogTime, LogData]);
+format(_LogRecord, _Time) ->
+    []\&.
+.fi
+.LP
+This function can be used as follows to transfer all log records stored after 1997-11-01: 
+
+.nf
+log:transfer("cave\&.ericsson\&.se", "mbj", "secret!", "my_log\&.txt",
+             {my_log, f, [{1997,11,01}]}
+.fi
+.RE
+.SH SEE ALSO
+.LP
+disk_log(3), eva(3), file(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

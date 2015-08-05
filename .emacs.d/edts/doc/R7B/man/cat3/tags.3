@@ -1,0 +1,132 @@
+
+
+
+tags(3)             ERLANG MODULE DEFINITION              tags(3)
+
+
+
+MODULE
+     tags - Generate Emacs TAGS file from Erlang source files
+
+DESCRIPTION
+     A _T_A_G_S file is used by Emacs to find function  and  variable
+     definitions  in  any  source  file  in  large projects. This
+     module can generate a _T_A_G_S file from Erlang source files. It
+     recognises functions, records, and macro definitions.
+
+
+EXPORTS
+     file(File [, Options])
+
+          Create a _T_A_G_S file for the file _F_i_l_e.
+
+     files(FileList [, Options])
+
+          Create a TAGS file for the files in the list _F_i_l_e_L_i_s_t.
+
+     dir(Dir [, Options])
+
+          Create a TAGS file for all files in directory _D_i_r.
+
+     dirs(DirList [, Options])
+
+          Create a TAGS file for all files in  any  directory  in
+          _D_i_r_L_i_s_t.
+
+     subdir(Dir [, Options])
+
+          Descend recursively down the directory _D_i_r and create a
+          _T_A_G_S file based on all files found.
+
+     subdirs(DirList [, Options])
+
+          Descend recursively down all the directories in _D_i_r_L_i_s_t
+          and create a _T_A_G_S file based on all files found.
+
+     root([Options])
+
+          Create a _T_A_G_S file covering all  files  in  the  Erlang
+          distribution.
+
+OPTIONS
+     The functions above have an optional argument,  _O_p_t_i_o_n_s.  It
+     is a list which can contain the following elements:
+
+       * {_o_u_t_f_i_l_e,  _N_a_m_e_O_f_T_A_G_S_F_i_l_e}  Create  a  _T_A_G_S  file  named
+         _N_a_m_e_O_f_T_A_G_S_F_i_l_e.
+
+       * {_o_u_t_d_i_r, _N_a_m_e_O_f_D_i_r_e_c_t_o_r_y} Create a file  named  _T_A_G_S  in
+         the directory _N_a_m_e_O_f_D_i_r_e_c_t_o_r_y.
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   1
+
+
+
+
+
+
+tags(3)             ERLANG MODULE DEFINITION              tags(3)
+
+
+
+     The default behaviour is to create a file named _T_A_G_S in  the
+     current directory.
+
+Examples
+       * _t_a_g_s:_r_o_o_t([{_o_u_t_f_i_l_e, "_r_o_o_t._T_A_G_S"}]).
+
+
+         This command will create a file named _r_o_o_t._T_A_G_S  in  the
+         current  directory.  The file will contain references to
+         all Erlang source files in the Erlang distribution.
+
+       * _t_a_g_s:_f_i_l_e_s(["_f_o_o._e_r_l", "_b_a_r._e_r_l", "_b_a_z._e_r_l"],  [{_o_u_t_d_i_r,
+         "../_p_r_o_j_e_c_t_d_i_r"}]).
+
+
+         Here  we  create  file  named  _T_A_G_S  placed  it  in  the
+         directory../_p_r_o_j_e_c_t_d_i_r.  The  file  contains information
+         about the functions, records, and macro  definitions  of
+         the three files.
+
+SEE ALSO
+       * Richard M. Stallman. GNU Emacs Manual, chapter  "Editing
+         Programs",  section  "Tag Tables". Free Software Founda-
+         tion, 1995.
+
+       * Anders Lindgren. The  Erlang  editing  mode  for  Emacs.
+         Ericsson, 1998.
+
+AUTHOR
+     Anders Lindgren - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   2
+
+
+

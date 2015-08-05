@@ -1,0 +1,132 @@
+
+
+
+lib(3)              ERLANG MODULE DEFINITION               lib(3)
+
+
+
+MODULE
+     lib - Interface Module
+
+DESCRIPTION
+     The module _l_i_b provides the following useful  library  func-
+     tions.
+
+
+EXPORTS
+     flush_receive() -> void()
+
+          Flushes the message buffer of the current process.
+
+     error_message(Format, Args)
+
+          Prints error message _A_r_g_s in accordance with _F_o_r_m_a_t  in
+          the normal way.
+
+     progname() -> atom()
+
+          Returns the name of the script that starts the  current
+          Erlang session.
+
+     nonl(List1)
+
+          Removes the last newline character, if any, in _L_i_s_t.
+
+     send(To, Msg)
+
+          This function to makes it possible to  send  a  message
+          through _a_p_p_l_y.
+
+     sendw(To, Msg)
+
+          As _s_e_n_d/_2, but waits for an answer. It  is  implemented
+          as follows:
+
+            sendw(To, Msg) ->
+              To ! {self(),Msg},
+              receive
+                Reply -> Reply
+              end.
+
+          The message returned is not necessarily a reply to  the
+          message sent.
+
+Warning
+     This module is retained for compatibility. It may  disappear
+     without warning in a future release.
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+lib(3)              ERLANG MODULE DEFINITION               lib(3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+

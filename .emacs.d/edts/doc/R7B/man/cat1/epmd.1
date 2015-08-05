@@ -1,0 +1,132 @@
+
+
+
+epmd(1)                   USER COMMANDS                   epmd(1)
+
+
+
+NAME
+     epmd - Erlang Port Mapper Daemon
+
+DESCRIPTION
+     This daemon acts as a name server on all hosts  involved  in
+     distributed Erlang computations. When an Erlang node starts,
+     the node has a name and it obtains an address from the  host
+     OS  kernel.  The  name  and the address are sent to the _e_p_m_d
+     daemon running on the local host. In a  TCP/IP  environment,
+     the  address  consists  of the IP address and a port number.
+     The name of the node is an atom on the  form  of  _N_a_m_e@_N_o_d_e.
+     The  job  of  the _e_p_m_d daemon is to keep track of which node
+     name listens on which address. Hence, _e_p_m_d map symbolic node
+     names to machine addresses.
+
+     The daemon is started automatically by the  Erlang  start-up
+     script.
+
+     The program _e_p_m_d can also be used for  a  variety  of  other
+     purposes,  for example checking the DNS (Domain Name System)
+     configuration of a host.
+
+
+EXPORTS
+     epmd [-daemon]
+
+          Starts a name server as a daemon. If it  has  no  argu-
+          ment,  the  _e_p_m_d runs as a normal program with the con-
+          trolling terminal of the shell in which it is  started.
+          Normally, it should run as a daemon.
+
+     epmd -names
+
+          Requests the names of the local Erlang nodes  _e_p_m_d  has
+          registered.
+
+     epmd -kill
+
+          Kills the _e_p_m_d process.
+
+     epmd -help
+
+          Write short info about the usage including some  debug-
+          ging options not listed here.
+
+Logging
+     On some operating systems _s_y_s_l_o_g  will  be  used  for  error
+     reporting  when  epmd runs as an daemon. To enable the error
+     logging you have to edit /etc/syslog.conf() file and add  an
+     entry
+
+           !epmd
+
+
+
+Ericsson Utvecklings ALBast change: erts  5.0.1                   1
+
+
+
+
+
+
+epmd(1)                   USER COMMANDS                   epmd(1)
+
+
+
+           *&ld;TABs&gt;/var/log/epmd.log
+
+     where <TABs> are real tab characters. Spaces  will  silently
+     be ignored.
+
+AUTHOR
+     Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: erts  5.0.1                   2
+
+
+

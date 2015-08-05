@@ -1,0 +1,198 @@
+
+
+
+CosNotifyChannelCAodsmNiont_iESfReyLqCAuhNeaGnncnMeeOPlDrAUodLxmEyiPnDu_ElSFleISqNuuIpeTpnIlcOieNePrr(o3x)yPullSupplier(3)
+
+
+
+MODULE
+     CosNotifyChannelAdmin_SequenceProxyPullSupplier -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+     This module also exports the functions described in:
+
+       * CosNotifyComm_NotifySubscribe
+
+       * CosNotification_QoSAdmin
+
+       * CosNotifyFilter_FilterAdmin
+
+       * CosNotifyChannelAdmin_ProxySupplier
+
+
+EXPORTS
+     connect_sequence_pull_consumer(SequenceProxyPullSupplier,
+     PullConsumer) -> Reply
+
+          Types
+               SequenceProxyPullSupplier = #objref
+               PullConsumer = #objref
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosEventChannelAdmin_AlreadyConnected'{}}
+
+          This operation connects a _P_u_l_l_C_o_n_s_u_m_e_r  to  the  target
+          object.  If a connection already exists an exception is
+          raised.
+
+     pull_structured_events(SequenceProxyPullSupplier, MaxEvents)
+     -> Reply
+
+          Types
+               SequenceProxyPullSupplier = #objref
+               MaxEvents = long()
+               Reply     =     EventBatch     |     {'EXCEPTION',
+               #'CosEventChannelAdmin_Disconnected'{}}
+               EventBatch = [StructuredEvent]
+               StructuredEvent                                  =
+               #'CosNotification_StructuredEvent'{header,
+               filterable_data, remainder_of_body}
+               header = EventHeader
+               filterable_data                                  =
+               [#'CosNotification_Property'{name, value}]
+               name = string()
+               value = #any
+               remainder_of_body = #any
+               EventHeader                                      =
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+CosNotifyChannelCAodsmNiont_iESfReyLqCAuhNeaGnncnMeeOPlDrAUodLxmEyiPnDu_ElSFleISqNuuIpeTpnIlcOieNePrr(o3x)yPullSupplier(3)
+
+
+
+               #'CosNotification_EventHeader'{fixed_header,
+               variable_header}
+               fixed_header = FixedEventHeader
+               variable_header = OptionalHeaderFields
+               FixedEventHeader                                 =
+               #'CosNotification_FixedEventHeader'{event_type,
+               event_name}
+               event_type = EventType
+               event_name = string()
+               EventType                                        =
+               #'CosNotification_EventType'{domain_name,
+               type_name}
+               domain_name = type_name = string()
+               OptionalHeaderFields                             =
+               [#'CosNotification_Property'{name, value}]
+
+          A client use this operation to pull next event sequence
+          of maximum length _M_a_x_E_v_e_n_t_s. This operation is blocking
+          and will not reply until the requested amount of events
+          can  be delivered or the QoS property _P_a_c_i_n_g_I_n_t_e_r_v_a_l is
+          reached. For more information see the _U_s_e_r'_s _G_u_i_d_e.
+
+     try_pull_structured_events(SequenceProxyPullSupplier,  MaxE-
+     vents) -> Reply
+
+          Types
+               SequenceProxyPullSupplier = #objref
+               MaxEvents = long()
+               Reply =  {EventBatch,  HasEvent}  |  {'EXCEPTION',
+               #'CosEventChannelAdmin_Disconnected'{}}
+               HasEvent = boolean()
+               EventBatch = [StructuredEvent]
+               StructuredEvent                                  =
+               #'CosNotification_StructuredEvent'{header,
+               filterable_data, remainder_of_body}
+               header = EventHeader
+               filterable_data                                  =
+               [#'CosNotification_Property'{name, value}]
+               name = string()
+               value = #any
+               remainder_of_body = #any
+               EventHeader                                      =
+               #'CosNotification_EventHeader'{fixed_header,
+               variable_header}
+               fixed_header = FixedEventHeader
+               variable_header = OptionalHeaderFields
+               FixedEventHeader                                 =
+               #'CosNotification_FixedEventHeader'{event_type,
+               event_name}
+               event_type = EventType
+               event_name = string()
+               EventType                                        =
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+
+
+
+
+CosNotifyChannelCAodsmNiont_iESfReyLqCAuhNeaGnncnMeeOPlDrAUodLxmEyiPnDu_ElSFleISqNuuIpeTpnIlcOieNePrr(o3x)yPullSupplier(3)
+
+
+
+               #'CosNotification_EventType'{domain_name,
+               type_name}
+               domain_name = type_name = string()
+               OptionalHeaderFields                             =
+               [#'CosNotification_Property'{name, value}]
+
+          This operation pulls an event sequence of  the  maximum
+          length _M_a_x_E_v_e_n_t_s, but do not block if the target object
+          have no events to forward. The  outparameter,  _H_a_s_E_v_e_n_t
+          is true if the sequence contain any events.
+
+     disconnect_sequence_pull_supplier(SequenceProxyPullSupplier)
+     -> ok
+
+          Types
+               SequenceProxyPullSupplier = #objref
+
+          This operation cause the target  object  to  close  the
+          connection and terminate.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              3
+
+
+

@@ -1,0 +1,396 @@
+
+
+
+error_logger(3)     ERLANG MODULE DEFINITION      error_logger(3)
+
+
+
+MODULE
+     error_logger - The Erlang Error Logger
+
+DESCRIPTION
+     The error logger is an event manager  behaviour  which  runs
+     with  the registered name _e_r_r_o_r__l_o_g_g_e_r (see more about event
+     managers/handlers in the Design Principles  chapter  and  in
+     gen_event(3)).  All  error  messages from the Erlang runtime
+     system are sent to this process as messages with the  format
+     {_e_m_u_l_a_t_o_r,  _G_l_e_a_d_e_r,  _S_t_r},  where  _S_t_r  is  a  string which
+     describes the error in plain English. The  _G_l_e_a_d_e_r  argument
+     is  the  group  leader  process  of  the process causing the
+     error. This is useful in a distributed setting as all  error
+     messages  can be returned to the _e_r_r_o_r__l_o_g_g_e_r process on the
+     originating node.
+
+     All errors detected by the standard libraries  are  reported
+     with the _e_r_r_o_r__l_o_g_g_e_r functions. Errors detected in applica-
+     tion  modules  should   also   be   reported   through   the
+     _e_r_r_o_r__l_o_g_g_e_r in order to get uniform reports.
+
+     Associated event handlers can be used to add  private  _t_y_p_e_s
+     of  reports  to  the  _e_r_r_o_r__l_o_g_g_e_r.  An  event handler which
+     recognizes the specialized report type is first added to the
+     _e_r_r_o_r__l_o_g_g_e_r (_a_d_d__r_e_p_o_r_t__h_a_n_d_l_e_r/_1, _2)
+
+     The standard configuration of the _e_r_r_o_r__l_o_g_g_e_r supports  the
+     logging  of errors to the _t_t_y, or to a specified _f_i_l_e. There
+     is also a multi-file logger which logs all events, not  only
+     the   standard   error   events,   to  several  files.  (see
+     log_mf_h(3)).
+
+     All error events are tagged with the group leader _G_l_e_a_d_e_r in
+     order to send the error to the originating node.
+
+
+EXPORTS
+     start() -> {ok, Pid} | {error, What}
+     start_link() -> {ok, Pid} | {error, What}
+
+          Types
+               Pid = pid()
+               What = {already_started, Pid} | term()
+
+          Starts the _e_r_r_o_r__l_o_g_g_e_r. The _s_t_a_r_t__l_i_n_k function should
+          be used when the _e_r_r_o_r__l_o_g_g_e_r is supervised
+
+     error_report(Report) -> ok
+
+          Types
+               Report = [{Tag, Data}] |  [term()]  |  string()  |
+               term()
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+error_logger(3)     ERLANG MODULE DEFINITION      error_logger(3)
+
+
+
+               Tag = term()
+               Data = term()
+
+          Sends a  standard  error  report  event  to  the  error
+          logger.  This  report  event is handled by the standard
+          event handler. The report is formatted as follows:
+
+          Tag1:   Data1
+          Tag2:   Data2
+          Term1
+          Term2
+
+          If _R_e_p_o_r_t is a string(), the string is written.
+
+          The report is written with an error heading.
+
+     error_report(Type,Report) -> ok
+
+          Types
+               Type = term()
+               Report = [{Tag, Data}] |  [term()]  |  string()  |
+               term()
+               Tag = term()
+               Data = term()
+
+          Sends a user defined error report  type  event  to  the
+          error   logger.   If   specialized  error  handling  is
+          required, an event handler  recognizing  this  _T_y_p_e  of
+          report must first be added to the _e_r_r_o_r__l_o_g_g_e_r.
+
+          It is recommended that  the  _R_e_p_o_r_t  follows  the  same
+          structure as _e_r_r_o_r__r_e_p_o_r_t/_1 above.
+
+     info_report(Report) -> ok
+
+          Types
+               Report = [{Tag, Data}] |  [term()]  |  string()  |
+               term()
+               Tag = term()
+               Data = term()
+
+          Sends an information report to the error  logger.  This
+          report  event is handled by the standard event handler.
+          The report is formatted as follows:
+
+          Tag1:   Data1
+          Tag2:   Data2
+          Term1
+          Term2
+
+          If _R_e_p_o_r_t is a string(), the string is written.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+error_logger(3)     ERLANG MODULE DEFINITION      error_logger(3)
+
+
+
+          The report is written with an information heading.
+
+     info_report(Type,Report) -> ok
+
+          Types
+               Type = term()
+               Report = [{Tag, Data}] |  [term()]  |  string()  |
+               term()
+               Tag = term()
+               Data = term()
+
+          Sends a user defined information report type  event  to
+          the  error  logger.  If  specialized  error handling is
+          required, an event handler  recognizing  this  _T_y_p_e  of
+          report must first be added to the _e_r_r_o_r__l_o_g_g_e_r.
+
+          It is recommended that  the  _R_e_p_o_r_t  follows  the  same
+          structure as _i_n_f_o__r_e_p_o_r_t/_1 above.
+
+     error_msg(Format) -> ok
+     error_msg(Format,Args) -> ok
+     format(Format,Args) -> ok
+
+          Types
+               Format = string()
+               Args = [term()]
+
+          Sends an error event to the error  logger.  The  _F_o_r_m_a_t
+          and  _A_r_g_s  arguments  are  the same as the arguments of
+          _i_o:_f_o_r_m_a_t/_2. These events are handled by  the  standard
+          event handler.
+
+     info_msg(Format) -> ok
+     info_msg(Format,Args) -> ok
+
+          Types
+               Format = string()
+               Args = [term()]
+
+          Sends an information event to  the  error  logger.  The
+          _F_o_r_m_a_t and _A_r_g_s arguments are the same as the arguments
+          of _i_o:_f_o_r_m_a_t/_2. These events are handled by  the  stan-
+          dard event handler.
+
+     tty(Flag) -> ok
+
+          Types
+               Flag = true | false
+
+          Enables or disables error printouts to the tty. If _F_l_a_g
+          is  _f_a_l_s_e,  all  text  that the error logger would have
+          sent to the terminal is discarded.  If  _F_l_a_g  is  _t_r_u_e,
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+error_logger(3)     ERLANG MODULE DEFINITION      error_logger(3)
+
+
+
+          error messages are sent to the terminal screen.
+
+     logfile(Request) -> ok | FileName | {error, What}
+
+          Types
+               Request = {open, FileName} | close | filename
+               FileName = atom() | string()
+               What = term()
+
+          This function makes it possible to append a copy of all
+          standard  error  printouts to a file. It can be used in
+          combination with the _t_t_y(_f_a_l_s_e) function in to  have  a
+          silent system, where all errors are logged to a file.
+
+          _R_e_q_u_e_s_t can be:
+
+            * {_o_p_e_n, _F_i_l_e_n_a_m_e}. Opens the file _F_i_l_e_n_a_m_e to  store
+              a  copy  of  all  error  messages.  Returns  _o_k, or
+              {_e_r_r_o_r, _W_h_a_t}.
+
+            * _c_l_o_s_e. Closes the current log file. Returns _o_k,  or
+              {_e_r_r_o_r, _W_h_a_t}.
+
+            * _f_i_l_e_n_a_m_e. Returns {_e_r_r_o_r, _W_h_a_t} or _F_i_l_e_N_a_m_e,  where
+              _F_i_l_e_N_a_m_e is the name of the open log file.
+
+          There can only be one active log file.
+
+     add_report_handler(Module) -> ok | Other
+     add_report_handler(Module,Args) -> ok | Other
+
+          Types
+               Module = atom()
+               Args = term()
+               Other = term()
+
+          Adds a new event handler to the error logger. The event
+          handler  is  initialized by a call to the _M_o_d_u_l_e:init/1
+          function. This function must  return  {_o_k,  _S_t_a_t_e}.  If
+          anything  else  (_O_t_h_e_r) is returned, the handler is not
+          added.
+
+          The report (event) handler will  be  called  for  every
+          error    event   that   the   error   logger   receives
+          (_M_o_d_u_l_e:_h_a_n_d_l_e__e_v_e_n_t/_2).  Errors  dedicated   to   this
+          handler should be handled accordingly.
+
+     delete_report_handler(Module) -> Return | {error, What}
+
+          Types
+               Module = atom()
+               Return = term()
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+
+
+
+
+error_logger(3)     ERLANG MODULE DEFINITION      error_logger(3)
+
+
+
+               What = term()
+
+          Deletes  an   error   report   (event)   handler.   The
+          _M_o_d_u_l_e:terminate/2  function  is  called  in  order  to
+          finalize the event handler. The  return  value  of  the
+          terminate/2 function is _R_e_t_u_r_n.
+
+     swap_handler(ToHandler) -> ok
+
+          Types
+               ToHandler = tty | {logfile, File}
+               File = atom() | string()
+
+          The _e_r_r_o_r__l_o_g_g_e_r event  manager  is  initially  started
+          with a primitive event handler which buffers and prints
+          the raw  error  events.  However,  this  function  does
+          install the standard event handler to be used according
+          to the system configuration.
+
+Events
+     The error logger event manager forwards the following events
+     to  all  added  event  handlers.  In the events that follow,
+     _G_l_e_a_d_e_r is the group leader process identity  of  the  error
+     reporting  process,  and _E_P_i_d is the process identity of the
+     _e_r_r_o_r__l_o_g_g_e_r. All other variables  are  described  with  the
+     function in which they appear.
+
+       {_e_r_r_o_r__r_e_p_o_r_t, _G_l_e_a_d_e_r, {_E_p_i_d, _s_t_d__e_r_r_o_r, _R_e_p_o_r_t}}:
+           This event is generated when the _e_r_r_o_r__r_e_p_o_r_t/_1  func-
+           tion is called.
+
+       {_e_r_r_o_r__r_e_p_o_r_t, _G_l_e_a_d_e_r, {_E_p_i_d, _T_y_p_e, _R_e_p_o_r_t}}:
+           This event is generated when the _e_r_r_o_r__r_e_p_o_r_t/_2  func-
+           tion is called.
+
+       {_i_n_f_o__r_e_p_o_r_t, _G_l_e_a_d_e_r, {_E_p_i_d, _s_t_d__i_n_f_o, _R_e_p_o_r_t}}:
+           This event is generated when the  _i_n_f_o__r_e_p_o_r_t/_1  func-
+           tion is called.
+
+       {_i_n_f_o__r_e_p_o_r_t, _G_l_e_a_d_e_r, {_E_p_i_d, _T_y_p_e, _R_e_p_o_r_t}}:
+           This event is generated when the  _i_n_f_o__r_e_p_o_r_t/_2  func-
+           tion is called.
+
+       {_e_r_r_o_r, _G_l_e_a_d_e_r, {_E_P_i_d, _F_o_r_m_a_t, _A_r_g_s}}:
+           This event is generated when the _e_r_r_o_r__m_s_g  or  _f_o_r_m_a_t
+           functions are called.
+
+       {_i_n_f_o__m_s_g, _G_l_e_a_d_e_r, {_E_P_i_d, _F_o_r_m_a_t, _A_r_g_s}}:
+           This event is generated when  the  _i_n_f_o__m_s_g  functions
+           are called.
+
+       {_i_n_f_o, _G_l_e_a_d_e_r, {_E_P_i_d, _t_e_r_m(), []}}:
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  5
+
+
+
+
+
+
+error_logger(3)     ERLANG MODULE DEFINITION      error_logger(3)
+
+
+
+           This structure is only used by the  _i_n_i_t  process  for
+           erroneously received messages.
+
+       {_e_m_u_l_a_t_o_r, _G_l_e_a_d_e_r, _s_t_r_i_n_g()}:
+           This event is generated by the runtime system. If  the
+           error  was not issued by a special process, _G_l_e_a_d_e_r is
+           _n_o_p_r_o_c.  This  event  should   be   handled   in   the
+           _h_a_n_d_l_e__i_n_f_o/_2 function of the event handler.
+
+  Note:
+     All events issued by a process which has  the  group  leader
+     _G_l_e_a_d_e_r  process  located  on another node will be passed to
+     this node by the _e_r_r_o_r__l_o_g_g_e_r.
+
+
+See Also
+     gen_event(3), log_mf_h(3)
+
+AUTHORS
+     Joe Armstrong - support@erlang.ericsson.se
+     Magnus Froberg - support@erlang.ericsson.se
+     Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  6
+
+
+

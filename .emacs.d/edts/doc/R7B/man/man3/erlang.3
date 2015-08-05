@@ -1,0 +1,2451 @@
+.TH erlang 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+erlang \- The Erlang BIFs
+.SH DESCRIPTION
+.LP
+By convention, Built In Functions (BIFs) are seen as being in the module \fIerlang\fR\&. Thus, both the calls \fIatom_to_list(Erlang)\fR and \fIerlang:atom_to_list(Erlang)\fR are identical\&. 
+.LP
+BIFs may fail for a variety of reasons\&. All BIFs fail if they are called with arguments of an incorrect type\&. For example, \fIatom_to_list/1\fR will fail if it is called with an argument which is not an atom\&. If this type of failure is not within the scope of a catch (and the BIF is not called within a guard; see below), the process making the call will exit, and an EXIT signal with the associated reason \fIbadarg\fR will be sent to all linked processes\&. The other reasons that may make BIFs fail are described in connection with the description of each individual BIF\&. 
+.LP
+A few BIFs may be used in guard tests, for example: 
+
+.nf
+tuple_5(Something) when size(Something) == 5 ->
+    is_tuple_size_5;
+tuple_5(_) ->
+    is_something_else\&.
+.fi
+.LP
+Here the BIF \fIsize/1\fR is used in a guard\&. If \fIsize/1\fR is called with a tuple, it will return the size of the tuple (i\&.e\&., how many elements there are in the tuple)\&. In the above example, \fIsize/1\fR is used in a guard which tests if its argument \fISomething\fR is a tuple and, if it is, whether it is of size 5\&. In this case, calling size with an argument other than a tuple will cause the guard to fail and execution will continue with the next clause\&. Suppose \fItuple_5/1\fR is written as follows: 
+
+.nf
+tuple_5(Something) ->
+    case size(Something) of
+         5 -> is_tuple_size_5;
+                 _ -> is_something_else
+            end\&.
+.fi
+.LP
+In this case, \fIsize/1\fR is not in a guard\&. If \fISomething\fR is not a tuple, \fIsize/1\fR will fail and cause the process to exit with the associated reason \fIbadarg\fR (see above)\&. 
+.LP
+Some of the BIFs in this chapter are optional in Erlang implementations, and not all implementations will include them\&. 
+.LP
+The following descriptions indicate which BIFs can be used in guards and which BIFs are optional\&. 
+
+.SH EXPORTS
+.LP
+.B
+abs(Number)
+.br
+.RS
+.LP
+Returns an integer or float which is the arithmetical absolute value of the argument \fINumber\fR (integer or float)\&. 
+
+.nf
+> abs(-3\&.33)\&.
+3\&.33000
+> abs(-3)\&.
+3
+.fi
+.LP
+This BIF is allowed in guard tests\&. 
+.LP
+Failure: \fIbadarg\fR if the argument is not an integer or a float\&. 
+.RE
+.LP
+.B
+erlang:append_element(Tuple, Term)
+.br
+.RS
+.LP
+Returns a new tuple which has one element more than \fITuple\fR, and contains the elements in Tuple followed by Term as the last element\&. Semantically equvivalent to \fIlist_to_tuple(tuple_to_list(Tuple ++ [Term])\fR, but much faster\&. 
+.LP
+Failure: \fIbadarg\fR if \fITuple\fR is not a tuple\&. 
+.RE
+.LP
+.B
+apply({Module, Function}, ArgumentList)
+.br
+.RS
+.LP
+This is equivalent to \fIapply(Module, Function, ArgumentList)\fR\&. 
+.RE
+.LP
+.B
+apply(Module, Function, ArgumentList)
+.br
+.RS
+.LP
+Returns the result of applying \fIFunction\fR in \fIModule\fR on \fIArgumentList\fR\&. The applied function must have been exported from \fIModule\fR\&. The arity of the function is the length of \fIArgumentList\fR\&. 
+
+.nf
+> apply(lists, reverse, [[a, b, c]])\&.
+[c,b,a]
+.fi
+.LP
+\fIapply\fR can be used to evaluate BIFs by using the module name \fIerlang\fR\&. 
+
+.nf
+> apply(erlang, atom_to_list, [\&'Erlang\&'])\&.
+"Erlang"
+.fi
+.LP
+Failure: \fIerror_handler:undefined_function/3\fR is called if \fIModule\fR has not exported \fIFunction/Arity\fR\&. The error handler can be redefined (see the BIF \fIprocess_flag/2\fR)\&. If the \fIerror_handler\fR is undefined, or if the user has redefined the default \fIerror_handler\fR so the replacement module is undefined, an error with the reason \fIundef\fR will be generated\&. 
+.RE
+.LP
+.B
+atom_to_list(Atom)
+.br
+.RS
+.LP
+Returns a list of integers (Latin-1 codes), which corresponds to the text representation of the argument \fIAtom\fR\&. 
+
+.nf
+>atom_to_list(\&'Erlang\&')\&.
+"Erlang"
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not an atom\&. 
+.RE
+.LP
+.B
+erlang:binary_to_float(Binary)
+.br
+.RS
+.LP
+Returns a float corresponding to the big-endian IEEE representation in \fIBinary\fR\&. The size of \fIBinary\fR must be 4 or 8 bytes\&. 
+.SS Warning:
+.LP
+This is an internal BIF, only to be used by OTP code\&.
+
+.LP
+Failure: \fIbadarg\fR if the argument is not a binary or not the representation of a number\&. 
+.RE
+.LP
+.B
+binary_to_list(Binary)
+.br
+.RS
+.LP
+Returns a list of integers which correspond to the bytes of \fIBinary\fR\&. 
+.RE
+.LP
+.B
+binary_to_list(Binary, Start, Stop)
+.br
+.RS
+.LP
+As \fIbinary_to_list/1\fR, but it only returns the list from position \fIStart\fR to position \fIStop\fR\&. \fIStart\fR and \fIStop\fR are integers\&. Positions in the binary are numbered starting from 1\&. 
+.RE
+.LP
+.B
+binary_to_term(Binary)
+.br
+.RS
+.LP
+Returns an Erlang term which is the result of decoding the binary \fIBinary\fR\&. \fIBinary\fR is encoded in the Erlang external binary representation\&. See \fIterm_to_binary/1\fR\&. 
+.RE
+.LP
+.B
+bump_reductions(Reductions)
+.br
+.RS
+.LP
+This implementation-dependent function increments the reduction counter for the current process\&. In the Beam emulator, the reduction counter is normally incremented by one for each function and BIF call, and a context switch is forced when the counter reaches 1000\&. 
+.SS Warning:
+.LP
+This BIF might be removed in a future version of the Beam machine without prior warning\&. It is unlikely to be implemented in other Erlang implementations\&. If you think that you must use it, encapsulate it your own wrapper module, and/or wrap it in a catch\&. 
+
+.RE
+.LP
+.B
+erlang:cancel_timer(Ref)
+.br
+.RS
+.LP
+\fIcancel_timer(Ref)\fR cancels a timer, where \fIRef\fR was returned by either \fIsend_after/3\fR or \fIstart_timer/3\fR\&. If the timer was there to be removed, \fIcancel_timer/1\fR returns the time in ms left until the timer would have expired, otherwise \fIfalse\fR (which may mean that \fIRef\fR was never a timer, or that it had already been cancelled, or that it had already delivered its message)\&. 
+.LP
+Note: usually, cancelling a timer does not guarantee that the message has not already been delivered to the message queue\&. However, in the special case of a process P cancelling a timer which would have sent a message to P itself, attempting to read the timeout message from the queue is guaranteed to remove the timeout in that situation: 
+
+.nf
+        cancel_timer(Ref),
+        receive
+            {timeout, Ref, _} ->
+                ok
+        after 0 ->
+                ok
+        end
+.fi
+.LP
+Failure: \fIbadarg\fR if \fIRef\fR is not a reference\&. 
+.RE
+.LP
+.B
+erlang:check_process_code(Pid, Module)
+.br
+.RS
+.LP
+Returns \fItrue\fR if the process \fIPid\fR is executing an old version of Module, if the current call of the process executes code for an old version of the module, if the process has references to an old version of the module, or if the process contains funs that references the old version of the module\&. Otherwise, it returns \fIfalse\fR\&. 
+
+.nf
+> erlang:check_process_code(Pid, lists)\&.
+false
+.fi
+.LP
+This is an optional BIF\&. 
+.LP
+Failure: \fIbadarg\fR, if the process argument is not a Pid, or the module argument is not an atom\&. 
+.RE
+.LP
+.B
+concat_binary(ListOfBinaries)
+.br
+.RS
+.LP
+Concatenates a list of binaries \fIListOfBinaries\fR into one binary\&. 
+.RE
+.LP
+.B
+date()
+.br
+.RS
+.LP
+Returns the current date as \fI{Year, Month, Day}\fR 
+
+.nf
+> date()\&.
+{1995, 2, 19}
+.fi
+.RE
+.LP
+.B
+erlang:delete_module(Module)
+.br
+.RS
+.LP
+Moves the current version of the code of \fIModule\fR to the old version and deletes all export references of \fIModule\fR\&. Returns \fIundefined\fR if the module does not exist, otherwise \fItrue\fR\&. 
+
+.nf
+> delete_module(test)\&.
+true
+.fi
+.LP
+This is an optional BIF\&. 
+.LP
+Failure: \fIbadarg\fR if there is already an old version of the module (see BIF \fIpurge_module/1\fR)\&. 
+.SS Warning:
+.LP
+In normal Erlang implementations code handling - which includes loading, deleting, and replacing modules - is performed in the module \fIcode\fR\&. This BIF is intended for use with the implementation of the module \fIcode\fR and should not be used elsewhere\&. 
+
+.RE
+.LP
+.B
+erlang:demonitor(Ref)
+.br
+.RS
+.LP
+If \fIRef\fR is a reference which the current process obtained by calling \fIerlang:monitor/2\fR, the monitoring is turned off\&. No action is performed if the monitoring already is turned of before the call\&. Returns \fItrue\fR\&.
+.LP
+After the call to \fIerlang:monitor/2\fR the monitoring process will not get any new \fI\&'DOWN\&'\fR message from this monitor into the receive queue\&.
+.LP
+It is an error if \fIRef\fR refers to a monitoring started by another process\&. Not all such cases are cheap to check; if checking is cheap, the call fails with \fIbadarg\fR (for example if \fIRef\fR is a remote reference)\&. 
+.RE
+.LP
+.B
+erlang:disconnect_node(Node)
+.br
+.RS
+.LP
+Forces the disconnection of a node\&. This will appear to the node \fINode\fR as if the current node has crashed\&. This BIF is mainly used in the Erlang network authentication protocols\&. Returns \fItrue\fR if disconnection succeeds, otherwise \fIfalse\fR\&. 
+.LP
+Failure: \fIbadarg\fR if \fINode\fR is not an atom\&. 
+.RE
+.LP
+.B
+erlang:display(Term)
+.br
+.RS
+.LP
+Prints a text representation \fITerm\fR on the standard output\&. Useful for debugging (especially startup problems) and strongly discouraged for other purposes\&. 
+.RE
+.LP
+.B
+element(N, Tuple)
+.br
+.RS
+.LP
+Returns the \fIN\fRth element (numbering from 1) of \fITuple\fR\&. 
+
+.nf
+> element(2, {a, b, c})\&.
+b
+.fi
+.LP
+Failure: \fIbadarg\fR if \fIN\fR < \fI1\fR, or \fIN\fR > \fIsize(Tuple)\fR, or if the argument \fITuple\fR is not a tuple\&. Allowed in guard tests\&. 
+.RE
+.LP
+.B
+erase()
+.br
+.RS
+.LP
+Returns the process dictionary and deletes it\&. 
+
+.nf
+> put(key1, {1, 2, 3}), put(key2, [a, b, c]), erase()\&.
+[{key1,{1, 2, 3}},{key2,[a, b, c]}]
+.fi
+.RE
+.LP
+.B
+erase(Key)
+.br
+.RS
+.LP
+Returns the value associated with \fIKey\fR and deletes it from the process dictionary\&. Returns \fIundefined\fR if no value is associated with \fIKey\fR\&. \fIKey\fR can be any Erlang term\&. 
+
+.nf
+> put(key1, {merry, lambs, are, playing}),
+  X = erase(key1), {X, erase(key1)}\&.
+{{merry, lambs, are, playing}, undefined}
+.fi
+.RE
+.LP
+.B
+exit(Reason)
+.br
+.RS
+.LP
+Stops the execution of the current process with the reason \fIReason\fR\&. Can be caught\&. \fIReason\fR is any Erlang term\&. Since evaluating this function causes the process to terminate, it has no return value\&. 
+
+.nf
+> exit(foobar)\&.
+** exited: foobar **
+> catch exit(foobar)\&.
+{\&'EXIT\&', foobar}
+.fi
+.RE
+.LP
+.B
+exit(Pid, Reason)
+.br
+.RS
+.LP
+Sends an EXIT message to the process \fIPid\fR\&. Returns \fItrue\fR\&. 
+
+.nf
+> exit(Pid, goodbye)\&.
+true
+.fi
+.SS Note:
+.LP
+The above is not necessarily the same as: 
+
+.nf
+Pid ! {\&'EXIT\&', self(), goodbye}
+.fi
+
+.LP
+The above two alternatives are the same if the process with the process identity \fIPid\fR is trapping exits\&. However, if \fIPid\fR is not trapping exits, the \fIPid\fR itself will exit and propagate EXIT signals in turn to its linked processes\&. 
+.LP
+If the reason is the atom \fIkill\fR, for example \fIexit(Pid, kill)\fR, an untrappable EXIT signal will be sent to the process \fIPid\fR\&. In other words, the process \fIPid\fR will be unconditionally killed\&. 
+.LP
+Returns \fItrue\fR\&. 
+.LP
+Failure: \fIbadarg\fR if \fIPid\fR is not a Pid\&. 
+.RE
+.LP
+.B
+fault(Reason)
+.br
+.RS
+.LP
+Stops the execution of the current process with the reason \fIReason\fR, where \fIReason\fR is any Erlang term\&. The actual EXIT term will be \fI{Reason, Where}\fR, where \fIWhere\fR is a list of the functions most recently called (the current function first)\&. Since evaluating this function causes the process to terminate, it has no return value\&. 
+.RE
+.LP
+.B
+fault(Reason, Args)
+.br
+.RS
+.LP
+Stops the execution of the current process with the reason \fIReason\fR, where \fIReason\fR is any Erlang term\&. The actual EXIT term will be \fI{Reason, Where}\fR, where \fIWhere\fR is a list of the functions most recently called (the current function first)\&. The \fIArgs\fR is expected to be the arguments for the current function; in Beam it will be used to provide the actual arguments for the current function in the \fIWhere\fR term\&. Since evaluating this function causes the process to terminate, it has no return value\&. 
+.RE
+.LP
+.B
+float(Number)
+.br
+.RS
+.LP
+Returns a float by converting \fINumber\fR to a float\&. 
+
+.nf
+> float(55)\&.
+55\&.0000
+.fi
+.SS Note:
+.LP
+\fIfloat/1\fR is allowed in guard tests, but it tests whether the argument is a float or not\&. 
+
+.nf
+-module(t)\&.
+
+f(F) when float(F) -> float;
+f(F) -> not_a_float\&.
+
+1> t:f(1)\&.
+not_a_float
+2> t:f(1\&.0)\&.
+float
+3>
+.fi
+
+.LP
+Failure: \fIbadarg\fR if the argument is not a float or an integer\&. 
+.RE
+.LP
+.B
+erlang:float_to_binary(Float, Size)
+.br
+.RS
+.LP
+Returns a binary containing the big-endian IEEE representation of \fIFloat\fR\&. \fISize\fR is the size in bits, and must be either 32 or 64\&. 
+.SS Warning:
+.LP
+This is an internal BIF, only to be used by OTP code\&.
+
+.LP
+Failure: \fIbadarg\fR if the argument is not a float\&. 
+.RE
+.LP
+.B
+float_to_list(Float)
+.br
+.RS
+.LP
+Returns a list of integers (ASCII codes) which corresponds to \fIFloat\fR\&. 
+
+.nf
+> float_to_list(7\&.0)\&.
+"7\&.00000000000000000000e+00"
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a float\&. 
+.RE
+.LP
+.B
+erlang:fun_info(Fun)
+.br
+.RS
+.LP
+Returns a list containing information about the fun \fIFun\fR\&. This BIF is only intended for debugging\&. The list returned contains the following tuples, not necessarily in the order listed here (i\&.e\&. you should not depend on the order)\&. 
+.RS 2
+.TP 4
+.B
+\fI{pid, Pid}\fR:
+\fIPid\fR is the pid of the process that originally created the fun\&. It will be the atom \fIundefined\fR if the fun is given in the tuple representation\&.
+.TP 4
+.B
+\fI{module, Module}\fR:
+\fIModule\fR (an atom) is the module in which the fun is defined\&.
+.TP 4
+.B
+\fI{index, Index}\fR:
+\fIIndex\fR (an integer) is an index into the module\&'s fun table\&.
+.TP 4
+.B
+\fI{uniq, Uniq}\fR:
+\fIUniq\fR (an integer) is a unique value for this fun\&.
+.TP 4
+.B
+\fI{env, Env}\fR:
+\fIEnv\fR (a list) is the environment or free variables for the fun\&.
+.RE
+.RE
+.LP
+.B
+erlang:function_exported(Module, Function, Arity)
+.br
+.RS
+.LP
+Returns \fItrue\fR if the module \fIModule\fR is loaded and it contains an exported function \fIFunction/Arity\fR; otherwise returns \fIfalse\fR\&. Returns \fIfalse\fR for any BIF (functions implemented in C rather than in Erlang)\&. 
+.LP
+This function is retained mainly for backwards compatibility\&. It is not clear why you really would want to use it\&. 
+.RE
+.LP
+.B
+erlang:fun_info(Fun, Item)
+.br
+.RS
+.LP
+Returns information about the \fIFun\fR as specified by \fIItem\fR, in the form \fI{Item, Info}\fR\&. Item can be any of the atoms \fIid\fR, \fImodule\fR, \fIindex\fR, \fIuniq\fR, or \fIenv\fR\&. See the \fIerlang:fun_info/1\fR BIF\&. 
+.RE
+.LP
+.B
+erlang:fun_to_list(Fun)
+.br
+.RS
+.LP
+Returns a textual representation of the fun \fIFun\fR\&. 
+.RE
+.LP
+.B
+erlang:garbage_collect()
+.br
+.RS
+.LP
+Forces an immediate garbage collection of the currently executing process\&. You should not use \fIerlang:garbage_collect()\fR unless you have noticed or have good reasons to suspect that the spontaneous garbage collection will occur too late or not at all\&. Improper use may seriously degrade system performance\&. 
+.LP
+Compatability note: In versions of OTP prior to R7, the garbage collection took place at the next context switch, not immediately\&. To force a context switch after a call to \fIerlang:garbage_collect()\fR, it was sufficient to make any function call\&. 
+.RE
+.LP
+.B
+erlang:garbage_collect(Pid)
+.br
+.RS
+.LP
+Works like erlang:garbage_collect() but on any process\&. The same caveats apply\&. Returns \fIfalse\fR if \fIPid\fR refers to a dead process; \fItrue\fR otherwise\&. 
+.RE
+.LP
+.B
+get()
+.br
+.RS
+.LP
+Returns the process dictionary as a list of \fI{Key, Value}\fR tuples\&. 
+
+.nf
+> put(key1, merry), put(key2, lambs),
+  put(key3, {are, playing}), get()\&.
+[{key1, merry}, {key2, lambs}, {key3, {are, playing}}]
+.fi
+.RE
+.LP
+.B
+get(Key)
+.br
+.RS
+.LP
+Returns the value associated with \fIKey\fR in the process dictionary, and \fIundefined\fR if no value is associated with \fIKey\fR\&. \fIKey\fR can be any Erlang term\&. 
+
+.nf
+> put(key1, merry), put(key2, lambs),
+  put({any, [valid, term]}, {are, playing}),
+  get({any, [valid, term]})\&.
+{are, playing}
+.fi
+.RE
+.LP
+.B
+erlang:get_cookie()
+.br
+.RS
+.LP
+Returns the "magic cookie" of the current node, if the node is alive; otherwise the atom \fInocookie\fR\&. 
+.RE
+.LP
+.B
+get_keys(Value)
+.br
+.RS
+.LP
+Returns a list of keys which corresponds to \fIValue\fR in the process dictionary\&. 
+
+.nf
+> put(mary, {1, 2}), put(had, {1, 2}), put(a, {1, 2}),
+  put(little, {1, 2}), put(dog, {1, 3}), put(lamb, {1, 2}),
+  get_keys({1, 2})\&.
+[mary, had, a, little, lamb]
+.fi
+.RE
+.LP
+.B
+group_leader()
+.br
+.RS
+.LP
+Every process is a member of some process group and all groups have a leader\&. 
+.LP
+This BIF returns the process identifier \fIPid\fR of the group leader for the process which evaluates the BIF\&. When a process is spawned, the group leader of the spawned process is the same as that of the process which spawned it\&. Initially, at system start-up, \fIinit\fR is both its own group leader and the group leader of all processes\&. 
+.RE
+.LP
+.B
+group_leader(Leader, Pid)
+.br
+.RS
+.LP
+Sets the group leader of \fIPid\fR to \fILeader\fR\&. Typically, this is used when a processes started from a certain shell should have another group leader than \fIinit\fR\&. The process \fILeader\fR is normally a process with an I/O protocol\&. All I/O from this group of processes are thus channeled to the same place\&. 
+.RE
+.LP
+.B
+halt()
+.br
+.RS
+.LP
+Halts the Erlang runtime system and indicates normal exit to the calling environment\&. Has no return value\&. 
+
+.nf
+> halt()\&.
+unix_prompt%
+.fi
+.RE
+.LP
+.B
+halt(Status)
+.br
+.RS
+.LP
+\fIStatus\fR must be a non-negative integer, or a string\&. Halts the Erlang runtime system\&. Has no return value\&. If \fIStatus\fR is an integer, it is returned as an exit status of Erlang to the calling environment\&. If \fIStatus\fR is a string, produces an Erlang crash dump with \fIString\fR as slogan, and then exits with a non-zero status code\&.
+.LP
+Note that on many platforms, only the status codes 0-255 are supported by the operating system\&.
+.RE
+.LP
+.B
+erlang:hash(Term, Range)
+.br
+.RS
+.LP
+Returns a hash value for \fITerm\fR within the range \fI1\&.\&.Range\fR\&. The allowed range is 1\&.\&.2^27-1\&. 
+.SS Warning:
+.LP
+This BIF is deprecated as the hash value may differ on different architectures\&. Also the hash values for integer terms larger than 2^27 as well as large binaries are very poor\&. The BIF is retained for backward compatibility reasons (it may have been used to hash records into a file), but all new code should use the BIF \fIerlang:phash/2\fR instead\&.
+
+.RE
+.LP
+.B
+hd(List)
+.br
+.RS
+.LP
+Returns the first item of \fIList\fR\&. 
+
+.nf
+> hd([1,2,3,4,5])\&.
+1
+.fi
+.LP
+Allowed in guard tests\&. 
+.LP
+Failure: \fIbadarg\fR if \fIList\fR is the empty list \fI[]\fR, or is not a list\&. 
+.RE
+.LP
+.B
+erlang:info(What)
+.br
+.RS
+.LP
+This BIF is now equvivalent to erlang:system_info/1\&. 
+.RE
+.LP
+.B
+integer_to_list(Integer)
+.br
+.RS
+.LP
+Returns a list of integers (ASCII codes) which correspond to \fIInteger\fR\&. 
+
+.nf
+> integer_to_list(77)\&.
+"77"
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not an integer\&. 
+.RE
+.LP
+.B
+is_alive()
+.br
+.RS
+.LP
+Returns the atom \fItrue\fR if the current node is alive; i\&.e\&., if the node can be part of a distributed system\&. Otherwise, it returns the atom \fIfalse\fR\&. 
+.RE
+.LP
+.B
+erlang:is_builtin(Module, Function, Arity)
+.br
+.RS
+.LP
+Returns \fItrue\fR if \fIModule:Function/Arity\fR is a BIF implemented in C; otherwise returns \fIfalse\fR\&. This BIF is useful for builders of cross reference tools\&. 
+.RE
+.LP
+.B
+is_process_alive(Pid)
+.br
+.RS
+.LP
+\fIPid\fR must refer to a process on the current node\&. Returns the atom \fItrue\fR if the process is alive, i\&.e\&., has not exited\&. Otherwise, it returns the atom \fIfalse\fR\&. This is the preferred way to check whether a process exists\&. Unlike \fIprocess_info/[1, 2]\fR, \fIis_process_alive/1\fR does not report zombie processes as alive\&. 
+.RE
+.LP
+.B
+length(List)
+.br
+.RS
+.LP
+Returns the length of \fIList\fR\&. 
+
+.nf
+> length([1,2,3,4,5,6,7,8,9])\&.
+9
+.fi
+.LP
+Allowed in guard tests\&. 
+.LP
+Failure: \fIbadarg\fR if the argument is not a proper list\&. 
+.RE
+.LP
+.B
+link(Pid)
+.br
+.RS
+.LP
+Creates a link to the process (or port) \fIPid\fR, if there is not such a link already\&. If a process attempts to create a link to itself, nothing is done\&. Returns \fItrue\fR\&. 
+.LP
+Failure: \fIbadarg\fR if the argument is not a Pid or port\&. Sends the EXIT signal \fInoproc\fR to the process which evaluates \fIlink\fR if the argument is the Pid of a process which does not exist\&. 
+.RE
+.LP
+.B
+list_to_atom(CharIntegerList)
+.br
+.RS
+.LP
+Returns an atom whose text representation is the integers (Latin-1 codes) in \fICharIntegerList\fR\&. 
+
+.nf
+> list_to_atom([69, 114, 108, 97, 110, 103])\&.
+\&'Erlang\&'
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a list of integers, or if any integer in the list is not an integer in the range [0, 255]\&. 
+.RE
+.LP
+.B
+list_to_binary(List)
+.br
+.RS
+.LP
+Returns a binary which is made from the integers and binaries in \fIList\fR\&. \fIList\fR may be deep and may contain any combination of integers and binaries\&. 
+.LP
+Example: \fIlist_to_binary([Bin1, 1, [2, 3, Bin2], 4|Bin3])\fR 
+.LP
+Failure: \fIbadarg\fR if the argument is not a list, or if the list or any sublist contains anything else than binaries or integers in the range [0, 255]\&. 
+.RE
+.LP
+.B
+list_to_float(AsciiIntegerList)
+.br
+.RS
+.LP
+Returns a float whose text representation is the integers (ASCII-values) in \fIAsciiIntegerList\fR\&. 
+
+.nf
+> list_to_float([50,46,50,48,49,55,55,54,52,101,43,48])\&.
+2\&.20178
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a list of integers, or if \fIAsciiIntegerList\fR contains a bad representation of a float\&. 
+.RE
+.LP
+.B
+list_to_integer(AsciiIntegerList)
+.br
+.RS
+.LP
+Returns an integer whose text representation is the integers (ASCII-values) in \fIAsciiIntegerList\fR\&. 
+
+.nf
+> list_to_integer([49, 50, 51])\&.
+123
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a list of integers, or if \fIAsciiIntegerList\fR contains a bad representation of an integer\&. 
+.RE
+.LP
+.B
+list_to_pid(AsciiIntegerList)
+.br
+.RS
+.LP
+Returns a Pid whose text representation is the integers (ASCII-values) in \fIAsciiIntegerList\fR\&. This BIF is intended for debugging, and in the Erlang operating system\&. \fIIt should not be used in application programs\fR\&. 
+
+.nf
+> list_to_pid("<0\&.4\&.1>")\&.
+<0\&.4\&.1>
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a list of integers, or \fIAsciiIntegerList\fR contains a bad representation of a Pid\&. 
+.RE
+.LP
+.B
+list_to_tuple(List)
+.br
+.RS
+.LP
+Returns a tuple which corresponds to \fIList\fR\&. \fIList\fR can contain any Erlang terms\&. 
+
+.nf
+> list_to_tuple([mary, had, a, little, {dog, cat, lamb}])\&.
+{mary, had, a, little, {dog, cat, lamb}}
+.fi
+.LP
+Failure: \fIbadarg\fR if \fIList\fR is not a proper list\&. 
+.RE
+.LP
+.B
+erlang:load_module(Module, Binary)
+.br
+.RS
+.LP
+If \fIBinary\fR contains the object code for the module \fIModule\fR, this BIF loads that object code\&. Also, if the code for the module \fIModule\fR already exists, all export references are replaced so they point to the newly loaded code\&. The previously loaded code is kept in the system as `old code\&', as there may still be processes which are executing that code\&. It returns either \fI{module, Module}\fR, where \fIModule\fR is the name of the module which has been loaded, or \fI{error, Reason}\fR if \fIload\fR fails\&. \fIReason\fR is one of the following: 
+.RS 2
+.TP 4
+.B
+\fIbadfile\fR:
+If the object code in \fIBinary\fR has an incorrect format\&. 
+.TP 4
+.B
+\fInot_purged\fR:
+If \fIBinary\fR contains a module which cannot be loaded because old code for this module already exists (see the BIFs \fIpurge_module\fR and \fIdelete_module\fR)\&. 
+.TP 4
+.B
+\fIbadfile\fR:
+If the object code contains code for another module than \fIModule\fR 
+.RE
+.SS Warning:
+.LP
+Code handling - which includes loading, deleting, and replacing of modules - is done by the module \fIcode\fR in normal Erlang implementations\&. This BIF is intended for the implementation of the module named \fIcode\fR and should not be used elsewhere\&.
+
+.LP
+This is an optional BIF\&. 
+.LP
+Failure: \fIbadarg\fR if the first argument is not an atom, or the second argument is not a binary\&. 
+.RE
+.LP
+.B
+erlang:loaded()
+.br
+.RS
+.LP
+Returns a list of all loaded Erlang modules, including preloaded modules\&. A module will be included in the list if it has either current code or old code or both loaded\&. 
+.RE
+.LP
+.B
+erlang:localtime()
+.br
+.RS
+.LP
+Returns the current local date and time \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&. 
+.LP
+The time zone and daylight saving time correction depend on the underlying OS\&. 
+
+.nf
+> erlang:localtime()\&.
+{{1996,11,6},{14,45,17}}
+.fi
+.RE
+.LP
+.B
+erlang:localtime_to_universaltime(DateTime)
+.br
+.RS
+.LP
+Converts local date and time in \fIDateTime\fR to Universal Time Coordinated (UTC), if this is supported by the underlying OS\&. Otherwise, no conversion is done and \fIDateTime\fR is returned\&. The return value is of the form \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&. 
+.LP
+Failure: \fIbadarg\fR if the argument is not a valid date and time tuple \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&. 
+
+.nf
+> erlang:localtime_to_universaltime({{1996,11,6},{14,45,17}})\&. 
+{{1996,11,6},{13,45,17}}
+.fi
+.RE
+.LP
+.B
+make_ref()
+.br
+.RS
+.LP
+Returns an almost unique reference\&. 
+.LP
+The returned reference will reoccur after approximately 2^82 calls; therefore it is unique enough for most practical purposes\&. 
+
+.nf
+> make_ref()\&.
+#Ref<0\&.0\&.0\&.135>
+.fi
+.RE
+.LP
+.B
+make_tuple(Arity, InitialValue)
+.br
+.RS
+.LP
+Returns a new tuple of the given \fIArity\fR, where all elements are \fIInitialValue\fR\&. 
+
+.nf
+> erlang:make_tuple(4, [])\&.       
+{[],[],[],[]}
+.fi
+.RE
+.LP
+.B
+erlang:md5(Data) -> Digest
+.br
+.RS
+.TP
+Types
+Data = iolist() | binary()
+.br
+Digest = binary()
+.br
+.RE
+.RS
+.LP
+Computes an \fIMD5\fR message digest from \fIData\fR, where the length of the digest is 128 bits (16 bytes)\&. \fIData\fR is a binary or a list of small integers and binaries\&. 
+.LP
+See The MD5 Message Digest Algorithm (RFC 1321) for more information about MD5\&. 
+.LP
+Failure: \fIbadarg\fR if the \fIData\fR argument is not a list, or if the list or any sublist contains anything else than binaries or integers in the range [0, 255]\&. 
+.RE
+.LP
+.B
+erlang:md5_init() -> Context
+.br
+.RS
+.TP
+Types
+Context = binary()
+.br
+.RE
+.RS
+.LP
+Creates an MD5 context, to be used in subsequent calls to \fImd5_update/2\fR\&. 
+.RE
+.LP
+.B
+erlang:md5_update(Context, Data) -> NewContext
+.br
+.RS
+.TP
+Types
+Data = iolist() | binary()
+.br
+Context = NewContext = binary()
+.br
+.RE
+.RS
+.LP
+Updates an MD5 \fIContext\fR with \fIData\fR, and returns a \fINewContext\fR\&. 
+.RE
+.LP
+.B
+erlang:md5_final(Context) -> Digest
+.br
+.RS
+.TP
+Types
+Context = Digest = binary()
+.br
+.RE
+.RS
+.LP
+Finishes the update of an MD5 \fIContext\fR and returns the computed \fIMD5\fR message digest\&. 
+.RE
+.LP
+.B
+erlang:module_loaded(Module)
+.br
+.RS
+.LP
+Returns the atom \fItrue\fR if the module contained in atom \fIModule\fR is loaded, otherwise it returns the atom \fIfalse\fR\&. It does not attempt to load the module\&. 
+.SS Warning:
+.LP
+This BIF is intended for the implementation of the module named \fIcode\fR and should not be used anywhere else\&. Use \fIcode:is_loaded/1\fR instead\&. 
+
+
+.nf
+> erlang:module_loaded(lists)\&.
+true
+.fi
+.LP
+This is an optional BIF\&. 
+.LP
+Failure: \fIbadarg\fR if the argument is not an atom\&. 
+.RE
+.LP
+.B
+erlang:monitor(Type, Item)
+.br
+.RS
+.LP
+The current process starts monitoring \fIItem\fR, and will be notified when \fIItem\fR dies, with a message \fI{\&'DOWN\&', Ref, Type, Object, Info}\fR, where \fIRef\fR is the value returned by the call to \fIerlang:monitor/2\fR, and \fIInfo\fR gives additional information\&. The message is also sent if \fIItem\fR is already dead\&.\fIObject\fR refers to the same entity as \fIItem\fR, but sometimes with a different format e\&.g when \fIItem\fR is a process name \fIObject\fR may be the pid\&. The value returned can be used for disabling the monitor (see \fIerlang:demonitor/1\fR)\&.
+.LP
+The currently allowed value for \fIType\fR is the atom \fIprocess\fR\&.\fIItem\fR may then be a pid, an atom \fIName\fR or a tuple\fI{Name, Node}\fR where Node also is an atom;\fIInfo\fR in the message is the exit reason of the process (or \fInoproc\fR or \fInoconnection\fR, when the process does not exist or the remote node goes down, respectively, in analogy with \fIlink/1\fR)\&. \fIObject\fR in the message is the pid that \fIItem\fR refers to, but if \fIName\fR is not registered on the referred node or if \fINode\fR is not alive then \fIObject\fR is equal to \fIName\fR, If an attempt is made to monitor a process on an older node (where remote process monitoring is not implemented (or one where remote process monitoring by registered name is not implemented)), the call fails with \fIbadarg\fR\&.
+.LP
+Making several calls to \fIerlang:monitor/2\fR for the same item is not an error; it results in several completely independent monitorings\&. 
+.RE
+.LP
+.B
+monitor_node(Node, Flag)
+.br
+.RS
+.LP
+Monitors the status of the node \fINode\fR\&. If \fIFlag\fR is \fItrue\fR, monitoring is turned on; if \fIFlag\fR is \fIfalse\fR, monitoring is turned off\&. Calls to the BIF are accumulated\&. This is shown in the following example, where a process is already monitoring the node \fINode\fR and a library function is called: 
+
+.nf
+monitor_node(Node, true),
+    \&.\&.\&.  some operations
+monitor_node(Node, false),
+.fi
+.LP
+After the call, the process is still monitoring the node\&. 
+.LP
+If \fINode\fR fails or does not exist, the message \fI{nodedown, Node}\fR is delivered to the process\&. If a process has made two calls to \fImonitor_node(Node, true)\fR and \fINode\fR terminates, two \fInodedown\fR messages are delivered to the process\&. If there is no connection to \fINode\fR, there will be an attempt to create one\&. If this fails, a \fInodedown\fR message is delivered\&. 
+.LP
+Returns \fItrue\fR\&. 
+.LP
+Failure: \fIbadarg\fR if \fIFlag\fR is not \fItrue\fR or \fIfalse\fR, and \fIbadarg\fR if \fINode\fR is not an atom indicating a remote node, or if the local node is not alive\&. 
+.RE
+.LP
+.B
+node()
+.br
+.RS
+.LP
+Returns the name of the current node\&. If it is not a networked node but a local Erlang runtime system, the atom \fInonode@nohost\fR is returned\&. 
+.LP
+Allowed in guard tests\&. 
+.RE
+.LP
+.B
+node(Arg) 
+.br
+.RS
+.LP
+Returns the node where \fIArg\fR is located\&. \fIArg\fR can be a Pid, a reference, or a port\&. 
+.LP
+Allowed in guard tests\&. 
+.LP
+Failure: \fIbadarg\fR if \fIArg\fR is not a Pid, reference, or port\&. 
+.RE
+.LP
+.B
+nodes()
+.br
+.RS
+.LP
+Returns a list of all known nodes in the system, excluding the current node\&. 
+.RE
+.LP
+.B
+now()
+.br
+.RS
+.LP
+Returns the tuple \fI{MegaSecs, Secs, Microsecs}\fR 
+.LP
+which is the elapsed time since 00:00 GMT, January 1, 1970 (zero hour) on the assumption that the underlying OS supports this\&. Otherwise, some other point in time is chosen\&. It is also guaranteed that subsequent calls to this BIF returns continuously increasing values\&. Hence, the return value from \fInow()\fR can be used to generate unique time-stamps\&. It can only be used to check the local time of day if the time-zone info of the underlying operating system is properly configured\&. 
+.RE
+.LP
+.B
+open_port(PortName, PortSettings)
+.br
+.RS
+.LP
+Returns a port identifier as the result of opening a new Erlang port\&. A port can be seen as an external Erlang process\&. \fIPortName\fR is one of the following: 
+.RS 2
+.TP 4
+.B
+\fI{spawn, Command}\fR:
+Starts an external program\&. \fICommand\fR is the name of the external program which will be run\&. \fICommand\fR runs outside the Erlang work space unless an Erlang driver with the name \fICommand\fR is found\&. If found, that driver will be started\&. A driver runs in the Erlang workspace, which means that it is linked with the Erlang runtime system\&. 
+.RS 4
+.LP
+When starting external programs on Solaris, the system call \fIvfork\fR is used in preference to \fIfork\fR for performance reasons, although it has a history of being less robust\&. If there are problems with using \fIvfork\fR, setting the environment variable \fIERL_NO_VFORK\fR to any value will cause \fIfork\fR to be used instead\&. 
+.RE
+.TP 4
+.B
+\fIAtom\fR:
+\fIThis use of open_port() is obsolete and will be removed in a future version of Erlang\&. Use the \fR\fIfile\fR \fImodule instead\&.\fR The atom is assumed to be the name of an external resource\&. A transparent connection is established between Erlang and the resource named by the atom \fIAtom\fR\&. The characteristics of the port depend on the type of resource\&. If \fIAtom\fR represents a normal file, the entire contents of the file is sent to the Erlang process as one or more messages\&. When messages are sent to the port, it causes data to be written to the file\&. 
+.TP 4
+.B
+\fI{fd, In, Out}\fR:
+Allows an Erlang process to access any currently opened file descriptors used by Erlang\&. The file descriptor \fIIn\fR can be used for standard input, and the file descriptor \fIOut\fR for standard output\&. It is only used for various servers in the Erlang operating system (\fIshell\fR and \fIuser\fR)\&. Hence, its use is very limited\&. 
+.RE
+.LP
+\fIPortSettings\fR is a list of settings for the port\&. Valid values are: 
+.RS 2
+.TP 4
+.B
+\fI{packet, N}\fR:
+Messages are preceded by their length, sent in \fIN\fR bytes, with the most significant byte first\&. Valid values for \fIN\fR are 1, 2, or 4\&. 
+.TP 4
+.B
+\fIstream\fR:
+Output messages are sent without packet lengths\&. A user-defined protocol must be used between the Erlang process and the external object\&. 
+.TP 4
+.B
+\fI{line, N}\fR:
+Messages are delivered on a per line basis\&. Each line (delimited by the OS-dependent newline sequence) is delivered in one single message\&. The message data format is \fI{Flag, Line}\fR, where \fIFlag\fR is either \fIeol\fR or \fInoeol\fR and \fILine\fR is the actual data delivered (without the newline sequence)\&.
+.RS 4
+.LP
+
+.LP
+\fIN\fR specifies the maximum line length in bytes\&. Lines longer than this will be delivered in more than one message, with the \fIFlag\fR set to \fInoeol\fR for all but the last message\&. If end of file is encountered anywere else than immediately following a newline sequence, the last line will also be delivered with the \fIFlag\fR set to \fInoeol\fR\&. In all other cases, lines are delivered with \fIFlag\fR set to \fIeol\fR\&.
+.LP
+
+.LP
+The \fI{packet, N}\fR and \fI{line, N}\fR settings are mutually exclusive\&. 
+.RE
+.TP 4
+.B
+\fI{cd, Dir}\fR:
+This is only valid for \fI{spawn, Command}\fR\&. The external program starts using Dir as its working directory\&. Dir must be a string\&. Not available on VxWorks\&. 
+.TP 4
+.B
+\fI{env, Environment}\fR:
+This is only valid for \fI{spawn, Command}\fR\&. The environment of the started process is extended using the environment specifications in \fIEnvironment\fR\&. \fIEnvironment\fR should be a list of tuples {\fIName\fR, \fIValue\fR}, where \fIName\fR is the name of an environment variable, and \fIValue\fR is the value it is to have in the spawned port process\&. Both \fIName\fR and \fIValue\fR must be strings\&. The one exception is \fIValue\fR being the atom \fIfalse\fR (in analogy with \fIos:getenv/1\fR), which removes the environment variable\&. Not available on VxWorks\&. 
+.TP 4
+.B
+\fIexit_status\fR:
+This is only valid for \fI{spawn, Command}\fR where \fICommand\fR refers to an external program\&. When the external process connected to the port exits, a message of the form \fI{Port, {exit_status, Status}}\fR is sent to the connected process, where \fIStatus\fR is the exit status of the external process\&. If the program aborts, on Unix the same convention is used as the shells do (i\&.e\&. 128+signal)\&. If the \fIeof\fR option has been given as well, the \fIeof\fR message and the \fIexit_status\fR message appear in an unspecified order\&. If the port program closes its stdout without exiting, the \fIexit_status\fR option will not work\&. 
+.TP 4
+.B
+\fIuse_stdio\fR:
+This is only valid for \fI{spawn, Command}\fR\&. It allows the standard input and output (file descriptors 0 and 1) of the spawned (UNIX) process for communication with Erlang\&. 
+.TP 4
+.B
+\fInouse_stdio\fR:
+The opposite of the above\&. Uses file descriptors 3 and 4 for communication with Erlang\&. 
+.TP 4
+.B
+\fIstderr_to_stdout\fR:
+Affects ports to external programs\&. The executed program gets its standard error file redirected to its standard output file\&. \fIstderr_to_stdout\fR and \fInouse_stdio\fR are mutually exclusive\&. 
+.TP 4
+.B
+\fIin\fR:
+The port can only be used for input\&. 
+.TP 4
+.B
+\fIout\fR:
+The port can only be used for output\&. 
+.TP 4
+.B
+\fIbinary\fR:
+All I/O from the port are binary data objects as opposed to lists of bytes\&. 
+.TP 4
+.B
+\fIeof\fR:
+The port will not be closed at the end of the file and produce an EXIT signal\&. Instead, it will remain open and a \fI{Port, eof}\fR message will be sent to the process holding the port\&. 
+.RE
+.LP
+The default is \fIstream\fR for all types of port and \fIuse_stdio\fR for spawned ports\&. 
+.LP
+Failure: \fIbadarg\fR if the format of \fIPortName\fR or \fIPortSettings\fR is incorrect\&. If the port cannot be opened, the exit reason is the Posix error code which most closely describes the error, or \fIeinval\fR if no Posix code is appropriate\&. The following Posix error codes may appear: 
+.RS 2
+.TP 4
+.B
+\fIenomem\fR:
+There was not enough memory to create the port\&. 
+.TP 4
+.B
+\fIeagain\fR:
+There are no more available operating system processes\&. 
+.TP 4
+.B
+\fIenametoolong\fR:
+The external command given was too long\&. 
+.TP 4
+.B
+\fIemfile\fR:
+There are no more available file descriptors\&. 
+.TP 4
+.B
+\fIenfile\fR:
+A file or port table is full\&. 
+.RE
+.LP
+During use of a port opened using \fI{spawn, Name}\fR, errors arising when sending messages to it are reported to the owning process using exit signals of the form \fI{\&'EXIT\&', Port, PosixCode}\fR\&. Posix codes are listed in the documentation for the \fIfile\fR module\&. 
+.LP
+The maximum number of ports that can be open at the same time is 1024 by default, but can be configured by the environment variable \fIERL_MAX_PORTS\fR\&. 
+.RE
+.LP
+.B
+erlang:phash(Term, Range)
+.br
+.RS
+.LP
+Portable hash function that will give the same hash for the same erlang term regardless of machine architecture and ERTS version (The BIF was introduced in ERTS 4\&.9\&.1\&.1)\&. Range can be between 1 and 2^32, the function returns a hash value for \fITerm\fR within the range \fI1\&.\&.Range\fR\&. 
+.LP
+This BIF should always be used instead of the old deprecated \fIerlang:hash/2\fR BIF, as it calculates better hashes for all datatypes\&. 
+.RE
+.LP
+.B
+pid_to_list(Pid)
+.br
+.RS
+.LP
+Returns a list which corresponds to the process \fIPid\fR\&. 
+.SS Warning:
+.LP
+This BIF is intended for debugging and for use in the Erlang operating system\&. It should not be used in application programs\&. 
+
+
+.nf
+> pid_to_list(whereis(init))\&.
+"<0\&.0\&.0>"
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a Pid\&. 
+.RE
+.LP
+.B
+port_close(Port, Data)
+.br
+.RS
+.LP
+Closes an open port\&. Roughly the same as \fIPort ! {self(), close}\fR except for the error behaviour (see below), and that the port does \fInot\fR reply with \fI{Port, closed}\fR\&. Any process may close a port with \fIport_close/1\fR, not only the port owner (the connected process)\&.
+.LP
+Returns: \fItrue\fR\&. 
+.LP
+Failure: \fIbadarg\fR if \fIPort\fR is not an open port\&.
+.LP
+For comparision: \fIPort ! {self(), close}\fR fails with \fIbadarg\fR if \fIPort\fR cannot be sent to (i\&.e\&. \fIPort\fR refers neither to a port nor to a process)\&. If \fIPort\fR is a closed port nothing happens\&. If \fIPort\fR is an open port and the current process is the port owner the port replies with \fI{Port, closed}\fR when all buffers have been flushed and the port really closes, but if the current process is not the port owner the \fIport owner\fR fails with \fIbadsig\fR\&.
+.LP
+Note that any process can close a port using \fIPort ! {PortOwner, close}\fR just as if it itself was the port owner, but the reply always goes to the port owner\&.
+.LP
+In short: \fIport_close(Port)\fR has a cleaner and more logical behaviour than \fIPort ! {self(), close}\fR\&.
+.RE
+.LP
+.B
+port_command(Port, Data)
+.br
+.RS
+.LP
+Sends data to a port\&. Same as \fIPort ! {self(), {command, Data}}\fR except for the error behaviour (see below)\&. Any process may send data to a port with \fIport_command/2\fR, not only the port owner (the connected process)\&.
+.LP
+Returns: \fItrue\fR\&. 
+.LP
+Failure: \fIbadarg\fR if \fIPort\fR is not an open port or if \fIData\fR is not an I/O list\&. An I/O list is a binary or a (possibly) deep list of binaries or integers in the range 0 through 255\&.
+.LP
+For comparision: \fIPort ! {self(), {command, Data}}\fR fails with \fIbadarg\fR if \fIPort\fR cannot be sent to (i\&.e\&. \fIPort\fR refers neither to a port nor to a process)\&. If \fIPort\fR is a closed port the data message disappears without a sound\&. If \fIPort\fR is open and the current process is not the port owner, the \fIport owner\fR fails with \fIbadsig\fR\&. The port owner fails with\fIbadsig\fR also if \fIData\fR is not a legal I/O list\&.
+.LP
+Note that any process can send to a port using \fIPort ! {PortOwner, {command, Data}}\fR just as if it itself was the port owner\&.
+.LP
+In short: \fIport_command(Port, Data)\fR has a cleaner and more logical behaviour than \fIPort ! {self(), {command, Data}}\fR\&.
+.RE
+.LP
+.B
+port_connect(Port, Pid)
+.br
+.RS
+.LP
+Sets the port owner (the connected port) to \fIPid\fR\&. Roughly the same as \fIPort ! {self(), {connect, Pid}}\fR except for the following:
+.RS 2
+.TP 2
+*
+The error behavior differs, see below\&.
+.TP 2
+*
+The port does \fInot\fR reply with \fI{Port, connected}\fR\&.
+.TP 2
+*
+The new port owner gets linked to the port\&.
+.RE
+.LP
+The old port owner stays linked to the port and have to call \fIunlink(Port)\fR if this is not desired\&. Any process may set the port owner to be any process with \fIport_connect/2\fR\&.
+.LP
+Returns: \fItrue\fR\&. 
+.LP
+Failure: \fIbadarg\fR if \fIPort\fR is not an open port or if \fIPid\fR is not a valid local pid\&.
+.LP
+For comparision: \fIPort ! {self(), {connect, Pid}}\fR fails with \fIbadarg\fR if \fIPort\fR cannot be sent to (i\&.e\&. \fIPort\fR refers neither to a port nor to a process)\&. If \fIPort\fR is a closed port nothing happens\&. If \fIPort\fR is an open port and the current process is the port owner the port replies with \fI{Port, connected}\fR to the old port owner\&. Note that the old port owner is still linked to the port, and that the new is not\&. If \fIPort\fR is an open port and the current process is not the port owner the \fIport owner\fR fails with \fIbadsig\fR\&. The port owner fails with \fIbadsig\fR also if \fIPid\fR is not a valid local pid\&.
+.LP
+Note that any process can set the port owner using \fIPort ! {PortOwner, {connect, Pid}}\fR just as if it itself was the port owner, but the reply always goes to the port owner\&.
+.LP
+In short: \fIport_connect(Port, Pid)\fR has a cleaner and more logical behaviour than \fIPort ! {self(), {connect, Pid}}\fR\&.
+.RE
+.LP
+.B
+port_control(Port, Operation, Data)
+.br
+.RS
+.LP
+Performs a synchronous control operation on a port\&. The meaning of \fIOperation\fR and \fIData\fR depends on the port, i\&.e\&. on the port driver\&. Not all port drivers support this control feature\&.
+.LP
+Returns: a list of integers in the range 0 through 255, or a binary, depending on the port driver\&. The meaning of the returned data also depends on the port driver\&.
+.LP
+Failure: \fIbadarg\fR if \fIPort\fR is not an open port, if \fIOperation\fR cannot fit in a 32-bit integer, if the port driver does not support synchronous control operations, if \fIData\fR is not a valid I/O list (see port_command/2), or if the port driver so decides for any reason (probably something wrong with \fIOperation\fR or \fIData\fR)\&.
+.RE
+.LP
+.B
+erlang:port_info(Port, Item)
+.br
+.RS
+.LP
+Returns information about the port \fIPort\fR as specified by \fIItem\fR, which can be any one of the atoms \fIid\fR, \fIconnected\fR, \fIlinks\fR, \fIname\fR, \fIinput\fR, or \fIoutput\fR\&. 
+.RS 2
+.TP 4
+.B
+\fI{id, Index}\fR:
+\fIIndex\fR is the internal index of the port\&. This index may be used to separate ports\&. 
+.TP 4
+.B
+\fI{connected, Pid}\fR:
+\fIPid\fR is the process connected to the port\&. 
+.TP 4
+.B
+\fI{links, ListOfPids}\fR:
+\fIListOfPids\fR is a list of Pids with processes to which the port has a link\&. 
+.TP 4
+.B
+\fI{name, String}\fR:
+\fIString\fR is the command name set by \fIopen_port\fR\&. 
+.TP 4
+.B
+\fI{input, Bytes}\fR:
+\fIBytes\fR is the total number of bytes read from the port\&. 
+.TP 4
+.B
+\fI{output, Bytes}\fR:
+\fIBytes\fR is the total number of bytes written to the port\&. 
+.RE
+.LP
+All implementations may not support all of the above \fIItems\fR\&. Returns \fIundefined\fR if the port does not exist\&. 
+.LP
+Failure: \fIbadarg\fR if \fIPort\fR is not a process identifier, or if \fIPort\fR is a port identifier of a remote process\&. 
+.RE
+.LP
+.B
+erlang:ports()
+.br
+.RS
+.LP
+Returns a list of all ports on the current node\&. 
+.RE
+.LP
+.B
+erlang:port_to_list(Port)
+.br
+.RS
+.LP
+Returns a list which corresponds to the port identifier \fIPort\fR\&. 
+.SS Warning:
+.LP
+This BIF is intended for debugging and for use in the Erlang operating system\&. It should not be used in application programs\&. 
+
+
+.nf
+> erlang:port_to_list(open_port({spawn,ls}, []))\&.
+"#Port<0\&.15>"
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a port\&. 
+.RE
+.LP
+.B
+erlang:pre_loaded()
+.br
+.RS
+.LP
+Returns a list of Erlang modules which are pre-loaded in the system\&. As all loading of code is done through the file system, the file system must have been loaded previously\&. Hence, at least the module \fIinit\fR must be pre-loaded\&. 
+.RE
+.LP
+.B
+erlang:process_display(Pid, Type)
+.br
+.RS
+.LP
+Writes information about the local process \fIPid\fR on standard error\&. The currently allowed value for the atom \fIType\fR is \fIbacktrace\fR, which shows the contents of the stack, including information about the call chain, with the most recent data printed last\&. The format of the output is not further defined\&. \fIPid\fR may be a zombie process\&. 
+.RE
+.LP
+.B
+process_flag(Flag, Option)
+.br
+.RS
+.LP
+Sets certain flags for the process which calls this function\&. Returns the old value of the flag\&. 
+.RS 2
+.TP 4
+.B
+\fIprocess_flag(trap_exit, Boolean)\fR:
+When \fItrap_exit\fR is set to \fItrue\fR, EXIT signals arriving to a process are converted to \fI{\&'EXIT\&', From, Reason}\fR messages, which can be received as ordinary messages\&. If \fItrap_exit\fR is set to \fIfalse\fR, the process exits if it receives an EXIT signal other than \fInormal\fR and the EXIT signal is propagated to its linked processes\&. Application processes should normally not trap exits\&. 
+.TP 4
+.B
+\fIprocess_flag(error_handler, Module)\fR:
+This is used by a process to redefine the error handler for undefined function calls and undefined registered processes\&. Inexperienced users should not use this flag since code autoloading is dependent on the correct operation of the error handling module\&. 
+.TP 4
+.B
+\fIprocess_flag(priority, Level)\fR:
+This sets the process priority\&. \fILevel\fR is an atom\&. All implementations support three priority levels, \fIlow\fR, \fInormal\fR, and \fIhigh\fR\&. The default is \fInormal\fR\&. 
+.TP 4
+.B
+\fIprocess_flag(save_calls, N)\fR:
+\fIN\fR must be an integer in the interval [0, 10000]\&. If \fIN\fR > 0, call saving is made active for the process, which means that information about the \fIN\fR most recent global function calls, BIF calls, sends and receives made by the process are saved in a list, which can be retrieved with \fIprocess_info(Pid, last_calls)\fR\&. A global function call is one in which the module of the function is explicitly mentioned\&. Only a fixed amount of information is saved: a tuple \fI{Module, Function, Arity}\fR for function calls, and the mere atoms \fIsend\fR, \fI\&'receive\&'\fR and \fItimeout\fR for sends and receives (\fI\&'receive\&'\fR when a message is received and \fItimeout\fR when a receive times out)\&. If \fIN\fR = 0, call saving is disabled for the process\&. Whenever the size of the call saving list is set, its contents are reset\&. 
+.RE
+.LP
+Failure: \fIbadarg\fR if \fIFlag\fR is not an atom, or is not a recognized flag value, or if \fIOption\fR is not a recognized term for \fIFlag\fR\&. 
+.RE
+.LP
+.B
+process_flag(Pid, Flag, Option)
+.br
+.RS
+.LP
+Sets certain flags for the process \fIPid\fR, in the same manner as \fIprocess_flag/2\fR\&. Returns the old value of the flag\&. The allowed values for \fIFlag\fR are only a subset of those allowed in \fIprocess_flag/2\fR, namely: \fIsave_calls\fR\&. 
+.LP
+Failure: \fIbadarg\fR if \fIPid\fR is not a process on the local node, or if \fIFlag\fR is not an atom, or is not a recognized flag value, or if \fIOption\fR is not a recognized term for \fIFlag\fR\&. 
+.RE
+.LP
+.B
+process_info(Pid)
+.br
+.RS
+.LP
+Returns a long list which contains information about the process \fIPid\fR\&. This BIF is only intended for debugging\&. It should not be used for any other purpose\&. The list returned contains the following tuples\&. The order in which these tuples are returned is not defined, nor are all the tuples mandatory\&. 
+.RS 2
+.TP 4
+.B
+\fI{current_function, {Module, Function, Arguments}}\fR:
+\fIModule\fR, \fIFunction\fR, \fIArguments\fR is the current function call of the process\&. 
+.TP 4
+.B
+\fI{dictionary, Dictionary}\fR:
+\fIDictionary\fR is the dictionary of the process\&. 
+.TP 4
+.B
+\fI{error_handler, Module}\fR:
+\fIModule\fR is the error handler module used by the process (for undefined function calls, for example)\&. 
+.TP 4
+.B
+\fI{group_leader, Groupleader}\fR:
+\fIGroupleader\fR is group leader for the I/O of the process\&. 
+.TP 4
+.B
+\fI{heap_size, Size}\fR:
+\fISize\fR is the heap size of the process in heap words\&. 
+.TP 4
+.B
+\fI{initial_call, {Module, Function, Arity}}\fR:
+\fIModule\fR, \fIFunction\fR, \fIArity\fR is the initial function call with which the process was spawned\&. 
+.TP 4
+.B
+\fI{links, ListOfPids}\fR:
+\fIListOfPids\fR is a list of Pids, with processes to which the process has a link\&. 
+.TP 4
+.B
+\fI{message_queue_len, MessageQueueLen}\fR:
+\fIMessageQueueLen\fR is the number of messages currently in the message queue of the process\&. This is the length of the list \fIMessageQueue\fR returned as the info item \fImessages\fR (see below)\&. 
+.TP 4
+.B
+\fI{messages, MessageQueue}\fR:
+\fIMessageQueue\fR is a list of the messages to the process, which have not yet been processed\&. 
+.TP 4
+.B
+\fI{priority, Level}\fR:
+\fILevel\fR is the current priority level for the process\&. Only \fIlow\fR and \fInormal\fR are always supported\&. 
+.TP 4
+.B
+\fI{reductions, Number}\fR:
+\fINumber\fR is the number of reductions executed by the process\&. 
+.TP 4
+.B
+\fI{registered_name, Atom}\fR:
+\fIAtom\fR is the registered name of the process\&. If the process has no registered name, this tuple is not present in the list\&. 
+.TP 4
+.B
+\fI{stack_size, Size}\fR:
+\fISize\fR is the stack size of the process in stack words\&. 
+.TP 4
+.B
+\fI{status, Status}\fR:
+\fIStatus\fR is the status of the process\&. \fIStatus\fR is \fIwaiting\fR (waiting for a message), \fIrunning\fR, \fIrunnable\fR (ready to run, but another process is running), \fIsuspended\fR (suspended on a "busy" port or by the \fIerlang:suspend_process/1\fR BIF), or \fIexiting\fR (if the process has exited, but remains as a zombie)\&. 
+.TP 4
+.B
+\fI{trap_exit, Boolean}\fR:
+\fIBoolean\fR is \fItrue\fR if the process is trapping exits, otherwise it is \fIfalse\fR\&. 
+.RE
+.LP
+Failure: \fIbadarg\fR if the argument is not a Pid, or if \fIPid\fR is a Pid of a remote process\&. 
+.RE
+.LP
+.B
+process_info(Pid, Item)
+.br
+.RS
+.LP
+Returns information about the process \fIPid\fR as specified by \fIItem\fR, in the form \fI{Item, Info}\fR\&. \fIItem\fR can be any one of the atoms \fIbacktrace\fR, \fIcurrent_function\fR, \fIdictionary\fR, \fIerror_handler\fR, \fIexit\fR, \fIgroup_leader\fR, \fIheap_size\fR, \fIinitial_call\fR, \fIlast_calls\fR, \fIlinks\fR, \fImemory\fR, \fImessage_queue_len\fR, \fImessages\fR, \fImonitored_by\fR, \fImonitors\fR, \fIpriority\fR, \fIreductions\fR, \fIregistered_name\fR, \fIstack_size\fR, \fIstatus\fR or \fItrap_exit\fR\&. 
+.LP
+Returns \fIundefined\fR if no information is known about the process\&. 
+.LP
+\fIprocess_info\fR can be used to obtain information about processes which have exited but whose data are still kept, so called zombie processes\&. To determine whether to keep information about dead processes, use the BIF \fIerlang:system_flag/2\fR\&. Since \fIprocess_info\fR does not necessarily return \fIundefined\fR for a dead process, use \fIis_process_alive/1\fR to check whether a process is alive\&. 
+.LP
+Item \fIexit\fR returns \fI[]\fR if the process is alive, or \fI{exit, Reason}\fR if the process has exited, where \fIReason\fR is the exit reason\&. 
+.LP
+Item \fIregistered_name\fR returns \fI[]\fR if the process has no registered name\&. If the process is a zombie, the registered name it had when it died is returned\&. 
+.LP
+Item \fImemory\fR returns {memory, Size}, where \fISize\fR is the size of the process in bytes\&. This includes stack, heap and internal structures\&. 
+.LP
+Item \fIbacktrace\fR returns a binary, which contains the same information as the output from \fIerlang:process_display(Pid, backtrace)\fR\&. Use \fIbinary_to_list/1\fR to obtain the string of characters from the binary\&. 
+.LP
+Item \fIlast_calls\fR returns \fIfalse\fR if call saving is not active for the process (see process_flag/3)\&. If call saving is active, a list is returned, in which the last element is the most recent\&. 
+.LP
+Item \fIlinks\fR returns a list of pids to which the process is linked\&. 
+.LP
+Item \fImonitors\fR returns a list of monitors (started by erlang:monitor/2) that are active for the process\&. For a local process monitor or a remote process monitor by pid, the list item is {process, Pid}, and for a remote process monitor by name the list item is {process, {Name, Node}}\&. 
+.LP
+Item \fImonitored_by\fR returns a list of pids that are monitoring the process (with erlang:monitor/2)\&. 
+.LP
+Not all implementations support every one of the above \fIItems\fR\&. 
+.LP
+Failure: \fIbadarg\fR if \fIPid\fR is not a process identifier, or if \fIPid\fR is a process identifier of a remote process\&. 
+.RE
+.LP
+.B
+processes()
+.br
+.RS
+.LP
+Returns a list of all processes on the current node, including zombie processes\&. See system_flag/2\&.
+
+.nf
+> processes()\&.
+[<0\&.0\&.1>, <0\&.1\&.1>, <0\&.2\&.1>, <0\&.3\&.1>, <0\&.4\&.1>, <0\&.6\&.1>]
+.fi
+.RE
+.LP
+.B
+erlang:purge_module(Module)
+.br
+.RS
+.LP
+Removes old code for \fIModule\fR\&. Before this BIF is used, \fIerlang:check_process_code/2\fR should be called to check that no processes are executing old code in this module\&. 
+.SS Warning:
+.LP
+In normal Erlang implementations, code handling - which is loading, deleting and replacing modules - is evaluated by the module \fIcode\fR\&. This BIF is intended to be used by the implementation of the module code and should not be used in any other place\&.
+
+.LP
+This is an optional BIF\&. 
+.LP
+Failure: \fIbadarg\fR if \fIModule\fR does not exist\&. 
+.RE
+.LP
+.B
+put(Key, Value)
+.br
+.RS
+.LP
+Adds a new \fIValue\fR to the process dictionary and associates it with \fIKey\fR\&. If a value is already associated with \fIKey\fR, that value is deleted and replaced by the new value \fIValue\fR\&. It returns any value previously associated with \fIKey\fR, or \fIundefined\fR if no value was associated with \fIKey\fR\&. \fIKey\fR and \fIValue\fR can be any valid Erlang terms\&. 
+.SS Note:
+.LP
+The values stored when \fIput\fR is evaluated within the scope of a \fIcatch\fR will not be retracted if a \fIthrow\fR is evaluated, or if an error occurs\&.
+
+
+.nf
+> X = put(name, walrus), Y = put(name, carpenter), 
+  Z = get(name), 
+  {X, Y, Z}\&.
+{undefined, walrus, carpenter}
+.fi
+.RE
+.LP
+.B
+erlang:read_timer(Ref)
+.br
+.RS
+.LP
+\fIreturns_timer(Ref)\fR returns the number of milliseconds remaining for a timer, where \fIRef\fR was returned by either \fIsend_after/3\fR or \fIstart_timer/3\fR\&. If the timer was active, \fIread_timer/1\fR returns the time in milliseconds left until the timer will expire, otherwise \fIfalse\fR (which may mean that \fIRef\fR was never a timer, or that it has been cancelled, or that it has already delivered its message)\&. 
+.LP
+Failure: \fIbadarg\fR if \fIRef\fR is not a reference\&. 
+.RE
+.LP
+.B
+erlang:ref_to_list(Ref)
+.br
+.RS
+.LP
+Returns a list which corresponds to the reference \fIRef\fR\&. 
+.SS Warning:
+.LP
+This BIF is intended for debugging and for use in the Erlang operating system\&. It should not be used in application programs\&. 
+
+
+.nf
+> erlang:ref_to_list(make_ref())\&.
+"#Ref<0\&.0\&.0\&.134>"
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a reference\&. 
+.RE
+.LP
+.B
+register(Name, Pid)
+.br
+.RS
+.LP
+Associates the name \fIName\fR with the process identity \fIPid\fR\&. \fIName\fR, which must be an atom, can be used instead of a pid in the send operator (\fIName ! Message\fR)\&. 
+.LP
+Returns \fItrue\fR\&. 
+.LP
+Failure: \fIbadarg\fR if \fIPid\fR is not an active process, or if \fIPid\fR is a process on another node, or if the name \fIName\fR is already in use, or if the process is already registered (it already has a name), or if the name \fIName\fR is not an atom, or if \fIName\fR is the atom \fIundefined\fR\&. 
+.RE
+.LP
+.B
+registered()
+.br
+.RS
+.LP
+Returns a list of names which have been registered using \fIregister/2\fR\&. 
+
+.nf
+> registered()\&.
+[code_server, file_server, init, user, my_db]
+.fi
+.RE
+.LP
+.B
+erlang:resume_process(Pid)
+.br
+.RS
+.LP
+Resume a suspended process\&. This should be used for debugging purposes only, not in production code\&. 
+.RE
+.LP
+.B
+round(Number)
+.br
+.RS
+.LP
+Returns an integer by rounding the number \fINumber\fR\&. Allowed in guard tests\&. 
+
+.nf
+> round(5\&.5)\&.
+6
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a float (or an integer)\&. 
+.RE
+.LP
+.B
+self()
+.br
+.RS
+.LP
+Returns the process identity of the calling process\&. Allowed in guard tests\&. 
+
+.nf
+> self()\&.
+<0\&.16\&.1>
+.fi
+.RE
+.LP
+.B
+erlang:send_after(Time, Pid, Msg)
+.br
+.RS
+.LP
+\fITime\fR is a non-negative integer, \fIPid\fR is either a pid or an atom, and \fIMsg\fR is any Erlang term\&. The function returns a reference\&. 
+.LP
+After \fITime\fR ms, \fIsend_after/3\fR sends \fIMsg\fR to \fIPid\fR\&. 
+.LP
+If \fIPid\fR is an atom, it is supposed to be the name of a registered process\&. The process referred to by the name is looked up at the time of delivery\&. No error is given if the name does not refer to a process\&. See also \fIstart_timer/3\fR and \fIcancel_timer/1\fR\&. 
+.LP
+Limitations: \fIPid\fR must be a process on the local node\&. The timeout value must fit in 32 bits\&. 
+.LP
+Failure: \fIbadarg\fR if any arguments are of the wrong type, or do not obey the limitations noted above\&. 
+.RE
+.LP
+.B
+erlang:set_cookie(Node, Cookie)
+.br
+.RS
+.LP
+Sets the "magic cookie" of \fINode\fR to the atom \fICookie\fR\&. If \fINode\fR is the current node, the BIF also sets the cookie of all other unknown nodes to \fICookie\fR (see auth(3))\&. 
+.RE
+.LP
+.B
+setelement(Index, Tuple, Value)
+.br
+.RS
+.LP
+Returns a tuple which is a copy of the argument \fITuple\fR with the element given by the integer argument \fIIndex\fR (the first element is the element with index 1) replaced by the argument \fIValue\fR\&. 
+
+.nf
+> setelement(2, {10, green, bottles}, red)\&.
+{10, red, bottles}
+.fi
+.LP
+Failure: \fIbadarg\fR if \fIIndex\fR is not an integer, or \fITuple\fR is not a tuple, or if \fIIndex\fR is less than 1 or greater than the size of \fITuple\fR\&. 
+.RE
+.LP
+.B
+size(Item)
+.br
+.RS
+.LP
+Returns an integer which is the size of the argument \fIItem\fR, where \fIItem\fR must be either a tuple or a binary\&. 
+
+.nf
+> size({morni, mulle, bwange})\&.
+3
+.fi
+.LP
+Allowed in guard tests\&. 
+.LP
+Failure: \fIbadarg\fR if \fIItem\fR is not a tuple or a binary\&. 
+.RE
+.LP
+.B
+spawn(Fun)
+.br
+.RS
+.LP
+Returns the Pid of a new process started by the application of \fIFun\fR to the empty argument list \fI[]\fR\&. Otherwise works like \fIspawn/3\fR\&. 
+.RE
+.LP
+.B
+spawn(Node, Fun)
+.br
+.RS
+.LP
+Returns the Pid of a new process started by the application of \fIFun\fR to the empty argument list \fI[]\fR on node \fINode\fR\&. Otherwise works like \fIspawn/4\fR\&. 
+.RE
+.LP
+.B
+spawn(Module, Function, ArgumentList)
+.br
+.RS
+.LP
+Returns the Pid of a new process started by the application of \fIModule:Function\fR to \fIArgumentList\fR\&. \fINote:\fR The new process created will be placed in the system scheduler queue and will be run some time later\&. 
+.LP
+\fIerror_handler:undefined_function(Module, Function, ArgumentList)\fR is evaluated by the new process if \fIModule:Function/Arity\fR does not exist (where \fIArity\fR is the length of ArgumentList)\&. The error handler can be redefined (see BIF \fIprocess_flag/2)\fR)\&. \fIArity\fR is the length of the \fIArgumentList\fR\&. If \fIerror_handler\fR is undefined, or the user has redefined the default \fIerror_handler\fR so its replacement is undefined, a failure with the reason \fIundef\fR will occur\&. 
+
+.nf
+> spawn(speed, regulator, [high_speed, thin_cut])\&.
+<0\&.13\&.1>
+.fi
+.LP
+Failure: \fIbadarg\fR if \fIModule\fR and/or \fIFunction\fR is not an atom, or if \fIArgumentList\fR is not a list\&. 
+.RE
+.LP
+.B
+spawn(Node, Module, Function, ArgumentList)
+.br
+.RS
+.LP
+Works like \fIspawn/3\fR, with the exception that the process is spawned at \fINode\fR\&. If \fINode\fR does not exist, a useless Pid is returned\&. 
+.LP
+Failure: \fIbadarg\fR if \fINode\fR, \fIModule\fR, or \fIFunction\fR are not atoms, or \fIArgumentList\fR is not a list\&. 
+.RE
+.LP
+.B
+spawn_link(Fun)
+.br
+.RS
+.LP
+Works like \fIspawn/1\fR except that a link is made from the current process to the newly created one, atomically\&. 
+.RE
+.LP
+.B
+spawn_link(Node, Fun)
+.br
+.RS
+.LP
+Works like \fIspawn/2\fR except that a link is made from the current process to the newly created one, atomically\&. 
+.RE
+.LP
+.B
+spawn_link(Module, Function, ArgumentList)
+.br
+.RS
+.LP
+This BIF is identical to the following code being evaluated in an atomic operation: 
+
+.nf
+> Pid = spawn(Module, Function, ArgumentList),
+  link(Pid),
+  Pid\&.
+.fi
+.LP
+This BIF is necessary since the process created might run immediately and fail before \fIlink/1\fR is called\&. 
+.LP
+Failure: See \fIspawn/3\fR\&. 
+.RE
+.LP
+.B
+spawn_link(Node, Module, Function, ArgumentList)
+.br
+.RS
+.LP
+Works like \fIspawn_link/3\fR, except that the process is spawned at \fINode\fR\&. If an attempt is made to spawn a process on a node which does not exist, a useless Pid is returned, and an EXIT signal will be received\&. 
+.RE
+.LP
+.B
+spawn_opt(Module, Function, ArgumentList, Options)
+.br
+.RS
+.LP
+Works exactly like spawn/3, except that an extra option list can be given when creating the process\&. 
+.SS Warning:
+.LP
+This BIF is only useful for performance tuning\&. Random tweaking of the parameters without measuring execution times and memory consumption may actually make things worse\&. Furthermore, most of the options are inherently implementation-dependent, and they can be changed or removed in future versions of OTP\&. 
+
+.RS 2
+.TP 4
+.B
+\fIlink\fR:
+Sets a link to the parent process (like \fIspawn_link/3\fR does)\&.
+.TP 4
+.B
+\fI{priority, Level}\fR:
+Sets the priority of the new process\&. Equivalent to executing \fIprocess_flag(priority, Level)\fR in the start function of the new process, except that the priority will be set before the process is scheduled in the first time\&.
+.TP 4
+.B
+\fI{fullsweep_after, Number}\fR:
+The Erlang runtime system uses a generational garbage collection scheme, using an "old heap" for data that has survived at least one garbage collection\&. When there is no more room on the old heap, a fullsweep garbage collection will be done\&. 
+.RS 4
+.LP
+Using the \fIfullsweep_after\fR option, you can specify the maximum number of generational collections before forcing a fullsweep even if there is still room on the old heap\&. Setting the number to zero effectively disables the general collection algorithm, meaning that all live data is copied at every garbage collection\&. 
+.LP
+Here are a few cases when it could be useful to change \fIfullsweep_after\fR\&. Firstly, if you want binaries that are no longer used to be thrown away as soon as possible\&. (Set \fINumber\fR to zero\&.) Secondly, a process that mostly have short-lived data will be fullsweeped seldom or never, meaning that the old heap will contain mostly garbage\&. To ensure a fullsweep once in a while, set \fINumber\fR to a suitable value such as 10 or 20\&. Thirdly, in embedded systems with limited amount of RAM and no virtual memory, you might want to preserve memory by setting \fINumber\fR to zero\&. (You probably want to the set the value globally\&. See system_flag/2\&.) 
+.RE
+.TP 4
+.B
+\fI{min_heap_size, Size}\fR:
+Gives a minimum heap size in words\&. Setting this value higher than the system default might speed up some processes because less garbage collection is done\&. Setting too high value, however, might waste memory and slow down the system due to worse data locality\&. Therefore, it is recommended to use this option only for fine-tuning an application and to measure the execution time with various \fISize\fR values\&.
+.RE
+.RE
+.LP
+.B
+split_binary(Binary, Pos)
+.br
+.RS
+.LP
+Returns a tuple which contains two binaries which are the result of splitting \fIBinary\fR into two parts at position \fIPos\fR\&. This is not a destructive operation\&. After this operation, there are three binaries altogether\&. Returns a tuple consisting of the two new binaries\&. For example: 
+
+.nf
+1> B = list_to_binary("0123456789")\&.
+#Bin
+2> size(B)\&.
+10
+3> {B1, B2} = split_binary(B,3)\&.
+{#Bin, #Bin}
+4> size(B1)\&.
+3
+5> size(B2)\&.
+7
+.fi
+.LP
+Failure: \fIbadarg\fR if \fIBinary\fR is not a binary, or \fIPos\fR is not an integer or is out of range\&. 
+.RE
+.LP
+.B
+erlang:start_timer(Time, Pid, Msg)
+.br
+.RS
+.LP
+\fITime\fR is a non-negative integer, \fIPid\fR is either a pid or an atom, and \fIMsg\fR is any Erlang term\&. The function returns a reference\&. 
+.LP
+After \fITime\fR ms, \fIstart_timer/3\fR sends the tuple \fI{timeout, Ref, Msg}\fR to \fIPid\fR, where \fIRef\fR is the reference returned by \fIstart_timer/3\fR\&. 
+.LP
+If \fIPid\fR is an atom, it is supposed to be the name of a registered process\&. The process referred to by the name is looked up at the time of delivery\&. No error is given if the name does not refer to a process\&. See also \fIsend_after/3\fR and \fIcancel_timer/1\fR\&. 
+.LP
+Limitations: \fIPid\fR must be a process on the local node\&. The timeout value must fit in 32 bits\&. 
+.LP
+Failure: \fIbadarg\fR if any arguments are of the wrong type, or do not obey the limitations noted above\&. 
+.RE
+.LP
+.B
+statistics(Type)
+.br
+.RS
+.LP
+Returns information about the system\&. \fIType\fR is an atom which is one of: 
+.RS 2
+.TP 4
+.B
+\fIrun_queue\fR:
+Returns the length of the run queue, that is the number of processes that are ready to run\&. 
+.TP 4
+.B
+\fIruntime\fR:
+Returns \fI{Total_Run_Time, Time_Since_Last_Call}\fR\&. 
+.TP 4
+.B
+\fIwall_clock\fR:
+Returns \fI{Total_Wallclock_Time, Wallclock_Time_Since_Last_Call}\fR\&. \fIwall_clock\fR can be used in the same manner as the atom \fIruntime\fR, except that real time is measured as opposed to runtime or CPU time\&. 
+.TP 4
+.B
+\fIreductions\fR:
+Returns \fI{Total_Reductions, Reductions_Since_Last_Call}\fR\&. 
+.TP 4
+.B
+\fIgarbage_collection\fR:
+Returns \fI{Number_of_GCs, Words_Reclaimed, 0}\fR\&. This information may not be valid for all implementations\&. 
+.RE
+.LP
+All times are in milliseconds\&. 
+
+.nf
+> statistics(runtime)\&.
+{1690, 1620}
+> statistics(reductions)\&.
+{2046, 11}
+> statistics(garbage_collection)\&.
+{85, 23961, 0}
+.fi
+.LP
+Failure: \fIbadarg\fR if \fIType\fR is not one of the atoms shown above\&. 
+.RE
+.LP
+.B
+erlang:suspend_process(Pid)
+.br
+.RS
+.LP
+Suspend a process\&. This should be used for debugging purposes only, not in production code\&. 
+.RE
+.LP
+.B
+erlang:system_flag(Flag, Value)
+.br
+.RS
+.LP
+This BIF sets various system properties of the Erlang node\&. If \fIFlag\fR is a valid name of a system flag, its value is set to \fIValue\fR, and the old value is returned\&. 
+.LP
+The following values for \fIFlag\fR are currently allowed: \fIkeep_zombies\fR, \fIfullsweep_after\fR, and \fIbacktrace_depth\fR\&. 
+.LP
+The value of the \fIkeep_zombies\fR flag is an integer which indicates how many processes to keep in memory when they exit, so that they can be inspected with \fIprocess_info\fR\&. Originally, the number is 0\&. Setting it to 0 disables the keeping of zombies\&. A negative number -\fIN\fR means to keep the \fIN\fR latest zombies; a positive value \fIN\fR means to keep the \fIN\fR first zombies\&. Setting the flag always clears away any already saved zombies\&. The maximum number of zombies which can be saved is 100\&. Resources owned by a zombie process are cleared away immediately when the process dies, for example ets tables and ports, and cannot be inspected\&. 
+.LP
+The value of the \fIfullsweep_after\fR is an non-negative integer which indicates how many times generational garbages collections can be done without forcing a fullsweep collection\&. The value applies to new processes; processes already running are not affected\&. 
+.LP
+In low-memory systems (especially without virtual memory), setting the value to zero can help to conserve memory\&. 
+.LP
+An alternative way to set this value is through the (operating system) environment variable \fIERL_FULLSWEEP_AFTER\fR\&. 
+.RE
+.LP
+.B
+erlang:system_info(What)
+.br
+.RS
+.LP
+\fIWhat\fR can be any of the atoms \fIinfo\fR, \fIprocs\fR, \fIloaded\fR, \fIdist\fR, \fIthread_pool_size\fR or \fIallocated_areas\fR\&. The BIF returns information of the different `topics\&' as binary data objects (except for thread_pool_size and allocated_areas, see below)\&. 
+.RS 2
+.TP 4
+.B
+\fIerlang:system_info(thread_pool_size)\fR:
+Returns the number of threads used for driver calls (as an integer)\&. 
+.TP 4
+.B
+\fIerlang:system_info(allocated_areas)\fR:
+Returns a list of tuples\&. Each tuple contains an atom describing the type of memory as first element and the amount of allocated memory in bytes as second element\&. In those cases when the system pre-allocate memory, a third element is present\&. This third element contains the amount of used memory in bytes\&. 
+.RS 4
+.LP
+
+.LP
+A lot of these values are shown by the \fI(i)nfo\fR alternative under the \fIBREAK\fR menu\&. The \fIBREAK\fR menu can be reached by typing Control C in the Erlang shell\&. 
+.LP
+
+.LP
+Observe that this is not a complete list of memory allocated by the system! 
+.RE
+.RE
+.LP
+Failure: \fIbadarg\fR if \fIWhat\fR is not one of the atoms shown above\&. 
+.RE
+.LP
+.B
+term_to_binary(Term)
+.br
+.RS
+.LP
+This BIF returns the encoded value of any Erlang term and turns it into the Erlang external term format\&. It can be used for a variety of purposes, for example writing a term to a file in an efficient way, or sending an Erlang term to some type of communications channel not supported by distributed Erlang\&. 
+.LP
+Returns a binary data object which corresponds to an external representation of the Erlang term \fITerm\fR\&. 
+.RE
+.LP
+.B
+term_to_binary(Term, Options)
+.br
+.RS
+.LP
+This BIF returns the encoded value of any Erlang term and turns it into the Erlang external term format\&. If the \fIOptions\fR list contains the atom \fIcompressed\fR, the external term format will be compressed\&. The compressed format is automatically recognised by \fIbinary_to_term/1\fR in R7\&. 
+.LP
+Returns a binary data object which corresponds to an external representation of the Erlang term \fITerm\fR\&. 
+.LP
+Failure: \fIbadarg\fR if \fIOptions\fR is not a list or if contains something else than the supported flags (currently only the atom \fIcompressed\fR)\&. 
+.RE
+.LP
+.B
+throw(Any)
+.br
+.RS
+.LP
+A non-local return from a function\&. If evaluated within a \fIcatch\fR, \fIcatch\fR will return the value \fIAny\fR\&. 
+
+.nf
+> catch throw({hello, there})\&.
+{hello, there}
+.fi
+.LP
+Failure: \fInocatch\fR if not evaluated within a catch\&. 
+.RE
+.LP
+.B
+time()
+.br
+.RS
+.LP
+Returns the tuple \fI{Hour, Minute, Second}\fR of the current system time\&. The time zone correction is implementation-dependent\&. 
+
+.nf
+> time()\&.
+{9, 42, 44}
+.fi
+.RE
+.LP
+.B
+tl(List)
+.br
+.RS
+.LP
+Returns \fIList\fR stripped of its first element\&. 
+
+.nf
+> tl([geesties, guilies, beasties])\&.
+[guilies, beasties]
+.fi
+.LP
+Failure: \fIbadarg\fR if \fIList\fR is the empty list \fI[]\fR, or is not a list\&. Allowed in guard tests\&. 
+.RE
+.LP
+.B
+erlang:trace(PidSpec, How, Flaglist)
+.br
+.RS
+.LP
+Turns on (if How == \fItrue\fR) or off (if How == \fIfalse\fR) the trace flags in \fIFlaglist\fR for the process or processes represented by \fIPidSpec\fR\&. \fIPidSpec\fR is either a pid for a local process, or one of the following atoms: 
+.RS 2
+.TP 4
+.B
+\fIexisting\fR:
+All processes currently existing\&.
+.TP 4
+.B
+\fInew\fR:
+All processes that will be created in the future\&.
+.TP 4
+.B
+\fIall\fR:
+All currently existing processes and all processes that will be created in the future\&. 
+.RE
+.LP
+\fIFlaglist\fR can contain any number of the following atoms (the "message tags" refers to the list of message following below): 
+.RS 2
+.TP 4
+.B
+\fIsend\fR:
+Traces the messages the process \fIPid\fR sends\&. Message tags: \fIsend\fR, \fIsend_to_non_existing_process\fR\&. 
+.TP 4
+.B
+\fI\&'receive\&'\fR:
+Traces the messages the process \fIPid\fR receives\&. Message tags: \fI\&'receive\&'\fR\&. 
+.TP 4
+.B
+\fIprocs\fR:
+Traces process related events, for example \fIspawn\fR, \fIlink\fR, \fIexit\fR\&. Message tags: \fIspawn\fR, \fIexit\fR, \fIlink\fR, \fIunlink\fR, \fIgetting_linked\fR\&. 
+.TP 4
+.B
+\fIcall\fR:
+Traces function calls to functions that tracing has been enabled for\&. Use the  erlang:trace_pattern/3  BIF to enable tracing for functions\&. Message tags: \fIcall\fR, \fIreturn_from\fR\&. 
+.TP 4
+.B
+\fIreturn_to\fR:
+Traces the actual return of a process from a traced function back to its caller\&. This return trace only works together with call trace and functions traced with the \fIlocal\fR option to  erlang:trace_pattern/3  \&. The semantics is that a message is sent when a call traced function actually returns, i\&.e\&. when a chain of tail recursive calls is ended\&. There will be only one trace message sent per chain of tail recursive calls, why the properties of tail recursiveness for function calls are kept while tracing with this flag\&. Using \fIcall\fR and \fIreturn_to\fR trace together makes it possible to know exactly in which function a process executes at any time\&. 
+.RS 4
+.LP
+
+.LP
+To get trace messages containing return values from functions, use the \fI{return_trace}\fR match_spec action instead\&. 
+.LP
+
+.LP
+Message tags: \fIreturn_to\fR\&. 
+.RE
+.TP 4
+.B
+\fIrunning\fR:
+Traces scheduling of processes\&. Message tags: \fIin\fR, \fIout\fR\&. 
+.TP 4
+.B
+\fIgarbage_collection\fR:
+Traces garbage collections of processes\&. Message tags: \fIgc_start\fR, \fIgc_end\fR\&. 
+.TP 4
+.B
+\fItimestamp\fR:
+Make a time stamp in all trace messages\&. The time stamp (Ts) is of the same form as returned by \fIerlang:now()\fR\&. 
+.TP 4
+.B
+\fIarity\fR:
+Instead of \fI{Mod, Fun, Args}\fR in call traces, there will be \fI{Mod, Fun, Arity}\fR\&. 
+.TP 4
+.B
+\fIset_on_spawn\fR:
+Makes any process created by \fIPid\fR inherit the flags of \fIPid\fR, including the \fIset_on_spawn\fR flag\&. 
+.TP 4
+.B
+\fIset_on_first_spawn\fR:
+Makes the first process created by \fIPid\fR inherit the flags of \fIPid\fR That process does not inherit the \fIset_on_first_spawn\fR flag\&. 
+.TP 4
+.B
+\fIset_on_link\fR:
+Makes any process linked by \fIPid\fR inherit the flags of \fIPid\fR, including the \fIset_on_link\fR flag\&. 
+.TP 4
+.B
+\fIset_on_first_link\fR:
+Makes the first process linked to by \fIPid\fR inherit the flags of \fIPid\fR\&. That process does not inherit the \fIset_on_first_link\fR flag\&. 
+.TP 4
+.B
+\fI{tracer, Tracer}\fR:
+\fITracer\fR should be the pid for a local process or the port identifier for a local port\&. All trace messages will be sent to the given process or port\&. If this flag is not given, trace messages will be sent to the process that called \fIerlang:trace/3\fR\&. 
+.RE
+.LP
+The effect of combining \fIset_on_first_link\fR with \fIset_on_link\fR is the same as having \fIset_on_first_link\fR alone\&. Likewise for \fIset_on_spawn\fR and \fIset_on_first_spawn\fR\&. 
+.LP
+If the \fItimestamp\fR flag is not given, the tracing process will receive the trace messages described below\&. If the \fItimestamp\fR flag is given, the first element of the tuple will be \fItrace_ts\fR and the timestamp will be in the last element of the tuple\&. 
+.RS 2
+.TP 4
+.B
+\fI{trace, Pid, \&'receive\&', Message}\fR:
+When the traced \fIPid\fR receives something\&. 
+.TP 4
+.B
+\fI{trace, Pid, send, Msg, To}\fR:
+When \fIPid\fR sends a message\&. 
+.TP 4
+.B
+\fI{trace, Pid, send_to_non_existing_process, Msg, To}\fR:
+When \fIPid\fR sends a message to a non existing process\&. 
+.TP 4
+.B
+\fI{trace, Pid, call, {M, F, A}}\fR:
+When Pid makes a function/BIF call\&. The return values of calls are never supplied, only the call and its arguments\&. 
+.TP 4
+.B
+\fI{trace, Pid, return_to, {M, F, A}}\fR:
+When Pid returns \fIto\fR function \fI{M, F, A}\fR\&. This message will be sent if both the \fIcall\fR and the \fIreturn_to\fR flags are present and the function is set to be traced on \fIlocal\fR function calls\&. The message is only sent when returning from a chain of tail recursive function calls where at least one call generated a \fIcall\fR trace message (i\&.e\&. the functions match specification matched and \fI{message, false}\fR was not an action)\&. 
+.TP 4
+.B
+\fI{trace, Pid, return_from, {M, F, A}, ReturnValue}\fR:
+When Pid returns \fIfrom\fR the function \fI{M, F, A}\fR This trace message is sent when the \fIcall\fR flag has been specified, and the function has a match specification with a \fIreturn_trace\fR action\&. 
+.TP 4
+.B
+\fI{trace, Pid, spawn, Pid2}\fR:
+When Pid spawns a new process \fIPid2\fR\&. 
+.TP 4
+.B
+\fI{trace, Pid, exit, Reason}\fR:
+When Pid exits with reason \fIReason\fR\&. 
+.TP 4
+.B
+\fI{trace, Pid, link, Pid2}\fR:
+When Pid links to a process \fIPid2\fR\&. 
+.TP 4
+.B
+\fI{trace, Pid, unlink, Pid2}\fR:
+When Pid removes the link from a process \fIPid2\fR\&. 
+.TP 4
+.B
+\fI{trace, Pid, getting_linked, Pid2}\fR:
+When Pid gets linked to a process \fIPid2\fR\&. 
+.TP 4
+.B
+\fI{trace, Pid, in, {M, F, A}}\fR:
+When Pid is scheduled to run\&. The process will run in function {M,F,A}, where A is always the arity\&. 
+.TP 4
+.B
+\fI{trace, Pid, out, {M, F, A}}\fR:
+When Pid is scheduled out\&. The process was running in function {M,F,A} where A is always the arity\&. 
+.TP 4
+.B
+\fI{trace, Pid, gc_start, Info}\fR:
+Sent when garbage collection is about to be started\&. \fIInfo\fR is a list of two-element tuples, where the first element is a key, and the second is the value\&. You should not depend on the tuples have any defined order Currently, the following keys are defined\&. 
+.RS 4
+.LP
+
+.RS 2
+.TP 4
+.B
+\fIheap_size\fR:
+The size of the used part of the heap\&.
+.TP 4
+.B
+\fIold_heap_size\fR:
+The size of the used part of the old heap\&.
+.TP 4
+.B
+\fIstack_size\fR:
+The actual size of the stack\&.
+.TP 4
+.B
+\fIrecent_size\fR:
+The size of the data that survived the previous garbage collection\&.
+.TP 4
+.B
+\fImbuf_size\fR:
+The combined size of message buffers associated with the process\&.
+.RE
+.LP
+
+.LP
+All sizes are in words\&.
+.RE
+.TP 4
+.B
+\fI{trace, Pid, gc_end, Info}\fR:
+Sent when garbage collection is finished\&. \fIInfo\fR contains the same kind of list as in the \fIgc_start\fR message, but the sizes reflect the new sizes after garbage collection\&. 
+.RE
+.LP
+If the tracing process dies, the flags will be silently removed\&. 
+.LP
+Only one process can trace a particular process\&. For this reason, attempts to trace an already traced process will fail\&. 
+.LP
+Returns: A number indicating the number of processes that matched \fIPidSpec\fR\&. If \fIPidSped\fR is a pid, the return value will be \fI1\fR\&. If \fIPidSpec\fR is \fIall\fR or \fIexisting\fR the return value will be the number of processes running, excluding tracer processes\&. If \fIPidSpec\fR is \fInew\fR, the return value will be \fI0\fR\&. 
+.LP
+Failure: \fIbadarg\fR if bad arguments are given\&. 
+.RE
+.LP
+.B
+erlang:trace_info(PidOrFunc, Item)
+.br
+.RS
+.LP
+Returns trace information about a process or exported function\&. 
+.LP
+To get information about a process, \fIPidOrFunc\fR should be a pid or the atom \fInew\fR\&. The atom \fInew\fR means that the default trace state for processes to be created will be returned\&. \fIItem\fR must have one of the following values: 
+.RS 2
+.TP 4
+.B
+\fIflags\fR:
+Return a list of atoms indicating what kind of traces is enabled for the process\&. The list will be empty if no traces are enabled, and one or more of the followings atoms if traces are enabled: \fIsend\fR, \fI\&'receive\&'\fR, \fIset_on_spawn\fR, \fIcall\fR, \fIreturn_to\fR, \fIprocs\fR, \fIset_on_first_spawn\fR, \fIset_on_link\fR, \fIrunning\fR, \fIgarbage_collection\fR, \fItimestamp\fR, and \fIarity\fR\&. The order is arbitrary\&. 
+.TP 4
+.B
+\fItracer\fR:
+Return the identifier for process or port tracing this process\&. If this process is not being traced, the return value will be \fI[]\fR\&. 
+.RE
+.LP
+To get information about an exported function, \fIPidOrFunc\fR should be a three-element tuple: \fI{Module, Function, Arity}\fR or the atom \fIon_load\fR\&. No wildcards are allowed\&. \fIItem\fR must have one of the following values: 
+.RS 2
+.TP 4
+.B
+\fItraced\fR:
+Return \fIglobal\fR if this function is traced on global function calls, \fIlocal\fR if this function is traced on local function calls (i\&.e local and global function calls) and \fIfalse\fR if this function is not traced at all\&. 
+.TP 4
+.B
+\fImatch_spec\fR:
+Return the match specification for this function, if it has one\&. If the function is not traced, the returned value is \fIfalse\fR and if the function is traced but has no match specification defined, the returned value is \fI[]\fR\&. 
+.RE
+.LP
+The actual return value will be \fI{Item, Value}\fR, where \fIValue\fR is the requested information as described above\&. If a pid for a dead process was given, or the name of a non-existing function, \fIValue\fR will be \fIundefined\fR\&. 
+.LP
+If \fIPidOrFunc\fR is the \fIon_load\fR, the information returned refers to the default value for code that will be loaded\&. 
+.RE
+.LP
+.B
+erlang:trace_pattern(MFA, MatchSpec)
+.br
+.RS
+.LP
+The same as erlang:trace_pattern(MFA, MatchSpec, []), retained for backward compatibility\&. 
+.RE
+.LP
+.B
+erlang:trace_pattern(MFA, MatchSpec, FlagList)
+.br
+.RS
+.LP
+This BIF is used to enable or disable call tracing for exported functions\&. It must be combined with erlang:trace/3 to set the \fIcall\fR trace flag for one or more processes\&. 
+.LP
+Conceptually, call tracing works like this: Inside the Erlang virtual machine there is a set of processes to be traced and a set of functions to be traced\&. Tracing will be enabled on the intersection of the set\&. That is, if a process included in the traced process set calls a function included in the traced function set, the trace action will be taken\&. Otherwise, nothing will happen\&. 
+.LP
+Use erlang:trace/3 to add or remove one or more processes to the set of traced processes\&. Use \fIerlang:trace_pattern/2\fR to add or remove exported functions to the set of traced functions\&. 
+.LP
+The \fIerlang:trace_pattern/3\fR BIF can also add match specifications to an exported function\&. A match spefication comprises a pattern that the arguments to the function must match, a guard expression which must evaluate to \fItrue\fR and action to be performed\&. The default action is to send a trace message\&. If the pattern does not match or the guard fails, the action will not be executed\&. 
+.LP
+The \fIMFA\fR argument should be a tuple like \fI{Module, Function, Arity}\fR or the atom \fIon_load\fR (described below)\&. It can be the module, function, and arity for an exported function (or a BIF in any module)\&. The \fI\&'_\&'\fR atom can be used to mean any of that kind\&. Wildcards can be used in any of the following ways: 
+.RS 2
+.TP 4
+.B
+\fI{Mod, Func, \&'_\&'}\fR:
+All exported functions of any arity named \fIFunc\fR in module \fIMod\fR\&. 
+.TP 4
+.B
+\fI{Mod, \&'_\&', \&'_\&'}\fR:
+All exported functions in module \fIMod\fR\&. 
+.TP 4
+.B
+\fI{\&'_\&', \&'_\&', \&'_\&'}\fR:
+All exported functions in all loaded modules\&. 
+.RE
+.LP
+Other combinations, such as \fI{Mod, \&'_\&', Arity}\fR, are not allowed\&. Local functions will match wildcards only if the \fIlocal\fR option is in the \fIFlagList\fR\&. 
+.LP
+If the \fIMFA\fR argument is the atom \fIon_load\fR, the match specification and flag list will be used on all modules that are newly loaded\&. 
+.LP
+The \fIMatchSpec\fR argument can take any of the following forms: 
+.RS 2
+.TP 4
+.B
+\fIfalse\fR:
+Disable tracing for the matching function(s)\&. Any match specification will be removed\&. 
+.TP 4
+.B
+\fItrue\fR:
+Enable tracing for the matching function(s)\&. 
+.TP 4
+.B
+\fIMatchSpecList\fR:
+A list of match specifications\&. An empty list is equvivalent to \fItrue\fR\&. See the ERTS User\&'s Guide for a description of match specifications\&. 
+.RS 4
+.LP
+
+.RE
+.RE
+.LP
+The \fIFlagList\fR parameter is a list of options\&. The following options are allowed: 
+.RS 2
+.TP 4
+.B
+\fIglobal\fR:
+Turn on or off call tracing for global function calls (i\&.e\&. calls specifying the module explicitly)\&. Only exported functions will match and only global calls will generate trace messages\&. This is the default\&. 
+.TP 4
+.B
+\fIlocal\fR:
+Turn on of off call tracing for all types of function calls\&. Trace messages will be sent whenever any of the specified functions are called, regardless of how it is called\&. If the \fIreturn_to\fR flag is set for the process, a \fIreturn_to\fR message will also be sent when this function returns to its caller\&. 
+.RE
+.LP
+The options are mutually exclusive and \fIglobal\fR is the default (if no options are specified)\&. A function can be \fIeither\fR globally or locally traced\&. If global trace is specified for a specified set of functions, local trace for the matching set of local functions will be disabled, and vice versa\&. 
+.LP
+When disabling trace, the option must match the type of trace that is set on the function, so that local tracing must be disabled with the \fIlocal\fR option and global tracing with the \fIglobal\fR option (or no option at all)\&. 
+.LP
+There is no way to directly change part of a match specification list\&. If a function has a match specification, you can replace it with a completely new one\&. If you need to change an existing match specification, use the  erlang:trace_info/2  BIF to retrieve the existing match specification\&. 
+.LP
+Returns the number of exported functions that matched the \fIMFA\fR argument\&. This will be zero if none matched at all\&. 
+.LP
+Failure: \fIbadarg\fR for invalid \fIMFA\fR or \fIMatchSpec\fR\&. 
+.RE
+.LP
+.B
+trunc(Number)
+.br
+.RS
+.LP
+Returns an integer by the truncation of \fINumber\fR\&. Allowed in guard tests\&. 
+
+.nf
+> trunc(5\&.5)\&.
+5
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a float, or an integer\&. 
+.RE
+.LP
+.B
+tuple_to_list(Tuple)
+.br
+.RS
+.LP
+Returns a list which corresponds to \fITuple\fR\&. \fITuple\fR may contain any valid Erlang terms\&. 
+
+.nf
+> tuple_to_list({share, {\&'Ericsson_B\&', 163}})\&.
+[share, {\&'Ericsson_B\&', 163}]
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not a tuple\&. 
+.RE
+.LP
+.B
+erlang:universaltime()
+.br
+.RS
+.LP
+Returns the current date and time according to Universal Time Coordinated (UTC), also called GMT, in the form \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR if supported by the underlying operating system\&. If not, \fIerlang:universaltime()\fR is equivalent to \fIerlang:localtime()\fR\&. 
+
+.nf
+> erlang:universaltime()\&.
+{{1996,11,6},{14,18,43}}
+.fi
+.RE
+.LP
+.B
+erlang:universaltime_to_localtime(DateTime)
+.br
+.RS
+.LP
+Converts UTC date and time in \fIDateTime\fR to local date and time if supported by the underlying operating system\&. Otherwise, no conversion is done, and \fIDateTime\fR is returned\&. The return value is of the form \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&. 
+.LP
+Failure: \fIbadarg\fR if the argument is not a valid date and time tuple \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&. 
+
+.nf
+> erlang:universaltime_to_localtime({{1996,11,6},{14,18,43}})\&. 
+{{1996,11,7},{15,18,43}}
+.fi
+.RE
+.LP
+.B
+unlink(Pid)
+.br
+.RS
+.LP
+Removes a link, if there is one, from the calling process to another process given by the argument \fIPid\fR\&. 
+.LP
+Returns \fItrue\fR\&. Will not fail if not linked to \fIPid\fR, or if \fIPid\fR does not exist\&. 
+.LP
+Failure: \fIbadarg\fR if the argument is not a valid Pid\&. 
+.RE
+.LP
+.B
+unregister(Name)
+.br
+.RS
+.LP
+Removes the registered name for a process, given by the atom argument \fIName\fR\&. 
+.LP
+Returns the atom \fItrue\fR\&. 
+
+.nf
+> unregister(db)\&.
+true
+.fi
+.LP
+Failure: \fIbadarg\fR if \fIName\fR is not the name of a registered process\&. 
+.LP
+Users are advised not to unregister system processes\&. 
+.RE
+.LP
+.B
+whereis(Name)
+.br
+.RS
+.LP
+Returns the Pid for the process registered under \fIName\fR (see \fIregister/2\fR)\&. Returns \fIundefined\fR if no such process is registered\&. 
+
+.nf
+> whereis(user)\&.
+<0\&.3\&.1>
+.fi
+.LP
+Failure: \fIbadarg\fR if the argument is not an atom\&. 
+.RE
+.LP
+.B
+yield()
+.br
+.RS
+.LP
+Voluntarily let other processes (if any) get a chance to execute\&. Using \fIyield()\fR is similar to \fIreceive after 1 -> ok end\fR, except that \fIyield()\fR is faster\&. 
+.RE
+.SH AUTHORS
+.nf
+Joe Armstrong - support@erlang.ericsson.se
+Mike Williams - support@erlang.ericsson.se
+Robert Virding - support@erlang.ericsson.se
+Claes Wikstrom - support@erlang.ericsson.se
+.fi

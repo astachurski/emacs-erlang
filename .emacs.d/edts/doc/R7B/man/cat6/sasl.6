@@ -1,0 +1,198 @@
+
+
+
+sasl(6)           ERLANG APPLICATION DEFINITION           sasl(6)
+
+
+
+APPLICATION
+     sasl - The SASL Application
+
+DESCRIPTION
+     This section describes the SASL application  which  provides
+     the following services:
+
+       * _a_l_a_r_m__h_a_n_d_l_e_r
+
+       * _o_v_e_r_l_o_a_d
+
+       * _r_e_l_e_a_s_e__h_a_n_d_l_e_r
+
+     The  SASL  application  also  includes  _e_r_r_o_r__l_o_g_g_e_r   event
+     handlers for formatting SASL error and crash reports.
+
+
+Error logger event handlers
+     The following error logger event handlers are defined in the
+     SASL application.
+
+       _s_a_s_l__r_e_p_o_r_t__t_t_y__h:
+           Formats and writes _s_u_p_e_r_v_i_s_o_r _r_e_p_o_r_t, _c_r_a_s_h _r_e_p_o_r_t and
+           _p_r_o_g_r_e_s_s _r_e_p_o_r_t to _s_t_d_i_o.
+
+       _s_a_s_l__r_e_p_o_r_t__f_i_l_e__h:
+           Formats and writes _s_u_p_e_r_v_i_s_o_r _r_e_p_o_r_t, _c_r_a_s_h _r_e_p_o_r_t and
+           _p_r_o_g_r_e_s_s _r_e_p_o_r_t to a single file.
+
+       _e_r_r_o_r__l_o_g_g_e_r__m_f__h:
+           This error logger writes _a_l_l events sent to the  error
+           logger to disk. It installs the _l_o_g__m_f__h event handler
+           in the _e_r_r_o_r__l_o_g_g_e_r process.
+
+Configuration
+     The following configuration parameters are defined  for  the
+     SASL  application. Refer to application(3) for more informa-
+     tion about configuration parameters:
+
+       _s_a_s_l__e_r_r_o_r__l_o_g_g_e_r = _V_a_l_u_e <_o_p_t_i_o_n_a_l>:
+           _V_a_l_u_e is one of:
+
+             _t_t_y:
+                 Installs _s_a_s_l__r_e_p_o_r_t__t_t_y__h in the error  logger.
+                 This is the default option.
+
+             {_f_i_l_e, _F_i_l_e_N_a_m_e}:
+                 Installs _s_a_s_l__r_e_p_o_r_t__f_i_l_e__h in the error logger.
+                 This  makes all reports go to the file _F_i_l_e_N_a_m_e.
+                 _F_i_l_e_N_a_m_e is a string.
+
+             _f_a_l_s_e:
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    1
+
+
+
+
+
+
+sasl(6)           ERLANG APPLICATION DEFINITION           sasl(6)
+
+
+
+                 No SASL error logger handler is installed.
+
+       _e_r_r_l_o_g__t_y_p_e = _e_r_r_o_r | _p_r_o_g_r_e_s_s | _a_l_l <_o_p_t_i_o_n_a_l>:
+           Restricts the error logging performed by the specified
+           _s_a_s_l__e_r_r_o_r__l_o_g_g_e_r  to error reports, progress reports,
+           or both. Default is _a_l_l.
+
+       _e_r_r_o_r__l_o_g_g_e_r__m_f__d_i_r = _s_t_r_i_n_g() | _f_a_l_s_e<_o_p_t_i_o_n_a_l>:
+           Specifies in which directory the files are stored.  If
+           this    parameter   is   undefined   or   _f_a_l_s_e,   the
+           _e_r_r_o_r__l_o_g_g_e_r__m_f__h is not installed.
+
+       _e_r_r_o_r__l_o_g_g_e_r__m_f__m_a_x_b_y_t_e_s = _i_n_t_e_g_e_r() <_o_p_t_i_o_n_a_l>:
+           Specifies how large each individual file  can  be.  If
+           this  parameter is undefined, the _e_r_r_o_r__l_o_g_g_e_r__m_f__h is
+           not installed.
+
+       _e_r_r_o_r__l_o_g_g_e_r__m_f__m_a_x_f_i_l_e_s = _0 < _i_n_t_e_g_e_r() < _2_5_6 <_o_p_t_i_o_n_a_l>:
+           Specifies how many files are used. If  this  parameter
+           is undefined, the _e_r_r_o_r__l_o_g_g_e_r__m_f__h is not installed.
+
+       _o_v_e_r_l_o_a_d__m_a_x__i_n_t_e_n_s_i_t_y = _f_l_o_a_t() > _0 <_o_p_t_i_o_n_a_l>:
+           Specifies the maximum intensity for _o_v_e_r_l_o_a_d.  Default
+           is _0._8.
+
+       _o_v_e_r_l_o_a_d__w_e_i_g_h_t = _f_l_o_a_t() > _0 <_o_p_t_i_o_n_a_l>:
+           Specifies the _o_v_e_r_l_o_a_d weight. Default is _0._1.
+
+       _s_t_a_r_t__p_r_g = _s_t_r_i_n_g()<_o_p_t_i_o_n_a_l>:
+           Specifies which program should be used when restarting
+           the system. Default is $_O_T_P__R_O_O_T/_b_i_n/_s_t_a_r_t.
+
+       _m_a_s_t_e_r_s = [_a_t_o_m()] <_o_p_t_i_o_n_a_l>:
+           Specifies which nodes this  node  uses  to  read/write
+           release  information. This parameter is ignored if the
+           _c_l_i_e_n_t__d_i_r_e_c_t_o_r_y parameter is not set.
+
+       _c_l_i_e_n_t__d_i_r_e_c_t_o_r_y = _s_t_r_i_n_g() <_o_p_t_i_o_n_a_l>:
+           This parameter specifies the client directory  at  the
+           master  nodes.  Refer  to Release Handling in the SASL
+           User's Guide for more information. This  parameter  is
+           ignored if the _m_a_s_t_e_r_s parameter is not set.
+
+       _s_t_a_t_i_c__e_m_u_l_a_t_o_r = _t_r_u_e | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Indicates  if  the  Erlang  emulator   is   statically
+           installed. A node with a static emulator cannot switch
+           dynamically to a new emulator as the executable  files
+           are  written into memory statically. This parameter is
+           ignored if the _m_a_s_t_e_r_s and _c_l_i_e_n_t__d_i_r_e_c_t_o_r_y parameters
+           are not set.
+
+       _r_e_l_e_a_s_e_s__d_i_r = _s_t_r_i_n_g()<_o_p_t_i_o_n_a_l>:
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    2
+
+
+
+
+
+
+sasl(6)           ERLANG APPLICATION DEFINITION           sasl(6)
+
+
+
+           Indicates where the releases directory is located. The
+           release  handler  writes  all its files to this direc-
+           tory. If this parameter is not set, the OS environment
+           parameter   _R_E_L_D_I_R   is  used.  By  default,  this  is
+           $_O_T_P__R_O_O_T/_r_e_l_e_a_s_e_s.
+
+SNMP MIBs
+     The following MIBs are defined in SASL:
+
+       OTP-REG:
+           This  MIB  contains  the  top-level  OTP  registration
+           objects, used by all other MIBs.
+
+       OTP-TC:
+           This MIB contains  the  general  Textual  Conventions,
+           which can be used by any other MIB.
+
+       OTP-MIB:
+           This MIB contains objects for instrumentation  of  the
+           Erlang nodes, the Erlang machines and the applications
+           in the system.
+
+     The MIBs are stored in the  _m_i_b_s  directory.  All  MIBs  are
+     defined  in  SNMPv2  SMI syntax. SNMPv1 versions of the mibs
+     are delivered in the _m_i_b_s/_v_1 directory.
+
+     The compiled MIBs are located under _p_r_i_v/_m_i_b_s, and the  gen-
+     erated  ._h_r_l files under the _i_n_c_l_u_d_e directory. To compile a
+     MIB  that  IMPORTS  the  _O_T_P-_M_I_B,  give  the   option   {_i_l,
+     ["_s_a_s_l/_p_r_i_v/_m_i_b_s"]} to the MIB compiler.
+
+     The only MIB with Managed Objects is _O_T_P-_M_I_B. If it is to be
+     used  in  a  system,  it must be loaded into an agent with a
+     call to _o_t_p__m_i_b:_i_n_i_t(_A_g_e_n_t),  where  _A_g_e_n_t  is  the  Pid  or
+     registered name of an SNMP agent. Use _o_t_p__m_i_b:_s_t_o_p(_A_g_e_n_t) to
+     unload the MIB. The implementation of this MIB  uses  Mnesia
+     to  store  a cache with data needed, which means that Mnesia
+     must run if the implementation of the  MIB  should  be  per-
+     formed.
+
+See Also
+     alarm_handler(3), error_logger(3), log_mf_h(3), overload(3),
+     release_handler(3), systools(3), appup(4), rel(4), relup(4),
+     script(4), application(3), snmp(6)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    3
+
+
+

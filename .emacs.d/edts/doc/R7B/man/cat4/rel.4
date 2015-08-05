@@ -1,0 +1,132 @@
+
+
+
+rel(4)                        FILES                        rel(4)
+
+
+
+NAME
+     rel - Release resource file
+
+DESCRIPTION
+     The _r_e_l_e_a_s_e _r_e_s_o_u_r_c_e  _f_i_l_e  describes  each  release  of  an
+     entire system based on OTP. This file defines which applica-
+     tions are included in a certain version of the system.
+
+     This file is used by _s_y_s_t_o_o_l_s to generate start scripts  and
+     release upgrade files.
+
+     Releases can also be  upgraded  and  instructions  for  this
+     should  be  written in the _r_e_l_u_p file (see the definition of
+     the relup file). The tedious work of writing the _r_e_l_u_p  file
+     has  been  automated  and  in  most  cases  the  file can be
+     automatically generated from the ._a_p_p_u_p files for the appli-
+     cations in the release.
+
+
+FILE SYNTAX
+     A release resource file is called _R_e_l_N_a_m_e._r_e_l where  _R_e_l_N_a_m_e
+     is the name of the release.
+
+     The ._r_e_l file contains one  single  Erlang  term,  which  is
+     called  a  _r_e_l_e_a_s_e _s_p_e_c_i_f_i_c_a_t_i_o_n. The file has the following
+     syntax:
+
+     {release, {Name,Vsn}, {erts, EVsn},
+       [{AppName, AppVsn} |
+        {AppName, AppVsn, AppType} |
+        {AppName, AppVsn, IncApps} |
+        {AppName, AppVsn, AppType, IncApps}]}.
+
+       * _N_a_m_e = _s_t_r_i_n_g() is the name of the release _N_a_m_e need not
+         be the same as _R_e_l_N_a_m_e above in the file name.
+
+       * _V_s_n = _s_t_r_i_n_g() is the version of the release.
+
+       * _E_V_s_n = _s_t_r_i_n_g() indicates which  Erlang  runtime  system
+         version  _E_V_s_n  the  release is intended for, for example
+         "4.4".
+
+       * _A_p_p_N_a_m_e = _a_t_o_m() is the name of an application  included
+         in the release.
+
+       * _A_p_p_V_s_n = _s_t_r_i_n_g() is the version of the _A_p_p_N_a_m_e applica-
+         tion.
+
+       * _A_p_p_T_y_p_e = _p_e_r_m_a_n_e_n_t | _t_r_a_n_s_i_e_n_t |  _t_e_m_p_o_r_a_r_y  |  _l_o_a_d  |
+         _n_o_n_e  is the start type of the _A_p_p_N_a_m_e application. This
+         parameter specifies how the application  is  treated  in
+         the systools-generated start script. If it is _p_e_r_m_a_n_e_n_t,
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    1
+
+
+
+
+
+
+rel(4)                        FILES                        rel(4)
+
+
+
+         _t_r_a_n_s_i_e_n_t or _t_e_m_p_o_r_a_r_y, the application is started  with
+         a  call to _a_p_p_l_i_c_a_t_i_o_n:_s_t_a_r_t(_A_p_p_N_a_m_e, _A_p_p_T_y_p_e). If it is
+         _l_o_a_d, the application is loaded, but not started. If  it
+         is _n_o_n_e, the application is neither loaded nor started.
+
+       * _I_n_c_A_p_p_s = [_a_t_o_m()] is a list of  applications  that  are
+         included  by an application, for example [_A_p_p_N_a_m_e, ...].
+         This list overrides the _i_n_c_l_u_d_e_d__a_p_p_l_i_c_a_t_i_o_n_s key in the
+         application resource file ._a_p_p. This list must be a sub-
+         set of the  list  of  included  applications  which  are
+         specified in the ._a_p_p file.
+
+  Note:
+     The list of applications must contain  the  _k_e_r_n_e_l  and  the
+     _s_t_d_l_i_b applications.
+
+
+SEE ALSO
+     app(4), appup(4), relup(4), systools(3)
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Magnus Froberg - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    2
+
+
+

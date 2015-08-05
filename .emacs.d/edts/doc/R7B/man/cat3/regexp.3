@@ -1,0 +1,395 @@
+
+
+
+regexp(3)           ERLANG MODULE DEFINITION            regexp(3)
+
+
+
+MODULE
+     regexp - Regular Expression Functions for Strings
+
+DESCRIPTION
+     This module contains functions for regular expression match-
+     ing and substitution.
+
+
+EXPORTS
+     match(String, RegExp) -> MatchRes
+
+          Types
+               String = RegExp = string()
+               MatchRes = {match,  Start,  Length}  |  nomatch  |
+               {error, errordesc()}
+               Start = Length = integer()
+
+          Finds the first, longest match of the  regular  expres-
+          sion  _R_e_g_E_x_p  in _S_t_r_i_n_g. This function searches for the
+          longest possible match and returns the first one  found
+          if there are several expressions of the same length. It
+          returns as follows:
+
+            {_m_a_t_c_h, _S_t_a_r_t, _L_e_n_g_t_h}:
+                if the match succeeded.  _S_t_a_r_t  is  the  starting
+                position  of  the match, and _L_e_n_g_t_h is the length
+                of the matching string.
+
+            _n_o_m_a_t_c_h:
+                if there were no matching characters.
+
+            {_e_r_r_o_r, _E_r_r_o_r}:
+                if there was an error in _R_e_g_E_x_p.
+
+     first_match(String, RegExp) -> MatchRes
+
+          Types
+               String = RegExp = string()
+               MatchRes = {match,  Start,  Length}  |  nomatch  |
+               {error, errordesc()}
+               Start = Length = integer()
+
+          Finds the first match of the regular expression  _R_e_g_E_x_p
+          in  _S_t_r_i_n_g.  This call is usually faster than _m_a_t_c_h and
+          it is also a useful  way  to  ascertain  that  a  match
+          exists. It returns as follows:
+
+            {_m_a_t_c_h, _S_t_a_r_t, _L_e_n_g_t_h}:
+                if the match succeeded.  _S_t_a_r_t  is  the  starting
+                position of the match and _L_e_n_g_t_h is the length of
+                the matching string.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+regexp(3)           ERLANG MODULE DEFINITION            regexp(3)
+
+
+
+            _n_o_m_a_t_c_h:
+                if there were no matching characters.
+
+            {_e_r_r_o_r, _E_r_r_o_r}:
+                if there was an error in _R_e_g_E_x_p.
+
+     matches(String, RegExp) -> MatchRes
+
+          Types
+               String = RegExp = string()
+               MatchRes = {match, Matches} | {error, errordesc()}
+               Matches = list()
+
+          Finds all non-overlapping  matches  of  the  expression
+          _R_e_g_E_x_p in _S_t_r_i_n_g. It returns as follows:
+
+            {_m_a_t_c_h, _M_a_t_c_h_e_s}:
+                if the regular expression was correct.  The  list
+                will be empty if there was no match. Each element
+                in the list looks  like  {_S_t_a_r_t,  _L_e_n_g_t_h},  where
+                _S_t_a_r_t  is the starting position of the match, and
+                _L_e_n_g_t_h is the length of the matching string.
+
+            {_e_r_r_o_r, _E_r_r_o_r}:
+                if there was an error in _R_e_g_E_x_p.
+
+     sub(String, RegExp, New) -> SubRes
+
+          Types
+               String = RegExp = New = string()
+               SubRes  =  {ok,  NewString,  RepCount}  |  {error,
+               errordesc()}
+               RepCount = integer()
+
+          Substitutes the first occurrence of a substring  match-
+          ing  _R_e_g_E_x_p  in  _S_t_r_i_n_g with the string _N_e_w. A & in the
+          string _N_e_w is replaced  by  the  matched  substring  of
+          _S_t_r_i_n_g.  \&  puts  a  literal  &  into  the replacement
+          string. It returns as follows:
+
+            {_o_k, _N_e_w_S_t_r_i_n_g, _R_e_p_C_o_u_n_t}:
+                if _R_e_g_E_x_p is correct. _R_e_p_C_o_u_n_t is the  number  of
+                replacements  which  have been made (this will be
+                either 0 or 1).
+
+            {_e_r_r_o_r, _E_r_r_o_r}:
+                if there is an error in _R_e_g_E_x_p.
+
+     gsub(String, RegExp, New) -> SubRes
+
+          Types
+               String = RegExp = New = string()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+regexp(3)           ERLANG MODULE DEFINITION            regexp(3)
+
+
+
+               SubRes  =  {ok,  NewString,  RepCount}  |  {error,
+               errordesc()}
+               RepCount = integer()
+
+          The  same  as  _s_u_b,  except  that  all  non-overlapping
+          occurrences  of  a  substring matching _R_e_g_E_x_p in _S_t_r_i_n_g
+          are replaced by the string _N_e_w. It returns:
+
+            {_o_k, _N_e_w_S_t_r_i_n_g, _R_e_p_C_o_u_n_t}:
+                if _R_e_g_E_x_p is correct. _R_e_p_C_o_u_n_t is the  number  of
+                replacements which have been made.
+
+            {_e_r_r_o_r, _E_r_r_o_r}:
+                if there is an error in _R_e_g_E_x_p.
+
+     split(String, RegExp) -> SplitRes
+
+          Types
+               String = RegExp = string()
+               SubRes = {ok, FieldList} | {error, errordesc()}
+               Fieldlist = [string()]
+
+          _S_t_r_i_n_g is split into fields (sub-strings) by the  regu-
+          lar expression _R_e_g_E_x_p.
+
+          If the separator expression is " "  (a  single  space),
+          then the fields are separated by blanks and/or tabs and
+          leading and trailing blanks and tabs are discarded. For
+          all other values of the separator, leading and trailing
+          blanks and tabs are not discarded. It returns:
+
+            {_o_k, _F_i_e_l_d_L_i_s_t}:
+                to indicate that the string  has  been  split  up
+                into the fields of _F_i_e_l_d_L_i_s_t.
+
+            {_e_r_r_o_r, _E_r_r_o_r}:
+                if there is an error in _R_e_g_E_x_p.
+
+     sh_to_awk(ShRegExp) -> AwkRegExp
+
+          Types
+               ShRegExp AwkRegExp = string()
+               SubRes  =  {ok,  NewString,  RepCount}  |  {error,
+               errordesc()}
+               RepCount = integer()
+
+          Converts the _s_h type regular expression _S_h_R_e_g_E_x_p into a
+          full _A_W_K regular expression. Returns the converted reg-
+          ular expression string. _s_h expressions are used in  the
+          shell  for  matching  file names and have the following
+          special characters:
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+regexp(3)           ERLANG MODULE DEFINITION            regexp(3)
+
+
+
+            *:  matches any string including the null string.
+
+            ?:  matches any single character.
+
+            [...]:
+                matches any of the enclosed characters. Character
+                ranges  are  specified  by  a  pair of characters
+                separated by a -. If the first character after  [
+                is  a  !,  then  any  character  not  enclosed is
+                matched.
+
+          It may sometimes be  more  practical  to  use  _s_h  type
+          expansions  as they are simpler and easier to use, even
+          though they are not as powerful.
+
+     parse(RegExp) -> ParseRes
+
+          Types
+               RegExp = string()
+               ParseRes = {ok, RE} | {error, errordesc()}
+
+          Parses the regular expression  _R_e_g_E_x_p  and  builds  the
+          internal  representation  used  in  the  other  regular
+          expression functions. Such representations can be  used
+          in  all  of  the  other  functions instead of a regular
+          expression string. This is more efficient when the same
+          regular expression is used in many strings. It returns:
+
+              representation.:
+            {_o_k, _R_E} if _R_e_g_E_x_p is  correct  and  _R_E  is  the  internal
+
+
+            {_e_r_r_o_r, _E_r_r_o_r} if there is an error in _R_e_g_E_x_p_S_t_r_i_n_g.:
+
+
+     format_error(ErrorDescriptor) -> string()
+
+          Types
+               ErrorDescriptor = errordesc()
+
+          Returns a  string  which  describes  the  error  _E_r_r_o_r_-
+          _D_e_s_c_r_i_p_t_o_r returned when there is an error in a regular
+          expression.
+
+Regular Expressions
+     The regular expressions allowed here is a subset of the  set
+     found  in  _e_g_r_e_p  and  in  the  _A_W_K programming language, as
+     defined in the book, _T_h_e _A_W_K _P_r_o_g_r_a_m_m_i_n_g _L_a_n_g_u_a_g_e, _b_y _A.  _V.
+     _A_h_o, _B. _W. _K_e_r_n_i_g_h_a_n, _P. _J. _W_e_i_n_b_e_r_g_e_r. They are composed of
+     the following characters:
+
+       c:  matches the non-metacharacter _c.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+regexp(3)           ERLANG MODULE DEFINITION            regexp(3)
+
+
+
+       matches the escape sequence or literal character _c.
+
+       .:  matches any character.
+
+       ^:  matches the beginning of a string.
+
+       $:  matches the end of a string.
+
+       [abc...]:
+           character class, which matches any of  the  characters
+           _a_b_c...  Character  ranges  are  specified by a pair of
+           characters separated by a -.
+
+       [^abc...]:
+           negated character class, which matches  any  character
+           except _a_b_c....
+
+       r1 | r2:
+           alternation. It matches either _r_1 or _r_2.
+
+       r1r2:
+           concatenation. It matches _r_1 and then _r_2.
+
+       r+: matches one or more _rs.
+
+       r*: matches zero or more _rs.
+
+       r?: matches zero or one _rs.
+
+       (r):
+           grouping. It matches _r.
+
+     The escape sequences allowed are  the  same  as  for  Erlang
+     strings:
+
+            backspace
+
+           form feed
+
+       0   newline (line feed)
+       :   carriage return
+
+          :
+           tab
+
+       \:  escape
+
+       vertical tab
+
+           space
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+regexp(3)           ERLANG MODULE DEFINITION            regexp(3)
+
+
+
+       :   delete
+
+       _d_d: the octal value ddd
+
+       any  other  character  literally,  for  example   \\   for
+           backslash, \" for ")
+
+     To make these functions easier to use, in  combination  with
+     the  function  _i_o:_g_e_t__l_i_n_e  which  terminates the input line
+     with a new line, the $ characters also matches a string end-
+     ing  with "...\_n". The following examples define Erlang data
+     types:
+
+     Atoms     [a-z][0-9a-zA-Z_]*
+
+     Variables [A-Z_][0-9a-zA-Z_]*
+
+     Floats    (\+|-)?[0-9]+\.[0-9]+((E|e)(\+|-)?[0-9]+)?
+
+     Regular expressions are written as Erlang strings when  used
+     with  the functions in this module. This means that any \ or
+     " characters in a regular expression string must be  written
+     with  \  as  they are also escape characters for the string.
+     For example, the regular expression string for Erlang floats
+     is:"(\\+|-)?[_0-_9]+\\.[_0-_9]+((_E|_e)(\\+|-)?[_0-_9]+)?".
+
+     It is not really necessary to have the escape  sequences  as
+     part  of the regular expression syntax as they can always be
+     generated directly in the string. They are included for com-
+     pleteness  and  can  they can also be useful when generating
+     regular expressions, or when they  are  entered  other  than
+     with Erlang strings.
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+

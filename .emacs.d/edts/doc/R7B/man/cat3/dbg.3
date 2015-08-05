@@ -1,0 +1,924 @@
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+MODULE
+     dbg - The Text Based Trace Facility
+
+DESCRIPTION
+     This module implements a text based interface to the _t_r_a_c_e/_3
+     and the trace_pattern/2 BIF's. It makes it possible to trace
+     functions, processes, and messages on text based  terminals.
+     It  can  be  used  instead of, or as complement to, the _p_m_a_n
+     module.
+
+     The utilities are suitable to use in system testing on large
+     systems,  where other tools have too much impact on the sys-
+     tem performance. Some primitive support for sequential trac-
+     ing is also included, see the advanced topics section.
+
+
+EXPORTS
+     h() -> ok
+
+          Gives a list of items for brief online help.
+
+     h(Item) -> ok
+
+          Types
+               Item = atom()
+
+          Gives a brief  help  text  for  functions  in  the  dbg
+          module. The available items can be listed with _d_b_g:_h/_0
+
+     p(Item) -> {ok, MatchDesc} | {error, term()}
+
+          Equivalent to _p(_I_t_e_m, [_m]).
+
+     p(Item, Flags) -> {ok, MatchDesc} | {error, term()}
+
+          Types
+               MatchDesc = [MatchNum]
+               MatchNum  =  {matched,  integer()}   |   {matched,
+               node(),  integer()}  | {matched, node(), 0, RPCEr-
+               ror}
+               RPCError = term()
+
+          Traces _I_t_e_m in accordance to  the  value  specified  by
+          _F_l_a_g_s. The variation of _I_t_e_m is listed below:
+
+            * If the _I_t_e_m is a pid(), the  corresponding  process
+              is  traced.  If  no trace port is used, the process
+              may be a remote process (on another  Erlang  node).
+              The  node  must be on the list of traced nodes (see
+              _n/_1).
+
+            * If the _I_t_e_m is the atom _a_l_l, all processes  in  the
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2               1
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+              system  as  well as all processes created hereafter
+              are to be traced. This also affects all nodes added
+              with the _n/_1 function.
+
+            * If the _I_t_e_m is the atom _n_e_w, no currently  existing
+              processes  are  affected, but every process created
+              after the call is.This also affects all nodes added
+              with the _n/_1 function.
+
+            * If the _I_t_e_m is  the  atom  _e_x_i_s_t_i_n_g,  all  existing
+              processes are traced, but new processes will not be
+              affected.This also affects all nodes added with the
+              _n/_1 function.
+
+            * If the _I_t_e_m is an  atom  other  than  _a_l_l,  _n_e_w  or
+              _e_x_i_s_t_i_n_g,   the   process  with  the  corresponding
+              registered name is traced.
+
+            * If the _I_t_e_m is an integer, the process <_I_t_e_m._1>  is
+              traced.
+
+            * If the _I_t_e_m is a  tuple  {_X,  _Y,  _Z},  the  process
+              <_X._Y._Z> is traced.
+
+          _F_l_a_g_s can be a single atom, or a  list  of  flags.  The
+          available flags are:
+
+            _s (_s_e_n_d):
+                Traces the messages the process sends.
+
+            _r (_r_e_c_e_i_v_e):
+                Traces the messages the process receives.
+
+            _m (_m_e_s_s_a_g_e_s):
+                Traces the  messages  the  process  receives  and
+                sends.
+
+            _c (_c_a_l_l):
+                Traces global  function  calls  for  the  process
+                according to the trace patterns set in the system
+                (see tp/2).
+
+            _p (_p_r_o_c):
+                Traces process related events to the process.
+
+            _s_o_s (_s_e_t _o_n _s_p_a_w_n):
+                Lets all processes created by the traced  process
+                inherit the trace flags of the traced process.
+
+            _s_o_l (_s_e_t _o_n _l_i_n_k):
+                Lets another process, _P_2, inherit the trace flags
+                of the traced process whenever the traced process
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2               2
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+                links to _P_2.
+
+            _s_o_f_s (_s_e_t _o_n _f_i_r_s_t _s_p_a_w_n):
+                This is the same as _s_o_s, but only for  the  first
+                process spawned by the traced process.
+
+            _s_o_f_l (_s_e_t _o_n _f_i_r_s_t _l_i_n_k):
+                This is the same as _s_o_l, but only for  the  first
+                call to _l_i_n_k/_1 by the traced process.
+
+            _a_l_l:
+                Sets all flags.
+
+            _c_l_e_a_r:
+                Clears all flags.
+
+          The list can also include any of the flags  allowed  in
+          _e_r_l_a_n_g:_t_r_a_c_e/_3
+
+          The function returns either an error tuple or  a  tuple
+          {_o_k,  _L_i_s_t}. The _L_i_s_t consists of specifications of how
+          many processes that matched (in  the  case  of  a  pure
+          pid()   exactly   1).   The  specification  of  matched
+          processes can be either {_m_a_t_c_h_e_d, _N}, when  only  local
+          processes matched, or {_m_a_t_c_h_e_d, _N_o_d_e, _N} in the case of
+          tracing a remote node (as well as the  local).  If  the
+          remote  processor call,_r_p_c, to a remote node fails, the
+          _r_p_c error message is delivered as a fourth argument and
+          the  number  of  matched processes are 0. Note that the
+          result {ok, List} may contain a list where _r_p_c calls to
+          one  or  more nodes failed. The _o_k only means that some
+          processes matched and are traced.
+
+     c(Mod, Fun, Args)
+
+          Equivalent to _c(_M_o_d, _F_u_n, _A_r_g_s, _a_l_l).
+
+     c(Mod, Fun, Args, Flags)
+
+          Evaluates the expression _a_p_p_l_y(_M_o_d, _F_u_n, _A_r_g_s) with the
+          trace  flags  in _F_l_a_g_s set. This is a convenient way to
+          trace processes from the Erlang shell.
+
+     i() -> ok
+
+          Displays information about all traced processes.
+
+     tp(Module,MatchSpec)
+
+          Same as tp({Module, '_', '_'}, MatchSpec)
+
+
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2               3
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+     tp(Module,Function,MatchSpec)
+
+          Same as tp({Module, Function, '_'}, MatchSpec)
+
+     tp(Module, Function, Arity, MatchSpec)
+
+          Same as tp({Module, Function, Arity}, MatchSpec)
+
+     tp({Module, Function, Arity}, MatchSpec) -> {ok,  MatchDesc}
+     | {error, term()}
+
+          Types
+               Module = atom() | '_'
+               Function = atom() | '_'
+               Arity = integer() |'_'
+               MatchSpec = integer() | [] | match_spec()
+               MatchDesc = [MatchInfo]
+               MatchInfo  =   {saved,   integer()}   |   MatchNum
+               <V>MatchNum  =  {matched,  integer()}  | {matched,
+               node(), integer()} | {matched, node(),  0,  RPCEr-
+               ror}
+
+          This function enables call trace for one or more  func-
+          tions.  All  exported  functions  matching the {_M_o_d_u_l_e,
+          _F_u_n_c_t_i_o_n, _A_r_i_t_y} argument will be  concerned,  but  the
+          _m_a_t_c_h__s_p_e_c()  may  further narrow down the set of func-
+          tion calls generating trace messages.
+
+          For a description of the  _m_a_t_c_h__s_p_e_c()  syntax,  please
+          turn to the  _U_s_e_r'_s _g_u_i_d_e part of the online documenta-
+          tion for the runtime system (_e_r_t_s). The  chapter  _M_a_t_c_h
+          _S_p_e_c_i_f_i_c_a_t_i_o_n  _i_n  _E_r_l_a_n_g  explains  the  general match
+          specification "language".
+
+          The Module, Function and/or Arity parts  of  the  tuple
+          may be specified as the atom '_' which is a "wild-card"
+          matching all modules/functions/arities.  Note,  if  the
+          Module  is  specified  as  '_',  the Function and Arity
+          parts have to be specified as '_' too. The  same  holds
+          for the Functions relation to the Arity.
+
+          All nodes added with _n/_1 will be affected by this call,
+          and  if  Module is not '_' the module will be loaded on
+          all nodes.
+
+          The function returns either an error tuple or  a  tuple
+          {_o_k,  _L_i_s_t}. The _L_i_s_t consists of specifications of how
+          many functions that matched, in the  same  way  as  the
+          processes are presented in the return value of _p/_2.
+
+          There may be a tuple {_s_a_v_e_d, _N} in the return value, if
+          the  MatchSpec is other than []. The integer _N may then
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2               4
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+          be used in subsequent calls to this function  and  will
+          stand  as an "alias" for the given expression (see also
+          ltp/0 below).
+
+          If an error is returned, it can be  due  to  errors  in
+          compilation of the match specification. Such errors are
+          presented as a list of tuples {_e_r_r_o_r,  _s_t_r_i_n_g()}  where
+          the  string is a textual explanation of the compilation
+          error. An example:
+
+          (x@y)4> dbg:tp({dbg,ltp,0},[{[],[],[{message, two, arguments}, {noexist}]}]).
+          {error,
+           [{error,"Special form 'message' called with wrong number of
+                    arguments in {message,two,arguments}."},
+            {error,"Function noexist/1 does_not_exist."}]}
+
+     tpl(Module,MatchSpec)
+
+          Same as tpl({Module, '_', '_'}, MatchSpec)
+
+     tpl(Module,Function,MatchSpec)
+
+          Same as tpl({Module, Function, '_'}, MatchSpec)
+
+     tpl(Module, Function, Arity, MatchSpec)
+
+          Same as tpl({Module, Function, Arity}, MatchSpec)
+
+     tpl({Module, Function, Arity}, MatchSpec) -> {ok, MatchDesc}
+     | {error, term()}
+
+          This function works as _t_p/_2, but  enables  tracing  for
+          loacl calls (and local functions) as well as for global
+          calls (and functions).
+
+     ctp(Module)
+
+          Same as ctp({Module, '_', '_'})
+
+     ctp(Module, Function)
+
+          Same as ctp({Module, Function, '_'})
+
+     ctp(Module, Function, Arity)
+
+          Same as ctp({Module, Function, Arity})
+
+     ctp({Module, Function, Arity}) -> {ok, MatchDesc} |  {error,
+     term()}
+
+          Types
+               Module = atom() | '_'
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2               5
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+               Function = atom() | '_'
+               Arity = integer() | '_'
+               MatchDesc = [MatchNum]
+               MatchNum  =  {matched,  integer()}   |   {matched,
+               node(),  integer()}  | {matched, node(), 0, RPCEr-
+               ror}
+
+          This function disables call tracing  on  the  specified
+          functions.  The  semantics of the parameter is the same
+          as for the corresponding function specification in _t_p/_2
+          or _t_p_l/_2. Both local and global call trace is disabled.
+
+          The return  value  reflects  how  many  functions  that
+          matched,  and  is  constructed as described in _t_p/_2. No
+          tuple {_s_a_v_e_d, _N} is however ever returned (for  obvious
+          reasons).
+
+     ctpl(Module)
+
+          Same as ctpl({Module, '_', '_'})
+
+     ctpl(Module, Function)
+
+          Same as ctpl({Module, Function, '_'})
+
+     ctpl(Module, Function, Arity)
+
+          Same as ctpl({Module, Function, Arity})
+
+     ctpl({Module, Function, Arity}) -> {ok, MatchDesc} | {error,
+     term()}
+
+          This function works as _c_t_p/_1, but only disables tracing
+          set up with _t_p_l/_2 (not with _t_p/_2).
+
+     ctpg(Module)
+
+          Same as ctpg({Module, '_', '_'})
+
+     ctpg(Module, Function)
+
+          Same as ctpg({Module, Function, '_'})
+
+     ctpg(Module, Function, Arity)
+
+          Same as ctpg({Module, Function, Arity})
+
+     ctpg({Module, Function, Arity}) -> {ok, MatchDesc} | {error,
+     term()}
+
+          This function works as _c_t_p/_1, but only disables tracing
+          set up with _t_p/_2 (not with _t_p_l/_2).
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2               6
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+     ltp() -> ok
+
+          Use this function to recall all match_spec's previously
+          used  in  the  session  (i.  e. previously saved during
+          calls to _t_p/_2. This is very useful,  as  a  complicated
+          match_spec can be quite awkward to write. Note that the
+          match_spec's are lost if _s_t_o_p/_0 is called.
+
+          Match specifications used can be saved in a file (if  a
+          read-write  file  system  is  present) for use in later
+          debugging sessions, see _w_t_p/_1 and _r_t_p/_1
+
+     dtp() -> ok
+
+          Use this function to "forget" all match  specifications
+          saved  during  calls  to  _t_p/_2. This is useful when one
+          wants to restore other match specifications from a file
+          with  _r_t_p/_1.  Use  _d_t_p/_1 to delete specific saved match
+          specifications.
+
+     dtp(N) -> ok
+
+          Types
+               N = integer()
+
+          Use this function to "forget" a specific match specifi-
+          cation saved during calls to _t_p/_2.
+
+     wtp(Name) -> ok | {error, IOError}
+
+          Types
+               Name = string()
+               IOError = term()
+
+          This function will save all match specifications  saved
+          during  the  session  (during  calls to _t_p/_2) in a text
+          file with the name designated by _N_a_m_e.  The  format  of
+          the file is textual, why it can be edited with an ordi-
+          nary text editor, and then restored with _r_t_p/_1.
+
+          Each match spec in the file ends with a full  stop  (.)
+          and  new  (syntactically  correct) match specifications
+          can be added to the file manually.
+
+          The function returns _o_k or an  error  tuple  where  the
+          second  element  contains  the  I/O error that made the
+          writing impossible.
+
+     rtp(Name) -> ok | {error, Error}
+
+          Types
+               Name = string()
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2               7
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+               Error = term()
+
+          This function reads match specifications  from  a  file
+          (possibly)  generated  by the _w_t_p/_1 function. It checks
+          the syntax of all  match  specifications  and  verifies
+          that  they are correct. The error handling principle is
+          "all or nothing", i. e. if some of the match specifica-
+          tions  are  wrong, none of the specifications are added
+          to the list of saved match specifications for the  run-
+          ning system.
+
+          The match specifications in the file  are  _m_e_r_g_e_d  with
+          the current match specifications, so that no duplicates
+          are generated. Use  _l_t_p/_0  to  see  what  numbers  were
+          assigned to the specifications from the file.
+
+          The function will return an error, either  due  to  I/O
+          problems  (like a non existing or non readable file) or
+          due to file format problems. The errors from a bad for-
+          mat  file  are  in a more or less textual format, which
+          will give a hint to what's causing the problem.
+
+     n(Nodename) -> {ok, Nodename} | {error, Reason}
+
+          Types
+               Nodename = atom()
+               Reason = term()
+
+          The _d_b_g server keeps a  list  of  nodes  where  tracing
+          should be performed. Whenever a _t_p/_2 call or a _p/_2 call
+          is made, it is executed for all nodes in this  list  as
+          well  as the local node (except for _p/_2 with a specific
+          _p_i_d() as first argument, in which case the  command  is
+          executed  only on the node where the designated process
+          resides.).
+
+          This function adds a node (_N_o_d_e_n_a_m_e)  to  the  list  of
+          nodes where tracing is performed.
+
+          Distributed tracing does not work together  with  trace
+          ports.
+
+          The function will return an error if either tracing  is
+          currently  directed  to a trace port (see _t_r_a_c_e__p_o_r_t/_2)
+          or the node _N_o_d_e_n_a_m_e is not reachable.
+
+     cn(Nodename) -> ok
+
+          Types
+               Nodename = atom()
+
+
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2               8
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+          Clears a node from the list of traced nodes. Subsequent
+          calls  to _t_p/_2 and _p/_2 will not consider that node, but
+          tracing already activated on the node will continue  to
+          be in effect.
+
+          Returns _o_k, cannot fail.
+
+     ln() -> ok
+
+          Shows the list of traced nodes on the console.
+
+     tracer() -> {ok, pid()} | {error, already_started}
+
+          This function starts a server that will  be  the  reci-
+          pient  of  all  trace messages. All subsequent calls to
+          _p/_2 will result in messages sent to the  newly  started
+          trace server.
+
+          A trace server started in this way will simply  display
+          the  trace  messages  in  a formatted way in the Erlang
+          shell  (i.  e.  use  io:format).  See  _t_r_a_c_e_r/_2  for  a
+          description  of  how  the  trace message handler can be
+          customized.
+
+     tracer(Type, Data) -> {ok, pid()} | {error, Error}
+
+          Types
+               Type = port | process
+               Data = PortGenerator | HandlerSpec
+               HandlerSpec = {HandlerFun, InitialData}
+               HandlerFun = fun() (two arguments)
+               InitialData = term()
+               PortGenerator = fun() (no arguments)
+               Error = term()
+
+          This function starts a tracer  server  with  additional
+          parameters. The first parameter, the _T_y_p_e, indicates if
+          trace messages should be handled by a receiving process
+          (_p_r_o_c_e_s_s) or by a tracer port (_p_o_r_t). For a description
+          about tracer ports see _t_r_a_c_e__p_o_r_t/_2.
+
+          If _T_y_p_e is a process, a message handler function can be
+          specified  (_H_a_n_d_l_e_r_S_p_e_c).  The  handler function, which
+          should be a _f_u_n taking two arguments,  will  be  called
+          for  each  trace  message, with the first argument con-
+          taining the message as it is and  the  second  argument
+          containing the return value from the last invocation of
+          the fun. The initial value of the second  parameter  is
+          specified  in  the _I_n_i_t_i_a_l_D_a_t_a part of the _H_a_n_d_l_e_r_S_p_e_c.
+          The _H_a_n_d_l_e_r_F_u_n may chose any appropriate action to take
+          when invoked, and can save a state for the next invoca-
+          tion by returning it.
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2               9
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+          If _T_y_p_e is a port, then the second parameter should  be
+          a  _f_u_n  which  takes  no  arguments and returns a newly
+          opened trace port when called. Such a _f_u_n is preferably
+          generated by calling _t_r_a_c_e__p_o_r_t/_2.
+
+          Note that most _d_b_g functions start the server automati-
+          cally.  Call  this  function with the appropriate argu-
+          ments _b_e_f_o_r_e calling any other functions in the module.
+          The  server  can be stopped with a call to _s_t_o_p/_0 if it
+          has been started in the default form by mistake.
+
+          If an error is returned, it can  either  be  due  to  a
+          tracer      server     already     running     ({_e_r_r_o_r,
+          _a_l_r_e_a_d_y__s_t_a_r_t_e_d}) or due to the _H_a_n_d_l_e_r_F_u_n throwing  an
+          exception.
+
+     trace_port(Type, Parameters) -> fun()
+
+          Types
+               Type = ip | file
+               Parameters = Filename | IPPortSpec
+               Filename = string()
+               IpPortSpec = PortNumber | {PortNumber, QueSize}
+               PortNumber = integer()
+               QueSize = integer()
+
+          This function creates a trace port generating _f_u_n.  The
+          _f_u_n takes no arguments and returns a newly opened trace
+          port. The return value from this function  is  suitable
+          as    a   second   parameter   to   tracer/2,   i.   e.
+          _d_b_g:_t_r_a_c_e_r(_p_o_r_t, _d_b_g:_t_r_a_c_e__p_o_r_t(_i_p, _4_7_1_1)).
+
+          A trace port is an Erlang port to a dynamically  linked
+          in driver that handles trace messages directly, without
+          the overhead of sending them as messages in the  Erlang
+          virtual machine.
+
+          Two trace drivers are currently implemented,  the  _f_i_l_e
+          and  the  _i_p  trace  drivers. The file driver sends all
+          trace messages into a  binary  file,  from  where  they
+          later   can   be   fetched   and   processed  with  the
+          _t_r_a_c_e__c_l_i_e_n_t/_2 function. The ip driver opens  a  TCP/IP
+          port  where  it  listens for connections. When a client
+          (preferably  started  by  calling   _t_r_a_c_e__c_l_i_e_n_t/_2   on
+          another  Erlang  node) connects, all trace messages are
+          sent over the IP network for further processing by  the
+          remote client.
+
+          Using a trace port significantly  lowers  the  overhead
+          imposed by using tracing.
+
+
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2              10
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+          The file trace driver expects a filename in the  native
+          machine format as parameter. The file is written with a
+          high degree of buffering, why all  trace  messages  are
+          _n_o_t  guaranteed  to  be  saved in the file in case of a
+          system crash. That is the price to pay for low  tracing
+          overhead.
+
+          The ip trace driver has a  queue  of  _Q_u_e_S_i_z_e  messages
+          waiting  to  be delivered. If the driver cannot deliver
+          messages as fast as they are produced  by  the  runtime
+          system,  a special message is sent, which indicates how
+          many messages  that  are  dropped.  That  message  will
+          arrive   at   the   handler   function   specified   in
+          _t_r_a_c_e__c_l_i_e_n_t/_3 as the tuple {_d_r_o_p, _N} where  _N  is  the
+          number  of  consecutive  messages  dropped.  In case of
+          heavy tracing, drop's are likely  to  occur,  and  they
+          surely  occur  if  no  client is reading the trace mes-
+          sages.
+
+          Note that processes on other  nodes  cannot  be  traced
+          using a trace port.
+
+     flush_trace_port() -> ok | {error, Reason}
+
+          This function is used to flush internal buffers held by
+          a  trace  port  driver.  Currently  only the file trace
+          driver supports this operation.
+
+          Returns _o_k if the operation was successful, or an error
+          if  the current tracer is a process or it is a port not
+          supporting the flush operation (i.e. a ip trace port).
+
+     trace_client(Type, Parameters) -> pid()
+
+          Types
+               Type = ip | file | follow_file
+               Parameters = Filename | IPClientPortSpec
+               Filename = string()
+               IpClientPortSpec = PortNumber |  {Hostname,  Port-
+               Number}
+               PortNumber = integer()
+               Hostname = string()
+
+          This function starts a trace client that reads the out-
+          put  created  by  a trace port driver and handles it in
+          mostly the same way as a tracer process created by  the
+          _t_r_a_c_e_r/_0 function.
+
+          If _T_y_p_e is _f_i_l_e, the client reads  all  trace  messages
+          stored in the file named _F_i_l_e_n_a_m_e (the second argument)
+          and let's the default handler function format the  mes-
+          sages  on the console. This is one way to interpret the
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2              11
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+          data stored in a file by the file trace port driver.
+
+          If _T_y_p_e is _f_o_l_l_o_w__f_i_l_e, the client behaves  as  in  the
+          _f_i_l_e  case, but keeps trying to read (and process) more
+          data    from    the    file    until     stopped     by
+          _s_t_o_p__t_r_a_c_e__c_l_i_e_n_t/_1.
+
+          If _T_y_p_e is _i_p, the client connects to the  TCP/IP  port
+          _P_o_r_t_N_u_m_b_e_r  on  the  host _H_o_s_t_n_a_m_e, from where it reads
+          trace messages until the TCP/IP connection  is  closed.
+          If no _H_o_s_t_n_a_m_e is specified, the local host is assumed.
+
+          As an example, one can let trace messages be sent  over
+          the network to another Erlang node (preferably _n_o_t dis-
+          tributed), where the formatting occurs:
+
+          On the node _s_t_a_c_k there's an Erlang node _a_n_t@_s_t_a_c_k,  in
+          the shell, type the following:
+
+                    ant@stack> dbg:tracer(port, dbg:trace_port(ip,4711)).
+                    <0.17.0>
+                    ant@stack> dbg:p(self(), send).
+                    {ok, 1}
+
+          All trace messages are  now  sent  to  the  trace  port
+          driver,  which  in  turn listens for connections on the
+          TCP/IP port 4711. If we want to  see  the  messages  on
+          another  node,  preferably  on another host, we do like
+          this:
+
+                    -> dbg:trace_client(ip, {"stack", 4711}).
+                    <0.42.0>
+
+          If we now send a message from the  shell  on  the  node
+          _a_n_t@_s_t_a_c_k, where all sends from the shell are traced:
+
+                    ant@stack> self() ! hello.
+                    hello
+
+          The following will appear at the console  on  the  node
+          that started the trace client:
+
+                    (<0.23.0>) <0.23.0> ! hello
+                    (<0.23.0>) <0.22.0> ! {shell_rep,<0.23.0>,{value,hello,[],[]}}
+
+          The last line is  generated  due  to  internal  message
+          passing  in  the  Erlang  shell.  The process id's will
+          vary.
+
+     trace_client(Type, Parameters, HandlerSpec) -> pid()
+
+          Types
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2              12
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+               Type = ip | file
+               Parameters = Filename | IPClientPortSpec
+               Filename = string()
+               IpClientPortSpec = PortNumber |  {Hostname,  Port-
+               Number}
+               PortNumber = integer()
+               Hostname = string()
+               HandlerSpec = {HandlerFun, InitialData}
+               HandlerFun = fun() (two arguments)
+               InitialData = term()
+
+          This function  works  exactly  as  _t_r_a_c_e__c_l_i_e_n_t/_2,  but
+          allows  you  to  write  your  own handler function. The
+          handler function works mostly as the one  described  in
+          _t_r_a_c_e_r/_2,  but  will also have to be prepared to handle
+          trace messages of the form {_d_r_o_p, _N}, where  _N  is  the
+          number  of  dropped messages. This pseudo trace message
+          will only occur if the ip trace driver is used.
+
+     stop_trace_client(Pid) -> ok
+
+          Types
+               Pid = pid()
+
+          This function shuts down  a  previously  started  trace
+          client.  The  _P_i_d  argument  is the process id returned
+          from the _t_r_a_c_e__c_l_i_e_n_t/_2 or _t_r_a_c_e__c_l_i_e_n_t/_3 call.
+
+     get_tracer() -> {ok, Tracer}
+
+          Types
+               Tracer = port() | pid()
+
+          Returns the process or port to which all trace messages
+          are sent.
+
+     stop() -> stopped
+
+          Stops the _d_b_g server and clears all trace flags for all
+          processes. Also shuts down all trace clients and closes
+          all trace ports.
+
+Advanced topics - combining with seq_trace
+     The _d_b_g module is primarily targeted towards tracing through
+     the  _e_r_l_a_n_g:_t_r_a_c_e/_3  function.  It  is  sometimes desired to
+     trace messages in a more delicate way,  which  can  be  done
+     with the help of the _s_e_q__t_r_a_c_e module.
+
+     Seq_trace implements sequential tracing (known in the  AXE10
+     world,  and  sometimes  called  "forlopp  tracing"). _d_b_g can
+     interpret messages generated from  _s_e_q__t_r_a_c_e  and  the  same
+     tracer  function  for both types of tracing can be used. The
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2              13
+
+
+
+
+
+
+dbg(3)              ERLANG MODULE DEFINITION               dbg(3)
+
+
+
+     _s_e_q__t_r_a_c_e messages can even be sent  to  a  trace  port  for
+     further analysis.
+
+     As a match specification can turn on sequential tracing, the
+     combination of _d_b_g and _s_e_q__t_r_a_c_e can be quite powerful. This
+     brief example shows a session where  sequential  tracing  is
+     used:
+
+     1> dbg:tracer().
+     {ok,<0.30.0>}
+     2> {ok, Tracer} = dbg:get_tracer().
+     {ok,<0.31.0>}
+     3> seq_trace:set_system_tracer(Tracer).
+     false
+     4> dbg:tp(dbg, get_tracer, [{[],[],[{set_seq_token, send, true}]}]).
+     {ok,[{matched,1},{saved,1}]}
+     5> dbg:p(all,call).
+     {ok,[{matched,22}]}
+     6> dbg:get_tracer(), receive after 1 -> ok end.
+     (<0.25.0>) call dbg:get_tracer()
+     SeqTrace [0]: (<0.25.0>) <0.30.0> ! {<0.25.0>,get_tracer} [Serial: {2,4}]
+     SeqTrace [0]: (<0.30.0>) <0.25.0> ! {dbg,{ok,<0.31.0>}} [Serial: {4,5}]
+     ok
+
+     This session sets the system_tracer to the same  process  as
+     the  ordinary  tracer  process (i. e. <0.31.0>) and sets the
+     trace pattern for the function _d_b_g:_g_e_t__t_r_a_c_e_r  to  one  that
+     has the action of setting a sequential token. When the func-
+     tion is called by a traced process (all processes are traced
+     in  this case), the process gets "contaminated" by the token
+     and _s_e_q__t_r_a_c_e messages are sent both for the server  request
+     and  the  response.  The _r_e_c_e_i_v_e _a_f_t_e_r _1 -> _o_k _e_n_d after the
+     call clears the _s_e_q__t_r_a_c_e token, why no  messages  are  sent
+     when  the  answer  propagates  via  the shell to the console
+     port. The output would otherwise have been more noisy.
+
+AUTHOR
+     Bjorn Gustavsson, Patrik Nyblom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtveckliLnagsst AcBhange: runtime_tools  1.1.2              14
+
+
+

@@ -1,0 +1,41 @@
+.TH mod_dir 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mod_dir \- Basic directory handling\&. 
+.SH DESCRIPTION
+.LP
+This module generates an HTML directory listing (Apache-style) if a client sends a request for a directory instead of a file\&. This module is not configurable and it needs to be removed from the Modules config directive if directory listings is unwanted\&. 
+
+.SH EWSAPI MODULE INTERACTION
+.LP
+Uses the following EWSAPI interaction data, if available: 
+.RS 2
+.TP 4
+.B
+\fI{real_name, {Path, AfterPath}}\fR:
+as defined in mod_alias(3)\&.
+.RE
+.LP
+Exports the following EWSAPI interaction data, if possible: 
+.RS 2
+.TP 4
+.B
+\fI{mime_type, MimeType}\fR:
+The file suffix of the incoming URL mapped into a \fIMimeType\fR as defined in the Mime Type Settings section of \fIhttpd_core(3)\fR\&.
+.RE
+.LP
+Uses the following EWSAPI functions: 
+.RS 2
+.TP 2
+*
+mod_alias:default_index/2
+.TP 2
+*
+mod_alias:path/3
+.RE
+.SH SEE ALSO
+.LP
+httpd(3), mod_alias(3) 
+.SH AUTHOR
+.nf
+Joakim Grebeno  - support@erlang.ericsson.se
+.fi

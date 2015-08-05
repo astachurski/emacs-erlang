@@ -1,0 +1,198 @@
+
+
+
+beam_lib(3)         ERLANG MODULE DEFINITION          beam_lib(3)
+
+
+
+MODULE
+     beam_lib - An interface to the BEAM file format
+
+DESCRIPTION
+     _b_e_a_m__l_i_b provides an interface to files created by the  BEAM
+     compiler  ("BEAM  files"). The format used, a variant of "EA
+     IFF 1985" Standard for  Interchange  Format  Files,  divides
+     data into chunks.
+
+     Chunk data can be returned as binaries or as compound terms.
+     Compound  terms  are  returned when chunks are referenced by
+     names (atoms) rather than identifiers (strings).  The  names
+     recognized    and    the   corresponding   identifiers   are
+     _a_b_s_t_r_a_c_t__c_o_d_e   ("Abst"),   _a_t_t_r_i_b_u_t_e_s   ("Attr"),   _e_x_p_o_r_t_s
+     ("ExpT"), _i_m_p_o_r_t_s ("ImpT"), and _l_o_c_a_l_s ("LocT").
+
+     The syntas of the compound term (_C_h_u_n_k_D_a_t_a) is as follows:
+
+       * _C_h_u_n_k_D_a_t_a  =  {_C_h_u_n_k_I_d,  _b_i_n_a_r_y()}   |   {_a_b_s_t_r_a_c_t__c_o_d_e,
+         _A_b_s_t_r_a_c_t_C_o_d_e}   |  {_a_t_t_r_i_b_u_t_e_s,  [{_A_t_t_r_i_b_u_t_e,  [_A_t_t_r_i_b_u_-
+         _t_e_V_a_l_u_e]}]} | {_e_x_p_o_r_t_s, [{_F_u_n_c_t_i_o_n, _A_r_i_t_y}]} | {_i_m_p_o_r_t_s,
+         [{_M_o_d_u_l_e,  _F_u_n_c_t_i_o_n,  _A_r_i_t_y}]}  |  {_l_o_c_a_l_s,  [{_F_u_n_c_t_i_o_n,
+         _A_r_i_t_y}]}]}
+
+       * _C_h_u_n_k_R_e_f = _C_h_u_n_k_I_d | _C_h_u_n_k_N_a_m_e
+
+       * _C_h_u_n_k_N_a_m_e =  _a_b_s_t_r_a_c_t__c_o_d_e  |  _a_t_t_r_i_b_u_t_e_s  |  _e_x_p_o_r_t_s  |
+         _i_m_p_o_r_t_s | _l_o_c_a_l_s
+
+       * _C_h_u_n_k_I_d = _s_t_r_i_n_g()
+
+       * _A_b_s_t_r_a_c_t_C_o_d_e = {_A_b_s_t_V_e_r_s_i_o_n, _f_o_r_m_s()} | _n_o__a_b_s_t_r_a_c_t__c_o_d_e
+
+       * _A_b_s_t_V_e_r_s_i_o_n = _a_t_o_m()
+
+       * _A_t_t_r_i_b_u_t_e = _a_t_o_m()
+
+       * _A_t_t_r_i_b_u_t_e_V_a_l_u_e = _t_e_r_m()
+
+       * _M_o_d_u_l_e = _F_u_n_c_t_i_o_n = _a_t_o_m()
+
+       * _A_r_i_t_y = _i_n_t_e_g_e_r() >= _0
+
+     The list of attributes is  sorted  on  _A_t_t_r_i_b_u_t_e,  and  each
+     attribute name occurs once in the list. The attribute values
+     occur in the same order as on the file. The lists  of  func-
+     tions are also sorted. It is not checked that the forms con-
+     form to the abstract format indicated by _A_b_s_t_V_e_r_s_i_o_n.
+
+
+EXPORTS
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+beam_lib(3)         ERLANG MODULE DEFINITION          beam_lib(3)
+
+
+
+     chunks(FileName, [ChunkRef]) ->  {ok,  {ModuleName,  [Chunk-
+     Data]}} | {error, Module, Reason}
+
+          Types
+               FileName = string() | atom()
+               ModuleName = string()
+               Reason = {not_a_file_name, term()} |  {not_a_list,
+               term()}    |    {not_a_beam_file,    FileName}   |
+               {missing_chunk,      FileName,      "FOR1"}      |
+               {form_not_beam,    FileName}    |   {form_too_big,
+               FileName,       FormSize,       FileSize}        |
+               {invalid_beam_file,   FileName,   FilePosition}  |
+               {file_error,      FileName,      FileError}      |
+               {invalid_chunk,      FileName,      "Atom"}      |
+               {missing_chunk,     FileName,      ChunkId}      |
+               {unknown_chunk,      FileName,      atom()}      |
+               {chunk_too_big,  FileName,   ChunkId,   ChunkSize,
+               FileSize}  |  {invalid_chunk, FileName, ChunkId} |
+               {file_error,      FileName,      FileError}      |
+               {not_a_beam_handle, pid()}
+
+          The _c_h_u_n_k_s/_2 function reads  chunk  data  for  selected
+          chunks. The order of the returned list of chunk data is
+          determined by the order of the list  of  chunks  refer-
+          ences; if each chunk data were replaced by the tag, the
+          result would be the given list.
+
+     version(FileName) -> {ok, {ModuleName, Version}}  |  {error,
+     Module, Reason}
+
+          Types
+               FileName = string() | atom()
+               ModuleName = string()
+               Version = [term()]
+
+          The _v_e_r_s_i_o_n/_1 function returns  the  module  version(s)
+          found on a BEAM file.
+
+          See _c_h_u_n_k_s/_2 for possible error reasons.
+
+     info(FileName)  ->  [{file,  FileName},  {module,   Module},
+     {chunks, [ChunkInfo]}] | {error, Module, Reason}
+
+          Types
+               FileName = string() | atom()
+               ChunkInfo = {ChunkId, StartPosition, Size}
+               StartPosition = Size = integer() > 0
+               Reason    =    {not_a_file_name,     term()}     |
+               {not_a_beam_file,   FileName}   |  {missing_chunk,
+               FileName, "FOR1"} |  {form_not_beam,  FileName}  |
+               {form_too_big,  FileName,  FormSize,  FileSize}  |
+               {invalid_beam_file,  FileName,   FilePosition}   |
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+beam_lib(3)         ERLANG MODULE DEFINITION          beam_lib(3)
+
+
+
+               {file_error,      FileName,      FileError}      |
+               {invalid_chunk, FileName, "Atom"}
+
+          The _i_n_f_o/_1 function extracts some information  about  a
+          BEAM file: the file name, the module name, and for each
+          chunk the identifier as well as the position  and  size
+          in bytes of the chunk data.
+
+     format_error(Error) -> character_list()
+
+          Given the  error  returned  by  any  function  in  this
+          module, the function _f_o_r_m_a_t__e_r_r_o_r returns a descriptive
+          string of the error in English. For  file  errors,  the
+          function _f_o_r_m_a_t__e_r_r_o_r/_1 in the _f_i_l_e module is called.
+
+AUTHOR
+     Hans Bolinder - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+

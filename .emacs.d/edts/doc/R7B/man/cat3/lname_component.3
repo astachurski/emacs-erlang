@@ -1,0 +1,132 @@
+
+
+
+lname_component(3)  ERLANG MODULE DEFINITION   lname_component(3)
+
+
+
+MODULE
+     lname_component -  Interface that supports the name  pseudo-
+     objects.
+
+DESCRIPTION
+     This interface is a part of the name library, which is  used
+     to  hide  the representation of names. In orbers Erlang map-
+     ping the pseodo-object names and the real IDL names have the
+     same  representation  but  it  is desirable that the clients
+     uses the names library so they will not be dependent of  the
+     representation.  The lname_component interface supports han-
+     dling of name components e.g. set  and  get  of  the  struct
+     members.
+
+     Note that the lname_component interface in  orber  does  not
+     contain  a  destroy  function because the NameComponents are
+     represented as Erlang records and therefor will  be  removed
+     by the garbage collector when not in use.
+
+     The type _N_a_m_e_C_o_m_p_o_n_e_n_t used below is defined as:
+
+           -record('CosNaming_NameComponent', {id, kind=""}).
+
+     _i_d and _k_i_n_d are strings.
+
+     The record is defined in the file _C_o_s_N_a_m_i_n_g._h_r_l  and  it  is
+     included with:
+
+           -include_lib("orber/COSS/CosNaming/CosNaming.hrl").
+
+
+EXPORTS
+     create() -> Return
+
+          Types
+               Return = NameComponent
+
+          This function returns a new name component.
+
+     get_id(NameComponent) -> Return
+
+          Types
+               Return = string()
+
+          This function returns the id  string  of  a  name  com-
+          ponent.
+
+     set_id(NameComponent, Id) -> Return
+
+          Types
+               Id = string()
+               Return = NameComponent
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   1
+
+
+
+
+
+
+lname_component(3)  ERLANG MODULE DEFINITION   lname_component(3)
+
+
+
+          This function sets the id string of  a  name  component
+          and returns the component.
+
+     get_kind(NameComponent) -> Return
+
+          Types
+               Return = string()
+
+          This function returns the id  string  of  a  name  com-
+          ponent.
+
+     set_kind(NameComponent, Kind) -> Return
+
+          Types
+               Kind = string()
+               Return = NameComponent
+
+          This function sets the kind string of a name  component
+          and returns the component.
+
+AUTHOR
+     Lars Thorsen - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   2
+
+
+

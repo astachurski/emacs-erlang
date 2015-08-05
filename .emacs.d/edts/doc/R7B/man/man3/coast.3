@@ -1,0 +1,590 @@
+.TH coast 3 "tools  1.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+coast \- Coverage and Statistics Analysis Tool
+.SH DESCRIPTION
+.LP
+The module \fIcoast\fR provides a set of functions for coverage and call statistics analysis of Erlang programs\&. 
+.LP
+Coverage analysis consists of monitoring executing programs, observing if each line of code is executed, and, if so, the number of times\&. 
+.LP
+Call statistics analysis consists of monitoring executing programs, observing the number of times certain modules, and the functions in them, are called\&. This analysis may be done in various levels of detail\&. 
+.LP
+Before any analysis can take place, the module(s) must be compiled in a special way\&. Execution may then take place - in this phase executional data is gathered: in an internal database, a counter for each statement in the module(s) is incremented every time that particular statement is executed\&. In the final phase we analyse the collected data, presenting it in various ways\&. (The observant reader may here correctly conclude that a module has to be executed, at least partially, before any useful coverage and call statistics analysis can take place\&.) 
+.LP
+
+
+.SH EXPORTS
+.LP
+.B
+compile(Module) -> Result
+.br
+.B
+compile(Module, Options) -> Result
+.br
+.RS
+.TP
+Types
+Module = ModuleName | [ModuleName]
+.br
+ModuleName = atom() | string()
+.br
+Options = [CompilerOptions]
+.br
+CompilerOptions = {outdir, OutDir} | {i, IncludeDir} | {d, Def} | OtherOptions
+.br
+OutDir = atom() | string()
+.br
+IncludeDir = atom() | string()
+.br
+Result = {ok, CompiledModules} | {error, Reason}
+.br
+CompiledModules = CompiledModule | [CompiledModule]
+.br
+CompiledModule = atom() | string()
+.br
+.RE
+.RS
+.LP
+Compiles a module for coverage and call statistics analysis\&. Currently \fIcompile\fR does not search for modules - if \fIModule\fR not resides in the durrent working directory, the complete path has to be specified\&. The file extension \fI\&.erl\fR may be omitted\&. 
+.LP
+\fIcompile/2\fR makes it possible to pass several options to the compiler\&. Some of these options are the tuples \fI{i, IncludeDir}\fR, \fI{outdir, OutDir}\fR, and \fI{d, Def}\fR; for a complete list, please see the manual page(s) for \fIcompile:file/2\fR\&. 
+.LP
+The return value \fIResult\fR is one of the following: 
+.RS 2
+.TP 4
+.B
+\fI{ok, CompiledModules}\fR:
+Compilation and loading succeeded, meaning that \fICompiledModule\fR now is prepared for coverage and call statistics analysis\&. 
+.TP 4
+.B
+\fI{error, Reason}\fR:
+The compilation failed, due to the reason specified in \fIReason\fR\&. 
+.RE
+.LP
+The function creates the subdirectories \fICOAST\fR and \fICOAST/tmp_code\fR in either the current directory or the directory specified using the \fI{outdir, OutDir}\fR option\&. In \fICOAST/tmp_code\fR two files, \fI<File>\&.COAST\&.pretty\&.erl\fR and \fI<File>\&.COAST\&.erl\fR, will be placed\&. \fI<File>\&.COAST\&.pretty\&.erl\fR is a transformed version (among other things, containing no comments) of the original file, \fI<File>\&.erl\fR\&. \fI<File>\&.COAST\&.erl\fR contains the code in \fI<File>\&.COAST\&.pretty\&.erl\fR, modified with the counter code necessary to gather coverage and call statistics data during execution\&. 
+.LP
+In either the current working directory or in the directory specified using the \fI{outdir, OutDir}\fR option, the file \fI<File>\&.beam\fR will be placed\&. This file is the the compiled version of \fI<File>\&.COAST\&.erl\fR\&. 
+.LP
+Note: \fI<File>\&.COAST\&.pretty\&.erl\fR and \fI<File>\&.COAST\&.erl\fR shall never ever be renamed or moved, or the coverage and call statistics analysis will fail! 
+.LP
+Example: 
+
+.nf
+          1> coast:compile(test)\&.
+          {ok,test}
+          2> coast:compile("\&.\&./can", [{outdir, "\&.\&./ebin"}])\&.
+          {ok,"\&.\&./can"}
+.fi
+.RE
+.LP
+.B
+compile_all() -> Result
+.br
+.B
+compile_all(Dir) -> Result
+.br
+.B
+compile_all(Dir, Options) -> Result
+.br
+.RS
+.TP
+Types
+Dir = atom() | string()
+.br
+Options = [CompilerOptions]
+.br
+CompilerOptions = {outdir, OutDir} | {i, IncludeDir} | {d, Def} | OtherOptions
+.br
+OutDir = atom() | string()
+.br
+IncludeDir = atom() | string()
+.br
+Result = {ok, CompiledModules} | {error, Reason}
+.br
+CompiledModules = [CompiledModule]
+.br
+CompiledModule = atom() | string()
+.br
+.RE
+.RS
+.LP
+\fIcompile_all/0\fR evaluates \fIcompile/1\fR for all \fI\&.erl\fR files found in the current working directory \fIDir\fR\&. 
+.LP
+\fIcompile_all/1\fR evaluates \fIcompile/1\fR for all \fI\&.erl\fR files found in the directory \fIDir\fR\&. 
+.LP
+\fIcompile_all/2\fR evaluates \fIcompile/2\fR for all \fI\&.erl\fR files found in the directory \fIDir\fR\&. 
+.LP
+Example: 
+
+.nf
+          3> coast:compile_all()\&.
+          {ok,["can","test"]}
+.fi
+.RE
+.LP
+.B
+run(Module, Function, ArgumentList) -> Result
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Function = atom()
+.br
+ArgumentList = [Args]
+.br
+Result = term()
+.br
+.RE
+.RS
+.LP
+\fIrun/3\fR applies (the presumably coast-compiled) \fIFunction\fR in \fIModule\fR on \fIArgumentList\fR\&. The function in question must have been exported from \fIModule\fR\&. The length of the \fIArgumentList\fR is the arity of the function\&. 
+.LP
+A function in a coast-compiled module cannot be started from the shell directly, it has to be started either using the function \fIrun/3\fR or from another process than the shell\&. 
+.LP
+Example: 
+
+.nf
+          4> coast:run(can,start,[10])\&.
+          <0\&.91\&.0>
+.fi
+.RE
+.LP
+.B
+mod_calls(Modules) -> Result
+.br
+.RS
+.TP
+Types
+Modules = ModuleName | [ModuleName]
+.br
+ModuleName = atom()
+.br
+Result = {module_calls, ModuleResults} | {error, Reason}
+.br
+ModuleResults = [ModuleResult]
+.br
+ModuleResult = {ModuleName, TotalCalls, ExternalCalls, InternalNonRecursiveCalls}
+.br
+TotalCalls = ExternalCalls = InternalNonRecursiveCalls = integer()
+.br
+Reason = {not_coast_compiled, ModuleName}
+.br
+.RE
+.RS
+.LP
+\fImod_calls/1\fR lists the number of times \fIModules\fR have been called\&. The listing is presented module by module, with the following data: 
+.RS 2
+.TP 4
+.B
+\fITotalCalls\fR:
+The total number of times the module (i\&.e\&., the functions in the module) has been called\&. This number is the sum of both internal calls and calls made from other modules\&. 
+.TP 4
+.B
+\fIExternalCalls\fR:
+The number of times the module (i\&.e\&., the functions in the module) has been called from other modules\&. 
+.TP 4
+.B
+\fIInternalNonRecursiveCalls\fR:
+The number of times the module has been called non-recursively by itself\&. Here a recursive module call is defined as when the module (i\&.e\&., a function in the module) calls itself (i\&.e\&., the same or another function in the module)\&. Using this definition, it follows that a module can never call itself non-recursively, meaning that \fIInternalNonRecursiveCalls\fR always equals to 0 (zero)\&. (The reason for nevertheless presenting it is to produce results having the same format from the \fImod_calls/1\fR, \fIfunc_calls/1\fR and \fIclause_calls/1\fR functions\&.) 
+.RE
+.LP
+Example: 
+
+.nf
+          5> coast:mod_calls(can)\&.
+          {module_calls,[{can,37,3,0}]}
+          6> coast:mod_calls([can,test])\&.
+          {module_calls,[{can,37,3,0},{test,0,0,0}]}
+.fi
+.RE
+.LP
+.B
+func_calls(Modules) -> Result
+.br
+.RS
+.TP
+Types
+Modules = ModuleName | [ModuleName]
+.br
+ModuleName = atom()
+.br
+Result = {function_calls, FunctionResults} | {error, Reason}
+.br
+FunctionResults = [FunctionResult]
+.br
+FunctionResult = {Function, TotalCalls, ExternalCalls, InternalNonRecursiveCalls}
+.br
+Function = {ModuleName, FunctionName, Arity}
+.br
+FunctionName = atom()
+.br
+Arity = integer()
+.br
+TotalCalls = ExternalCalls = InternalNonRecursiveCalls = integer()
+.br
+Reason = {not_coast_compiled, ModuleName}
+.br
+.RE
+.RS
+.LP
+\fIfunc_calls/1\fR lists the number of times the functions in \fIModules\fR have been called\&. The listing is presented in order, module by module and function by function, with the following data: 
+.RS 2
+.TP 4
+.B
+\fITotalCalls\fR:
+The total number of times the function in question has been called\&. This number is the sum of both internal calls (i\&.e\&., calls made from the same module) and calls made from other modules\&. 
+.TP 4
+.B
+\fIExternalCalls\fR:
+The number of times the function in question has been called from other modules\&. 
+.TP 4
+.B
+\fIInternalNonRecursiveCalls\fR:
+The number of times the function in question has been called non-recursively from the same module (i\&.e\&., by other functions in the same module)\&. 
+.RE
+.LP
+Example: 
+
+.nf
+          7> coast:func_calls(can)\&.
+          {function_calls,[{{can,create_rects,2},1,0,1},
+                           {{can,create_rects,3},11,0,1},
+                           {{can,event_loop,2},20,0,1},
+                           {{can,f,1},1,0,1},
+                           {{can,mk_canvas,1},1,1,0},
+                           {{can,prov,1},2,1,1},
+                           {{can,prov2,1},0,0,0},
+                           {{can,start,1},1,1,0}]}
+.fi
+.RE
+.LP
+.B
+clause_calls(Modules) -> Result
+.br
+.RS
+.TP
+Types
+Modules = ModuleName | [ModuleName]
+.br
+ModuleName = atom()
+.br
+Result = {clause_calls, ClauseResults} | {error, Reason}
+.br
+ClauseResults = [ClauseResult]
+.br
+ClauseResult = {Clause, TotalCalls, ExternalCalls, InternalNonRecursiveCalls}
+.br
+Clause = {ModuleName, FunctionName, Arity, ClauseNumber}
+.br
+FunctionName = atom()
+.br
+Arity = ClauseNumber = integer()
+.br
+TotalCalls = ExternalCalls = InternalNonRecursiveCalls = integer()
+.br
+Reason = {not_coast_compiled, ModuleName}
+.br
+.RE
+.RS
+.LP
+\fIclause_calls/1\fR lists the number of times the function clauses in \fIModules\fR have been called\&. The listing is presented in order, module by module, function by function and clause by clause\&. To distinguish between clauses in a function, they are numbered sequentially, the first clause encountered getting number 1 (one)\&. For each clause the following data is presented: 
+.RS 2
+.TP 4
+.B
+\fITotalCalls\fR:
+The total number of times the function clause in question has been called\&. This number is the sum of both internal calls (i\&.e\&., calls made from the same module) and calls made from other modules\&. 
+.TP 4
+.B
+\fIExternalCalls\fR:
+The number of times the function clause in question has been called from other modules\&. 
+.TP 4
+.B
+\fIInternalNonRecursiveCalls\fR:
+The number of times the function clause in question has been called non-recursively from the same module (i\&.e\&., by other functions in the same module)\&. (Please note that a call from another clause \fIin the same function\fR also is a recursive call!) 
+.RE
+.LP
+Example: 
+
+.nf
+          8> coast:clause_calls(can)\&.
+          {clause_calls,[{{can,create_rects,2,1},1,0,1},
+                         {{can,create_rects,3,1},10,0,1},
+                         {{can,create_rects,3,2},1,0,0},
+                         {{can,event_loop,2,1},20,0,1},
+                         {{can,f,1,1},1,0,1},
+                         {{can,mk_canvas,1,1},1,1,0},
+                         {{can,prov,1,1},1,0,1},
+                         {{can,prov,1,2},1,1,0},
+                         {{can,prov2,1,1},0,0,0},
+                         {{can,prov2,1,2},0,0,0},
+                         {{can,start,1,1},1,1,0}]}
+.fi
+.RE
+.LP
+.B
+mod_coverage(Modules) -> Result
+.br
+.RS
+.TP
+Types
+Modules = ModuleName | [ModuleName]
+.br
+ModuleName = atom()
+.br
+Result = {module_coverage, ModuleResults} | {error, Reason}
+.br
+ModuleResults = [ModuleResult]
+.br
+ModuleResult = {ModuleName, Covered, Uncovered}
+.br
+Covered = Uncovered = integer()
+.br
+Reason = {not_coast_compiled, ModuleName}
+.br
+.RE
+.RS
+.LP
+\fImod_coverage/1\fR lists the number of covered and uncovered lines of code in \fIModules\fR\&. The listing is presented module by module\&. 
+.LP
+Example: 
+
+.nf
+          9> coast:mod_coverage(can)\&.       
+          {module_coverage,[{can,22,4}]}
+.fi
+.RE
+.LP
+.B
+func_coverage(Modules) -> Result
+.br
+.RS
+.TP
+Types
+Modules = ModuleName | [ModuleName]
+.br
+ModuleName = atom()
+.br
+Result = {function_coverage, FunctionResults} | {error, Reason}
+.br
+FunctionResults = [FunctionResult]
+.br
+FunctionResult = {Function, Covered, Uncovered}
+.br
+Function = {ModuleName, FunctionName, Arity}
+.br
+FunctionName = atom()
+.br
+Arity = integer()
+.br
+Covered = Uncovered = integer()
+.br
+Reason = {not_coast_compiled, ModuleName}
+.br
+.RE
+.RS
+.LP
+\fIfunc_coverage/1\fR lists, for each function in \fIModules\fR, the number of covered and uncovered lines of code\&. 
+.LP
+Example: 
+
+.nf
+          10> coast:func_coverage(can)\&. 
+          {function_coverage,[{{can,create_rects,2},1,0},
+                              {{can,create_rects,3},5,0},
+                              {{can,event_loop,2},5,2},
+                              {{can,f,1},1,0},
+                              {{can,mk_canvas,1},6,0},
+                              {{can,prov,1},3,0},
+                              {{can,prov2,1},0,2},
+                              {{can,start,1},1,0}]}
+.fi
+.RE
+.LP
+.B
+clause_coverage(Modules) -> Result
+.br
+.RS
+.TP
+Types
+Modules = ModuleName | [ModuleName]
+.br
+ModuleName = atom()
+.br
+Result = {clause_coverage, ClauseResults} | {error, Reason}
+.br
+ClauseResults = [ClauseResult]
+.br
+ClauseResult = {Clause, Covered, Uncovered}
+.br
+Clause = {ModuleName, FunctionName, Arity, ClauseNumber}
+.br
+FunctionName = atom()
+.br
+Arity = integer()
+.br
+ClauseNumber = integer()
+.br
+Covered = Uncovered = integer()
+.br
+Reason = {not_coast_compiled, ModuleName}
+.br
+.RE
+.RS
+.LP
+\fIclause_coverage/1\fR lists, for each function clause in \fIModules\fR, the number of covered and uncovered lines of code\&. To distinguish between clauses in a function, they are numbered sequentially, the first clause encountered getting number 1 (one)\&. 
+.LP
+Example: 
+
+.nf
+          11> coast:clause_coverage(can)\&.
+          {clause_coverage,[{{can,create_rects,2,1},1,0},
+                            {{can,create_rects,3,1},4,0},
+                            {{can,create_rects,3,2},1,0},
+                            {{can,event_loop,2,1},5,2},
+                            {{can,f,1,1},1,0},
+                            {{can,mk_canvas,1,1},6,0},
+                            {{can,prov,1,1},1,0},
+                            {{can,prov,1,2},2,0},
+                            {{can,prov2,1,1},0,1},
+                            {{can,prov2,1,2},0,1},
+                            {{can,start,1,1},1,0}]}
+.fi
+.RE
+.LP
+.B
+analyse_to_file(Modules) -> Result
+.br
+.RS
+.TP
+Types
+Modules = ModuleName | [ModuleName]
+.br
+ModuleName = atom()
+.br
+Result = {ok, Files} | {error, Reason}
+.br
+Files = [FileName]
+.br
+FileName = string()
+.br
+Reason = {not_coast_compiled, ModuleName} | OtherReason
+.br
+.RE
+.RS
+.LP
+\fIanalyse_to_file/1\fR performs a detailed coverage analysis, showing the number of times each line in \fIModules\fR has been called so far\&. The result is stored in \fIFileNames\fR (one file for each module)\&. 
+.LP
+Example: 
+
+.nf
+12> coast:analyse_to_file([can,test])\&.
+{ok,["/clearcase/otp/tools/devtools/tools/ebin/COAST/can\&.COAST\&.out",
+"/clearcase/otp/tools/devtools/tools/ebin/COAST/test\&.COAST\&.out"]}
+.fi
+.RE
+.LP
+.B
+known_modules() -> Result
+.br
+.RS
+.TP
+Types
+Result = [ModuleName]
+.br
+ModuleName = atom()
+.br
+.RE
+.RS
+.LP
+\fIknown_modules/0\fR lists the modules that the coast program is aware of, i\&.e\&., the coast-compiled modules that so far, during this session working with coast, have been coast-compiled or subject to execution\&. The \fIabsence\fR of a module in the list probably means it has never been coast-compiled\&. The \fIpresence\fR of an unexpected module in the list probably means that an old coast-compiled module has been executed\&. 
+.LP
+Example: 
+
+.nf
+          13> coast:known_modules()\&.
+          [can,test]
+.fi
+.RE
+.LP
+.B
+source_files(Modules) -> Result
+.br
+.RS
+.TP
+Types
+Modules = ModuleName | [ModuleName]
+.br
+ModuleName = atom()
+.br
+Result = [ModuleResult]
+.br
+ModuleResult = FileName | {error, Reason}
+.br
+FileName = string()
+.br
+Reason = {no_such_module, ModuleName} | {not_coast_compiled, ModuleName} | OtherReason
+.br
+.RE
+.RS
+.LP
+\fIsource_files/1\fR lists the source files that the coast-compiled modules specified in \fIModules\fR originates from\&. 
+.LP
+\fIResult\fR is a list containing (for each module in \fIModules\fR) either the corresponding source file found, or an error\&. 
+.LP
+This function is useful if one wants to make sure that the correct module actually is the one being subject to coverage and call statistics analysis\&. 
+.LP
+Example: 
+
+.nf
+          14> coast:source_files(coast:known_modules())\&.
+          ["/clearcase/otp/tools/devtools/tools/ebin/can\&.erl",
+           "/clearcase/otp/tools/devtools/tools/ebin/test\&.erl"]
+          15> c(test)\&.
+          {ok,test}
+          16> coast:source_files([can,xxx,test])\&.
+          ["/clearcase/otp/tools/devtools/tools/ebin/can\&.erl",
+           {error,{no_such_module,xxx}},
+           {error,{not_coast_compiled,test}}]
+.fi
+.RE
+.LP
+.B
+clear(Modules) -> ok
+.br
+.RS
+.TP
+Types
+Modules = ModuleName | [ModuleName]
+.br
+ModuleName = atom()
+.br
+.RE
+.RS
+.LP
+\fIclear/1\fR discards all coverage and call statistics data, concerning one or more modules, that has been stored (in the internal database) up to the present\&. (Trying to analyse any of the modules cleared will then yield the same result as when they still not have been subject to any execution\&.) 
+.RE
+.LP
+.B
+clear_all() -> ok
+.br
+.RS
+.LP
+\fIclear_all/0\fR discards all coverage and call statistics data that has been stored (in the internal database) up to the present\&. 
+.RE
+.LP
+.B
+quit() -> ok
+.br
+.RS
+.LP
+\fIquit/0\fR stops the server controlling the collected coverage and call statistics data\&. 
+.RE
+.SH Note
+.LP
+This module has replaced the \fIcover\fR module, which is now obsolete\&. 
+.SH AUTHOR
+.nf
+Fredrik Gustafson - support@erlang.ericsson.se
+.fi

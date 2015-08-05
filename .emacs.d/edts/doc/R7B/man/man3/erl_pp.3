@@ -1,0 +1,187 @@
+.TH erl_pp 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+erl_pp \- The Erlang Pretty Printer
+.SH DESCRIPTION
+.LP
+The functions in this module are used to generate aesthetically attractive representations of abstract forms, which are suitable for printing\&. All functions return (possibly deep) lists of characters and generate an error if the form is wrong\&. 
+.LP
+All functions can have an optional argument which specifies a hook that is called if an attempt is made to print an unknown form\&. 
+
+.SH EXPORTS
+.LP
+.B
+form(Form) -> DeepCharList
+.br
+.B
+form(Form, HookFunction) -> DeepCharList
+.br
+.RS
+.TP
+Types
+Form = term()
+.br
+HookFunction = see separate description below\&.
+.br
+DeepCharList = [char()|DeepCharList]
+.br
+.RE
+.RS
+.LP
+Pretty prints a \fIForm\fR which is an abstract form of a type which is returned by \fIerl_parse:parse_form\fR\&. 
+.RE
+.LP
+.B
+attribute(Attribute) -> DeepCharList
+.br
+.B
+attribute(Attribute, HookFunction) -> DeepCharList
+.br
+.RS
+.TP
+Types
+Attribute = term()
+.br
+HookFunction = see separate description below\&.
+.br
+DeepCharList = [char()|DeepCharList]
+.br
+.RE
+.RS
+.LP
+The same as \fIform\fR, but only for the attribute \fIAttribute\fR\&. 
+.RE
+.LP
+.B
+function(Function) -> DeepCharList
+.br
+.B
+function(Function, HookFunction) -> DeepCharList
+.br
+.RS
+.TP
+Types
+Function = term()
+.br
+HookFunction = see separate description below\&.
+.br
+DeepCharList = [char()|DeepCharList]
+.br
+.RE
+.RS
+.LP
+The same as \fIform\fR, but only for the function \fIFunction\fR\&. 
+.RE
+.LP
+.B
+guard(Guard) -> DeepCharList
+.br
+.B
+guard(Guard, HookFunction) -> DeepCharList
+.br
+.RS
+.TP
+Types
+Form = term()
+.br
+HookFunction = see separate description below\&.
+.br
+DeepCharList = [char()|DeepCharList]
+.br
+.RE
+.RS
+.LP
+The same as \fIform\fR, but only for the guard test \fIGuard\fR\&. 
+.RE
+.LP
+.B
+exprs(Expressions) -> DeepCharList
+.br
+.B
+exprs(Expressions, HookFunction) -> DeepCharList
+.br
+.B
+exprs(Expressions, Indent, HookFunction) -> DeepCharList
+.br
+.RS
+.TP
+Types
+Expressions = term()
+.br
+HookFunction = see separate description below\&.
+.br
+Indent = integer()
+.br
+DeepCharList = [char()|DeepCharList]
+.br
+.RE
+.RS
+.LP
+The same as \fIform\fR, but only for the sequence of expressions in \fIExpressions\fR\&. 
+.RE
+.LP
+.B
+expr(Expression) -> DeepCharList
+.br
+.B
+expr(Expression, HookFunction) -> DeepCharList
+.br
+.B
+expr(Expression, Indent, HookFunction) -> DeepCharList
+.br
+.B
+expr(Expression, Indent, Precedence, HookFunction) ->-> DeepCharList
+.br
+.RS
+.TP
+Types
+Expression = term()
+.br
+HookFunction = see separate description below\&.
+.br
+Indent = integer()
+.br
+Precedence = 
+.br
+DeepCharList = [char()|DeepCharList]
+.br
+.RE
+.RS
+.LP
+This function prints one expression\&. It is useful for implementing hooks (see below)\&. 
+.RE
+.SH Unknown Expression Hooks
+.LP
+The optional argument \fIHookFunction\fR, shown in the functions described above, defines a function which is called when an unknown form occurs where there should be a valid expression\&. It can have the following formats: 
+.RS 2
+.TP 4
+.B
+\fIFunction\fR:
+The hook function is called by:
+.RS 4
+
+.nf
+Function(Expr, 
+         CurrentIndentation,
+         CurrentPrecedence,
+         HookFunction)
+.fi
+.RE
+.TP 4
+.B
+\fInone\fR:
+There is no hook function
+.RE
+.LP
+The called hook function should return a (possibly deep) list of characters\&. \fIexpr/4\fR is useful in a hook\&. 
+.LP
+If \fICurrentIndentation\fR is negative, there will be no line breaks and only a space is used as a separator\&. 
+.SH Bugs
+.LP
+It should be possible to have hook functions for unknown forms at places other than expressions\&. 
+.SH See Also
+.LP
+io, erl_parse, erl_eval 
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,660 @@
+
+
+
+ssl_socket(3)       ERLANG MODULE DEFINITION        ssl_socket(3)
+
+
+
+MODULE
+     ssl_socket - Old interface to Secure Socket Layer
+
+DESCRIPTION
+     This manual describes the old  interface  to  Secure  Socket
+     Layer. It should not be used for new development.
+
+     The information in this manual is not up-to-date,  and  will
+     not be updated in the future. However, the following applies
+     for the SSL 2.0 version: Windows and UNIX are supported; the
+     "-log " option in _S_S_L_F_l_a_g_s is not supported anymore.
+
+     SSL Sockets are the secure BSD UNIX interface to  communica-
+     tion protocols based on SSLeay library written by Eric Young
+     (eay@mincom.oz.au).
+
+      _U_s_e_r_s _o_f _t_h_e _S_S_L _s_o_c_k_e_t_s _m_u_s_t _b_e _a_w_a_r_e _o_f _t_h_e _p_a_t_e_n_t _r_i_g_h_t_s
+     _a_n_d  _e_x_p_o_r_t  _r_e_s_t_r_i_c_t_i_o_n_s  _o_f  _c_r_y_p_r_o_g_r_a_p_h_i_c  _a_l_g_o_r_i_t_h_m_s  _i_n
+     _E_u_r_o_p_e _a_n_d _U_S_A. _P_l_e_a_s_e _s_e_e _t_h_e Requirements _s_e_c_t_i_o_n _a_n_d  _t_h_e
+     _S_S_L_e_a_y _d_o_c_u_m_e_n_t_a_t_i_o_n_s _o_n _t_h_e _l_e_g_a_l _a_s_p_e_c_t_s _o_n _a_l_g_o_r_i_t_h_m _u_s_e.
+
+     Only the _A_F__I_N_E_T protocol family and  the  _S_T_R_E_A_M  protocols
+     are supported.
+
+     A socket is a full duplex communications channel between two
+     UNIX  processes,  either over a network to a remote machine,
+     or locally between processes running on the same machine.  A
+     socket  connects  two parties, the initiator and the connec-
+     tor. The initiator is the UNIX process which first opens the
+     socket.  It  issues  a  series of system calls to set up the
+     socket and then waits for another process to create  a  con-
+     nection  to  the  socket. When the connector starts, it also
+     issues a series of system calls to set up the  socket.  Then
+     both processes continue running and the communications chan-
+     nel is bound to a file descriptor which both  processes  use
+     for reading and writing.
+
+
+EXPORTS
+     listen(Protocol, Family, Address, Mode)
+
+          Sets up a socket listening to _A_d_d_r_e_s_s.  It  also  binds
+          the  name  specified by _A_d_d_r_e_s_s to the socket. _P_r_o_t_o_c_o_l
+          must be the atom _S_T_R_E_A_M  (connection-oriented).  _F_a_m_i_l_y
+          must be _A_F__I_N_E_T.
+
+          The UNIX process that is to connect to the  socket  can
+          run  on  any  other accessible machine on the Internet.
+          The _A_d_d_r_e_s_s is an integer specifying what  port  number
+          is to be listened to. This port number uniquely identi-
+          fies the socket on the machine. If  port  number  _0  is
+          chosen,  a  free port number is automatically chosen by
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    1
+
+
+
+
+
+
+ssl_socket(3)       ERLANG MODULE DEFINITION        ssl_socket(3)
+
+
+
+          the UNIX kernel. _N_o_t_e: These port numbers are not to be
+          confused with Erlang ports; they are UNIX-socket ports.
+          Socket ports are used with a host name to create an end
+          point   for   a   socket   connection.   _l_i_s_t_e_n/_4  with
+          _P_r_o_t_o_c_o_l=_S_T_R_E_A_M  returns  the  tuple   {_F_i_l_e_d_e_s_c_r_i_p_t_o_r,
+          _P_o_r_t_n_u_m_b_e_r}.  _F_i_l_e_d_e_s_c_r_i_p_t_o_r  is  an integer specifying
+          the file descriptor assigned to  the  socket  which  is
+          being  listened to. _P_o_r_t_n_u_m_b_e_r is an integer specifying
+          the port number assigned to the socket. If  _A_d_d_r_e_s_s  is
+          not  zero  in  the  call  to  _l_i_s_t_e_n, the returned port
+          number is equal to _A_d_d_r_e_s_s.
+
+          _M_o_d_e must be one of:
+
+          {packet, N}
+          {binary_packet, N}
+          raw       == {packet, 0}
+          onebyte   == {packet, 1}
+          twobytes  == {packet, 2}
+          fourbytes == {packet, 4}
+          asn1
+
+          where valid values for _N are _0, _1, _2 and _4. This param-
+          eter  specifies the way to read or write to the socket.
+          If _M_o_d_e is {_p_a_c_k_e_t, _N}, then each series of bytes writ-
+          ten  to the socket will be prepended with _N bytes indi-
+          cating the length of the string. These _N bytes  are  in
+          binary format, with the most significant byte first. In
+          this way it can be checked that  all  bytes  that  were
+          written  also  are read. For this reason no partitioned
+          messages will ever be delivered.
+
+          If _M_o_d_e is {_b_i_n_a_r_y__p_a_c_k_e_t, _N}, the socket is in  binary
+          mode,  and  binary  data will be prepended with a bytes
+          header of _N. When data is  delivered  to  a  socket  in
+          binary  mode,  the  data  will be delivered as a binary
+          (instead of being unpacked as a byte list.) If _N is  0,
+          nothing will be prepended. If _M_o_d_e is _a_s_n_1, the receiv-
+          ing side of the connection will assume  that  BER-coded
+          _A_S_N._1  messages  are  sent on the socket. The header of
+          the _A_S_N._1 message will then be checked to find out  the
+          total length of the _A_S_N._1 message. That number of bytes
+          will then be read from the socket and only one  message
+          at a time delivered to the Erlang runtime system. _N_o_t_e!
+          the _a_s_n_1 mode will only work if all  BER  encoded  data
+          uses the definite length form. If the indefinite length
+          form is used (the sender's decision), only the tag  and
+          length  bytes  will be received and then the connection
+          will be broken. If the indefinite length form can occur
+          (received  by  the  Erlang  runtime  system) the _r_a_w or
+          {_p_a_c_k_e_t, _0} mode should be used.
+
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    2
+
+
+
+
+
+
+ssl_socket(3)       ERLANG MODULE DEFINITION        ssl_socket(3)
+
+
+
+          For  this  reason   if   the   options   {_p_a_c_k_e_t,   _N},
+          {_b_i_n_a_r_y__p_a_c_k_e_t,  _N}  (N  >  0)  or  _a_s_n_1 are set on the
+          socket, all that is written at the sender side will  be
+          read  (in  one  chunk)  on the reader side. This can be
+          very convenient as this is not guaranteed  in  TCP.  In
+          TCP the messages may be divided partition in unpredict-
+          able ways. With TCP a STREAM of bytes is delivered;  it
+          is not a datagram protocol.
+
+          Example:
+
+          ListenSocket = ssl_socket:listen('STREAM', 'AF_INET', 3000,
+                                           {packet, 2}).
+
+          _L_i_s_t_e_n_S_o_c_k_e_t may be bound to {3, 3000}, where  3  is  a
+          file  descriptor  and  3000 is the port listened to. If
+          not successful the process evaluating _l_i_s_t_e_n  evaluates
+          _e_x_i_t({_l_i_s_t_e_n,  _s_y_n_c_e_r_r_o_r}).  This happens if, for exam-
+          ple, _P_o_r_t_n_u_m_b_e_r is set to a  number  which  is  already
+          occupied on the machine.
+
+     accept(ListenSocket, SSLFlags)
+
+          After a _l_i_s_t_e_n, the incoming requests to connect for  a
+          connection  oriented  (STREAM)  socket may be accepted.
+          This is  done  with  the  call  _a_c_c_e_p_t.  The  parameter
+          _L_i_s_t_e_n_S_o_c_k_e_t  is  the  tuple returned from the previous
+          call to _l_i_s_t_e_n. The call to _a_c_c_e_p_t suspends the  caller
+          until a connection has been established from outside. A
+          process identifier is returned to the caller. This pro-
+          cess is located between the user and the actual socket.
+          All communication with the socket is through this  pro-
+          cess,  which  understands a series of messages and also
+          sends a series of messages to  the  process  that  ini-
+          tiated the call to _a_c_c_e_p_t.
+
+          _S_S_L_F_l_a_g_s is an ASCII list which contains a  combination
+          of the following options separated by space/s:
+
+          -_c_e_r_t ARG specify the certificate  file  to  use.  File
+          should be in PEM format. Server must always have a cer-
+          tificate.
+
+          -_k_e_y ARG specify the private  key  file  to  use.  File
+          should  be  in PEM format. If certificate file contains
+          private key then there is no need  to  specify  private
+          key file.
+
+          -_c_i_p_h_e_r ARG specify the list of ciphers to use, list of
+          the  following:  NULL-MD5 RC4-MD5 EXP-RC4-MD5 IDEA-CBC-
+          MD5 RC2-CBC-MD5 EXP-RC2-CBC-MD DES-CBC-MD5  DES-CBC-SHA
+          DES-CBC3-MD5 DES-CBC3-SHA DES-CFB-M1, separated by ':'.
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    3
+
+
+
+
+
+
+ssl_socket(3)       ERLANG MODULE DEFINITION        ssl_socket(3)
+
+
+
+          If this option is  not  specified  then  the  value  of
+          environment variable SSL_CIPHER will be used.
+
+          -_v_e_r_i_f_y ARG specify the certificate verification level.
+          ARG  could  be  one  of:  0 - server does not ask for a
+          client certificate; client does not  check  the  server
+          certificate  but uses it for establishing a SSL connec-
+          tion 1 - server asks for client certificate; both do  a
+          certificate  check;  if  it  fails  because  of unknown
+          issuer certificate  the  connection  still  gets  esta-
+          blished 2 - server asks for client certificate; both do
+          a certificate check; SSL  connection  gets  established
+          only  if  the  certificate  check  is successful. _N_o_t_e:
+          default level of verification is 0.
+
+          -_l_o_g ARG specify the log file
+
+          Example:
+
+          Socket = ssl_socket:accept(ListenSocket,
+                                     "-cert server_cert.pem -key server_key.pem")
+
+          After the statement above it is possible to communicate
+          with the socket. The messages, which may be sent to the
+          socket are:
+
+          Socket ! {self(), {deliver, ByteList}}.
+
+          or
+
+          Socket ! {self(), {deliver, Binary}}.
+
+          Causes _B_i_n_a_r_y/_B_y_t_e_L_i_s_t to be written to the socket.
+
+          Socket ! {self(), close}.
+
+          Closes the socket down in an orderly way. If the socket
+          is  not  closed  in  this way, it will be automatically
+          closed when the process terminates. The  messages  that
+          can  be  received from the socket are best explained by
+          an example:
+
+          receive
+              {Socket, {socket_closed, normal}} ->
+                  ok;   %% socket closed by foreign host
+              {Socket, {socket_closed, Error}} ->
+                  notok; %% something has happened to the socket
+              {Socket, {fromsocket, Bytes}} ->
+                  {bytes, Bytes}
+          end.
+
+
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    4
+
+
+
+
+
+
+ssl_socket(3)       ERLANG MODULE DEFINITION        ssl_socket(3)
+
+
+
+          Two messages may be sent to the  socket,  i.e.  deliver
+          and close. The socket can send three messages back: two
+          error messages and one message indicating  the  arrival
+          of new data. All of these are shown below.
+
+          Input to the socket:
+
+            -  {self(), {deliver, ByteList}}
+            -  {self(), {deliver, Binary}}
+            -  {self(), close}
+
+          Output from the socket:
+
+            -  {Socket, {socket_closed, normal}}
+            -  {Socket, {socket_closed, Error}}
+            -  {Socket, {fromsocket, ByteList}}
+            -  {Socket, {fromsocket, Binary}}
+
+          It may sometimes be convenient  to  listen  to  several
+          sockets  at the same time. This is most easily achieved
+          by having one Erlang process for each port  number  for
+          listening.
+
+          Another common situation in network programming is when
+          a  server is listening to one or more ports waiting for
+          a connect message from the network. Once it arrives,  a
+          separate  process is spawned to specifically handle the
+          connection. It returns and continues  waiting  for  new
+          connections from the network.
+
+          The code for this could be similar to the following:
+
+          top(Port) ->
+              Listen = ssl_socket:listen('STREAM', 'AF_INET', Port,
+                                         {packet, 2}),
+              loop(Listen).
+
+          loop(Listen) ->
+              Pid = spawn(mymod, connection, [Listen, self()]),
+              receive
+                  {Pid, ok} ->
+                      loop(Listen)
+              end.
+
+          connection(Listen, Father) ->
+              Socket = ssl_socket:accept(Listen, "-cert ssl_server.pem"),
+              Father ! {self(), ok},
+              Socket ! {self(), {deliver, "Hello there"}},
+              .....
+              ....
+
+
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    5
+
+
+
+
+
+
+ssl_socket(3)       ERLANG MODULE DEFINITION        ssl_socket(3)
+
+
+
+          This code first spawns a process, and lets the new pro-
+          cess be suspended while waiting for the connection from
+          the network. Once the new  process  is  connected,  the
+          original  process  is informed about it by the {_s_e_l_f(),
+          _o_k} message. That process then spawns another, etc.
+
+          If there is a listening function to a port and _a_c_c_e_p_t/_2
+          has been evaluated, the process is suspended and cannot
+          be aborted. In order to stop accepting input, the  pro-
+          cess  making  the  call  receives  an  EXIT signal. The
+          accept call will then terminate and no more connections
+          will be accepted until a new accept call is made to the
+          same _L_i_s_t_e_n_S_o_c_k_e_t. To achieve this, _l_o_o_p(_L_i_s_t_e_n) can be
+          modified in the following way:
+
+          loop(Listen) ->
+              Pid = spawn(mymod, connection, [Listen, self()]),
+              loop(Pid, Listen).
+
+          loop(Pid, Listen) ->
+              receive
+                  {Pid, ok} ->
+                      loop(Listen);
+                  stop ->
+                      exit(Pid, abort),
+                      exit(normal)
+              end.
+
+          After the code above has received the _s_t_o_p message  and
+          exited,  there  is no error in the _L_i_s_t_e_n socket. It is
+          still intact and can be used again in  a  new  call  to
+          _l_o_o_p/_1.
+
+          Another common situation in socket programming is want-
+          ing  to  listen to an address for connections, and then
+          having all the connections handled by a single  special
+          process  (that  reads and writes several sockets simul-
+          taneously). The code for that would be similar  to  the
+          following example:
+
+          my_accept(ListenFd, User) ->
+              S = ssl_socket:accept(ListenFd, "-cert ssl_server.pem"),
+              ssl_socket:controlling_process(S, User),
+              my_accept(ListenFd, User).
+
+          The process User runs code that is similar to the  fol-
+          lowing:
+
+          run(Sockets) when list(Sockets) ->
+              receive
+                  {From, {fromsocket, Bytes}} ->
+                      case lists:member(From, Sockets) of
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    6
+
+
+
+
+
+
+ssl_socket(3)       ERLANG MODULE DEFINITION        ssl_socket(3)
+
+
+
+                          true ->  %% old socket
+                              handle_input(Bytes),
+                              run(Sockets);
+                          false ->  %% new connection
+                              handle_input(Bytes),
+                              run([From|Sockets])
+                      end;
+                  ..........   etc.
+
+     client(Protocol, Family, Address, Mode, SSLFlags)
+
+          If another UNIX  process  is  already  listening  to  a
+          socket,  the  socket  on  the client side may be opened
+          with this call. As before, _P_r_o_t_o_c_o_l must  be  the  atom
+          _S_T_R_E_A_M  and  _F_a_m_i_l_y  must be _A_F__I_N_E_T. _A_d_d_r_e_s_s must be a
+          tuple of the type {_I_P_A_d_d_r_e_s_s, _P_o_r_t_n_u_m_b_e_r}.  It  may  be
+          argued that users should not have to know port numbers,
+          only names of services as in the  BSD  library  routine
+          _g_e_t_s_e_r_v_b_y_n_a_m_e(). However, this idea has not been imple-
+          mented in this package, so when a client is to be  con-
+          nected  to  a socket over the Internet, the port number
+          has to be specified. Examples:
+
+          Socket1 =
+            ssl_socket:client('STREAM', 'AF_INET',
+                              {'gin.eua.ericsson.se', 1000}, raw,
+                              "-cert client_cert.pem -cert client_key.pem"),
+          Socket2 =
+            ssl_socket:client('STREAM', 'AF_INET',
+                              {'134.138.99.53', 1002}, asn1,
+                              "-cert ssl_client.pem"),
+          Socket3 =
+            ssl_socket:client('STREAM', 'AF_INET',
+                              {'gin', 1003}, {binary_packet, 4}, ""),
+
+          As can be seen in the examples above,  several  formats
+          are  allowed for _A_d_d_r_e_s_s. The _M_o_d_e variable in the call
+          to _c_l_i_e_n_t is the same as in the calls  to  _l_i_s_t_e_n.  The
+          _S_S_L_F_l_a_g_s  variable  is  the  same  as  in  the calls to
+          _a_c_c_e_p_t, with one exception it is recommended for client
+          to have a certificate but it is not necessary.
+
+          _c_l_i_e_n_t returns a process identifier of a  process  with
+          the  same  characteristics as the process described for
+          the _a_c_c_e_p_t call above.
+
+     controlling_process(Socket, Pid)
+
+          When a value has been returned from the call to  _a_c_c_e_p_t
+          or  the  call  to  _c_l_i_e_n_t, the Pid of the process which
+          performed the initiation is known by  the  socket.  All
+          output  from  the  socket  is sent to this process. All
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    7
+
+
+
+
+
+
+ssl_socket(3)       ERLANG MODULE DEFINITION        ssl_socket(3)
+
+
+
+          input to the socket must also be wrapped with  the  Pid
+          of the original process.
+
+          If the controlling process is to be changed, the socket
+          must  be informed. This is similar to the way an Erlang
+          port needs to know the Pid of the process which  opened
+          it.  The  socket (and the port) must know where to send
+          messages. The function above assigns a new  controlling
+          process to the socket. Thus, this function ensures that
+          all output from the socket is sent to a  process  other
+          than  the  process  which  created  the socket. It also
+          ensures that no messages from the socket are lost while
+          the switch takes place.
+
+     peername(Socket)
+
+          Returns the name of the peer to _S_o_c_k_e_t.
+
+          If AF_UNIX is used _p_e_e_r_n_a_m_e returns the  filename  used
+          as  address  of  a  string. If AF_INET is used _p_e_e_r_n_a_m_e
+          returns the tuple {_P_o_r_t_n_u_m_b_e_r, _I_P_A_d_d_r_e_s_s}.
+
+     resolve()
+
+          Returns the official name of the current host.
+
+     resolve(IPAddress)
+
+          Returns the official name of the host with the  address
+          _I_P_A_d_d_r_e_s_s.
+
+     close(Socket)
+
+          Closes the socket. This  is  equivalent  to  sending  a
+          {_s_e_l_f(),  _c_l_o_s_e} message to the process controlling the
+          socket. It also operates on  sockets  returned  by  the
+          _l_i_s_t_e_n  call.  This is the method to stop the listening
+          to a socket.
+
+     start()
+
+          Starts the socket server.
+
+     stop()
+
+          Stops the socket server, and closes all open sockets.
+
+FEATURES
+     Even if a socket is opened in {_p_a_c_k_e_t, _N} mode, it is possi-
+     ble  to  write  binaries  to  it.  The receiving part of the
+     socket determines if data from the socket is to be  unpacked
+     as  a  byte list or not. i.e. a sender may be in binary mode
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    8
+
+
+
+
+
+
+ssl_socket(3)       ERLANG MODULE DEFINITION        ssl_socket(3)
+
+
+
+     ({_b_i_n_a_r_y__p_a_c_k_e_t, _N}) and the  receiver  in  byte  list  mode
+     ({_p_a_c_k_e_t,  _N})  or  vice versa. The only restriction is that
+     the packet sizes must match.
+
+     The modes _r_a_w and _t_w_o_b_y_t_e_s are kept for  backwards  compati-
+     bility,  and the modes _o_n_e_b_y_t_e and _f_o_u_r_b_y_t_e_s have been added
+     for forward compatibility.
+
+     In order to be able to use this module  it  is  required  to
+     generate a key and a certificate.
+
+     For test purposes a private key and  a  certificate  can  be
+     generated by using:
+
+           req -new -x509 -nodes -out test.pem -keyout test.pem
+           ln -sf test.pem `x509 -noout -hash < test.pem`.0
+
+     Certificate signing request can be generated by using:
+
+           req -new -out csr.pem -keyout key.pem -days XXX
+
+     A certificate signing request (csr.pem)  is  then  could  be
+     send  to  a Certificate Authority (CA) for the purpose of of
+     CA signing the request.
+
+     Some of Certification Authorities:
+
+     http://www.verisign.com <http://www.verisign.com> - Verisignhttp://www.thawte.com/certs <http://www.thawte.com/certs> - Thawte Consultinghttp://www.eurosign.com <http://eurosign.com> - EuroSignhttp://www.cost.se <http://www.cost.se> - COST
+
+     Environment variables _S_S_L__C_E_R_T__D_I_R and  _S_S_L__C_E_R_T__F_I_L_E  could
+     be  used  to  set  the  location  of  the certificate of the
+     trusted certifying authority. This is used during the certi-
+     ficate verification process.
+
+REQUIREMENTS
+     When using this module, both client and server must be  SSL-
+     enabled. A SSL-server will hang if a non-SSL client tries to
+     connect to it. If a SSL-client tries to connect  to  a  non-
+     SSL-server, the connection will fail.
+
+     SSL sockets need the SSLeay version 0.6.6 package  installed
+     in    shared   library   form.   You   can   get   it   from
+     ftp://ftp.psy.uq.oz.au/pub/Crypto/SSL
+     <ftp://ftp.psy.uq.oz.au/pub/Crypto/SSL>   or  you  can  find
+     other            mirrored            locations            at
+     http://www.psy.uq.oz.au/~ftp/Crypto/
+     <http://www.psy.uq.oz.au/~ftp/Crypto/>.
+
+     The SSLeay package implements  several  well  known  crypto-
+     graphic  algorithms. Some of these are protected by software
+     patents in some countries. The package can be configured  to
+     exclude  algorithms at installation. Below follows a summary
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    9
+
+
+
+
+
+
+ssl_socket(3)       ERLANG MODULE DEFINITION        ssl_socket(3)
+
+
+
+     on software  patents  and  restrictions  for  algorithms  in
+     SSLeay, see the SSLeay documentation for details:
+
+     The use of the RSA algorithm must be licensed in the USA due
+     to  US  software patents. This includes any products sold to
+     the USA that use the SSLeay RSA package. Export from the USA
+     is  restricted  for  software containing cryptographic algo-
+     rithms.
+
+     The IDEA algorithm is protected by a patent  in  Europe  and
+     must be licensed.
+
+     General use of cryptography is prohibited in France.
+
+BUGS
+     At this stage it is not  possible  to  establish  connection
+     between  a  server  and a client residing on the same Erlang
+     node due to blocking of SSL_connect().
+
+     Please note that at this stage it is  not  possible  to  use
+     private  key  encrypted  with  a pass phrase. To remove pass
+     phrase do:
+
+           rsa -in key-protected -out key-unprotected.pem
+
+     The result of this restriction is that  the  secury  of  the
+     private  key  relies  on the file system security mechanism.
+     Keep the private key and the certificate in separate files.
+
+AUTHORS
+      Claes Wikstrom - support@erlang.ericsson.se
+      Helen Airiyan - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                   10
+
+
+

@@ -1,0 +1,122 @@
+.TH snmp 6 "snmp  3.2.1" "Ericsson Utvecklings AB" "ERLANG APPLICATION DEFINITION"
+.SH APPLICATION
+snmp \- The SNMP Application
+.SH DESCRIPTION
+.LP
+This chapter describes the \fIsnmp\fR application in OTP\&. The SNMP application provides the following services: 
+.RS 2
+.TP 2
+*
+a multilingual extensible SNMP agent 
+.TP 2
+*
+a MIB compiler 
+.TP 2
+*
+a simple manager 
+.RE
+
+.SH Configuration
+.LP
+The following configuration parameters are defined for the SNMP application\&. Refer to application(3) for more information about configuration parameters\&. 
+.RS 2
+.TP 4
+.B
+\fIaudit_trail_log = false | write_log | read_write_log <optional>\fR:
+Specifies if an audit trail log should be used\&. The \fIdisk_log\fR module is used to maintain a wrap log\&. If \fIwrite_log\fR is specified, only set requests are logged\&. If \fIread_write_log\fR, all requests are logged\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIaudit_trail_log_dir = string() <optional>\fR:
+Specifies where the audit trail log should be stored\&. If \fIaudit_trail_log\fR specifies that logging should take place, this parameter must be defined\&. 
+.TP 4
+.B
+\fIaudit_trail_log_size = {MaxBytes, MaxFiles} <optional>\fR:
+Specifies the size of the audit trail log\&. This parameter is sent to \fIdisk_log\fR\&. If \fIaudit_trail_log\fR specifies that logging should take place, this parameter must be defined\&. 
+.TP 4
+.B
+\fIbind_to_ip_address = bool() <optional>\fR:
+If \fItrue\fR the agent binds to the agent IP adress\&. If \fIfalse\fR the agent listens on any IP address on the host where it is running\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIforce_config_load = bool() <optional>\fR:
+If \fItrue\fR the configuration files are re-read during startup, and the contents of the configuration database ignored\&. Thus, if \fItrue\fR, changes to the configuration database are lost upon reboot of the agent\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIno_reuse_address = bool() <optional>\fR:
+If \fItrue\fR the agent does not specify that the IP and port address should be reusable\&. If \fIfalse\fR the agent the address is set to reusable\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIsnmp_agent_type = master | sub <optional>\fR:
+If \fImaster\fR, one master agent is started\&. Otherwise, no agents are started\&. Default is \fImaster\fR\&. 
+.TP 4
+.B
+\fIsnmp_config_dir = string() <mandatory>\fR:
+Defines where the SNMP configuration files and the compiled master agent MIB files are stored\&. 
+.TP 4
+.B
+\fIsnmp_db_dir = string() <mandatory>\fR:
+Defines where the SNMP internal db files are stored\&. 
+.TP 4
+.B
+\fIsnmp_master_agent_mibs = [string()] <optional>\fR:
+Specifies a list of MIB names and defines which MIBs are initially loaded into the SNMP master agent\&. These MIBs are loaded from \fIsnmp_config_dir\fR\&. 
+.TP 4
+.B
+\fIsnmp_multi_threaded = bool() <optional>\fR:
+If \fItrue\fR, the agent is multi-threaded, with one thread for each get request\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIsnmp_priority = atom() <optional>\fR:
+Defines the Erlang priority for all SNMP processes\&. Default is \fInormal\fR\&. 
+.TP 4
+.B
+\fIv1 = bool() <optional>\fR:
+Defines if the agent shall speak SNMPv1\&. Default is \fItrue\fR\&. 
+.TP 4
+.B
+\fIv2 = bool() <optional>\fR:
+Defines if the agent shall speak SNMPv2c\&. Default is \fItrue\fR\&. 
+.TP 4
+.B
+\fIv3 = bool() <optional>\fR:
+Defines if the agent shall speak SNMPv3\&. Default is \fItrue\fR\&. 
+.TP 4
+.B
+\fIsnmp_local_db_auto_repair = false | true | true_verbose <optional>\fR:
+When starting snmp_local_db it always tries to open an existing database\&. If \fIfalse\fR, and some errors occur, a new datebase is created instead\&. If \fItrue\fR, erroneous transactions (in the logfile) are ignored\&. If \fItrue_verbose\fR, erroneous transactions (in the logfile) are igored and an error message is written\&. Default is \fItrue\fR\&. 
+.TP 4
+.B
+\fIsnmp_mibentry_override = bool() <optional>\fR:
+If this value is false, then when loading a mib each mib- entry is checked prior to installation of the mib\&. The perpose of the check is to prevent that the same symbolic mibentry name is used for different oid\&'s\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIsnmp_trapentry_override = bool() <optional>\fR:
+If this value is false, then when loading a mib each trap is checked prior to installation of the mib\&. The perpose of the check is to prevent that the same symbolic trap name is used for different trap\&'s\&. Default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIsnmp_master_agent_verbosity = silence | info | log | debug | trace <optional>\fR:
+Specifies the startup verbosity for the SNMP master agent\&. Default is \fIsilence\fR\&. 
+.TP 4
+.B
+\fIsnmp_symbolic_store_verbosity = silence | info | log | debug | trace <optional>\fR:
+Specifies the startup verbosity for the SNMP symbolic store\&. Default is \fIsilence\fR\&. 
+.TP 4
+.B
+\fIsnmp_note_store_verbosity = silence | info | log | debug | trace <optional>\fR:
+Specifies the startup verbosity for the SNMP note store\&. Default is \fIsilence\fR\&. 
+.TP 4
+.B
+\fIsnmp_net_if_verbosity = silence | info | log | debug | trace <optional>\fR:
+Specifies the startup verbosity for the SNMP net if\&. Default is \fIsilence\fR\&. 
+.TP 4
+.B
+\fIsnmp_mibserver_verbosity = silence | info | log | debug | trace <optional>\fR:
+Specifies the startup verbosity for the SNMP mib server\&. Default is \fIsilence\fR\&. 
+.RE
+.SH SEE ALSO
+.LP
+application(3), disk_log(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

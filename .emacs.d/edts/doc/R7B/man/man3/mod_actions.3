@@ -1,0 +1,78 @@
+.TH mod_actions 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mod_actions \- Filetype/method-based script execution\&. 
+.SH DESCRIPTION
+.LP
+This module runs CGI scripts whenever a file of a certain type or HTTP method (See RFC 1945) is requested\&. The following config directives are described: 
+.RS 2
+.TP 2
+*
+Action
+.TP 2
+*
+Script
+.RE
+
+.SH DIRECTIVE: "Action"
+.LP
+\fISyntax:\fR \fIAction\fR mime-type cgi-script
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_actions(3) 
+.LP
+\fIAction\fR adds an action, which will activate a \fIcgi-script\fR whenever a file of a certain \fImime-type\fR is requested\&. It propagates the URL and file path of the requested document using the standard CGI \fIPATH_INFO\fR and \fIPATH_TRANSLATED\fR environment variables\&. 
+.LP
+Examples: 
+
+.nf
+Action text/plain /cgi-bin/log_and_deliver_text
+Action home-grown/mime-type1 /~bob/do_special_stuff
+.fi
+.SH DIRECTIVE: "Script"
+.LP
+\fISyntax:\fR \fIScript\fR method cgi-script
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_actions(3) 
+.LP
+\fIScript\fR adds an action, which will activate a \fIcgi-script\fR whenever a file is requested using a certain HTTP \fImethod\fR\&. The \fImethod\fR is either \fIGET\fR or \fIPOST\fR as defined in RFC 1945\&. It propagates the URL and file path of the requested document using the standard CGI \fIPATH_INFO\fR and \fIPATH_TRANSLATED\fR environment variables\&. 
+.LP
+Examples: 
+
+.nf
+Script GET /cgi-bin/get
+Script PUT /~bob/put_and_a_little_more
+.fi
+.SH EWSAPI MODULE INTERACTION
+.LP
+Uses the following EWSAPI interaction data, if available: 
+.RS 2
+.TP 4
+.B
+\fI{real_name, {Path, AfterPath}}\fR:
+as defined in mod_alias(3)\&.
+.RE
+.LP
+Exports the following EWSAPI interaction data, if possible: 
+.RS 2
+.TP 4
+.B
+\fI{new_request_uri, RequestURI}\fR:
+An alternative \fIRequestURI\fR has been generated\&.
+.RE
+.LP
+Uses the following exported EWSAPI functions: 
+.RS 2
+.TP 2
+*
+mod_alias:path/3
+.RE
+.SH SEE ALSO
+.LP
+httpd(3), mod_alias(3) 
+.SH AUTHOR
+.nf
+Joakim Grebeno  - support@erlang.ericsson.se
+.fi

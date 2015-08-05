@@ -1,0 +1,66 @@
+
+
+
+snmp_framework_mib(3)ERLANG MODULE DEFINITIONsnmp_framework_mib(3)
+
+
+
+MODULE
+     snmp_framework_mib -  Instrumentation  Functions  for  SNMP-
+     FRAMEWORK-MIB
+
+DESCRIPTION
+     The  module  _s_n_m_p__f_r_a_m_e_w_o_r_k__m_i_b  implements  instrumentation
+     functions for the SNMP-FRAMEWORK-MIB, and functions for ini-
+     tializing and configuring the database.
+
+     The configuration files are described  in  the  SNMP  User's
+     Manual.
+
+
+EXPORTS
+     configure(ConfDir) -> void()
+
+          Types
+               ConfDir = string()
+
+          This function is called from the supervisor  at  system
+          start-up.
+
+          Inserts all data in the configuration  files  into  the
+          database and destroys all old data.
+
+          Thus, the data in the  SNMP-FRAMEWORK-MIB,  after  this
+          function  has  been  called,  is from the configuration
+          files.
+
+          All _s_n_m_p counters are set to zero.
+
+          If an error is found in the configuration file,  it  is
+          reported  using  the  function _s_n_m_p__e_r_r_o_r:_c_o_n_f_i_g__e_r_r/_2,
+          and the function fails with reason _c_o_n_f_i_g_u_r_a_t_i_o_n__e_r_r_o_r.
+
+          _C_o_n_f_D_i_r is a string which points to the directory where
+          the configuration files are found.
+
+          The configuration file read is: _c_o_n_t_e_x_t._c_o_n_f.
+
+     init() -> void()
+
+          This function is called from the supervisor  at  system
+          start-up.
+
+          Creates the necessary objects in the database  if  they
+          do not exist. It does not destroy any old values.
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Klas Eriksson - support@erlang.ericsson.se
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   1
+
+
+

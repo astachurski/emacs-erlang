@@ -1,0 +1,54 @@
+.TH CosTransactions_SubtransactionAwareResource 3 "cosTransactions  1.1.1.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+CosTransactions_SubtransactionAwareResource \-  
+.SH DESCRIPTION
+.LP
+This interface inherits the CosTransactions::Resource interface\&. Hence, it must also support all operations defined in the Resource interface\&. 
+.LP
+To get access to the record definitions for the structures use:
+.br
+ \fI-include_lib("cosTransactions/include/CosTransactions\&.hrl")\&.\fR 
+
+.SH EXPORTS
+.LP
+.B
+commit_subtransaction(SubtransactionAwareResource, Coordinator) -> Return
+.br
+.RS
+.TP
+Types
+SubtransactionAwareResource = #objref
+.br
+Coordinator = #objref
+.br
+Return = ok
+.br
+.RE
+.RS
+.LP
+If the \fISubtransactionAwareResource\fR have been registered with a \fIsubtransaction\fR using the operation \fICosTransactions_Coordinator:register_subtran_aware/2\fR, it will be notified when the transaction has committed\&. 
+.SS Note:
+.LP
+The results of a commited subtransaction are reltive to the completion of its ancestor transactions, that is, these results can be undone if any ancestor transaction is rolled back\&. 
+
+.RE
+.LP
+.B
+rollback_subtransaction(SubtransactionAwareResource) -> Return
+.br
+.RS
+.TP
+Types
+SubtransactionAwareResource = #objref
+.br
+Return = ok
+.br
+.RE
+.RS
+.LP
+If the \fISubtransactionAwareResource\fR have been registered with a transactions using the operation \fICosTransactions_Coordinator:register_subtran_aware/2\fR it will be notified when the transaction has rolled back\&. 
+.RE
+.SH AUTHOR
+.nf
+Niclas Eklund - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,132 @@
+
+
+
+CosTransactions_RecoveErRyLCAoNoGrCdoMisOnTDarUtaLonErs(aD3cE)tFIiNoInTsI_ORNecoveryCoordinator(3)
+
+
+
+MODULE
+     CosTransactions_RecoveryCoordinator -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -
+     _i_n_c_l_u_d_e__l_i_b("_c_o_s_T_r_a_n_s_a_c_t_i_o_n_s/_i_n_c_l_u_d_e/_C_o_s_T_r_a_n_s_a_c_t_i_o_n_s._h_r_l").
+
+
+EXPORTS
+     replay_completion(RecoveryCoordinator, Timeout, Resource) ->
+     Return
+
+          Types
+               RecoveryCoordinator = #objref
+               Timeout = integer(), milliseconds | 'inifinity'
+               Resource = #objref
+               Return = Status | {'EXCEPTION', E}
+               E = #'CosTransactions_NotPrepared'{}
+               Status = atom()
+
+          The  _R_e_c_o_v_e_r_y_C_o_o_r_d_i_n_a_t_o_r  object  is  returned  by  the
+          operation
+          _C_o_s_T_r_a_n_s_a_c_t_i_o_n_s__C_o_o_r_d_i_n_a_t_o_r:_r_e_g_i_s_t_e_r__r_e_s_o_u_r_c_e/_3.    The
+          _r_e_p_l_a_y__c_o_m_p_l_e_t_i_o_n/_2  may only be used by the registered
+          Resource and returns the current status of the transac-
+          tion.  The  operation  is  used when recovering after a
+          failure.
+
+          Possible Status replies:
+
+            * 'StatusCommitted'
+
+            * 'StatusCommitting'
+
+            * 'StatusMarkedRollback'
+
+            * 'StatusRollingBack'
+
+            * 'StatusRolledBack'
+
+            * 'StatusActive'
+
+            * 'StatusPrepared'
+
+            * 'StatusUnknown'
+
+            * 'StatusNoTransaction'
+
+            * 'StatusPreparing'
+
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             1
+
+
+
+
+
+
+CosTransactions_RecoveErRyLCAoNoGrCdoMisOnTDarUtaLonErs(aD3cE)tFIiNoInTsI_ORNecoveryCoordinator(3)
+
+
+
+  Warning:
+     _r_e_p_l_a_y__c_o_m_p_l_e_t_i_o_n/_3 is blocking and may cause dead-lock if a
+     child  calls  this  function  at the same time as its parent
+     invokes an operation on the child. Dead-lock will not  occur
+     if the timeout has any value except 'infinity'.
+
+     If the call is external  incoming  (intra-ORB)  the  timeout
+     will  not  be activated. Hence, similar action must be taken
+     if the Resource resides on another vendors ORB.
+
+
+AUTHOR
+     Niclas Eklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtveckLlaisntgschAaBnge: cosTransactions  1.1.1.1             2
+
+
+

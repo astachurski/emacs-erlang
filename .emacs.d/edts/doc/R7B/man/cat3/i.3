@@ -1,0 +1,462 @@
+
+
+
+i(3)                ERLANG MODULE DEFINITION                 i(3)
+
+
+
+MODULE
+     i - Interpreter (debugger) Interface.
+
+DESCRIPTION
+     The module _i provides short forms for some of the  functions
+     in the _i_n_t module.
+
+     This module also provides facilities for  displaying  status
+     information about interpreted processes and break points.
+
+     It is possible to attach interpreted processes by giving the
+     corresponding  process identity only. By default, an attach-
+     ment window pops up. Processes at other Erlang nodes can  be
+     attached manually or automatically .
+
+     By preference, these functions can be included in the module
+     _s_h_e_l_l__d_e_f_a_u_l_t. By default, they are.
+
+
+EXPORTS
+     im() -> pid()
+
+          Starts a new graphical monitor. This is the main window
+          of  the interpreter. All of the interpreter functional-
+          ity is accessed from the monitor  window.  The  monitor
+          window  displays  the  status of all processes that are
+          running interpreted modules.
+
+     ii(AbsModule) -> {module, Module} | error
+
+          Types
+               AbsModule  =  atom()  |  string()  |   [atom()   |
+               string()]
+               Module = atom()
+
+          Marks _M_o_d_u_l_e as being interpreted. The _M_o_d_u_l_e parameter
+          can either be a single module name, or a list of module
+          names. _M_o_d_u_l_e is compiled into an abstract  form  which
+          is  loaded  into  the interpreter. The actual paths are
+          searched   for   the   corresponding   source   file(s)
+          (_M_o_d_u_l_e.erl).  _M_o_d_u_l_e  can  be  given  with an absolute
+          path.
+
+  Note:
+     If _M_o_d_u_l_e is a list of  modules,  the  result  of  the  last
+     module is returned.
+
+
+  Note:
+     If an interpreted module is compiled using the c:c function,
+     this module is reloaded into the interpreter.
+
+
+
+
+Ericsson UtvecklingsLaAsBt change: debugger  1.5.2                 1
+
+
+
+
+
+
+i(3)                ERLANG MODULE DEFINITION                 i(3)
+
+
+
+     iq(Module) -> ok
+
+          Types
+               Module = atom() | string() | [atom() | string()]
+
+          Does not interpret _M_o_d_u_l_e.  The  _M_o_d_u_l_e  parameter  can
+          either  be  a  single  module name, or a list of module
+          names. _M_o_d_u_l_e  is  removed  from  the  set  of  modules
+          currently being interpreted.
+
+     ini(Module) -> {module,Module} | error | ok
+     inq(Module) -> ok
+
+          Behaves as the corresponding _i_i/_1  and  _i_q/_1  functions
+          described  above,  but  on all nodes in the network. It
+          returns _o_k if we are _a_l_i_v_e, otherwise as above.
+
+     il() -> ok
+
+          Makes a printout of all  interpreted  modules.  Modules
+          are  printed  together  with  the full path name of the
+          corresponding source code file.
+
+     ip() -> ok
+
+          Makes a printout of the current status  of  all  inter-
+          preted  processes.  Processes  on  all  known nodes are
+          printed.
+
+     ic() -> ok
+
+          Deletes  (clears)  information  about  all   terminated
+          processes from the interpreter.
+
+     iaa(Flag) -> true
+
+          Types
+               Flag = FlagItem | [FlagItem]
+               FlagItem = init | break | exit | false
+
+          Interpreted processes can  be  attached  automatically,
+          without the need to attach to a process using the moni-
+          tor window, _i:_i_m() or _i_n_t:_m(). An attachment  window  -
+          not  described here - pops up for the attached process.
+          _F_l_a_g specifies at which point interpreted processes are
+          automatically attached.
+
+          _F_l_a_g is one of:
+
+            * _i_n_i_t. Attach to a process the very  first  time  it
+              calls an interpreted function.
+
+
+
+
+Ericsson UtvecklingsLaAsBt change: debugger  1.5.2                 2
+
+
+
+
+
+
+i(3)                ERLANG MODULE DEFINITION                 i(3)
+
+
+
+            * _b_r_e_a_k. Attach to a process whenever  it  reaches  a
+              break point.
+
+            * _e_x_i_t. Attach to a process when it terminates.
+
+            * _f_a_l_s_e. Deactivate the automatic attach facility.
+
+          If several conditions are to be active, a list of flags
+          must be given.
+
+     iaa(Flag,Function) -> true
+
+          Types
+               Flag = FlagItem | [FlagItem]
+               FlagItem = init | break | exit | false
+               Function = {Mod, Func}
+               Mod = atom()
+               Fun = atom()
+
+          As above, but instead of using the  default  attachment
+          window,  the  specified  _F_u_n_c_t_i_o_n  is  used in order to
+          start the interaction with the  attached  process.  The
+          _F_u_n_c_t_i_o_n  parameter  must be the tuple {_M_o_d, _F_u_n_c}, and
+          this function should implement the corresponding  func-
+          tionality  in the same way as the _i_n_t__s_h_o_w:_a__s_t_a_r_t/_3, _4
+          functions.
+
+     ist(Flag) -> true
+
+          Types
+               Flag = all | true | no_tail | false
+
+          The interpreter can keep call frames in the  stack  for
+          future  inspections.  Typically, you can go up and down
+          in the stack in order to inspect the  flow  of  control
+          when the execution has been stopped - at a break point,
+          when the process has terminated, or in  a  single  step
+          execution.
+
+          By default, the whole stack is  kept  (_F_l_a_g  =  _a_l_l  or
+          _t_r_u_e). If processes with a very long life time and with
+          a lot of tail  recursive  calls  are  interpreted,  the
+          _n_o__t_a_i_l  flag  should  be used. No tail recursive calls
+          are kept in the stack if this flag is used.
+
+          The _f_a_l_s_e flag should be used if the interpreter is not
+          to keep call frames.
+
+     ia(Pid) -> ok | no_proc
+
+          Types
+               Pid = pid()
+
+
+
+Ericsson UtvecklingsLaAsBt change: debugger  1.5.2                 3
+
+
+
+
+
+
+i(3)                ERLANG MODULE DEFINITION                 i(3)
+
+
+
+          Attaches to the _P_i_d process. An attachment window  pops
+          up.
+
+     ia(X,Y,Z) -> ok | no_proc
+
+          Types
+               X = Y = Z = int()
+
+          Attaches  to  the   process   with   process   identity
+          c:pid(_X,_Y,_Z). An attachment window pops up.
+
+     ia(Pid,Function) -> ok | no_proc
+
+          Types
+               Pid = pid()
+               Function = {Mod, Fun}
+               Mod = atom()
+               Fun = atom()
+
+          Attaches to the  _P_i_d  process.  Use  _F_u_n_c_t_i_o_n  for  the
+          interaction  with  the  attached  process,  as  for the
+          _i:_i_a_a/_2 function.
+
+     ia(X,Y,Z,Function) -> ok | no_proc
+
+          Types
+               X = Y = Z = int()
+               Function = {Mod, Fun}
+               Mod = atom()
+               Fun = atom()
+
+          Attaches  to  the   process   with   process   identity
+          c:pid(_X,_Y,_Z). Use _F_u_n_c_t_i_o_n for the interaction with the
+          attached process, as for the _i:_i_a_a/_2 function.
+
+     ib(Module,Line) -> ok | {error, What}
+
+          Types
+               Module = atom()
+               Line = int()
+               What = badarg | break_exists
+
+          Creates a new break point at _L_i_n_e in _M_o_d_u_l_e. The execu-
+          tion  of  an interpreted process will be stopped before
+          the expression at _L_i_n_e in _M_o_d_u_l_e is executed.
+
+     ib(Module,Function,Arity) -> ok | {error, What}
+
+          Types
+               Module = atom()
+               Function = atom()
+               Arity = int()
+
+
+
+Ericsson UtvecklingsLaAsBt change: debugger  1.5.2                 4
+
+
+
+
+
+
+i(3)                ERLANG MODULE DEFINITION                 i(3)
+
+
+
+               What = badarg | function_not_found
+
+          Creates break points at the first line in every  clause
+          of the _M_o_d_u_l_e:_F_u_n_c_t_i_o_n/_A_r_i_t_y function.
+
+     ir(Module,Line) -> ok | {error, What}
+
+          Types
+               Module = atom()
+               Line = int()
+               What = badarg | no_break_exists
+
+          Deletes the break point located at _L_i_n_e in _M_o_d_u_l_e.
+
+     ir() -> ok
+
+          Deletes all existing break points.
+
+     ir(Module) -> ok
+
+          Types
+               Module = atom()
+
+          Deletes all existing break points in _M_o_d_u_l_e.
+
+     ir(Module,Function,Arity) -> ok | {error, What}
+
+          Types
+               Module = atom()
+               Function = atom()
+               Arity = int()
+               What = badarg | function_not_found
+
+          Deletes break points at the first line in every  clause
+          of the _M_o_d_u_l_e:_F_u_n_c_t_i_o_n/_A_r_i_t_y function.
+
+     ibd(Module,Line) -> ok | {error, What}
+
+          Types
+               Module = atom()
+               Line = int()
+               What = badarg | no_break
+
+          Makes the break point at _L_i_n_e in _M_o_d_u_l_e  inactive.  The
+          break  point  still  exists,  but  no processes will be
+          stopped at the break point.
+
+     ibe(Module,Line) -> ok | {error, What}
+
+          Types
+               Module = atom()
+               Line = int()
+
+
+
+Ericsson UtvecklingsLaAsBt change: debugger  1.5.2                 5
+
+
+
+
+
+
+i(3)                ERLANG MODULE DEFINITION                 i(3)
+
+
+
+               What = badarg | no_break
+
+          Makes  the  break  point  at  _L_i_n_e  in  _M_o_d_u_l_e  active.
+          Processes will again be stopped at the break point.
+
+     iba(Module,Line,Action) -> ok | {error, What}
+
+          Types
+               Module = atom()
+               Line = int()
+               Action = enable | disable | delete
+               What = badarg | no_break
+
+          Sets the status of the break point at  _L_i_n_e  in  _M_o_d_u_l_e
+          after it is triggered the next time. _A_c_t_i_o_n is: _e_n_a_b_l_e,
+          _d_i_s_a_b_l_e, or _d_e_l_e_t_e.
+
+     ibc(Module,Line,Function) -> ok | {error, What}
+
+          Types
+               Module = atom()
+               Line = int()
+               Function = {M, F}
+               Mod = atom()
+               Func = atom()
+               What = badarg | no_break
+
+          Makes the break point at _L_i_n_e  in  _M_o_d_u_l_e  conditional.
+          _F_u_n_c_t_i_o_n is called whenever the break point is reached.
+          _F_u_n_c_t_i_o_n is a tuple {_M_o_d,  _F_u_n_c}.  _F_u_n_c_t_i_o_n  must  have
+          _a_r_i_t_y  _1 and return either _t_r_u_e or _f_a_l_s_e. This way, the
+          break point either triggers, or not.  The  argument  to
+          _F_u_n_c_t_i_o_n  is  the current variable bindings of the pro-
+          cess at the place of the break point. The bindings  can
+          be inspected using _i_n_t:_g_e_t__b_i_n_d_i_n_g/_2.
+
+     ipb() -> ok
+
+          Makes a printout of all existing break points.
+
+     ipb(Module) -> ok
+
+          Types
+               Module = atom()
+
+          Makes a printout of all existing break  points  located
+          in _M_o_d_u_l_e.
+
+     iv() -> atom()
+
+          Returns the current version number of the interpreter.
+
+
+
+
+Ericsson UtvecklingsLaAsBt change: debugger  1.5.2                 6
+
+
+
+
+
+
+i(3)                ERLANG MODULE DEFINITION                 i(3)
+
+
+
+     help() -> ok
+
+          Prints help text.
+
+Usage
+     Refer to the Debugger User's Guide for information about the
+     graphical interface.
+
+See Also
+     int(3), code(3)
+
+AUTHOR
+     Magnus Froberg - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLaAsBt change: debugger  1.5.2                 7
+
+
+

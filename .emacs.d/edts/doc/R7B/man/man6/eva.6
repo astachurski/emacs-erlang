@@ -1,0 +1,58 @@
+.TH eva 6 "eva  2.0.2.1" "Ericsson Utvecklings AB" "ERLANG APPLICATION DEFINITION"
+.SH APPLICATION
+eva  \- The Event and Alarm Handling Application 
+.SH DESCRIPTION
+.LP
+The Event and Alarm handling appliction (EVA) is a Fault Management application that provides support to applications and managers for sending and controlling events and alarms, and for control and transfer of logs in the system\&. 
+.LP
+EVA is modular and provides two different management protocol independent services\&. These two services are basic \fIeva\fR, which provides event and alarm definition and sending, and \fIlog\fR which provides support for controlling logs in the system, and for transferring logs to remote systems\&. There is also a service called \fIeva_log\fR, which provides a specialization of the generic log mechanism, for logging of events and alarms\&. The basic \fIeva\fR can be used independently of \fIlog\fR\&. EVA defines an API that can be used to make management protocol specific interfaces to EVA, for example SNMP, CORBA, or HTTP interfaces\&. Currently, an SNMP interface to the two generic services are defined\&. 
+.LP
+EVA is designed to be used as an included application, which means that it needs another application to include it, in order to run\&. That application is an ordinary application which starts the EVA services it needs in its supervision tree\&. The services can either be started individually, or by using the supervisor \fIeva_sup\fR\&. 
+.LP
+EVA is designed to be a distributed global application, which means that the super application that includes EVA may be specified as a distributed application which runs at one node at a time only, with the other nodes as standby nodes\&. The basic EVA service - the eva server - is a global server, which means that clients can access the EVA functionality from any node\&. 
+.LP
+EVA uses the Mnesia DBMS to store data\&. This means that Mnesia must be running on all nodes where EVA can run, and that the tables EVA uses are created and configured correctly\&. Each EVA service provides a function that should be called to create the tables, and to define the replicas for Mnesia\&. Each such function is called \fIcreate_tables*\fR and takes one parameter that is a list of nodes\&. The Mnesia tables will be replicated on these nodes; some on disk, and some in RAM\&. It is important that these nodes are the same as where the super application that includes EVA is defined to run as a distributed application\&. 
+
+.SH CONFIGURATION
+.LP
+The following configuration parameters are defined for the EVA application; for more information about configuration parameters see application(3): 
+.RS 2
+.TP 4
+.B
+\fIuse_snmpea_log = true | false <optional>\fR:
+Specifies if the audit trail log in snmp should be visible and controllable in the log application\&. Default is \fIfalse\fR\&. 
+.RE
+.SH SNMP MIBs
+.LP
+The following MIBs are defined in EVA: 
+.RS 2
+.TP 4
+.B
+OTP-EVA-MIB (eva):
+This MIB contains objects for instrumentation and control of the events and alarms in the system\&. 
+.TP 4
+.B
+OTP-LOG-MIB (eva):
+This MIB contains objects for instrumentation and control of the logs and FTP transfer of logs\&. 
+.TP 4
+.B
+OTP-EVA-LOG-MIB (eva):
+This MIB contains objects for instrumentation and control of the events and alarm logs in the system\&. 
+.TP 4
+.B
+OTP-SNMPEA-LOG-MIB (eva):
+This MIB contains objects for instrumentation and control of the snmp audit trail log in the system\&. 
+.RE
+.LP
+The MIBs are stored in the \fImibs\fR directory\&. All MIBs are defined in SNMPv2 SMI syntax\&. SNMPv1 versions of the mibs are delivered in the \fImibs/v1\fR directory\&. 
+.LP
+The compiled MIBs are located under \fIpriv/mibs\fR, and the generated \fI\&.hrl\fR files under the \fIinclude\fR directory\&. To compile a MIB that IMPORTS an EVA MIB, give the option \fI{il, ["eva/priv/mibs"]}\fR to the MIB compiler\&. 
+.LP
+The MIBs are loaded into the agent when the services are started\&. 
+.SH SEE ALSO
+.LP
+eva(3), eva_log(3), eva_server(3), eva_sup(3), eva_log_snmp(3), eva_snmp_adaptation(3), log(3), log_snmp(3), log_snmpea(3), snmp(6) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

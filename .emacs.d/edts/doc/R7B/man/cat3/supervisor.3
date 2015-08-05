@@ -1,0 +1,396 @@
+
+
+
+supervisor(3)       ERLANG MODULE DEFINITION        supervisor(3)
+
+
+
+MODULE
+     supervisor - A Behaviour for Supervision of Processes.
+
+DESCRIPTION
+     A _s_u_p_e_r_v_i_s_o_r is a process that supervises _c_h_i_l_d processes. A
+     child  can  be  another  supervisor  or  a _w_o_r_k_e_r process. A
+     supervisor is always linked to its children. This  structure
+     is  used to build a _s_u_p_e_r_v_i_s_i_o_n _t_r_e_e, which is a nice way to
+     structure an application for fault tolerance.
+
+     The basic idea of a supervisor is that it keeps its children
+     alive.  If  a  child terminates abnormally, it is restarted.
+     There are three basic types of restart strategies for super-
+     visors, _o_n_e-_f_o_r-_o_n_e, _o_n_e-_f_o_r-_a_l_l, and _r_e_s_t-_f_o_r-_o_n_e
+
+       * If a child in a one-for-one supervisor dies  abnormally,
+         it is restarted.
+
+       * If a child in a one-for-all supervisor dies, the  super-
+         visor shuts down all of the other children and then res-
+         tarts all children. This strategy can be used when there
+         are dependencies among the children.
+
+       * If a child in a rest-for-one supervisor dies, all  chil-
+         dren  started _a_f_t_e_r the faulty child are shut down, then
+         restarted. The children started before the faulty  child
+         are not affected.
+
+     There is yet another restart strategy which is a variant  of
+     the  ordinary  one-for-one. It is called _s_i_m_p_l_e-_o_n_e-_f_o_r-_o_n_e.
+     It should be used for dynamic processes of  the  same  type,
+     for  example  processes  which represent a call. Compared to
+     one-for-one, this type has  reduced  overheads  in  starting
+     dynamic children .
+
+     Each child can be one of three types: _p_e_r_m_a_n_e_n_t,  _t_r_a_n_s_i_e_n_t,
+     or  _t_e_m_p_o_r_a_r_y. A permanent child is always restarted when it
+     dies. A transient child is restarted if it dies  abnormally,
+     and a temporary child is never restarted.
+
+     The supervisors have a built-in mechanism to prevent  situa-
+     tions  where  a  child dies, is restarted by the supervisor,
+     only to die again for the same reason, is  restarted  again,
+     and  so on. It limits the number of restarts which can occur
+     in a given time interval. This is determined by  the  values
+     of two parameters, _M_a_x_R and _M_a_x_T. If more than _M_a_x_R restarts
+     are performed in the last _M_a_x_T seconds, then the  supervisor
+     shuts  down  all  the  children which it supervises and then
+     dies.
+
+     An instance of the  supervisor  behaviour  can  be  debugged
+     using the module _s_y_s.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+supervisor(3)       ERLANG MODULE DEFINITION        supervisor(3)
+
+
+
+EXPORTS
+     start_link(Module,StartArgs) -> SupRet
+     start_link(SupName,Module,StartArgs) -> SupRet
+
+          Types
+               SupName = {local, atom()} | {global, atom()}
+               Module = atom()
+               StartArgs = term()
+               SupRet = {ok, Pid} | ignore | {error, Reason}
+               Pid = pid()
+               Reason = {already_started, Pid} | term()
+
+          Starts a new instance of the supervisor behaviour.  The
+          function  _M_o_d_u_l_e:_i_n_i_t(_S_t_a_r_t_A_r_g_s)  is called in order to
+          create a start specification (see below).
+
+          If the supervisor is started without  _S_u_p_N_a_m_e,  it  can
+          only be called using the returned _P_i_d identifier. If it
+          is started with _S_u_p_N_a_m_e, the name is registered locally
+          or globally.
+
+     start_child(Supervisor,ChildSpec | ExtraStartArgs)  ->  {ok,
+     Child} | {ok, Child, Info} | {error, Reason}
+
+          Types
+               Supervisor = pid() | SupName | {global, SupName}
+               ChildSpec = child_spec()
+               ExtraStartArgs = [term()]
+               child_spec() = {Name,  Start,  Restart,  Shutdown,
+               Type, Modules}
+               SupName = atom()
+               Name = term()
+               Start = {M, F, A}
+               Restart = permanent | transient | temporary
+               Shutdown = int() >= 0 | brutal_kill | infinity
+               Type = worker | supervisor
+               Modules = [atom()] | dynamic
+               Child = pid() | undefined
+               Info = term()
+
+          Use this function to  dynamically  add  a  child  to  a
+          supervisor.  The  start  function  _S_t_a_r_t is supposed to
+          return {_o_k, _P_i_d} | {_o_k, _P_i_d, _I_n_f_o} | _i_g_n_o_r_e  |  {_e_r_r_o_r,
+          _R_e_a_s_o_n}.  If _i_g_n_o_r_e is returned, the supervisor ignores
+          the child and returns {_o_k, _u_n_d_e_f_i_n_e_d}. The start  func-
+          tion  is  executed  by  the supervisor process. It must
+          return a Pid that is linked to  the  caller  (i.e.  the
+          supervisor).  The  supervisor uses this link to monitor
+          and control the child. If {_o_k, _P_i_d, _I_n_f_o}  is  returned
+          from the start function, the same is returned from this
+          function. The _I_n_f_o is not interpreted in any way by the
+          supervisor.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+supervisor(3)       ERLANG MODULE DEFINITION        supervisor(3)
+
+
+
+          _N_a_m_e is an internal name, which is used by the supervi-
+          sor to identify its children.
+
+          _M_o_d_u_l_e_s is used  for  the  code  change  procedure.  It
+          should  be  _d_y_n_a_m_i_c  if the modules that the child uses
+          can  change  dynamically  at  runtime,  for  example  a
+          _g_e_n__e_v_e_n_t  process. (Note that this refers to the names
+          of the modules rather than the  implementation  of  the
+          module.)  Otherwise,  it should be a list of the module
+          with which the child is implemented,  This  information
+          is  used  by  the release handler to find all processes
+          which execute a module. For example, if the child is  a
+          _g_e_n__s_e_r_v_e_r,  _M_o_d_u_l_e_s  is  a  list  with the name of the
+          callback module as its only element.
+
+          The _S_h_u_t_d_o_w_n value _i_n_f_i_n_i_t_y must be used with care. The
+          supervisor  tries  to  shut  down  the child by calling
+          _e_x_i_t(_C_h_i_l_d, _s_h_u_t_d_o_w_n) and waits for the child  to  ter-
+          minate. If the child does not terminate, the supervisor
+          will hang forever. _i_n_f_i_n_i_t_y should be used for children
+          which themselves are supervisors, but it is not allowed
+          for workers. This is to make sure that the  system  can
+          be shut down without hanging forever.
+
+          If the supervisor is a  _s_i_m_p_l_e__o_n_e__f_o_r__o_n_e  supervisor,
+          this      function      should     be     called     as
+          _s_t_a_r_t__c_h_i_l_d(_S_u_p_e_r_v_i_s_o_r, _E_x_t_r_a_S_t_a_r_t_A_r_g_s).  It  starts  a
+          new  child of the same type and calls the child's start
+          function as _a_p_p_l_y(_M, _F, _A ++ _E_x_t_r_a_S_t_a_r_t_A_r_g_s). _M, _F, and
+          _A are returned from the supervisor's _i_n_i_t function. The
+          new child does not get a unique name by which is  iden-
+          tified  in  the  supervisor.  Therefore,  the functions
+          _t_e_r_m_i_n_a_t_e__c_h_i_l_d/_2, _d_e_l_e_t_e__c_h_i_l_d/_2  and  _r_e_s_t_a_r_t__c_h_i_l_d/_2
+          cannot  be  used  for  a _s_i_m_p_l_e__o_n_e__f_o_r__o_n_e supervisor.
+          When a _t_e_m_p_o_r_a_r_y child dies for any reason or  a  _t_r_a_n_-
+          _s_i_e_n_t  child  dies  normally, the child is removed from
+          the supervisor. Compare this with a  ordinary  supervi-
+          sor,   where  the  child  specification  remains  until
+          _d_e_l_e_t_e__c_h_i_l_d/_2 is called. No progress  report  is  gen-
+          erated  when  the  child  is started. This is to reduce
+          overheads.
+
+     terminate_child(Supervisor, Name) -> ok | {error, not_found}
+
+          Types
+               Supervisor = pid() | SupName | {global, SupName}
+               SupName = atom()
+               Name = term()
+
+          Terminates a child. The child is not removed  from  the
+          supervisor's set of children. This means that it can be
+          restarted explicitly  by  calling  _r_e_s_t_a_r_t__c_h_i_l_d/_2,  or
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+supervisor(3)       ERLANG MODULE DEFINITION        supervisor(3)
+
+
+
+          started implicitly if the supervisor has to restart all
+          children.
+
+     delete_child(Supervisor,Name) ->  ok  |  {error,  running  |
+     not_found}
+
+          Types
+               Supervisor = pid() | SupName | {global, SupName}
+               SupName = atom()
+               Name = term()
+
+          Deletes a child from the supervisor. The child must  be
+          terminated.
+
+     restart_child(Supervisor,Name) ->  {ok,  Pid}  |  {ok,  Pid,
+     Info} | {error, running | not_found | Reason}
+
+          Types
+               Supervisor = pid() | SupName | {global, SupName}
+               SupName = atom()
+               Name = term()
+               Info = term()
+
+          Starts a child which has been terminated and  not  res-
+          tarted according to the restart specification. This can
+          include a temporary child which terminates, or a  child
+          that  was terminated explicitly by calling the function
+          _t_e_r_m_i_n_a_t_e__c_h_i_l_d/_2.
+
+     which_children(Supervisor) -> [{Name, Pid, Type, Modules}]
+
+          Types
+               Supervisor = pid() | SupName | {global, SupName}
+               SupName = atom()
+               Name = term()
+               Pid = pid() | undefined
+               Type = worker | supervisor
+               Modules = [atom()] | dynamic
+
+          Returns a list of the supervisor's children. _N_a_m_e, _T_y_p_e
+          and _M_o_d_u_l_e_s are as defined in the child specification.
+
+     check_childspecs([ChildSpec]) -> ok | {error, Reason}
+
+          Types
+               ChildSpec = child_spec()
+
+          Checks if a list of child specifications are  syntacti-
+          cally correct.
+
+Callback Functions
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+supervisor(3)       ERLANG MODULE DEFINITION        supervisor(3)
+
+
+
+     The following functions should be exported from a _s_u_p_e_r_v_i_s_o_r
+     callback module.
+
+EXPORTS
+     Module:init(StartArgs) -> {ok,  {SupFlags,  [ChildSpec]}}  |
+     ignore | {error, Reason}
+
+          Types
+               SupFlags = {restart_strategy(), MaxR, MaxT}
+               restart_strategy() = one_for_all |  one_for_one  |
+               rest_for_one | simple_one_for_one
+               MaxR = int() >= 0
+               MaxT = int() > 0
+               ChildSpec = child_spec()
+
+          This  function  returns  a  supervisor   specification.
+          _C_h_i_l_d_S_p_e_c is as previously defined in the _s_t_a_r_t__c_h_i_l_d/_2
+          function. _M_a_x_R is the maximum number of restarts  which
+          can be performed within _M_a_x_T seconds.
+
+          When the restart strategy  is  _s_i_m_p_l_e__o_n_e__f_o_r__o_n_e,  the
+          list  of  child  specifications must be a list with one
+          element only. This child is not started during the ini-
+          tialization phase, but all children are started dynami-
+          cally. Each dynamically started child is  of  the  same
+          type,  which  means  that all children are instances of
+          the  initial  child  specification.  New  children  are
+          created  with a call to _s_t_a_r_t__c_h_i_l_d(_S_u_p_e_r_v_i_s_o_r, _E_x_t_r_a_S_-
+          _t_a_r_t_A_r_g_s).
+
+          If a child start function returns _i_g_n_o_r_e, the child  is
+          kept  in  the  supervisor's list of children. The child
+          can be restarted explicitly by calling _r_e_s_t_a_r_t__c_h_i_l_d/_2.
+          The  child  is  also  restarted  if  the  supervisor is
+          _o_n_e__f_o_r__a_l_l and performs a restart of all children,  or
+          if  the  supervisor is _r_e_s_t__f_o_r__o_n_e and performs a res-
+          tart of this child. The supervisor start-up  fails  and
+          terminates  if the child start function returns {_e_r_r_o_r,
+          _R_e_a_s_o_n}
+
+          This function can return _i_g_n_o_r_e in order to inform  the
+          parent,  especially  if  it is another supervisor, that
+          the supervisor is not started according  to  configura-
+          tion data, for instance.
+
+System Events
+     The supervisor behaviour generates the same system events as
+     the  _g_e_n__s_e_r_v_e_r  behaviour. System events are handled by the
+     _s_y_s module.
+
+See Also
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+supervisor(3)       ERLANG MODULE DEFINITION        supervisor(3)
+
+
+
+     gen_server(3), sys(3)
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Magnus Froberg - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+

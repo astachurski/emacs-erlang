@@ -1,0 +1,132 @@
+
+
+
+appup(4)                      FILES                      appup(4)
+
+
+
+NAME
+     appup - Application upgrade file
+
+DESCRIPTION
+     The _a_p_p_l_i_c_a_t_i_o_n _u_p_g_r_a_d_e _f_i_l_e defines how an  application  is
+     upgraded in a running system.
+
+     This file is used by _s_y_s_t_o_o_l_s to  generate  release  upgrade
+     files.
+
+
+FILE SYNTAX
+     Applications can be upgraded and the instructions to do this
+     are placed in the ._a_p_p_u_p file for the application. For exam-
+     ple, for the _s_n_m_p application these instructions are  placed
+     in the _s_n_m_p._a_p_p_u_p file. The ._a_p_p_u_p file looks as follows:
+
+     The application upgrade file is called _N_a_m_e._a_p_p_u_p where _N_a_m_e
+     is  the  name of the application. The file should be located
+     in the _e_b_i_n directory for the application.
+
+     The ._a_p_p_u_p file  contains  one  single  Erlang  term,  which
+     defines  the  instructions  used to upgrade the application.
+     The file has the following syntax:
+
+     {Vsn,
+         [{UpFromVsn, UpFromScript}, ...],
+         [{DownToVsn, DownToScript}, ...]}.
+
+       * _V_s_n = _s_t_r_i_n_g() is the current version  of  the  applica-
+         tion.
+
+       * _U_p_F_r_o_m_V_s_n = _s_t_r_i_n_g() is a version we can upgrade from.
+
+       * _U_p_F_r_o_m_S_c_r_i_p_t is the script which describes the  sequence
+         of  release  upgrade  instructions. Refer to the section
+         Release Handling Instructions in the SASL  User's  Guide
+         for a description of this script.
+
+       * _D_o_w_n_T_o_V_s_n = _s_t_r_i_n_g() is a version to which we can  down-
+         grade.
+
+       * _D_o_w_n_T_o_S_c_r_i_p_t is the script which describes the  sequence
+         of  downgrade instructions. Refer to the section Release
+         Handling Instructions in the SASL  User's  Guide  for  a
+         description of this script.
+
+     In the case of _U_p_F_r_o_m_S_c_r_i_p_t and _D_o_w_n_F_r_o_m_S_c_r_i_p_t, the  scripts
+     typically  contain  one line for each module in the applica-
+     tion.
+
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    1
+
+
+
+
+
+
+appup(4)                      FILES                      appup(4)
+
+
+
+SEE ALSO
+     app(4), relup(4), systools(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    2
+
+
+

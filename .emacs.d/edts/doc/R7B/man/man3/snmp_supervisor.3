@@ -1,0 +1,115 @@
+.TH snmp_supervisor 3 "snmp  3.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+snmp_supervisor \- A supervisor for the SNMP Processes
+.SH DESCRIPTION
+.LP
+The \fIsnmp_supervisor\fR is the supervisor for the SNMP application\&. There is always one supervisor at each node with an SNMP agent (master agent or subagent)\&. 
+
+.SH EXPORTS
+.LP
+.B
+start_sub()
+.br
+.B
+start_sub(Opts) -> {ok, pid()} | {error, {already_started, pid()}} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Opts = [opt()]
+.br
+opt() = {priority, Prio}
+.br
+.RE
+.RS
+.LP
+Starts a supervisor for the SNMP agent system without a master agent\&. The supervisor starts all involved SNMP processes, but no agent processes\&. Subagents should be started by calling \fIstart_subagent/3\fR\&. 
+.LP
+\fIPrio\fR is an Erlang priority\&. All SNMP processes use this priority\&. Default is the same as default in the Erlang runtime system\&. 
+.RE
+.LP
+.B
+start_master(DbDir,ConfDir)
+.br
+.B
+start_master(DbDir,ConfDir,Opts) -> {ok, pid()} | {error, {already_started, pid()}} | {error, Reason}
+.br
+.RS
+.TP
+Types
+DbDir = string()
+.br
+ConfDir = string()
+.br
+Opts = [opt()]
+.br
+opt() = {mibs, Mibs} | {net_if, NetIfModule} | {priority, Prio} | {name, Name}
+.br
+Mibs = [MibName]
+.br
+MibName = [string()]
+.br
+NetfModule = atom()
+.br
+Name = {local, atom()} | {global, atom()}
+.br
+.RE
+.RS
+.LP
+Starts a supervisor for the SNMP agent system\&. The supervisor starts all involved SNMP processes, including the master agent\&. Subagents should be started by calling \fIstart_subagent/3\fR\&. 
+.LP
+\fIDbDir\fR is a string including a trailing directory delimiter, which points to the directory where the database files sre stored\&. 
+.LP
+\fIConfDir\fR is a string including a trailing directory delimiter, which points to the directory where the configuration file is found\&. 
+.LP
+If the STANDARD-MIB is not specified in the \fIMibs\fR list, it is loaded from the configuration directory (i\&.e\&. with the \fI\&.conf\fR files)\&. 
+.LP
+If no \fINetIfModules\fR is specified, the default net if implementation is used (\fIsnmp_net_if\fR)\&. 
+.LP
+\fIPrio\fR is an Erlang priority\&. All SNMP processes use this priority\&. Default is the same as default in the Erlang runtime system\&. 
+.LP
+If no \fIOpts\fR is given, \fI[{name, {local, snmp_master_agent}}]\fR is default\&. 
+.RE
+.LP
+.B
+start_subagent(ParentAgent,Subtree,Mibs) -> {ok, pid()} | {error, Reason}
+.br
+.RS
+.TP
+Types
+ParentAgent = pid()
+.br
+SubTree = oid()
+.br
+Mibs = [MibName]
+.br
+MibName = [string()]
+.br
+.RE
+.RS
+.LP
+Starts a subagent on the node where the function is called\&. The \fIsnmp_supervisor\fR must be running\&. 
+.LP
+If the supervisor is not running, the function fails with the reason \fIbadarg\fR\&. 
+.RE
+.LP
+.B
+stop_subagent(SubAgent) -> ok | no_such_child
+.br
+.RS
+.TP
+Types
+SubAgent = pid()
+.br
+.RE
+.RS
+.LP
+Stops the subagent on the node where the function is called\&. The \fIsnmp_supervisor\fR must be running\&. 
+.LP
+If the supervisor is not running, the function fails with the reason \fIbadarg\fR\&. 
+.RE
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Klas Eriksson - support@erlang.ericsson.se
+.fi

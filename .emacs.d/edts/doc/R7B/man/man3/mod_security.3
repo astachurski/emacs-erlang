@@ -1,0 +1,274 @@
+.TH mod_security 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+mod_security \- Security Audit and Trailing Functionality 
+.SH DESCRIPTION
+.LP
+This module serves as a filter for authenticated requests handled in mod_auth\&. It provides possibility to restrict users from access for a specified amount of time if they fail to authenticate several times\&. It logs failed authentication as well as blocking of users, and it also calls a configurable call-back module when the events occur\&. 
+.LP
+There is also an API to manually block, unblock and list blocked users or users, who have been authenticated within a configurable amount of time\&. 
+.LP
+This module understands the following configuration directives: 
+.RS 2
+.TP 2
+*
+<Directory>
+.TP 2
+*
+SecurityDataFile
+.TP 2
+*
+SecurityMaxRetries
+.TP 2
+*
+SecurityBlockTime
+.TP 2
+*
+SecurityFailExpireTime
+.TP 2
+*
+SecurityAuthTimeout
+.TP 2
+*
+SecurityCallbackModule
+.RE
+
+.SH DIRECTIVE: "SecurityDataFile"
+.LP
+\fISyntax:\fR \fISecurityDataFile\fR filename
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_security(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR SecurityMaxRetries, SecurityBlockTime, SecurityFailExpireTime, SecurityAuthTimeout, SecurityCallbackModule 
+.LP
+\fISecurityDataFile\fR sets the name of the security modules for a directory\&. The filename can be either absolute or relative to the \fIServerRoot\fR\&. This file is used to store persistent data for the mod_security module\&. 
+.SS Note:
+.LP
+Several directories can have the same \fISecurityDataFile\fR\&. 
+
+.SH DIRECTIVE: "SecurityMaxRetries"
+.LP
+\fISyntax:\fR \fISecurityMaxRetries\fR integer() | infinity
+.br
+ \fIDefault:\fR 3
+.br
+ \fIModule:\fR mod_security(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR SecurityDataFile, SecurityBlockTime, SecurityFailExpireTime, SecurityAuthTimeout, SecurityCallbackModule 
+.LP
+\fISecurityMaxRetries\fR specifies the maximum number of tries to authenticate a user has before he is blocked out\&. If a user successfully authenticates when he is blocked, he will receive a 403 (Forbidden) response from the server\&. 
+.SS Note:
+.LP
+For security reasons, failed authentications made by this user will return a message 401 (Unauthorized), even if the user is blocked\&. 
+
+.SH DIRECTIVE: "SecurityBlockTime"
+.LP
+\fISyntax:\fR \fISecurityBlockTime\fR integer() | infinity
+.br
+ \fIDefault:\fR 60
+.br
+ \fIModule:\fR mod_security(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR SecurityDataFile, SecurityMaxRetries, SecurityFailExpireTime, SecurityAuthTimeout, SecurityCallbackModule 
+.LP
+\fISecurityBlockTime\fR specifies the number of minutes a user is blocked\&. After this amount of time, he automatically regains access\&. 
+.SH DIRECTIVE: "SecurityFailExpireTime"
+.LP
+\fISyntax:\fR \fISecurityFailExpireTime\fR integer() | infinity
+.br
+ \fIDefault:\fR 30
+.br
+ \fIModule:\fR mod_security(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR SecurityDataFile, SecurityMaxRetries, SecurityFailExpireTime, SecurityAuthTimeout, SecurityCallbackModule 
+.LP
+\fISecurityFailExpireTime\fR specifies the number of minutes a failed user authentication is remembered\&. If a user authenticates after this amount of time, his previous failed authentications are forgotten\&. 
+.SH DIRECTIVE: "SecurityAuthTimeout"
+.LP
+\fISyntax:\fR \fISecurityAuthTimeout\fR integer() | infinity
+.br
+ \fIDefault:\fR 30
+.br
+ \fIModule:\fR mod_security(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR SecurityDataFile, SecurityMaxRetries, SecurityFailExpireTime, SecurityFailExpireTime, SecurityCallbackModule 
+.LP
+\fISecurityAuthTimeout\fR specifies the number of seconds a successful user authentication is remembered\&. After this time has passed, the authentication will no longer be reported by the list_auth_users function\&. 
+.SH DIRECTIVE: "SecurityCallbackModule"
+.LP
+\fISyntax:\fR \fISecurityCallbackModule\fR atom()
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR mod_security(3)
+.br
+ \fIContext:\fR <Directory>
+.br
+ \fIRelated:\fR SecurityDataFile, SecurityMaxRetries, SecurityFailExpireTime, SecurityFailExpireTime, SecurityAuthTimeout 
+.LP
+\fISecurityCallbackModule\fR specifies the name of a callback module\&. This module only has one export, event/4, which is called whenever a security event occurs\&. Read the callback module documentation to find out more\&. 
+.SH EXPORTS
+.LP
+.B
+list_auth_users(Port) -> Users | []
+.br
+.B
+list_auth_users(Address, Port) -> Users | []
+.br
+.B
+list_auth_users(Port, Dir) -> Users | []
+.br
+.B
+list_auth_users(Address, Port, Dir) -> Users | []
+.br
+.RS
+.TP
+Types
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Users = list() = [string()]
+.br
+.RE
+.RS
+.LP
+\fIlist_auth_users/1\fR, \fIlist_auth_users/2\fR and \fIlist_auth_users/3\fR returns a list of users that are currently authenticated\&. Authentications are stored for SecurityAuthTimeout seconds, and are then discarded\&. 
+.RE
+.LP
+.B
+list_blocked_users(Port) -> Users | []
+.br
+.B
+list_blocked_users(Address, Port) -> Users | []
+.br
+.B
+list_blocked_users(Port, Dir) -> Users | []
+.br
+.B
+list_blocked_users(Address, Port, Dir) -> Users | []
+.br
+.RS
+.TP
+Types
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Users = list() = [string()]
+.br
+.RE
+.RS
+.LP
+\fIlist_blocked_users/1\fR, \fIlist_blocked_users/2\fR and \fIlist_blocked_users/3\fR returns a list of users that are currently blocked from access\&. 
+.RE
+.LP
+.B
+block_user(User, Port, Dir, Seconds) -> true | {error, Reason}
+.br
+.B
+block_user(User, Address, Port, Dir, Seconds) -> true | {error, Reason}
+.br
+.RS
+.TP
+Types
+User = string()
+.br
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Seconds = integer() | infinity
+.br
+Reason = no_such_directory
+.br
+.RE
+.RS
+.LP
+\fIblock_user/4\fR and \fIblock_user/5\fR blocks the user \fIUser\fR from the directory \fIDir\fR for a specified amount of time\&. 
+.RE
+.LP
+.B
+unblock_user(User, Port) -> true | {error, Reason}
+.br
+.B
+unblock_user(User, Address, Port) -> true | {error, Reason}
+.br
+.B
+unblock_user(User, Port, Dir) -> true | {error, Reason}
+.br
+.B
+unblock_user(User, Address, Port, Dir) -> true | {error, Reason}
+.br
+.RS
+.TP
+Types
+User = string()
+.br
+Port = integer()
+.br
+Address = {A, B, C, D} | string() | undefined
+.br
+Dir = string()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+\fIunblock_user/2\fR, \fIunblock_user/3\fR and \fIunblock_user/4\fR removes the user \fIUser\fR from the list of blocked users for the Port (and Dir) specified\&. 
+.RE
+.SH The SecurityCallbackModule
+.LP
+The SecurityCallbackModule is a user written module that can receive events from the mod_security EWSAPI module\&. This module only exports one function, event/4, which is described below\&. 
+.SH EXPORTS
+.LP
+.B
+event(What, Port, Dir, Data) -> ignored
+.br
+.B
+event(What, Address, Port, Dir, Data) -> ignored
+.br
+.RS
+.TP
+Types
+What = atom()
+.br
+Port = integer()
+.br
+Address = {A, B, C, D} | string() <v>Dir = string()
+.br
+What = [Info]
+.br
+Info = {Name, Value}
+.br
+.RE
+.RS
+.LP
+\fIevent/4\fR or \fIevent/4\fR is called whenever an event occurs in the mod_security EWSAPI module (\fIevent/4\fR is called if Address is undefined and \fIevent/5\fR otherwise)\&. The \fIWhat\fR argument specifies the type of event that has occurred, and should be one of the following reasons; \fIauth_fail\fR (a failed user authentication), \fIuser_block\fR (a user is being blocked from access) or \fIuser_unblock\fR (a user is being removed from the block list)\&. 
+.SS Note:
+.LP
+Note that the \fIuser_unblock\fR event is not triggered when a user is removed from the block list explicitly using the \fIunblock_user\fR function\&. 
+
+.RE
+.SH AUTHOR
+.nf
+Mattias Nilsson  - support@erlang.ericsson.se
+.fi

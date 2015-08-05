@@ -1,0 +1,66 @@
+
+
+
+run_erl(1)                USER COMMANDS                run_erl(1)
+
+
+
+NAME
+     run_erl -  Redirect  Erlang  input  and  output  streams  on
+     Solaris(R)
+
+DESCRIPTION
+     This describes the _r_u_n__e_r_l program specific to Solaris. This
+     program  redirect  the  standard  input  and standard output
+     streams so that all output can be logged. It  also  let  the
+     program  _t_o__e_r_l connect to the Erlang console making it pos-
+     sible to monitor and debug an embedded system remotely.
+
+     You can read more about  the  use  in  the  _E_m_b_e_d_d_e_d  _S_y_s_t_e_m
+     _U_s_e_r'_s _G_u_i_d_e.
+
+
+EXPORTS
+     run_erl pipe_dir/ log_dir "exec command [command_arguments]"
+
+          The _r_u_n__e_r_l program arguments are:
+
+            pipe_dir:
+                This is where to  put  the  named  pipe,  usually
+                /_t_m_p/.
+
+            log_dir:
+                This is where the log files  are  written.  There
+                will  be  one log file, _r_u_n__e_r_l._l_o_g that log pro-
+                gress  and  warnings  from  the  _r_u_n__e_r_l  program
+                itself  and there will be up to five log files at
+                maximum 100KB each with the content of the  stan-
+                dard  streams  from  and to the command. When the
+                logs are full _r_u_n__e_r_l will delete and  reuse  the
+                oldest log file.
+
+            "exec command [command_arguments]":
+                In the third argument _c_o_m_m_a_n_d is the  to  execute
+                where  everything  written to stdin and stdout is
+                logged to _l_o_g__d_i_r.
+
+SEE ALSO
+     start(1), start_erl(1)
+
+AUTHOR
+     Kent Boortz - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: erts  5.0.1                   1
+
+
+

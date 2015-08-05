@@ -1,0 +1,278 @@
+.TH release_handler 3 "sasl  1.9" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+release_handler \- A process to Unpack and Install Releases
+.SH DESCRIPTION
+.LP
+The release handler process is a SASL process that handles unpacking, installation, and removal of release packages\&. As an example, a release package could contain applications, a new emulator, and new configuration parameters\&. In this text, the directory \fIROOT\fR refers to the installation root directory (\fIcode:root_dir()\fR)\&. A release package is a compressed \fItar\fR file that is written to the \fIreleases\fR directory, for example via ftp\&. The location of this directory is specified with the configuration parameter \fIreleases_dir\fR, or the OS environment variable \fIRELDIR\fR\&. Default is \fIROOT/releases\fR\&. The release handler must have write access to this directory in order to install new releases\&. The persistent state of the release handler, for example information about installed releases, is stored in a file called \fIRELEASES\fR in the releases directory\&. 
+.LP
+The package can be \fIunpacked\fR, which extracts the files from the package\&. When the release is unpacked, it can be \fIinstalled\fR\&. This operation evaluates the release upgrade script\&. An installed release can be made \fIpermanent\fR\&. There can only be one permanent release in the system, and this is the release that is used when the system is started\&. An installed release, except the permanent one, can be \fIremoved\fR\&. When a release is removed, all files that belong to that release only are deleted\&. The system can be \fIrebooted\fR from an old release\&. 
+.LP
+Each release has a status\&. The status can be \fIunpacked\fR, \fIcurrent\fR, \fIpermanent\fR, or \fIold\fR\&. There is always one latest release which either has status \fIpermanent\fR (normal case), or \fIcurrent\fR (installed, but not yet made permanent)\&. The following table illustrates the meaning of the status values\&. 
+
+.nf
+Status            Action                NextStatus
+--------------------------------------------------
+  -               unpack                unpacked
+unpacked          install               current
+                  remove                  -
+current           make_permanent        permanent
+                  install other         old
+                  remove                  -
+permanent         make other permanent  old
+                  install               permanent
+old               reboot_old            permanent
+                  install               current
+                  remove                  -
+.fi
+.LP
+A release package always contains two special files, the \fIReleaseName\&.rel\fR file and the \fIrelup\fR file\&. The \fIReleaseName\&.rel\fR file contains information about the release, such as its name, version, and which system and library versions it uses\&. The \fIrelup\fR file contains release upgrade scripts\&. There is one release upgrade script for each old version that can be updated to the new version\&. 
+.LP
+The release handler process is a locally registered process on each node\&. When a release is installed in a distributed system, the release handler on each node must be called\&. The release installation may be synchronized between nodes\&. From an operator view, it may be unsatisfactory to specify each node\&. The aim is to install one release package in the system, no matter how many nodes there are\&. If this is the case, it is recommended that software management functions are written which take care of this problem\&. Such a function may have knowledge of the system architecture, so it can contact each individual release handler to install the package\&. 
+.LP
+A new release may restart the system, using \fIstart_prg\fR\&. This is a configuration parameter to the application \fIsasl\fR\&. The default is \fIROOT/bin/start\fR 
+.LP
+The emulator restart on Windows NT expects that the system is started using the \fIerlsrv\fR program (as a service)\&. Furthermore the release handler expects that the service is named \fINodeName\fR_\fIRelease\fR, where \fINodeName\fR is the first part of the Erlang nodename (up to, but not including the "@") and \fIRelease\fR is the current release of the application\&. The release handler furthermore expects that a program like \fIstart_erl\&.exe\fR is specified as "machine" to \fIerlsrv\fR\&. During upgrading with restart, a new service will be registered and started\&. The new service will be set to automatic and the old service removed as soon as the new release is made permanent\&.
+.LP
+The release handler at a node which runs on a diskless machine, or with a read-only file system, must be configured accordingly using the following \fIsasl\fR configuration parameters: 
+.RS 2
+.TP 4
+.B
+masters:
+This node uses a number of master nodes in order to store and fetch release information\&. All master nodes must be up and running whenever release information is written by this node\&. 
+.TP 4
+.B
+client_directory:
+The \fIclient_directory\fR in the directory structure of the master nodes must be specified\&. 
+.TP 4
+.B
+static_emulator:
+This parameter specifies if the Erlang emulator is statically installed at the client node\&. A node with a static emulator cannot dynamically switch to a new emulator because the executable files are statically written into memory\&. 
+.RE
+.LP
+There are additional functions for using another file structure than the structure defined in OTP\&. These functions can be used to test a release upgrade locally\&. 
+
+.SH EXPORTS
+.LP
+.B
+check_install_release(Vsn) -> {ok, FromVsn, Descr} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Vsn = FromVsn = string()
+.br
+Descr = term()
+.br
+.RE
+.RS
+.LP
+The release must not have status \fIcurrent\fR\&. Checks that there is a \fIrelup\fR release upgrade script from the \fIFromVsn\fR (current version) to \fIVsn\fR\&. Checks that all required libs (or applications) are present and that all new code can be loaded\&. Checks that there is a \fIstart\&.boot\fR file and a \fIsys\&.config\fR for the new release\&. 
+.LP
+This function evaluates all instructions that occur before the \fIpoint_of_no_return\fR instruction in the release upgrade script\&. 
+.LP
+Returns the same as \fIinstall_release/1\fR\&. 
+.RE
+.LP
+.B
+create_RELEASES(Root, RelDir, RelFile, LibDirs) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Root = RelDir = RelFile = string()
+.br
+LibDirs = [{LibName, LibVsn, Dir}]
+.br
+LibName = atom()
+.br
+LibVsn = Dir = string()
+.br
+.RE
+.RS
+.LP
+This function can be called to create an initial RELEASES file to be used by the release_handler\&. This file must exist in order to install new releases\&. When the system is installed, a default RELEASES file is created in the default releases directory \fIROOT/releases\fR\&. 
+.LP
+\fIRoot\fR is the root of the installation as described above\&. \fIRelDir\fR is the the releases directory where the RELASES file should be created\&. \fIRelFile\fR is the name of the \fI\&.rel\fR file that describes the initial release\&. 
+.LP
+\fILibDirs\fR can be used to specify from where the modules for an application should be loaded\&. \fILibName\fR is the name of the lib (or application), \fILibVsn\fR is the version, and \fIDir\fR is the name of the directory where the lib directory \fILibName-LibVsn\fR is located\&. The corresponding modules should be located under \fIDir/LibName-LibVsn/ebin\fR\&. 
+.RE
+.LP
+.B
+install_file(Vsn, FileName) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+FileName = string()
+.br
+Vsn = string()
+.br
+.RE
+.RS
+.LP
+Installs a release dependent file in the release structure\&. A release dependent file is a file that must be in the release structure when the release is installed\&. Currently there are three such mandatory files, \fIstart\&.boot\fR, \fIsys\&.config\fR and \fIrelup\fR\&. 
+.LP
+This function should be called to install release dependent files, for example when these files are generated at the target\&. It should be called when \fIset_unpacked/2\fR has been called\&. 
+.RE
+.LP
+.B
+install_release(Vsn) -> {ok, FromVsn, Descr} | {error, Reason}
+.br
+.B
+install_release(Vsn, Opt) -> {ok, FromVsn, Descr} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Vsn = FromVsn = string()
+.br
+Opt = [{error_action, Error_action} | {code_change_timeout, Timeout} | {suspend_timeout, Timeout}]
+.br
+Error_action = restart | reboot
+.br
+Descr = term()
+.br
+Timeout = default | infinity | int() > 0
+.br
+.RE
+.RS
+.LP
+The release must not have status \fIcurrent\fR\&. Installs the delivered release in the system by evaluating the release upgrade script found in the \fIrelup\fR file\&. This function returns \fI{ok, FromVsn, Descr}\fR if successful, or \fI{error, Reason}\fR if a recoverable error occurs\&. \fIDescr\fR is a user defined parameter, found in the \fIrelup\fR file, used to describe the release\&. The system is restarted if a non-recoverable error occurs\&. There can be many installed releases at the same time in the system\&. 
+.LP
+It is possible to define if the node should be restarted or rebooted in case of an error during the installation\&. Default is \fIrestart\fR\&. 
+.LP
+The option \fIcode_change_timeout\fR defines the time-out for all calls to \fIsys:change_code\fR\&. If no value is specified or \fIdefault\fR is given, the default value defined in \fIsys\fR is used\&. 
+.LP
+The option \fIsuspend_timeout\fR defines the time-out for all calls to \fIsys:suspend\fR\&. If no value is specified, the values defined by the \fITimeout\fR parameter of the \fIupgrade\fR or \fIsuspend\fR instructions are used\&. If \fIdefault\fR is specified, the default value defined in \fIsys\fR is used\&. 
+.LP
+Note that if an \fIold\fR or the \fIpermanent\fR release is installed, a downgrade will occur\&. There must a correspnding downgrade script in the \fIrelup\fR file\&. 
+.RE
+.LP
+.B
+make_permanent(Vsn) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Vsn = string()
+.br
+.RE
+.RS
+.LP
+Makes the current release permanent\&. This causes the specified release to be used at system start-up\&. 
+.RE
+.LP
+.B
+remove_release(Vsn) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Vsn = string()
+.br
+.RE
+.RS
+.LP
+Removes a release and its files from the system\&. The release must not be the permanent release\&. Removes only the files and directories not in use by another release\&. 
+.RE
+.LP
+.B
+reboot_old_release(Vsn) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Vsn = string()
+.br
+Reason = {no_such_release, Vsn}
+.br
+.RE
+.RS
+.LP
+Reboots the system by making the old release permanent, and calls \fIinit:reboot()\fR directly\&. The release must have status \fIold\fR\&. 
+.RE
+.LP
+.B
+set_removed(Vsn) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Vsn = string()
+.br
+Reason = {no_such_release, Vsn} | {permanent, Vsn}
+.br
+.RE
+.RS
+.LP
+Makes it possible to handle removal of releases outside the \fIrelease_handler\fR\&. Tells the \fIrelease_handler\fR that the release is removed from the system\&. This function does not delete any files\&. 
+.RE
+.LP
+.B
+set_unpacked(RelFile, LibDirs) -> {ok, Vsn} | {error, Reason}
+.br
+.RS
+.TP
+Types
+RelFile = string()
+.br
+LibDirs = [{LibName, LibVsn, Dir}]
+.br
+LibName = atom()
+.br
+LibVsn = Dir = string()
+.br
+Vsn = string()
+.br
+.RE
+.RS
+.LP
+Makes it possible to handle the unpacking of releases outside the \fIrelease_handler\fR\&. Makes the \fIrelease_handler\fR aware that the release is unpacked\&. \fIVsn\fR is extracted from the release file \fIRelFile\fR and is used as parameter to the other functions\&. 
+.LP
+\fILibDirs\fR can be used to specify from where the modules for an application should be loaded\&. \fILibName\fR is the name of the lib (or application), \fILibVsn\fR is the version, and \fIDir\fR is the name of the directory where the lib directory \fILibName-LibVsn\fR is located\&. The corresponding modules should be located under \fIDir/LibName-LibVsn/ebin\fR\&. 
+.RE
+.LP
+.B
+unpack_release(ReleaseName) -> {ok, Vsn} | {error, Reason}
+.br
+.RS
+.TP
+Types
+ReleaseName = string()
+.br
+Vsn = string()
+.br
+.RE
+.RS
+.LP
+The \fIReleaseName\fR is the name of the release package\&. This is the name of the package file, without \fI\&.tar\&.gz\fR\&. \fIReleaseName\fR may or may not be the same as the release version\&. \fIVsn\fR is extracted from the release package and is used as parameter to the other functions\&. 
+.LP
+Performs some checks on the package - for example checks that all mandatory files are present - and extracts its contents\&. 
+.RE
+.LP
+.B
+which_releases() -> [{Name, Vsn, [Lib], Status}]
+.br
+.RS
+.TP
+Types
+Name = string()
+.br
+Vsn = string()
+.br
+Lib = string()
+.br
+Status = unpacked | current | permanent | old
+.br
+.RE
+.RS
+.LP
+Returns all releases known to the release handler\&. \fIName\fR is the name of the system\&. \fILib\fR is the name of a library\&. This name may be the application name followed by its version, for example "kernel-1\&.0"\&. 
+.RE
+.SH See Also
+.LP
+systools(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

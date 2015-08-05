@@ -1,0 +1,198 @@
+
+
+
+erl_parse(3)        ERLANG MODULE DEFINITION         erl_parse(3)
+
+
+
+MODULE
+     erl_parse - The Erlang Parser
+
+DESCRIPTION
+     This module is the basic Erlang parser which converts tokens
+     into the abstract form of either forms (i.e., top-level con-
+     structs), expressions, or terms. Note that a token list must
+     end  with  the  _d_o_t  token  in order to be acceptable to the
+     parse functions (see erl_scan).
+
+
+EXPORTS
+     parse_form(Tokens) -> {ok, AbsForm} | {error, ErrorInfo}
+
+          Types
+               Tokens = [Token]
+               Token = {Tag, Line} | {Tag, Line, term()}
+               Tag = atom()
+               AbsForm = term()
+               ErrorInfo = see section Error Information below.
+
+          This function parses _T_o_k_e_n_s as if it were  a  form.  It
+          returns:
+
+            {_o_k, _A_b_s_F_o_r_m}:
+                The parsing was successful. See section  Abstract
+                Form below for a description of _A_b_s_F_o_r_m.
+
+            {_e_r_r_o_r, _E_r_r_o_r_I_n_f_o}:
+                An error occurred.
+
+     parse_exprs(Tokens) -> {ok, Expr_list} | {error, ErrorInfo}
+
+          Types
+               Tokens = [Token]
+               Token = {Tag, Line} | {Tag, Line, term()}
+               Tag = atom()
+               Expr_list = [AbsExpr]
+               AbsExpr = term()
+               ErrorInfo = see section Error Information below.
+
+          This function parses _T_o_k_e_n_s as if it  were  a  list  of
+          expressions. It returns:
+
+            {_o_k, _E_x_p_r__l_i_s_t}:
+                The parsing was successful. _E_x_p_r__l_i_s_t is  a  list
+                of  the  form  _A_b_s_E_x_p_r, which is described in the
+                section Abstract Form below.
+
+            {_e_r_r_o_r, _E_r_r_o_r_I_n_f_o}:
+                An error occurred.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+erl_parse(3)        ERLANG MODULE DEFINITION         erl_parse(3)
+
+
+
+     parse_term(Tokens) -> {ok, Term} | {error, ErrorInfo}
+
+          Types
+               Tokens = [Token]
+               Token = {Tag, Line} | {Tag, Line, term()}
+               Tag = atom()
+               Term = term()
+               ErrorInfo = see section Error Information below.
+
+          This function parses _T_o_k_e_n_s as if it were  a  term.  It
+          returns:
+
+            {_o_k, _T_e_r_m}:
+                The parsing was successful. _T_e_r_m  is  the  Erlang
+                term corresponding to the token list.
+
+            {_e_r_r_o_r, _E_r_r_o_r_I_n_f_o}:
+                An error occurred.
+
+     format_error(ErrorDescriptor) -> string()
+
+          Types
+               ErrorDescriptor = errordesc()
+
+          Uses an _E_r_r_o_r_D_e_s_c_r_i_p_t_o_r  and  returns  a  string  which
+          describes  the  error.  This function is usually called
+          implicitly when an  _E_r_r_o_r_I_n_f_o  structure  is  processed
+          (see below).
+
+     tokens(AbsTerm) -> Tokens
+     tokens(AbsTerm, MoreTokens) -> Tokens
+
+          Types
+               Tokens = MoreTokens = [Token]
+               Token = {Tag, Line} | {Tag, Line, term()}
+               Tag = atom()
+               AbsTerm = term()
+               ErrorInfo = see section Error Information below.
+
+          This function generates a list of  tokens  representing
+          the abstract form _A_b_s_T_e_r_m of an expression. Optionally,
+          it appends _M_o_r_e_t_o_k_e_n_s.
+
+     normalise(AbsTerm) -> Data
+
+          Types
+               AbsTerm = Data = term()
+
+          Converts the abstract form _A_b_s_T_e_r_m of  a  term  into  a
+          conventional  Erlang  data  structure  (i.e.,  the term
+          itself). This is the inverse of _a_b_s_t_r_a_c_t/_1.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+erl_parse(3)        ERLANG MODULE DEFINITION         erl_parse(3)
+
+
+
+     abstract(Data) -> AbsTerm
+
+          Types
+               Data = AbsTerm = term()
+
+          Converts  the  Erlang  data  structure  _D_a_t_a  into   an
+          abstract  form  of type _A_b_s_T_e_r_m. This is the inverse of
+          _n_o_r_m_a_l_i_s_e/_1.
+
+Abstract Form
+     To be supplied
+
+Error Information
+     The _E_r_r_o_r_I_n_f_o mentioned  above  is  the  standard  _E_r_r_o_r_I_n_f_o
+     structure  which is returned from all IO modules. It has the
+     format:
+
+         {ErrorLine, Module, ErrorDescriptor}
+
+     A string which describes the error is obtained with the fol-
+     lowing call:
+
+     apply(Module, format_error, ErrorDescriptor)
+
+See Also
+     io, erl_scan
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+

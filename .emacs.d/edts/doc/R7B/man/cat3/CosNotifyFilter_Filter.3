@@ -1,0 +1,264 @@
+
+
+
+CosNotifyFilter_FilterE(R3L)ANG MODULE DEFINICToIsONNotifyFilter_Filter(3)
+
+
+
+MODULE
+     CosNotifyFilter_Filter -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+
+EXPORTS
+     _get_constraint_grammar(Filter) -> Grammar
+
+          Types
+               Filter = #objref
+               Grammar = string()
+
+          This operation returns which type of Grammar the Filter
+          uses. Currently, only "_E_X_T_E_N_D_E_D__T_C_L" is supported.
+
+     add_constraints(Filter, ConstraintExpSeq) -> Reply
+
+          Types
+               Filter = #objref
+               ConstraintExpSeq = [Constraint]
+               ConstraintExp                                    =
+               #'CosNotifyFilter_ConstraintExp'{event_types,
+               constraint_expr}
+               event_types = #'CosNotification_EventTypeSeq'{}
+               constraint_expr = string()
+               Reply   =   ConstraintInfoSeq   |    {'EXCEPTION',
+               #'CosNotifyFilter_InvalidConstraint'{constr}}
+               constr = ConstraintExp
+               ConstraintInfoSeq = [ConstraintInfo]
+               ConstraintInfo                                   =
+               #'CosNotifyFilter_ConstraintInfo'{constraint_expression,
+               constraint_id}
+               constraint_expression = ConstraintExp
+               constraint_id = long()
+
+          Initially, Filters  do  not  contain  any  constraints,
+          hence,    all    events    will   be   forwarded.   The
+          _a_d_d__c_o_n_s_t_r_a_i_n_t_s/_2 operation allow us to add constraints
+          to the target object.
+
+     modify_constraints(Filter,  ConstraintIDSeq,   ConstraintIn-
+     foSeq) -> Reply
+
+          Types
+               Filter = #objref
+               ConstraintIDSeq = [ConstraintID]
+               ConstraintID = long()
+               ConstraintInfoSeq = [ConstraintInfo]
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+CosNotifyFilter_FilterE(R3L)ANG MODULE DEFINICToIsONNotifyFilter_Filter(3)
+
+
+
+               ConstraintInfo                                   =
+               #'CosNotifyFilter_ConstraintInfo'{constraint_expression,
+               constraint_id}
+               constraint_expression = ConstraintExp
+               constraint_id = long()
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosNotifyFilter_InvalidConstraint'{constr}}    |
+               {'EXCEPTION',
+               #'CosNotifyFilter_ConstraintNotFound'{id}}
+               constr = ConstraintExp
+               id = long()
+               ConstraintExp                                    =
+               #'CosNotifyFilter_ConstraintExp'{event_types,
+               constraint_expr}
+               event_types = #'CosNotification_EventTypeSeq'{}
+               constraint_expr = string()
+
+          This operation is invoked  by  a  client  in  order  to
+          modify  the  constraints  associated  with  the  target
+          object. The constraints related  to  the  Id's  in  the
+          parameter  sequence _C_o_n_s_t_r_a_i_n_t_I_D_S_e_q will, if all values
+          are valid, be deleted. The _C_o_n_s_t_r_a_i_n_t_I_n_f_o_S_e_q  parameter
+          contains of Id-Expression pairs and a constraint match-
+          ing one of the unique Id's will, if  all  input  values
+          are  correct,  be  updated.  If  the parameters contain
+          incorrect data en exception will be raised.
+
+     get_constraints(Filter, ConstraintIDSeq) -> Reply
+
+          Types
+               Filter = #objref
+               ConstraintIDSeq = [ConstraintID]
+               ConstraintID = long()
+               Reply   =   ConstraintInfoSeq   |    {'EXCEPTION',
+               #'CosNotifyFilter_ConstraintNotFound'{id}}
+               ConstraintInfoSeq = [ConstraintInfo]
+               ConstraintInfo                                   =
+               #'CosNotifyFilter_ConstraintInfo'{constraint_expression,
+               constraint_id}
+               constraint_expression = ConstraintExp
+               constraint_id = id = long()
+
+          This operation return a sequence  of  ConstraintInfo's,
+          related  to  the  given ConstraintID's, associated with
+          the target object.
+
+     get_all_constraints(Filter) -> ConstraintInfoSeq
+
+          Types
+               Filter = #objref
+               ConstraintInfoSeq = [ConstraintInfo]
+               ConstraintInfo                                   =
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+
+
+
+
+CosNotifyFilter_FilterE(R3L)ANG MODULE DEFINICToIsONNotifyFilter_Filter(3)
+
+
+
+               #'CosNotifyFilter_ConstraintInfo'{constraint_expression,
+               constraint_id}
+               constraint_expression = ConstraintExp
+               constraint_id = long()
+
+          All constraints, and their unique Id,  associated  with
+          the target object will be returned by this operation.
+
+     remove_all_constraints(Filter) -> ok
+
+          Types
+               Filter = #objref
+
+          All constraints associated with the target  object  are
+          removed  by  this  operation  and, since the the target
+          object no longer contain  any  constraints,  true  will
+          always be the result of any match operation.
+
+     destroy(Filter) -> ok
+
+          Types
+               Filter = #objref
+
+          This operation terminates the target object.
+
+     match(Filter, Event) -> Reply
+
+          Types
+               Filter = #objref
+               Event = #any
+               Reply     =     boolean()     |      {'EXCEPTION',
+               #'CosNotifyFilter_UnsupportedFilterableData'{}}
+
+          This operation accepts an #_a_n_y{} event and returns _t_r_u_e
+          if  it  satisfies at least one constraint. If the event
+          containts data of the wrong type,  e.g.,  should  be  a
+          string()  but  in  fact  i  a  short(), an exception is
+          raised.
+
+     match_structured(Filter, Event) -> Reply
+
+          Types
+               Filter = #objref
+               Event = #'CosNotification_StructuredEvent'{}
+               Reply     =     boolean()     |      {'EXCEPTION',
+               #'CosNotifyFilter_UnsupportedFilterableData'{}}
+
+          This operation is similar to the _m_a_t_c_h_y  operation  but
+          accepts structured events instead.
+
+     attach_callback(Filter, NotifySubscribe) -> CallbackID
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              3
+
+
+
+
+
+
+CosNotifyFilter_FilterE(R3L)ANG MODULE DEFINICToIsONNotifyFilter_Filter(3)
+
+
+
+          Types
+               Filter = #objref
+               NotifySubscribe = #objref
+               CallbackID = long()
+
+          This operation connects a NotifySubscribe object, which
+          should be informed when the target object's constraints
+          are updated. A unique Id  is  returned  which  must  be
+          stored if we ever want to detach the callback object in
+          the future.
+
+     detach_callback(Filter, CallbackID) -> Reply
+
+          Types
+               Filter = #objref
+               CallbackID = long()
+               Reply       =       ok       |       {'EXCEPTION',
+               #'CosNotifyFilter_CallbackNotFound'{}}
+
+          If the target object has an  associated  callback  that
+          matches  the  supplied Id it will be removed and longer
+          informed of any updates. If no object with  a  matching
+          Id is found an exception is raised.
+
+     get_callbacks(Filter) -> CallbackIDSeq
+
+          Types
+               Filter = #objref
+               CallbackIDSeq = [CallbackID]
+               CallbackID = long()
+
+          This operation returns  a  sequence  of  all  connected
+          NotifySubscribe  object Id's. If no callbacks are asso-
+          ciated with the target object the list will be empty.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              4
+
+
+

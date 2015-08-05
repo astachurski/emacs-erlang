@@ -1,0 +1,143 @@
+.TH erl_ddll 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+erl_ddll \- Dynamic Driver Loader and Linker
+.SH DESCRIPTION
+.LP
+The \fIerl_ddll\fR module can load and link a linked-in driver, if run-time loading and linking of shared objects, or dynamic libraries, is supported by the underlying operating system\&. 
+
+.SH EXPORTS
+.LP
+.B
+start() -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.LP
+Starts \fIddll_server\fR\&. The error return values are the same as for \fIgen_server\fR\&. 
+.RE
+.LP
+.B
+start_link() -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.LP
+Starts \fIddll_server\fR and links it to the calling process\&. The error return values are the same as for \fIgen_server\fR\&. 
+.RE
+.LP
+.B
+stop() -> ok
+.br
+.RS
+.LP
+Stops \fIddll_server\fR\&. 
+.RE
+.LP
+.B
+load_driver(Path, Name) -> ok | {error, ErrorDescriptor}
+.br
+.RS
+.TP
+Types
+Name = string() | atom()
+.br
+Path = string() | atom()
+.br
+.RE
+.RS
+.LP
+Loads and links the dynamic driver \fIName\fR\&. \fIName\fR must be sharable object/dynamic library\&. Two drivers with different \fIPath\fRs cannot be loaded under the same name\&. The number of dynamically loadable drivers are limited by the size of \fIdriver_tab\fR in \fIconfig\&.c\fR\&. 
+.LP
+If the server is not started the caller will crash\&. 
+.RE
+.LP
+.B
+unload_driver(Name) -> ok | {error, ErrorDescriptor}
+.br
+.RS
+.TP
+Types
+Name = string() | atom()
+.br
+.RE
+.RS
+.LP
+Unloads the dynamic driver \fIName\fR\&. This will fail if any port programs are running the code that is being unloaded\&. Linked-in driver cannot be unloaded\&. The process must previously have called load_driver/1 for the driver\&. 
+.LP
+There is no guarantee that the memory where the driver was loaded is freed\&. This depends on the underlying operating system\&. 
+.LP
+If the server is not started the caller will crash\&. 
+.RE
+.LP
+.B
+loaded_drivers() -> {ok, DriverList}
+.br
+.RS
+.TP
+Types
+DriverList = [Driver()]
+.br
+Driver = string()
+.br
+.RE
+.RS
+.LP
+Returns a list of all the available drivers, both (statically) linked-in and dynamically loaded ones\&. 
+.LP
+If the server is not started the caller will crash\&. 
+.RE
+.LP
+.B
+format_error(ErrorDescriptor) -> string()
+.br
+.RS
+.LP
+Takes an \fIErrorDescriptor\fR which has been returned by one of \fIload_driver/2\fR and \fIunload_driver/1\fR and returns a string which describes the error or warning\&. 
+.RE
+.SH Differences Between Statically Linked-in Drivers and Dynamically Loaded Drivers
+.LP
+Except for the following minor changes, all information in Appendix E of Concurrent Programming in Erlang, second edition, still applies\&. 
+.LP
+The \fIdriver_entry\fR struct has two new members: \fIfinish\fR and \fIhandle\fR\&. 
+.LP
+Before the driver is unloaded, the \fIfinish\fR function is called, without arguments, to give the driver writer a chance to clean up and release memory allocated in \fIdriver_init\fR\&. 
+.LP
+The member \fIhandle\fR contains a pointer obtained from the operating system when the driver was loaded\&. Without this, the driver cannot be unloaded! 
+.LP
+The \fIinit\fR function in \fIstruct driver_entry\fR is not used anymore\&. After the driver is loaded, the function \fIstruct driver_entry *driver_init(void *)\fR is called with \fIhandle\fR as argument\&. If the operating system loader cannot find a function called \fIdriver_init\fR, the driver will not be loaded\&. The \fIdriver_init\fR function \fImust\fR initialize a \fIstruct driver_entry\fR and return a pointer to it\&. 
+.LP
+Example:
+
+.nf
+#include <stdio\&.h>
+#include "driver\&.h"
+static long my_start();
+static int my_stop(), my_read();
+static struct driver_entry my_driver_entry;
+/*
+ * Initialize and return a driver entry struct
+ */
+struct driver_entry *driver_init(void *handle)
+{
+  my_driver_entry\&.init = null_func;   /* Not used */
+  my_driver_entry\&.start = my_start;
+  my_driver_entry\&.stop = my_stop;
+  my_driver_entry\&.output = my_read;
+  my_driver_entry\&.ready_input = null_func;
+  my_driver_entry\&.ready_output = null_func;
+  my_driver_entry\&.driver_name = "my_driver";
+  my_driver_entry\&.finish = null_func;
+  my_driver_entry\&.handle = handle;  /* MUST set this!!! */
+  return &my_driver_entry;
+}
+.fi
+.SH config\&.c
+.LP
+The size of the \fIdriver_tab\fR array, defined in \fIconfig\&.c\fR, limits the number of dynamically loadable drivers\&. 
+.SH Compiling Your Driver
+.LP
+Please refer to your C compiler or operating system documentation for information about producing a sharable object or DLL\&. 
+.LP
+The include file \fIdriver\&.h\fR is found in the \fIusr/include\fR directory of the Erlang installation\&. 
+.SH AUTHOR
+.nf
+Jan-Erik Dahlin - support@erlang.ericsson.se
+.fi

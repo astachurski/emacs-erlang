@@ -1,0 +1,66 @@
+
+
+
+asn1rt(3)           ERLANG MODULE DEFINITION            asn1rt(3)
+
+
+
+MODULE
+     asn1rt - ASN.1 runtime support functions
+
+DESCRIPTION
+     This module is the interface module for  the  ASN.1  runtime
+     support  functions. To encode and decode ASN.1 types in run-
+     time the functions in this module should be used.
+
+
+EXPORTS
+     encode(Module,{Type,Value})-> {ok,Bytes}| {error,Reason}
+     encode(Module,Type,Value)-> {ok,Bytes} | {error,Reason}
+
+          Types
+               Module = Type = atom()
+               Value = term()
+               Bytes = [Int] when integer(Int), Int >= 0, Int  =<
+               255
+               Reason = term()
+
+          Encodes _V_a_l_u_e of  _T_y_p_e  defined  in  the  ASN.1  module
+          _M_o_d_u_l_e.  Returns  a list of bytes if successful. To get
+          as fast execution as possible the encode function  only
+          performs  rudimentary  tests  that the input _V_a_l_u_e is a
+          correct instance of _T_y_p_e. The length of strings is  for
+          example not always checked.
+
+     decode(Module,Type,Bytes) -> {ok,Value}|{error,Reason}
+
+          Types
+               Module = Type = atom()
+               Value = Reason = term()
+               Bytes = [Int] when integer(Int), Int >= 0, Int  =<
+               255
+
+          Decodes _T_y_p_e from _M_o_d_u_l_e from the list of bytes  _B_y_t_e_s.
+          Returns {_o_k, _V_a_l_u_e} if successful.
+
+     validate(Module,{Type,Value}) -> ok | {error,Reason}
+     validate(Module,Type,Value) -> ok | {error,Reason}
+
+          Types
+               Module = Type = atom()
+               Value = term()
+
+          Validates that _V_a_l_u_e conforms to _T_y_p_e from _M_o_d_u_l_e.  _N_o_t
+          _i_m_p_l_e_m_e_n_t_e_d _i_n _t_h_i_s _v_e_r_s_i_o_n _o_f _t_h_e _A_S_N._1 _a_p_p_l_i_c_a_t_i_o_n.
+
+AUTHOR
+     Kenneth Lundin - support@erlang.ericsson.se
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: asn1  1.2.9.3                  1
+
+
+

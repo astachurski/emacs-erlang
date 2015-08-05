@@ -1,0 +1,611 @@
+.TH int 3 "debugger  1.5.2" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+int \- Interpreter (Debugger) Interface\&.
+.SH DESCRIPTION
+.LP
+The module \fIint\fR provides an interface for the Erlang interpreter (debugger)\&. The graphical interface can be opened, but there are also commands available for interacting with the interpreter from the Erlang shell\&. 
+.LP
+The purpose of the interpreter is to provide mechanisms which makes it possible to monitor what is going on while processes execute specified modules, or when processes crash\&. 
+.LP
+The following features are provided to assist the user to catch bugs: 
+
+.nf
+        o Specify which module(s) to be interpreted\&.
+
+        o Make processes stop on specified break points\&.
+
+        o Examine what has happened when a process has
+          stopped, or crashed, by means of process attachment\&.
+          This includes inspecting variable bindings\&.
+
+        o Change processes, so that you can experiment
+          by correcting the effects of one bug and proceed to
+          the next one\&.
+
+        o Single step the execution\&.
+
+        o Monitor the current status of all interpreted
+          processes\&. Processes spread over several Erlang 
+          nodes can all be monitored and attached\&.
+.fi
+.LP
+If a network of Erlang nodes, break points are always updated on all nodes\&. 
+
+.SH EXPORTS
+.LP
+.B
+m() -> pid()
+.br
+.RS
+.LP
+Starts a new graphical monitor\&. This is the main window of the interpreter\&. All interpreter functionality is accessed from the monitor window\&. The monitor window displays the status of all processes that are running interpreted modules\&. 
+.RE
+.LP
+.B
+i(AbsModule) -> {module, Module} | error
+.br
+.RS
+.TP
+Types
+AbsModule = atom() | string() | [atom() | string()]
+.br
+Module = atom()
+.br
+.RE
+.RS
+.LP
+Marks \fIModule\fR as being interpreted\&. The \fIModule\fR parameter can either be a single module name, or a list of module names\&. \fIModule\fR is compiled into an abstract form which is loaded into the interpreter\&. The actual paths are searched for the corresponding source file(s) (\fIModule\fR\&.erl)\&. \fIModule\fR can be given with an absolute path\&.
+.SS Note:
+.LP
+If \fIModule\fR is a list of modules, the result of the last module is returned\&.
+
+.SS Note:
+.LP
+If an interpreted module is compiled using the \fIc:c\fR function, this module is reloaded into the interpreter\&. 
+
+.RE
+.LP
+.B
+i(AbsModule,Options) -> {module, Module} | error
+.br
+.RS
+.TP
+Types
+AbsModule = atom() | string() | [atom() | string()]
+.br
+Module = atom()
+.br
+Options = [opt()]
+.br
+opt() = verbose | {i, dir()} | {d, macro()} | {d, macro(), term()}
+.br
+dir() = string()
+.br
+macro() = atom()
+.br
+.RE
+.RS
+.LP
+As above, but verbose information is given in \fIOptions\fR is one of: 
+.RS 2
+.TP 4
+.B
+\fIverbose\fR:
+Print verbose information\&. 
+.TP 4
+.B
+\fI{i, Dir}\fR:
+Add \fIDir\fR to the list of directories to be searched when including a file\&. 
+.TP 4
+.B
+\fI{d, Macro}\fR:
+.TP 4
+.B
+\fI{d, Macro, Value}\fR:
+Defines a macro \fIMacro\fR to have the value \fIValue\fR\&. The default is \fItrue\fR)\&. 
+.RE
+.RE
+.LP
+.B
+a(AbsModule) -> {module, Module} | error
+.br
+.RS
+.TP
+Types
+AbsModule = atom() | string() | [atom() | string()]
+.br
+Module = atom()
+.br
+.RE
+.RS
+.LP
+\fIObsolete\fR function\&. It has the same functionality as \fIint:i/1\fR\&. 
+.RE
+.LP
+.B
+a(AbsModule,Options) -> {module, Module} | error
+.br
+.RS
+.TP
+Types
+AbsModule = atom() | string() | [atom() | string()]
+.br
+Module = atom()
+.br
+Options = [opt()]
+.br
+opt() = verbose | {i, dir()} | {d, macro()} | {d, macro(), term()}
+.br
+dir() = string()
+.br
+macro() = atom()
+.br
+.RE
+.RS
+.LP
+\fIObsolete\fR function\&. It has the same functionality as \fIint:i/2\fR\&. 
+.RE
+.LP
+.B
+n(Module) -> ok
+.br
+.RS
+.TP
+Types
+Module = atom() | string() | [atom() | string()]
+.br
+.RE
+.RS
+.LP
+Does not interpret \fIModule\fR\&. The \fIModule\fR parameter can either be a single module name, or a list of module names\&. \fIModule\fR is removed from the set of modules currently being interpreted\&. 
+.RE
+.LP
+.B
+ni(AbsModule) -> {module,Module} | error | ok
+.br
+.B
+ni(AbsModule,Options) -> {module,Module} | error | ok
+.br
+.B
+na(AbsModule) -> {module,Module} | error | ok
+.br
+.B
+na(AbsModule,Options) -> {module,Module} | error | ok
+.br
+.B
+nn(Module) -> ok
+.br
+.RS
+.LP
+Behaves as the corresponding i/1,i/2,a/1,a/2,n/1 functions described above, but on all nodes in the network\&. These functions always return \fIok\fR if we are \fIalive\fR, otherwise as above\&. 
+.RE
+.LP
+.B
+interpreted() -> [Module]
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+.RE
+.RS
+.LP
+Returns a list of all modules currently being interpreted\&. 
+.RE
+.LP
+.B
+version() -> atom()
+.br
+.RS
+.LP
+Returns the current version number of the interpreter\&. 
+.RE
+.LP
+.B
+auto_attach(Flag) -> true
+.br
+.RS
+.TP
+Types
+Flag = FlagItem | [FlagItem]
+.br
+FlagItem = init | break | exit | false
+.br
+.RE
+.RS
+.LP
+Interpreted processes can be attached automatically, without the need to attach to a process using the monitor window \fIint:m()\fR\&. An attachment window - not described here - pops up for the attached process\&. \fIFlag\fR specifies at which point interpreted processes are automatically attached\&. 
+.LP
+\fIFlag\fR is one of: 
+.RS 2
+.TP 2
+*
+\fIinit\fR\&. Attach to a process the very first time it calls an interpreted function\&.
+.TP 2
+*
+\fIbreak\fR\&. Attach to a process whenever it reaches a break point\&.
+.TP 2
+*
+\fIexit\fR\&. Attach to a process when it terminates\&.
+.TP 2
+*
+\fIfalse\fR\&. Deactivate the automatic attach facility\&.
+.RE
+.LP
+If several conditions are to be active, a list of flags must be given\&. 
+.RE
+.LP
+.B
+auto_attach(Flag,Function) -> true
+.br
+.RS
+.TP
+Types
+Flag = FlagItem | [FlagItem]
+.br
+FlagItem = init | break | exit | false
+.br
+Function = {Mod, Func}
+.br
+Mod = atom()
+.br
+Fun = atom()
+.br
+.RE
+.RS
+.LP
+As above, but instead of using the default attachment window, the specified \fIFunction\fR is used in order to start the interaction with the attached process\&. The \fIFunction\fR parameter must be the tuple \fI{Mod, Func}\fR, and this function should implement the corresponding functionality in the same way as the \fIint_show:a_start/3, 4\fR functions\&. 
+.RE
+.LP
+.B
+stack_trace(Flag) -> true
+.br
+.RS
+.TP
+Types
+Flag = all | true | no_tail | false
+.br
+.RE
+.RS
+.LP
+The interpreter can keep call frames in the stack for future inspections\&. Typically, it is possible to go up and down in the stack in order to inspect the flow of control when the execution has been stopped - at a break point, when a process has terminated, or in a single step execution\&. 
+.LP
+By default, the whole stack is kept (\fIFlag\fR = \fIall\fR or \fItrue\fR)\&. If processes with a very long life time and with a lot of tail recursive calls are interpreted, the \fIno_tail\fR flag should be used\&. No tail recursive calls are kept in the stack if this flag is used\&. 
+.LP
+The \fIfalse\fR flag should be used if the interpreter is not to keep call frames\&. 
+.RE
+.LP
+.B
+snapshot() -> [Snap]
+.br
+.RS
+.TP
+Types
+Snap = {Pid, InitialFunc, Status, Info}
+.br
+Pid = pid()
+.br
+InitialFunc = atom()
+.br
+Status = idle | running | waiting | break | exit | no_conn
+.br
+Info = {} | {Module, Line} | ExitReason
+.br
+Module = atom()
+.br
+Line = int()
+.br
+ExitReason = term()
+.br
+.RE
+.RS
+.LP
+Returns a list which contains the current status information of all interpreted processes, \fI[{Pid, InitialFunc, Status, Info}, \&.\&.\&.]\fR where: 
+.RS 2
+.TP 2
+*
+\fIPid\fR is the process identity of the interpreted process\&.
+.TP 2
+*
+\fIInitialFunc\fR is the name of the first interpreted function\&.
+.TP 2
+*
+\fIStatus\fR is the current status of the process\&.
+.TP 2
+*
+\fIInfo\fR is additional information if \fIStatus\fR is break (the tuple \fI{Module, Line}\fR) or exit (the exit reason)\&.
+.RE
+.RE
+.LP
+.B
+continue(Pid) -> ok | {error, not_interpreted}
+.br
+.RS
+.LP
+Order \fIPid\fR to resume the execution\&. 
+.RE
+.LP
+.B
+continue(X,Y,Z) -> ok | {error, not_interpreted}
+.br
+.RS
+.TP
+Types
+X = Y = Z = int()
+.br
+.RE
+.RS
+.LP
+Order the process c:pid(\fIX\fR,\fIY\fR,\fIZ\fR) to resume the execution\&. 
+.RE
+.LP
+.B
+clear() -> ok
+.br
+.RS
+.LP
+Delete (clear) information for all terminated processes from the interpreter\&. 
+.RE
+.LP
+.B
+file(Module) -> FileName | {error, not_loaded}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+FileName = string()
+.br
+.RE
+.RS
+.LP
+Returns the name of the corresponding source code file last loaded for \fIModule\fR\&. Returns the name with the absolute path of the file\&. 
+.RE
+.LP
+.B
+break(Module,Line) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+What = badarg | break_exists
+.br
+.RE
+.RS
+.LP
+Creates a new break point at \fILine\fR in \fIModule\fR\&. The execution of an interpreted process is stopped before the expression at \fILine\fR in \fIModule\fR is executed\&. 
+.RE
+.LP
+.B
+delete_break(Module,Line) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+What = badarg | no_break_exists
+.br
+.RE
+.RS
+.LP
+Deletes the break point located at \fILine\fR in \fIModule\fR\&. 
+.RE
+.LP
+.B
+no_break() -> ok
+.br
+.RS
+.LP
+Deletes all existing break points\&. 
+.RE
+.LP
+.B
+no_break(Module) -> ok
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+.RE
+.RS
+.LP
+Deletes all existing break points in \fIModule\fR\&. 
+.RE
+.LP
+.B
+break_in(Module,Function,Arity) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Function = atom()
+.br
+Arity = int()
+.br
+What = badarg | function_not_found
+.br
+.RE
+.RS
+.LP
+Creates break points at the first line in every clause of the \fIModule\fR:\fIFunction\fR/\fIArity\fR function\&. 
+.RE
+.LP
+.B
+del_break_in(Module,Function,Arity) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Function = atom()
+.br
+Arity = int()
+.br
+What = badarg | function_not_found
+.br
+.RE
+.RS
+.LP
+Deletes break points at the first line in every clause of the \fIModule\fR:\fIFunction\fR/\fIArity\fR function\&. 
+.RE
+.LP
+.B
+disable_break(Module,Line) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+What = badarg | no_break
+.br
+.RE
+.RS
+.LP
+Makes the break point at \fILine\fR in \fIModule\fR inactive\&. No processes will be stopped at the break point, but the break point still exists\&. 
+.RE
+.LP
+.B
+enable_break(Module,Line) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+What = badarg | no_break
+.br
+.RE
+.RS
+.LP
+Makes the break point at \fILine\fR in \fIModule\fR active\&. Processes will again be stopped at the break point\&. 
+.RE
+.LP
+.B
+action_at_break(Module,Line,Action) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+Action = enable | disable | delete
+.br
+What = badarg | no_break
+.br
+.RE
+.RS
+.LP
+Sets the status of the break point at \fILine\fR in \fIModule\fR after it is triggered the next time\&. \fIAction\fR is \fIenable\fR, \fIdisable\fR, or \fIdelete\fR\&. 
+.RE
+.LP
+.B
+test_at_break(Module,Line,Function) -> ok | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Line = int()
+.br
+Function = {M, F}
+.br
+Mod = atom()
+.br
+Func = atom()
+.br
+What = badarg | no_break
+.br
+.RE
+.RS
+.LP
+Makes the break point at \fILine\fR in \fIModule\fR conditional\&. \fIFunction\fR is called whenever the break point is reached\&. \fIFunction\fR is a tuple \fI{Mod, Func}\fR\&. \fIFunction\fR must have \fIarity 1\fR and return either \fItrue\fR or \fIfalse\fR\&. This way, the break point either triggers, or not\&. The argument to \fIFunction\fR is the current variable bindings of the process at the place of the break point\&. The bindings can be inspected using \fIint:get_binding/2\fR\&. 
+.RE
+.LP
+.B
+get_binding(Variable,Bs) -> {value, Value} | unbound
+.br
+.RS
+.TP
+Types
+Variable = atom()
+.br
+Bs = term()
+.br
+Value = term()
+.br
+.RE
+.RS
+.LP
+Gets the binding of \fIVariable\fR in the binding structure \fIBs\fR\&. \fIVariable\fR must be an atom, for example \fI\&'Num\&'\fR\&. This function is be used from inside a conditional break point function\&. \fIBs\fR is supplied as an argument to the conditional test function above\&. 
+.RE
+.LP
+.B
+all_breaks() -> [{Break, Options}]
+.br
+.RS
+.TP
+Types
+Break = {Module, Line}
+.br
+Module = atom()
+.br
+Line = int()
+.br
+Options = term()
+.br
+.RE
+.RS
+.LP
+Returns a list of all existing break points\&. 
+.RE
+.LP
+.B
+all_breaks(Module) -> [{Break, Options}]
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Break = {Module, Line}
+.br
+Line = int()
+.br
+Options = term()
+.br
+.RE
+.RS
+.LP
+Returns a list of all existing break points located in \fIModule\fR\&. 
+.RE
+.SH Usage
+.LP
+Refer to the Debugger User\&'s Guide for information about the graphical interface\&. 
+.SH See Also
+.LP
+i(3), c(3), code(3), error_handler(3) 
+.SH AUTHOR
+.nf
+Magnus Froberg - support@erlang.ericsson.se
+.fi

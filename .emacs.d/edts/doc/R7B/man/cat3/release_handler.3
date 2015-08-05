@@ -1,0 +1,462 @@
+
+
+
+release_handler(3)  ERLANG MODULE DEFINITION   release_handler(3)
+
+
+
+MODULE
+     release_handler - A process to Unpack and Install Releases
+
+DESCRIPTION
+     The release handler process is a SASL process  that  handles
+     unpacking, installation, and removal of release packages. As
+     an example, a release package could contain applications,  a
+     new  emulator,  and  new  configuration  parameters. In this
+     text, the directory _R_O_O_T refers  to  the  installation  root
+     directory   (_c_o_d_e:_r_o_o_t__d_i_r()).   A   release  package  is  a
+     compressed _t_a_r file that is written to the  _r_e_l_e_a_s_e_s  direc-
+     tory, for example via ftp. The location of this directory is
+     specified with the configuration parameter _r_e_l_e_a_s_e_s__d_i_r,  or
+     the    OS    environment   variable   _R_E_L_D_I_R.   Default   is
+     _R_O_O_T/_r_e_l_e_a_s_e_s. The release handler must have write access to
+     this  directory  in  order to install new releases. The per-
+     sistent state of the release handler, for  example  informa-
+     tion  about  installed  releases, is stored in a file called
+     _R_E_L_E_A_S_E_S in the releases directory.
+
+     The package can be _u_n_p_a_c_k_e_d, which extracts the  files  from
+     the  package.  When  the  release  is  unpacked,  it  can be
+     _i_n_s_t_a_l_l_e_d. This  operation  evaluates  the  release  upgrade
+     script.  An  installed  release can be made _p_e_r_m_a_n_e_n_t. There
+     can only be one permanent release in the system, and this is
+     the  release  that  is  used  when the system is started. An
+     installed release, except the permanent one, can be _r_e_m_o_v_e_d.
+     When  a  release  is  removed, all files that belong to that
+     release only are deleted. The system can be _r_e_b_o_o_t_e_d from an
+     old release.
+
+     Each release has a  status.  The  status  can  be  _u_n_p_a_c_k_e_d,
+     _c_u_r_r_e_n_t,  _p_e_r_m_a_n_e_n_t,  or  _o_l_d.  There  is  always one latest
+     release which either has status _p_e_r_m_a_n_e_n_t (normal case),  or
+     _c_u_r_r_e_n_t (installed, but not yet made permanent). The follow-
+     ing table illustrates the meaning of the status values.
+
+     Status            Action                NextStatus
+     --------------------------------------------------
+       -               unpack                unpacked
+     unpacked          install               current
+                       remove                  -
+     current           make_permanent        permanent
+                       install other         old
+                       remove                  -
+     permanent         make other permanent  old
+                       install               permanent
+     old               reboot_old            permanent
+                       install               current
+                       remove                  -
+
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    1
+
+
+
+
+
+
+release_handler(3)  ERLANG MODULE DEFINITION   release_handler(3)
+
+
+
+     A release package always contains  two  special  files,  the
+     _R_e_l_e_a_s_e_N_a_m_e._r_e_l file and the _r_e_l_u_p file. The _R_e_l_e_a_s_e_N_a_m_e._r_e_l
+     file contains information about the  release,  such  as  its
+     name,  version,  and  which  system  and library versions it
+     uses. The _r_e_l_u_p file contains release upgrade scripts. There
+     is  one release upgrade script for each old version that can
+     be updated to the new version.
+
+     The release handler process is a locally registered  process
+     on  each  node. When a release is installed in a distributed
+     system, the release handler on each node must be called. The
+     release installation may be synchronized between nodes. From
+     an operator view, it may be unsatisfactory to  specify  each
+     node.  The aim is to install one release package in the sys-
+     tem, no matter how many nodes there  are.  If  this  is  the
+     case,  it  is recommended that software management functions
+     are written which take care of this problem. Such a function
+     may  have  knowledge  of  the system architecture, so it can
+     contact each individual release handler to install the pack-
+     age.
+
+     A new release may restart the system, using _s_t_a_r_t__p_r_g.  This
+     is  a  configuration  parameter to the application _s_a_s_l. The
+     default is _R_O_O_T/_b_i_n/_s_t_a_r_t
+
+     The emulator restart on Windows NT expects that  the  system
+     is started using the _e_r_l_s_r_v program (as a service). Further-
+     more the release handler expects that the service  is  named
+     _N_o_d_e_N_a_m_e__R_e_l_e_a_s_e,  where  _N_o_d_e_N_a_m_e  is the first part of the
+     Erlang nodename (up to,  but  not  including  the  "@")  and
+     _R_e_l_e_a_s_e  is  the  current  release  of  the application. The
+     release handler furthermore  expects  that  a  program  like
+     _s_t_a_r_t__e_r_l._e_x_e  is  specified  as "machine" to _e_r_l_s_r_v. During
+     upgrading with restart, a new service will be registered and
+     started.  The  new  service will be set to automatic and the
+     old service removed as soon as the new release is made  per-
+     manent.
+
+     The release handler at a  node  which  runs  on  a  diskless
+     machine, or with a read-only file system, must be configured
+     accordingly using the following _s_a_s_l  configuration  parame-
+     ters:
+
+       masters:
+           This node uses a number of master nodes  in  order  to
+           store  and fetch release information. All master nodes
+           must be up and running whenever release information is
+           written by this node.
+
+       client_directory:
+           The _c_l_i_e_n_t__d_i_r_e_c_t_o_r_y in the directory structure of the
+           master nodes must be specified.
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    2
+
+
+
+
+
+
+release_handler(3)  ERLANG MODULE DEFINITION   release_handler(3)
+
+
+
+       static_emulator:
+           This parameter specifies if  the  Erlang  emulator  is
+           statically installed at the client node. A node with a
+           static emulator cannot dynamically  switch  to  a  new
+           emulator  because  the executable files are statically
+           written into memory.
+
+     There are additional functions for using another file struc-
+     ture  than the structure defined in OTP. These functions can
+     be used to test a release upgrade locally.
+
+
+EXPORTS
+     check_install_release(Vsn) -> {ok, FromVsn, Descr} | {error,
+     Reason}
+
+          Types
+               Vsn = FromVsn = string()
+               Descr = term()
+
+          The release must not have status _c_u_r_r_e_n_t.  Checks  that
+          there  is  a  _r_e_l_u_p  release  upgrade  script  from the
+          _F_r_o_m_V_s_n (current  version)  to  _V_s_n.  Checks  that  all
+          required  libs  (or  applications) are present and that
+          all new code can be loaded.  Checks  that  there  is  a
+          _s_t_a_r_t._b_o_o_t file and a _s_y_s._c_o_n_f_i_g for the new release.
+
+          This function evaluates  all  instructions  that  occur
+          before   the   _p_o_i_n_t__o_f__n_o__r_e_t_u_r_n  instruction  in  the
+          release upgrade script.
+
+          Returns the same as _i_n_s_t_a_l_l__r_e_l_e_a_s_e/_1.
+
+     create_RELEASES(Root, RelDir,  RelFile,  LibDirs)  ->  ok  |
+     {error, Reason}
+
+          Types
+               Root = RelDir = RelFile = string()
+               LibDirs = [{LibName, LibVsn, Dir}]
+               LibName = atom()
+               LibVsn = Dir = string()
+
+          This function  can  be  called  to  create  an  initial
+          RELEASES  file  to be used by the release_handler. This
+          file must exist in order to install new releases.  When
+          the  system  is  installed,  a default RELEASES file is
+          created   in    the    default    releases    directory
+          _R_O_O_T/_r_e_l_e_a_s_e_s.
+
+          _R_o_o_t is the  root  of  the  installation  as  described
+          above.  _R_e_l_D_i_r  is the the releases directory where the
+          RELASES file should be created. _R_e_l_F_i_l_e is the name  of
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    3
+
+
+
+
+
+
+release_handler(3)  ERLANG MODULE DEFINITION   release_handler(3)
+
+
+
+          the ._r_e_l file that describes the initial release.
+
+          _L_i_b_D_i_r_s can be used to specify from where  the  modules
+          for  an  application  should  be loaded. _L_i_b_N_a_m_e is the
+          name of the lib (or application), _L_i_b_V_s_n  is  the  ver-
+          sion,  and  _D_i_r  is the name of the directory where the
+          lib   directory   _L_i_b_N_a_m_e-_L_i_b_V_s_n   is   located.    The
+          corresponding   modules   should   be   located   under
+          _D_i_r/_L_i_b_N_a_m_e-_L_i_b_V_s_n/_e_b_i_n.
+
+     install_file(Vsn, FileName) -> ok | {error, Reason}
+
+          Types
+               FileName = string()
+               Vsn = string()
+
+          Installs a release dependent file in the release struc-
+          ture.  A  release dependent file is a file that must be
+          in the release structure when the release is installed.
+          Currently   there   are  three  such  mandatory  files,
+          _s_t_a_r_t._b_o_o_t, _s_y_s._c_o_n_f_i_g and _r_e_l_u_p.
+
+          This function  should  be  called  to  install  release
+          dependent  files, for example when these files are gen-
+          erated  at  the  target.  It  should  be  called   when
+          _s_e_t__u_n_p_a_c_k_e_d/_2 has been called.
+
+     install_release(Vsn) -> {ok, FromVsn, Descr} | {error,  Rea-
+     son}
+     install_release(Vsn, Opt) -> {ok, FromVsn, Descr} |  {error,
+     Reason}
+
+          Types
+               Vsn = FromVsn = string()
+               Opt    =    [{error_action,    Error_action}     |
+               {code_change_timeout, Timeout} | {suspend_timeout,
+               Timeout}]
+               Error_action = restart | reboot
+               Descr = term()
+               Timeout = default | infinity | int() > 0
+
+          The release must not have status _c_u_r_r_e_n_t. Installs  the
+          delivered  release  in  the  system  by  evaluating the
+          release upgrade script found in the  _r_e_l_u_p  file.  This
+          function returns {_o_k, _F_r_o_m_V_s_n, _D_e_s_c_r} if successful, or
+          {_e_r_r_o_r, _R_e_a_s_o_n} if a recoverable error occurs. _D_e_s_c_r is
+          a user defined parameter, found in the _r_e_l_u_p file, used
+          to describe the release. The system is restarted  if  a
+          non-recoverable   error   occurs.  There  can  be  many
+          installed releases at the same time in the system.
+
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    4
+
+
+
+
+
+
+release_handler(3)  ERLANG MODULE DEFINITION   release_handler(3)
+
+
+
+          It is possible to define if the  node  should  be  res-
+          tarted  or rebooted in case of an error during the ins-
+          tallation. Default is _r_e_s_t_a_r_t.
+
+          The option _c_o_d_e__c_h_a_n_g_e__t_i_m_e_o_u_t defines the time-out for
+          all  calls to _s_y_s:_c_h_a_n_g_e__c_o_d_e. If no value is specified
+          or _d_e_f_a_u_l_t is given, the default value defined  in  _s_y_s
+          is used.
+
+          The option _s_u_s_p_e_n_d__t_i_m_e_o_u_t defines the time-out for all
+          calls  to  _s_y_s:_s_u_s_p_e_n_d.  If  no value is specified, the
+          values defined by the _T_i_m_e_o_u_t parameter of the  _u_p_g_r_a_d_e
+          or  _s_u_s_p_e_n_d instructions are used. If _d_e_f_a_u_l_t is speci-
+          fied, the default value defined in _s_y_s is used.
+
+          Note that  if  an  _o_l_d  or  the  _p_e_r_m_a_n_e_n_t  release  is
+          installed,   a  downgrade  will  occur.  There  must  a
+          correspnding downgrade script in the _r_e_l_u_p file.
+
+     make_permanent(Vsn) -> ok | {error, Reason}
+
+          Types
+               Vsn = string()
+
+          Makes the current release permanent.  This  causes  the
+          specified release to be used at system start-up.
+
+     remove_release(Vsn) -> ok | {error, Reason}
+
+          Types
+               Vsn = string()
+
+          Removes a release and its files from  the  system.  The
+          release must not be the permanent release. Removes only
+          the  files  and  directories  not  in  use  by  another
+          release.
+
+     reboot_old_release(Vsn) -> ok | {error, Reason}
+
+          Types
+               Vsn = string()
+               Reason = {no_such_release, Vsn}
+
+          Reboots the system by making the old release permanent,
+          and calls _i_n_i_t:_r_e_b_o_o_t() directly. The release must have
+          status _o_l_d.
+
+     set_removed(Vsn) -> ok | {error, Reason}
+
+          Types
+               Vsn = string()
+               Reason = {no_such_release, Vsn} | {permanent, Vsn}
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    5
+
+
+
+
+
+
+release_handler(3)  ERLANG MODULE DEFINITION   release_handler(3)
+
+
+
+          Makes it possible to handle removal of releases outside
+          the _r_e_l_e_a_s_e__h_a_n_d_l_e_r. Tells the _r_e_l_e_a_s_e__h_a_n_d_l_e_r that the
+          release is removed from the system. This function  does
+          not delete any files.
+
+     set_unpacked(RelFile, LibDirs) -> {ok, Vsn} |  {error,  Rea-
+     son}
+
+          Types
+               RelFile = string()
+               LibDirs = [{LibName, LibVsn, Dir}]
+               LibName = atom()
+               LibVsn = Dir = string()
+               Vsn = string()
+
+          Makes it possible to handle the unpacking  of  releases
+          outside  the _r_e_l_e_a_s_e__h_a_n_d_l_e_r. Makes the _r_e_l_e_a_s_e__h_a_n_d_l_e_r
+          aware that the release is unpacked.  _V_s_n  is  extracted
+          from  the release file _R_e_l_F_i_l_e and is used as parameter
+          to the other functions.
+
+          _L_i_b_D_i_r_s can be used to specify from where  the  modules
+          for  an  application  should  be loaded. _L_i_b_N_a_m_e is the
+          name of the lib (or application), _L_i_b_V_s_n  is  the  ver-
+          sion,  and  _D_i_r  is the name of the directory where the
+          lib   directory   _L_i_b_N_a_m_e-_L_i_b_V_s_n   is   located.    The
+          corresponding   modules   should   be   located   under
+          _D_i_r/_L_i_b_N_a_m_e-_L_i_b_V_s_n/_e_b_i_n.
+
+     unpack_release(ReleaseName) -> {ok, Vsn} | {error, Reason}
+
+          Types
+               ReleaseName = string()
+               Vsn = string()
+
+          The _R_e_l_e_a_s_e_N_a_m_e is the name  of  the  release  package.
+          This  is the name of the package file, without ._t_a_r._g_z.
+          _R_e_l_e_a_s_e_N_a_m_e may or may not be the same as  the  release
+          version.  _V_s_n is extracted from the release package and
+          is used as parameter to the other functions.
+
+          Performs some checks  on  the  package  -  for  example
+          checks  that  all  mandatory  files  are  present - and
+          extracts its contents.
+
+     which_releases() -> [{Name, Vsn, [Lib], Status}]
+
+          Types
+               Name = string()
+               Vsn = string()
+               Lib = string()
+               Status = unpacked | current | permanent | old
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    6
+
+
+
+
+
+
+release_handler(3)  ERLANG MODULE DEFINITION   release_handler(3)
+
+
+
+          Returns all releases known to the release handler. _N_a_m_e
+          is  the  name  of  the  system.  _L_i_b  is  the name of a
+          library. This name may be the application name followed
+          by its version, for example "kernel-1.0".
+
+See Also
+     systools(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    7
+
+
+

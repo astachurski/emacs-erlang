@@ -1,0 +1,198 @@
+
+
+
+snmp_local_db(3)    ERLANG MODULE DEFINITION     snmp_local_db(3)
+
+
+
+MODULE
+     snmp_local_db - The SNMP built-in database
+
+DESCRIPTION
+     The module _s_n_m_p__l_o_c_a_l__d_b contains functions for implementing
+     tables (and variables) using the SNMP built-in database. The
+     database exists in two instances, one volatile and one  per-
+     sistent.  The volatile database is implemented with ets. The
+     persistent database is implemented with a module, pets (Per-
+     sistent ets (Erlang Term Store)), that keeps an ets database
+     in memory for speed, and on disk for persistent storage.  At
+     start-up,  the  ets  database  is initialized from disk. All
+     readings from the database go to the ets. Writings  go  also
+     to the ets, and a note is made in a log file. When the data-
+     base is closed, the entire ets database is dumped,  and  the
+     log  file  is  cleared. If a crash occurs, the log file will
+     always contain the latest changes. At start-up,  the  dumped
+     ets  is  read,  and then the database is recovered using the
+     log file. It is also possible to manually dump the database,
+     in  which case the entire ets is dumped, and the log file is
+     cleared.
+
+     There are three scaling problems with this database.
+
+       * If the database is never dumped,  there  are  a  lot  of
+         modifications to the database and the log file will grow
+         rapidly. This can be solved  by  regularly  dumping  the
+         database.
+
+       * The second problem occurs  if  the  database  is  large,
+         dumping  the  entire database may take some considerable
+         time and it may slow down the system.
+
+       * The third problem is that insertions and  deletions  are
+         inefficient for large tables.
+
+     All these problems are best solved by using Mnesia instead.
+
+     The  following   functions   describe   the   interface   to
+     _s_n_m_p__l_o_c_a_l__d_b.  Each  function  has a Mnesia equivalent. The
+     argument _N_a_m_e_D_b is a tuple {_N_a_m_e, _D_b} where _N_a_m_e is the sym-
+     bolic  name  of  the managed object (as defined in the MIB),
+     and _D_b is either _v_o_l_a_t_i_l_e or _p_e_r_s_i_s_t_e_n_t. _m_n_e_s_i_a is not  pos-
+     sible since all these functions are _s_n_m_p__l_o_c_a_l__d_b specific.
+
+
+Common data types
+     In the functions defined  below,  the  following  types  are
+     used:
+
+       * _N_a_m_e_D_b = {_N_a_m_e, _D_b}
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   1
+
+
+
+
+
+
+snmp_local_db(3)    ERLANG MODULE DEFINITION     snmp_local_db(3)
+
+
+
+       * _N_a_m_e = _a_t_o_m(), _D_b = _v_o_l_a_t_i_l_e | _p_e_r_s_i_s_t_e_n_t
+
+       * _R_o_w_I_n_d_e_x = [_i_n_t()]
+
+       * _C_o_l_s = [_C_o_l] | [{_C_o_l, _V_a_l_u_e}],  _C_o_l  =  _i_n_t(),  _V_a_l_u_e  =
+         _t_e_r_m()
+
+     where _R_o_w_I_n_d_e_x denotes the last part of the OID, that speci-
+     fies  the  index  of the row in tha table. _C_o_l_s is a list of
+     column numbers in case of a get operation,  and  a  list  of
+     column numbers and values in case of a set operation.
+
+EXPORTS
+     dump() -> ok | {error, Reason}
+
+          This function can be used to dump the database  at  any
+          time.  The  entire  ets database is dumped to disk, and
+          the log file is cleared. This might be  useful  if  the
+          log  file  grows  rapidly. Returns {_e_r_r_o_r, _R_e_a_s_o_n} if a
+          file system error occured.
+
+     match(NameDb,Pattern)
+
+          Performs an ets matching on the table. See Stdlib docu-
+          mentation, module ets, for a description of _P_a_t_t_e_r_n and
+          the return values.
+
+     print()
+     print(TableName)
+     print(TableName, Db)
+
+          Types
+               TableName = atom()
+
+          Prints the contents of the database on screen. This  is
+          useful  for  debugging  since the _S_T_A_N_D_A_R_D-_M_I_B and _O_T_P-
+          _S_N_M_P_E_A-_M_I_B (and maybe your  own  MIBs)  are  stored  in
+          _s_n_m_p__l_o_c_a_l__d_b.
+
+          _T_a_b_l_e_N_a_m_e is an atom for a table in the database.  When
+          no name is supplied, the whole database is shown.
+
+     table_create(NameDb) -> bool()
+
+          Creates a table. If the table already  exist,  the  old
+          copy is destroyed.
+
+          Returns _f_a_l_s_e if the  _N_a_m_e_D_b  argument  is  incorrectly
+          specified, _t_r_u_e otherwise.
+
+     table_create_row(NameDb,RowIndex,Row) -> bool()
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   2
+
+
+
+
+
+
+snmp_local_db(3)    ERLANG MODULE DEFINITION     snmp_local_db(3)
+
+
+
+          Types
+               Row = {Val1, Val2, ..., ValN}
+               Val1 = Val2 = ... = ValN = term()
+
+          Creates a row in a table. _R_o_w is a  tuple  with  values
+          for all columns, including the index columns.
+
+     table_delete(NameDb) -> void()
+
+          Deletes a table.
+
+     table_delete_row(NameDb,RowIndex) -> bool()
+
+          Deletes the row in the table.
+
+     table_exists(NameDb) -> bool()
+
+          Checks if a table exists.
+
+     table_get_row(NameDb,RowIndex) -> Row | undefined
+
+          Types
+               Row = {Val1, Val2, ..., ValN}
+               Val1 = Val2 = ... = ValN = term()
+
+          _R_o_w is a tuple with values for all  columns,  including
+          the index columns.
+
+SEE ALSO
+     ets(3), snmp_generic(3)
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Klas Eriksson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   3
+
+
+

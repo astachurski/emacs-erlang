@@ -1,0 +1,198 @@
+
+
+
+erl_prim_loader(3)  ERLANG MODULE DEFINITION   erl_prim_loader(3)
+
+
+
+MODULE
+     erl_prim_loader - The Low Level Erlang Loader.
+
+DESCRIPTION
+     The _e_r_l__p_r_i_m__l_o_a_d_e_r is used to load all Erlang modules  into
+     the  system.  The  start script is also fetched with the low
+     level loader.
+
+     The _e_r_l__p_r_i_m__l_o_a_d_e_r knows about the environment and  how  to
+     fetch  modules.  The  loader could, for example, fetch files
+     using the file system (with absolute file names  as  input),
+     or  a  database  (where  the  binary  format  of a module is
+     stored).
+
+     The -_l_o_a_d_e_r _L_o_a_d_e_r command line flag can be used  to  choose
+     the  method  used by the _e_r_l__p_r_i_m__l_o_a_d_e_r. Two _L_o_a_d_e_r methods
+     are supported by the Erlang runtime system: _e_f_i_l_e and  _i_n_e_t.
+     If another loader is required, then it has to be implemented
+     by the user. The _L_o_a_d_e_r provided by the  user  must  fulfill
+     the  protocol  defined  below,  and  it  is started with the
+     _e_r_l__p_r_i_m__l_o_a_d_e_r  by   evaluating_o_p_e_n__p_o_r_t({_s_p_a_w_n,   _L_o_a_d_e_r},
+     [_b_i_n_a_r_y]).
+
+
+EXPORTS
+     start(Id,Loader,Hosts) -> {ok, Pid} | {error, What}
+
+          Types
+               Id = term()
+               Loader = atom() | string()
+               Hosts = [Host]
+               Host = atom()
+               Pid = pid()
+               What = term()
+
+          Starts the Erlang low level loader.  This  function  is
+          called  by the _i_n_i_t process (and module). The _i_n_i_t pro-
+          cess reads the  command  line  flags  -_i_d  _I_d,  -_l_o_a_d_e_r
+          _L_o_a_d_e_r,  and -_h_o_s_t_s _H_o_s_t_s. These are the arguments sup-
+          plied to the _s_t_a_r_t/_3 function.
+
+          If -_l_o_a_d_e_r is not given, the default  loader  is  _e_f_i_l_e
+          which tells the system to read from the file system.
+
+          If -_l_o_a_d_e_r is _i_n_e_t,  the  -_i_d  _I_d,  -_h_o_s_t_s  _H_o_s_t_s,  and
+          -_s_e_t_c_o_o_k_i_e  _C_o_o_k_i_e  flags  must also be supplied. _H_o_s_t_s
+          identifies hosts which this node can contact  in  order
+          to  load  modules.  One  Erlang  runtime  system with a
+          _e_r_l__b_o_o_t__s_e_r_v_e_r process must  be  started  on  each  of
+          hosts  given  in _H_o_s_t_s in order to answer the requests.
+          See _e_r_l__b_o_o_t__s_e_r_v_e_r(_3).
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+erl_prim_loader(3)  ERLANG MODULE DEFINITION   erl_prim_loader(3)
+
+
+
+          If -_l_o_a_d_e_r is something else, the given port program is
+          started.  The  port  program  is supposed to follow the
+          protocol specified below.
+
+     get_file(File) -> {ok, Bin, FullName} | error
+
+          Types
+               File = string()
+               Bin = binary()
+               FullName = string()
+
+          This function  fetches  a  file  using  the  low  level
+          loader.  _F_i_l_e  is  either an absolute file name or just
+          the name of the file, for example "_l_i_s_t_s._b_e_a_m".  If  an
+          internal  path  is set to the loader, this path is used
+          to find the file. If a user supplied  loader  is  used,
+          the path can be stripped off if it is obsolete, and the
+          loader does not use a path. _F_u_l_l_N_a_m_e  is  the  complete
+          name  of  the  fetched file. _B_i_n is the contents of the
+          file as a binary.
+
+     get_path() -> {ok, Path}
+
+          Types
+               Path = [Dir]
+               Dir = string()
+
+          This function gets the path set in the loader. The path
+          is  set  by  the  _i_n_i_t process according to information
+          found in the start script.
+
+     set_path(Path) -> ok
+
+          Types
+               Path = [Dir]
+               Dir = string()
+
+          This function sets the  path  of  the  loader  if  _i_n_i_t
+          interprets a _p_a_t_h command in the start script.
+
+Protocol
+     The following protocol must be followed if a  user  provided
+     loader  port  program  is  used.  The _L_o_a_d_e_r port program is
+     started  with   the   command   _o_p_e_n__p_o_r_t({_s_p_a_w_n,   _L_o_a_d_e_r},
+     [_b_i_n_a_r_y]). The protocol is as follows:
+
+     Function          Send               Receive
+     -------------------------------------------------------------
+     get_file          [102 | FileName]   [121 | BinaryFile] (on success)
+                                          [122]              (failure)
+
+     stop              eof                terminate
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+erl_prim_loader(3)  ERLANG MODULE DEFINITION   erl_prim_loader(3)
+
+
+
+Command Line Flags
+     The _e_r_l__p_r_i_m__l_o_a_d_e_r module interprets the following flags:
+
+       -_l_o_a_d_e_r _L_o_a_d_e_r:
+           Specifies   the   name   of   the   loader   used   by
+           _e_r_l__p_r_i_m__l_o_a_d_e_r.  _L_o_a_d_e_r  can  be _e_f_i_l_e (use the local
+           file system), or _i_n_e_t (load using the  _b_o_o_t__s_e_r_v_e_r  on
+           another  Erlang  node). If _L_o_a_d_e_r is user defined, the
+           defined _L_o_a_d_e_r port program is started.
+
+           If the -_l_o_a_d_e_r flag is omitted, it defaults to _e_f_i_l_e.
+
+       -_h_o_s_t_s _H_o_s_t_s:
+           Specifies which other Erlang nodes the _i_n_e_t loader can
+           use.  This  flag is mandatory if the -_l_o_a_d_e_r _i_n_e_t flag
+           is present. On each host, there must be on Erlang node
+           with   the  _e_r_l__b_o_o_t__s_e_r_v_e_r  which  handles  the  load
+           requests. _H_o_s_t_s is a list of IP  addresses  (hostnames
+           are not acceptable).
+
+       -_i_d _I_d:
+           Specifies the identity of the Erlang  runtime  system.
+           If  the  system runs as a distributed node, _I_d must be
+           identical to the name  supplied  with  the  -_s_n_a_m_e  or
+           -_n_a_m_e distribution flags.
+
+       -_s_e_t_c_o_o_k_i_e _C_o_o_k_i_e:
+           Specifies the cookie of  the  Erlang  runtime  system.
+           This  flag  is  mandatory  if the -_l_o_a_d_e_r _i_n_e_t flag is
+           present.
+
+SEE ALSO
+     init(3), erl_boot_server(3)
+
+AUTHOR
+     Magnus Froberg - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+

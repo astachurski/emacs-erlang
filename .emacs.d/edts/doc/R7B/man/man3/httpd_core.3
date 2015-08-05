@@ -1,0 +1,263 @@
+.TH httpd_core 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+httpd_core \- The core functionality of the Web server\&. 
+.SH DESCRIPTION
+.LP
+This manual page summarize the core features of the server not being implemented as EWSAPI modules\&. The following core config directives are described: 
+.RS 2
+.TP 2
+*
+BindAddress
+.TP 2
+*
+DefaultType
+.TP 2
+*
+DocumentRoot
+.TP 2
+*
+MaxClients
+.TP 2
+*
+Modules
+.TP 2
+*
+Port
+.TP 2
+*
+ServerAdmin
+.TP 2
+*
+ServerName
+.TP 2
+*
+ServerRoot
+.TP 2
+*
+SocketType
+.TP 2
+*
+SSLCertificateFile
+.TP 2
+*
+SSLCertificateKeyFile
+.TP 2
+*
+SSLVerifyClient
+.TP 2
+*
+KeepAlive
+.TP 2
+*
+KeepAliveTimeout
+.RE
+
+.SH SECURE SOCKETS LAYER (SSL)
+.LP
+The SSL support is realized using the SSLeay <http://psych\&.psy\&.uq\&.oz\&.au/~ftp/Crypto/> package\&. Please refer to \fIssl(3)\fR\&. 
+.LP
+SSLeay is an implementation of Netscape\&'s Secure Socket Layer specification - the software encryption protocol specification behind the Netscape Secure Server and the Netscape Navigator Browser\&. 
+.LP
+The SSL Protocol can negotiate an encryption algorithm and session key as well as authenticate a server before the application protocol transmits or receives its first byte of data\&. All of the application protocol data is transmitted encrypted, ensuring privacy\&. 
+.LP
+The SSL protocol provides "channel security" which has three basic properties: 
+.RS 2
+.TP 2
+*
+The channel is private\&. Encryption is used for all messages after a simple handshake is used to define a secret key\&.
+.TP 2
+*
+The channel is authenticated\&. The server end-point of the conversation is always authenticated, while the client endpoint is optionally authenticated\&.
+.TP 2
+*
+The channel is reliable\&. The message transport includes a message integrity check (using a MAC)\&.
+.RE
+.LP
+The SSL mechanism can be enabled in the server by using the SSLCertificateFile, SSLCertificateKeyFile and the SSLVerifyClient config directives\&. 
+.SH MIME TYPE SETTINGS
+.LP
+Files delivered to the client are  MIME typed according to RFC 1590\&. File suffixes are mapped to MIME types before file delivery\&. 
+.LP
+The mapping between file suffixes and MIME types are specified in the \fImime\&.types\fR file\&. The \fImime\&.types\fR reside within the \fIconf\fR directory of the ServerRoot\&. Refer to the example server root($INETS_ROOT/examples/server_root)\&. MIME types may be added as required to the \fImime\&.types\fR file and the DefaultType config directive can be used to specify a default mime type\&. 
+.SH DIRECTIVE: "BindAddress"
+.LP
+\fISyntax:\fR \fIBindAddress\fR address
+.br
+ \fIDefault:\fR \fIBindAddress *\fR
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+\fIBindAddress\fR defines which address the server will listen to\&. If the argument is * then the server listens to all addresses otherwise the server will only listen to the address specified\&. Address can be given either as an IP address or a hostname\&. 
+.SH DIRECTIVE: "DefaultType"
+.LP
+\fISyntax:\fR \fIDefaultType\fR mime-type
+.br
+ \fIDefault:\fR - None - \fIModule:\fR httpd_core(3) 
+.LP
+When the server is asked to provide a document type which cannot be determined by the MIME Type Settings, the server must inform the client about the content type of documents and \fImime-type\fR is used if an unknown type is encountered\&. 
+.SH DIRECTIVE: "DocumentRoot"
+.LP
+\fISyntax:\fR \fIDocumentRoot\fR directory-filename
+.br
+ \fIDefault:\fR - Mandatory - \fIModule:\fR httpd_core(3) 
+.LP
+\fIDocumentRoot\fR points the Web server to the document space from which to serve documents from\&. Unless matched by a directive like Alias, the server appends the path from the requested URL to the \fIDocumentRoot\fR to make the path to the document, for example: 
+
+.nf
+DocumentRoot /usr/web
+.fi
+.LP
+and an access to \fIhttp://your\&.server\&.org/index\&.html\fR would refer to \fI/usr/web/index\&.html\fR\&. 
+.SH DIRECTIVE: "MaxClients"
+.LP
+\fISyntax:\fR \fIMaxClients\fR number
+.br
+ \fIDefault:\fR \fIMaxClients 150\fR \fIModule:\fR httpd_core(3) 
+.LP
+\fIMaxClients\fR limits the \fInumber\fR of simultaneous requests that can be supported\&. No more than this \fInumber\fR of child server processes can be created\&. 
+.SH DIRECTIVE: "Modules"
+.LP
+\fISyntax:\fR \fIModules\fR module module \&.\&.\&.
+.br
+ \fIDefault:\fR \fIModules mod_get mod_head mod_log\fR
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+\fIModules\fR defines which EWSAPI modules to be used in a specific server setup\&. \fImodule\fR is a module in the code path of the server which has been written in accordance with the EWSAPI (Erlang Web Server API)\&. The server executes functionality in each module, from left to right (from now on called \fIEWSAPI Module Sequence\fR)\&. 
+.LP
+Before altering the EWSAPI Modules Sequence please observe what types of data each module uses and propagates\&. Read the "EWSAPI Interaction" section for each module and the EWSAPI Module Interaction description in \fIhttpd(3)\fR\&. 
+.SH DIRECTIVE: "Port"
+.LP
+\fISyntax:\fR \fIPort\fR number
+.br
+ \fIDefault:\fR \fIPort 80\fR
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+\fIPort\fR defines which port \fInumber\fR the server should use (0 to 65535)\&. Certain port numbers are reserved for particular protocols, i\&.e\&. examine your OS characteristics(/etc/services) for a list of reserved ports\&. The standard port for HTTP is 80\&. 
+.LP
+All ports numbered below 1024 are reserved for system use and regular (non-root) users cannot use them, i\&.e\&. to use port 80 you must start the Erlang node as root\&. (sic!) If you do not have root access choose an unused port above 1024 typically 8000, 8080 or 8888\&. 
+.SH DIRECTIVE: "ServerAdmin"
+.LP
+\fISyntax:\fR \fIServerAdmin\fR email-address
+.br
+ \fIDefault:\fR \fIServerAdmin unknown@unknown\fR
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+\fIServerAdmin\fR defines the \fIemail-address\fR of the server administrator, to be included in any error messages returned by the server\&. It may be worth setting up a dedicated user for this because clients do not always state which server they have comments about, for example: 
+
+.nf
+ServerAdmin www-admin@white-house\&.com
+.fi
+.SH DIRECTIVE: "ServerName"
+.LP
+\fISyntax:\fR \fIServerName\fR fully-qualified domain name
+.br
+ \fIDefault:\fR - Mandatory - 
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+\fIServerName\fR sets the \fIfully-qualified domain name\fR of the server\&. 
+.SH DIRECTIVE: "ServerRoot"
+.LP
+\fISyntax:\fR \fIServerRoot\fR directory-filename
+.br
+ \fIDefault:\fR - Mandatory -
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+\fIServerRoot\fR defines a \fIdirectory-filename\fR where the server has its operational home, e\&.g\&. used to store log files and system icons\&. Relative paths specified in the config file refer to this \fIdirectory-filename\fR (See mod_log(3))\&. 
+.SH DIRECTIVE: "SocketType"
+.LP
+\fISyntax:\fR \fISocketType\fR type
+.br
+ \fIDefault:\fR \fISocketType ip_comm\fR
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+\fISocketType\fR defines which underlying communication \fItype\fR to be used\&. Valid socket types are: 
+.RS 2
+.TP 4
+.B
+\fIip_comm\fR:
+the default and preferred communication type\&. ip_comm is also used for all remote message passing in Erlang\&.
+.TP 4
+.B
+\fIssl\fR:
+the communication type to be used to support SSL (Read more about Secure Sockets Layer (SSL) in \fIhttpd(3)\fR)\&.
+.RE
+.SH DIRECTIVE: "SSLCertificateFile"
+.LP
+\fISyntax:\fR \fISSLCertificateFile\fR filename
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+\fISSLCertificateFile\fR points at a PEM encoded certificate\&. Read more about PEM encoded certificates in the SSL application documentation\&. The dummy certificate server\&.pem($INETS/examples/server_root/ssl/), in the Inets distribution, can be used for test purposes\&. Read more about PEM encoded certificates in the SSL application documentation\&. 
+.SH DIRECTIVE: "SSLCertificateKeyFile"
+.LP
+\fISyntax:\fR \fISSLCertificateKeyFile\fR filename
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+\fISSLCertificateKeyFile\fR is used to point at a certificate key file\&. This directive should only be used if a certificate key has not been bundled with the certificate file pointed at by SSLCertificateFile\&. 
+.SH DIRECTIVE: "SSLVerifyClient"
+.LP
+\fISyntax:\fR \fISSLVerifyClient\fR type
+.br
+ \fIDefault:\fR - None -
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+Set \fItype\fR to: 
+.RS 2
+.TP 4
+.B
+0:
+if no client certificate is required\&.
+.TP 4
+.B
+1:
+if the client \fImay\fR present a valid certificate\&.
+.TP 4
+.B
+2:
+if the client \fImust\fR present a valid certificate\&.
+.TP 4
+.B
+3:
+if the client \fImay\fR present a valid certificate but it is \fInot\fR required to have a valid CA\&.
+.RE
+.LP
+Read more about SSL in the application documentation\&. 
+.SH DIRECTIVE: "KeepAlive"
+.LP
+\fISyntax:\fR \fIKeepAlive\fR max-requests
+.br
+ \fIDefault:\fR - Disabled -
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+This directive enables Keep-Alive support\&. Set \fImax-requests\fR to the maximum number of requests you want the server to serve per connection\&. A limit is imposed to prevent a client from hogging your server resources\&. To disable Keep-Alive support, do not set this directive\&. 
+.LP
+The Keep-Alive extension to HTTP, as defined by the HTTP/1\&.1 draft, allows persistent connections\&. These long-lived HTTP sessions allow multiple requests to be sent over the same TCP connection, and in some cases have been shown to result in almost 50% speedup in latency times for HTML documents with lots of images\&. 
+.SH DIRECTIVE: "KeepAliveTimeout"
+.LP
+\fISyntax:\fR \fIKeepAliveTimeout\fR seconds
+.br
+ \fIDefault:\fR - Disabled -
+.br
+ \fIModule:\fR httpd_core(3) 
+.LP
+The number of seconds the server will wait for a subsequent request before closing the connection\&. 
+.SH SEE ALSO
+.LP
+httpd(3) 
+.SH AUTHOR
+.nf
+Joakim Grebeno  - support@erlang.ericsson.se
+.fi

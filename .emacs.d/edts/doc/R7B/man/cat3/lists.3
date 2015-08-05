@@ -1,0 +1,726 @@
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+MODULE
+     lists - List Processing Functions
+
+DESCRIPTION
+     This module contains  functions  for  list  processing.  The
+     functions  are  organized  in two groups: those in the first
+     group perform a particular  operation  on  one  ore  several
+     lists,  whereas  those  in  the  second  group perform use a
+     user-defined function (given as the first argument) to  per-
+     form an operation on one list.
+
+
+EXPORTS
+     append(ListOfLists) -> List1
+
+          Types
+               ListOfLists = [List]
+               List = List1 = [term()]
+
+          Returns a list in which all  the  sub-lists  of  _L_i_s_t_O_-
+          _f_L_i_s_t_s have been appended. For example:
+
+          > lists:append([[1, 2, 3], [a, b], [4, 5, 6]]).
+          [1, 2, 3, a, b, 4, 5, 6]
+
+     append(List1, List2) -> List3
+
+          Types
+               List1 = List2 = List3 = [term()]
+
+          Returns a new list _L_i_s_t_3 which is made  from  the  ele-
+          ments  of  _L_i_s_t_1 followed by the elements of _L_i_s_t_2. For
+          example:
+
+          > lists:append("abc", "def").
+          "abcdef".
+
+          _l_i_s_t_s:_a_p_p_e_n_d(_A, _B) is equivalent to _A ++ _B.
+
+     concat(Things) -> string()
+
+          Types
+               Things = [Thing]
+               Thing = atom() | integer() | float() | string()
+
+          Concatenates the ASCII list representation of the  ele-
+          ments  of  _T_h_i_n_g_s. The elements of _T_h_i_n_g_s can be atoms,
+          integers, floats or strings.
+
+          > lists:concat([doc, '/', file, '.', 3]).
+          "doc/file.3"
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+     delete(Element, List1) -> List2
+
+          Types
+               List1 = list2 = [Element]
+               Element = term()
+
+          Returns a copy of _L_i_s_t_1, but the  first  occurrence  of
+          _E_l_e_m_e_n_t, if present, is deleted.
+
+     duplicate(N, Element) -> List
+
+          Types
+               N = int()
+               List = [Element]
+               Element = term()
+
+          Returns a list which contains N copies of the term _E_l_e_-
+          _m_e_n_t.
+
+  Note:
+     _N must be an integer >= 0. For example:
+
+
+     > lists:duplicate(5, xx).
+     [xx, xx, xx, xx, xx]
+
+     flatlength(DeepList) -> int()
+
+          Equivalent to _l_e_n_g_t_h(_f_l_a_t_t_e_n(_D_e_e_p_L_i_s_t)), but more effi-
+          cient.
+
+     flatten(DeepList) -> List
+
+          Types
+               DeepList = [term() | DeepList]
+
+          Returns a flattened version of _D_e_e_p_L_i_s_t.
+
+     flatten(DeepList, Tail) -> List
+
+          Types
+               DeepList = [term() | DeepList]
+               Tail = [term()]
+
+          Returns a flattened version of _D_e_e_p_L_i_s_t with  the  tail
+          _T_a_i_l appended.
+
+     keydelete(Key, N, TupleList1) -> TupleList2
+
+          Types
+               TupleList1 = TupleList2 = [tuple()]
+               N = int()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+               Key = term()
+
+          Returns a copy of _T_u_p_l_e_L_i_s_t_1 where the first occurrence
+          of  a  tuple  whose  _Nth  element is _K_e_y is deleted, if
+          present.
+
+     keymember(Key, N, TupleList) -> bool()
+
+          Types
+               TupleList = [tuple()]
+               N = int()
+               Key = term()
+
+          Searches the list of tuples _T_u_p_l_e_L_i_s_t for a tuple whose
+          _Nth element is _K_e_y.
+
+     keymerge(N, List1, List2)
+
+          Types
+               N = int()
+               List1 = List2 = [tuple()]
+
+          Returns the sorted list formed by merging the _L_i_s_t_1 and
+          _L_i_s_t_2.  The  merge  is  performed on the _Nth element of
+          each tuple. Both _L_i_s_t_1 and  _L_i_s_t_2  must  be  key-sorted
+          prior  to evaluating this function; otherwise the order
+          of the elements in the result will be  undefined.  When
+          elements  in  the  input  lists compare equal, elements
+          from _L_i_s_t_1 are picked before elements from _L_i_s_t_2.
+
+     keyreplace(Key, N, TupleList1, NewTuple) -> TupleList2
+
+          Types
+               Key = term()
+               N = int()
+               TupleList1 = TupleList2 = [tuple()]
+               NewTuple = tuple()
+
+          Returns a list of tuples. In  this  list,  a  tuple  is
+          replaced by the tuple _N_e_w_T_u_p_l_e. This tuple is the first
+          tuple in the list where the element number _N  is  equal
+          to _K_e_y.
+
+     keysearch(Key, N, TupleList) -> Result
+
+          Types
+               TupleList = [tuple()]
+               N = int()
+               Key = term()
+               Result = {value, tuple()} | false
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+          Searches the list of the  tuples  _T_u_p_l_e_L_i_s_t  for  _T_u_p_l_e
+          whose  _Nth  element  is  _K_e_y. Returns {_v_a_l_u_e, _T_u_p_l_e} if
+          such a tuple is found, or _f_a_l_s_e if  no  such  tuple  is
+          found.
+
+     keysort(N, List1) -> List2
+
+          Types
+               N = int()
+               List1 = List2 = [tuple()]
+
+          Returns a list containing the sorted elements of _L_i_s_t_1.
+          _T_u_p_l_e_L_i_s_t_1  must  be  a list of tuples, and the sort is
+          performed on the _Nth element of the tuple. The sort  is
+          stable.
+
+     last(List) -> Element
+
+          Types
+               List = [Element]
+               Element = term()
+
+          Returns the last element in _L_i_s_t.
+
+     max(List) -> Max
+
+          Types
+               List = [Element]
+               Element = Max = term()
+
+          Returns the maximum element of _L_i_s_t.
+
+     member(Element, List) -> bool()
+
+          Types
+               List = [Element]
+               Element = term()
+
+          Returns _t_r_u_e if _E_l_e_m_e_n_t is contained in the list  _L_i_s_t,
+          otherwise _f_a_l_s_e.
+
+     merge(List1, List2) -> List3
+
+          Types
+               List1 = List2 = List3 = [term()]
+
+          Returns the sorted list formed  by  merging  _L_i_s_t_1  and
+          _L_i_s_t_2.  Both  _L_i_s_t_1  and  _L_i_s_t_2 must be sorted prior to
+          evaluating this function.
+
+     merge(Fun, List1, List2) -> List
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+          Types
+               List = List1 = List2 = [Element]
+               Fun = fun(Element, Element) -> bool()
+               Element = term()
+
+          Returns the sorted list formed  by  merging  _L_i_s_t_1  and
+          _L_i_s_t_2.  Both  _L_i_s_t_1  and  _L_i_s_t_2 must be sorted prior to
+          evaluating this function,  according  to  the  ordering
+          function  _F_u_n.  _F_u_n(_A, _B) should return _t_r_u_e if _A comes
+          before _B in the ordering, _f_a_l_s_e otherwise.
+
+     min(List) -> Min
+
+          Types
+               List = [Element]
+               Element = Max = term()
+
+          Returns the minimum element of _L_i_s_t.
+
+     nth(N, List) -> Element
+
+          Types
+               N = int()
+               List = [Element]
+               Element = term()
+
+          Returns the _Nth element of the _L_i_s_t. For example:
+
+          > lists:nth(3, [a, b, c, d, e]).
+          c
+
+     nthtail(N, List1) -> List2
+
+          Types
+               N = int()
+               List1 = List2 = [Alpha]
+
+          Returns the _Nth tail of _L_i_s_t. For example:
+
+          > lists:nthtail(3, [a, b, c, d, e]).
+          [d, e]
+
+     prefix(List1, List2) -> bool()
+
+          Types
+               List1 = List2 = [term()]
+
+          Returns _t_r_u_e if _L_i_s_t_1 is a prefix of  _L_i_s_t_2,  otherwise
+          _f_a_l_s_e.
+
+     reverse(List1) -> List2
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+          Types
+               List1 = List2 = [term()]
+
+          Returns a list with the top level elements in _L_i_s_t_1  in
+          reverse order.
+
+     reverse(List1, List2) -> List3
+
+          Types
+               List1 = List2 = List3 = [term()]
+
+          Returns a  list  where  _L_i_s_t_1  has  been  reversed  and
+          appended  to  the  beginning  of  _L_i_s_t_2.  Equivalent to
+          _r_e_v_e_r_s_e(_L_i_s_t_1) ++ _L_i_s_t_2. For example:
+
+          > lists:reverse([1, 2, 3, 4], [a, b, c]).
+          [4, 3, 2, 1, a, b, c]
+
+     seq(From, To) -> [int()]
+     seq(From, To, Incr) -> [int()]
+
+          Types
+               From = To = Incr = int()
+
+          Returns a sequence of integers which starts  with  _F_r_o_m
+          and  contains  the successive results of adding _I_n_c_r to
+          the previous element, until  _T_o  has  been  reached  or
+          passed (in the latter case, _T_o is not an element of the
+          sequence). If _T_o-_F_r_o_m has a different sign  from  _I_n_c_r,
+          or  if _I_n_c_r = 0 and _F_r_o_m is different from _T_o, an error
+          is signalled (this implies that the result is never  an
+          empty list - the first element is always _F_r_o_m).
+
+          _s_e_q(_F_r_o_m, _T_o) is equivalent to _s_e_q(_F_r_o_m, _T_o, _1).
+
+          Examples:
+
+          > lists:seq(1, 10).
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+          > lists:seq(1, 20, 3).
+          [1, 4, 7, 10, 13, 16, 19]
+
+          > lists:seq(1, 1, 0).
+          [1]
+
+     sort(List1) -> List2
+
+          Types
+               List1 = List2 = [term()]
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+          Returns a list which contains the  sorted  elements  of
+          _L_i_s_t_1.
+
+     sort(Fun, List1) -> List2
+
+          Types
+               List1 = List2 = [Element]
+               Fun = fun(Element, Element) -> bool()
+               Element = term()
+
+          Returns a list which contains the  sorted  elements  of
+          _L_i_s_t_1,  according  to the ordering function _F_u_n. _F_u_n(_A,
+          _B) should return _t_r_u_e if _A comes before _B in the order-
+          ing, _f_a_l_s_e otherwise.
+
+     sublist(List, N) -> List1
+
+          Types
+               List1 = List2 = [term()]
+               N = int()
+
+          Returns the first _N elements of  _L_i_s_t.  It  is  not  an
+          error  for _N to exceed the length of the list when _L_i_s_t
+          is a proper list - in  that  case  the  whole  list  is
+          returned.
+
+     sublist(List1, Start, Length) -> List2
+
+          Types
+               List1 = List2 = [term()]
+               Start = End = int()
+
+          Returns the sub-list  of  _L_i_s_t  starting  at  _S_t_a_r_t  of
+          length  _L_e_n_g_t_h.  Terminates  with  a runtime failure if
+          _S_t_a_r_t is not in _L_i_s_t, but a sub-list of a  length  less
+          than  _L_e_n_g_t_h  is accepted. _S_t_a_r_t is considered to be in
+          _L_i_s_t if _S_t_a_r_t >= 1 and _S_t_a_r_t <= _l_e_n_g_t_h(_L_i_s_t)+_1.
+
+     subtract(List1, List2) -> List3
+
+          Types
+               List1 = List2 = List3 = [term()]
+
+          Returns a new list _L_i_s_t_3 which is a copy of _L_i_s_t_1, sub-
+          jected  to the following procedure: for each element in
+          _L_i_s_t_2, its first occurrence in _L_i_s_t_1  is  removed.  For
+          example:
+
+          > lists:subtract("123212", "212").
+          "312".
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  7
+
+
+
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+          _l_i_s_t_s:_s_u_b_t_r_a_c_t(_A, _B) is equivalent to _A -- _B.
+
+     suffix(List1, List2) -> bool()
+
+          Returns _t_r_u_e if _L_i_s_t_1 is a suffix of  _L_i_s_t_2,  otherwise
+          _f_a_l_s_e.
+
+     sum(List) -> number()
+
+          Types
+               List = [number()]
+
+          Returns the sum of the elements in _L_i_s_t.
+
+     all(Pred, List) -> bool()
+
+          Types
+               Pred = fun(A) -> bool()
+               List = [A]
+
+          Returns _t_r_u_e if all elements X in _L_i_s_t satisfy _P_r_e_d(_X).
+
+     any(Pred, List) -> bool()
+
+          Types
+               Pred = fun(Element) -> bool()
+               List = [Element]
+               Element = term()
+
+          Returns _t_r_u_e if any of the elements in  _L_i_s_t  satisfies
+          _P_r_e_d.
+
+     dropwhile(Pred, List1) -> List2
+
+          Types
+               Pred = fun(A) -> bool()
+               List1 = List2 = [A]
+
+          Drops elements _X from _L_i_s_t_1 while _P_r_e_d(_X) is  _t_r_u_e  and
+          returns the remaining list.
+
+     filter(Pred, List1) -> List2
+
+          Types
+               Pred = fun(A) -> bool()
+               List1 = List2 = [A]
+
+          _L_i_s_t_2 is a list of all elements _X in  _L_i_s_t_1  for  which
+          _P_r_e_d(_X) is _t_r_u_e.
+
+     flatmap(Function, List1) -> Element
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  8
+
+
+
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+          Types
+               Function = fun(A) -> B
+               List1 = [A]
+               Element = [B]
+
+          _f_l_a_t_m_a_p behaves as if it had been defined as follows:
+
+          flatmap(Func, List) ->
+              append(map(Func, List))
+
+     foldl(Function, Acc0, List) -> Acc1
+
+          Types
+               Function = fun(A, AccIn) -> AccOut
+               List = [A]
+               Acc0 = Acc1 = AccIn = AccOut = term()
+
+          _A_c_c_0 is returned if the list is empty. For example:
+
+          > lists:foldl(fun(X, Sum) -> X + Sum end, 0, [1,2,3,4,5]).
+          15
+          > lists:foldl(fun(X, Prod) -> X * Prod end, 1, [1,2,3,4,5]).
+          120
+
+     foldr(Function, Acc0, List) -> Acc1
+
+          Types
+               Function = fun(A, AccIn) -> AccOut
+               List = [A]
+               Acc0 = Acc1 = AccIn = AccOut = term()
+
+          Calls _F_u_n_c_t_i_o_n on successive elements of _L_i_s_t  together
+          with  an  extra  argument  _A_c_c (short for accumulator).
+          _F_u_n_c_t_i_o_n must return a new accumulator which is  passed
+          to  the  next  call.  _A_c_c_0  is  returned if the list is
+          empty. _f_o_l_d_r differs from _f_o_l_d_l in  that  the  list  is
+          traversed  "bottom  up" instead of "top down". _f_o_l_d_l is
+          tail recursive and would usually be preferred to _f_o_l_d_r.
+
+     foreach(Function, List) -> void()
+
+          Types
+               Function = fun(A) -> void()
+               List = [A]
+
+          Applies the function _F_u_n_c_t_i_o_n to each of  the  elements
+          in _L_i_s_t. This function is used for its side effects and
+          the evaluation order is defined to be the same  as  the
+          order of the elements in the list.
+
+     map(Func, List1) -> List2
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  9
+
+
+
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+          Types
+               Func = fun(A) -> B
+               List1 = [A]
+               List2 = [B]
+
+          _m_a_p takes a function from _As to _Bs, and a  list  of  _As
+          and  produces  a list of _Bs by applying the function to
+          every element in the list. This  function  is  used  to
+          obtain  the  return  values.  The  evaluation  order is
+          implementation dependent.
+
+     mapfoldl(Function, Acc0, List1) -> {List2, Acc}
+
+          Types
+               Function = fun(A, AccIn) -> {B, AccOut}
+               Acc0 = Acc1 = AccIn = AccOut = term()
+               List1 = [A]
+               List2 = [B]
+
+          _m_a_p_f_o_l_d combines the operations of _m_a_p and  _f_o_l_d_l  into
+          one  pass.  For example, we could sum the elements in a
+          list and double them _a_t _t_h_e _s_a_m_e _t_i_m_e:
+
+
+          > lists:mapfoldl(fun(X, Sum) -> {2*X, X+Sum} end,
+                           0, [1,2,3,4,5]).
+          {[2,4,6,8,10],15}
+
+     mapfoldr(Function, Acc0, List1) -> {List2, Acc}
+
+          Types
+               Function = fun(A, AccIn) -> {B, AccOut}
+               Acc0 = Acc1 = AccIn = AccOut = term()
+               List1 = [A]
+               List2 = [B]
+
+          _m_a_p_f_o_l_d combines the operations of _m_a_p and  _f_o_l_d_r  into
+          one pass.
+
+     splitwith(Pred, List) -> {List1, List2}
+
+          Types
+               Pred = fun(A) -> bool()
+               List = List1 = List2 = [A]
+
+          Partitions _L_i_s_t_s into  _L_i_s_t_1  and  _L_i_s_t_2  according  to
+          _P_r_e_d.
+
+          _s_p_l_i_t_w_i_t_h behaves as if it had been defined as follows:
+
+          splitwidth(Pred, List) ->
+                    {takewhile(Pred, List), dropwhile(Pred, List)}.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                 10
+
+
+
+
+
+
+lists(3)            ERLANG MODULE DEFINITION             lists(3)
+
+
+
+          Note also that _L_i_s_t == _L_i_s_t_1 ++ _L_i_s_t_2.
+
+     takewhile(Pred, List1) -> List2
+
+          Types
+               Pred = fun(A) -> bool()
+               List1 = List2 = [A]
+
+          Returns the longest prefix of _L_i_s_t_1 for which all  ele-
+          ments _X in _L_i_s_t_1 satisfy _P_r_e_d(_X).
+
+Relics
+     Some of the exported functions in _l_i_s_t_s._e_r_l  are  not  docu-
+     mented.  In particular, this applies to a number of _m_a_p_s and
+     _f_o_l_d_s which have an extra argument for environment  passing.
+     These  functions are no longer needed because Erlang 4.4 and
+     later releases have _F_u_n_s.
+
+  Note:
+     Any undocumented functions in lists should not be used.
+
+
+AUTHORS
+     Joe Armstrong - support@erlang.ericsson.se
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                 11
+
+
+

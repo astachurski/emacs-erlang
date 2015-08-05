@@ -1,0 +1,66 @@
+
+
+
+random(3)           ERLANG MODULE DEFINITION            random(3)
+
+
+
+MODULE
+     random - Pseudo random number generation
+
+DESCRIPTION
+     Random number generator. The method is  attributed  to  B.A.
+     Wichmann   and  I.D.Hill,  in  'An  efficient  and  portable
+     pseudo-random number generator', Journal of Applied  Statis-
+     tics. AS183. 1982. Also Byte March 1987.
+
+     The current algorithm  is  a  modification  of  the  version
+     attributed  to  Richard  A  O'Keefe  in  the standard Prolog
+     library.
+
+
+EXPORTS
+     seed() -> ran()
+
+          Seeds random number  generation  with  default  (fixed)
+          values.
+
+     seed(A1, A2, A3) -> ran()
+
+          Types
+               A1 = A2 = A3 = int()
+
+          Seeds random number generation with integer values.
+
+     uniform() -> float()
+
+          Returns a random float  uniformly  distributed  between
+          _0._0 and _1._0.
+
+     uniform(N) -> int()
+
+          Types
+               N = int()
+
+          Given an integer _N >= _1, _u_n_i_f_o_r_m(_N)  returns  a  random
+          integer uniformly distributed between _1 and _N.
+
+Note
+     Uses the process dictionary variable _r_a_n_d_o_m__s_e_e_d to remember
+     the current seed.
+
+     Before a process calls _u_n_i_f_o_r_m/_0 or _u_n_i_f_o_r_m/_1 for the  first
+     time, it must call one of the seeding functions.
+
+AUTHOR
+     Joe Armstrong - support@erlang.ericsson.se
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+

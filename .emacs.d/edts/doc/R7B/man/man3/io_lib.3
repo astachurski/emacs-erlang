@@ -1,0 +1,190 @@
+.TH io_lib 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+io_lib \- IO Library Functions
+.SH DESCRIPTION
+.LP
+This module contains functions for converting to and from strings (lists of characters)\&. They are used for implementing the functions in the \fIio\fR module\&. There is no guarantee that the character lists returned from some of the functions are flat, they can be deep lists\&. \fIlists:flatten/1\fR is used for generating flat lists\&. 
+
+.SH EXPORTS
+.LP
+.B
+nl()
+.br
+.RS
+.LP
+Returns a character list which represents a new line character\&. 
+.RE
+.LP
+.B
+write(Term)
+.br
+.B
+write(Term, Depth)
+.br
+.RS
+.LP
+Returns a character list which represents \fITerm\fR\&. The \fIDepth\fR (-1) argument controls the depth of the structures written\&. When the specified depth is reached, everything below this level is replaced by "\&.\&.\&."\&. For example:
+
+.nf
+> lists:flatten(io_lib:write({1,[2],[3],[4,5],6,7,8,9}))\&.        
+"{1,[2],[3],[4,5],6,7,8,9}"
+> lists:flatten(io_lib:write({1,[2],[3],[4,5],6,7,8,9}, 5))\&.
+"{1,[2],[3],[4|\&.\&.\&.],6|\&.\&.\&.}"
+.fi
+.RE
+.LP
+.B
+print(Term)
+.br
+.B
+print(Term, Column, LineLength, Depth)
+.br
+.RS
+.LP
+Also returns a list of characters which represents \fITerm\fR, but breaks representations which are longer than one line into many lines and indents each line sensibly\&. It also tries to detect and output lists of printable characters as strings\&. \fIColumn\fR is the starting column (1), \fILineLength\fR the maximum line length (80), and \fIDepth\fR the maximum print depth\&. 
+.RE
+.LP
+.B
+fwrite(Format, Data)
+.br
+.B
+format(Format, Data)
+.br
+.RS
+.LP
+Returns a character list which represents \fIData\fR formatted in accordance with \fIFormat\fR\&. Refer to io for a detailed description of the available formatting options\&. A fault is generated if there is an error in the format string or argument list\&. 
+.RE
+.LP
+.B
+fread(Format, String)
+.br
+.RS
+.LP
+Tries to read \fIString\fR in accordance with the control sequences in \fIFormat\fR\&. Refer to io for a detailed description of the available formatting options\&. It is assumed that \fIString\fR contains whole lines\&. It returns: 
+.RS 2
+.TP 4
+.B
+\fI{ok, InputList, LeftOverChars}\fR:
+The string was read\&. \fIInputList\fR is the list of successfully matched and read items, and \fILeftOverChars\fR are the input characters not used\&. 
+.TP 4
+.B
+\fI{more, RestFormat, Nchars, InputStack}\fR:
+The string was read, but more input is needed in order to complete the original format string\&. \fIRestFormat\fR is the remaining format string, \fINChars\fR the number of characters scanned, and \fIInputStack\fR is the reversed list of inputs matched up to that point\&. 
+.TP 4
+.B
+\fI{error, What}\fR:
+An error occurred which can be formatted with the call \fIformat_error/1\fR\&. 
+.RE
+.LP
+Example:
+
+.nf
+> io_lib:fread("~f~f~f", "15\&.6 17\&.3e-6 24\&.5")\&.
+{ok, [15\&.6000, 1\&.73000e-5, 24\&.5000], []}
+.fi
+.RE
+.LP
+.B
+fread(Continuation, CharList, Format)
+.br
+.RS
+.LP
+This is the re-entrant formatted reader\&. It returns: 
+.RS 2
+.TP 4
+.B
+\fI{done, Result, LeftOverChars}\fR:
+The input is complete\&. The result is one of the following: 
+.RS 4
+.RS 2
+.TP 4
+.B
+\fI{ok, InputList}\fR:
+The string was read\&. \fIInputList\fR is the list of successfully matched and read items, and \fILeftOverChars\fR are the remaining characters\&. 
+.TP 4
+.B
+\fIeof\fR:
+End of file has been encountered\&. \fILeftOverChars\fR are the input characters not used\&. 
+.TP 4
+.B
+\fI{error, What}\fR:
+An error occurred, which can be formatted with the call \fIformat_error/1\fR\&. 
+.RE
+.RE
+.TP 4
+.B
+\fI{more, Continuation}\fR:
+More data is required to build a term\&. \fIContinuation\fR must be passed to \fI<c>fread/3\fR, when more data becomes available\&.
+.RE
+.RE
+.LP
+.B
+write_atom(Atom)
+.br
+.RS
+.LP
+Returns the list of characters needed to print the atom \fIAtom\fR\&. 
+.RE
+.LP
+.B
+write_string(String)
+.br
+.RS
+.LP
+Returns the list of characters needed to print \fIString\fR as a string\&. 
+.RE
+.LP
+.B
+write_char(Integer)
+.br
+.RS
+.LP
+Returns the list of characters needed to print a character constant\&. 
+.RE
+.LP
+.B
+indentation(String, StartIndent)
+.br
+.RS
+.LP
+Returns the indentation if \fIString\fR has been printed, starting at \fIIndentation\fR\&. 
+.RE
+.LP
+.B
+char_list(CharList) -> bool()
+.br
+.RS
+.LP
+Returns \fItrue\fR if CharList is a list of characters, otherwise it returns \fIfalse\fR\&. 
+.RE
+.LP
+.B
+deep_char_list(CharList)
+.br
+.RS
+.LP
+Returns \fItrue\fR if CharList is a deep list of characters, otherwise it returns \fIfalse\fR\&. 
+.RE
+.LP
+.B
+printable_list(CharList)
+.br
+.RS
+.LP
+Returns \fItrue\fR if CharList is a list of printable characters, otherwise it returns \fIfalse\fR\&. 
+.RE
+.SH Notes
+.LP
+The module \fIio_lib\fR also uses the extra modules \fIio_lib_format\fR, \fIio_lib_fread\fR, and \fIio_lib_pretty\fR\&. All external interfaces exist in \fIio_lib\fR\&. 
+.LP
+\fIUsers are strongly advised not to access the other modules directly\&.\fR 
+.SS Note:
+.LP
+Any undocumented functions in \fIio_lib\fR should not be used\&. 
+
+.LP
+The continuation of the first call to the re-entrant input functions must be \fI[]\fR\&. Refer to Armstrong, Virding, Williams, \&'Concurrent Programming in Erlang\&', Chapter 13 for a complete description of how the re-entrant input scheme works 
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

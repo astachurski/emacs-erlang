@@ -1,0 +1,83 @@
+.TH net_adm 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+net_adm \- Various Erlang Net Administration Routines 
+.SH DESCRIPTION
+.LP
+This module contains various network utility functions\&. 
+
+.SH EXPORTS
+.LP
+.B
+host_file() 
+.br
+.RS
+.LP
+This function reads the \fI\&.hosts\&.erlang\fR file\&. It returns the hosts in this file as a list, or it returns \fI{error, Reason}\fR if the file cannot be found\&. 
+.RE
+.LP
+.B
+dns_hostname(Host) 
+.br
+.RS
+.LP
+This function calls epmd for the fully qualified name (DNS) of \fIHost\fR\&. It returns \fI{ok, Longhostname}\fR if the call is successful, or \fI{error, Host}\fR if \fIHost\fR cannot be located by DNS\&. 
+.RE
+.LP
+.B
+localhost() 
+.br
+.RS
+.LP
+This function returns the fully qualified name of the local host, if it can be found by DNS\&. 
+.RE
+.LP
+.B
+names(), names(Host) 
+.br
+.RS
+.LP
+This function returns \fI{ok, List}\fR or \fI{error, Reason}\fR\&. \fIList\fR is a list of tuples on the form \fI{Name, Port}\fR\&. For example: \fInet_adm:names(elrond) -> {ok, [{"foo", 61178}, {"ts", 61160}]}\fR\&. 
+.RE
+.LP
+.B
+ping(Node) 
+.br
+.RS
+.LP
+This function tries to set up a connection to \fINode\fR\&. It returns \fIpang\fR if it fails, and \fIpong\fR if it is successful\&. 
+.RE
+.LP
+.B
+world (), world (verbose) 
+.br
+.RS
+.LP
+This function runs \fIepmd - names\fR on all hosts which are specified in the Erlang host file \fI\&.hosts\&.erlang\fR, collects the replies and then evaluates \fIping\fR on all those nodes\&. Accordingly, connections are created to all nodes which are running on the hosts specified in the \fI\&.hosts\&.erlang\fR file\&. An error message is printed if another user node is found when this is done\&. 
+.LP
+This function can be useful when a node is started, but the names of the other nodes in the network are not initially known\&. 
+.RE
+.LP
+.B
+world_list (Hostlist), world_list (Hostlist, verbose) 
+.br
+.RS
+.LP
+These functions are the same as \fIworld/0\fR and \fIworld/1\fR, but instead of reading the hostfile from \fI\&.hosts\&.erlang\fR the hosts are specified in \fIHostlist\fR\&. 
+.RE
+.SH Files
+.LP
+The \fI\&.hosts\&.erlang\fR file consists of a number of host names written as Erlang terms\&. It can be located in the current work directory, \fI$HOME/\&.hosts\&.erlang\fR, or \fIcode:root_dir()/\&.hosts\&.erlang\fR\&. The format of the \fI\&.hosts\&.erlang\fR file must be one host name per line\&. The host names must be within quotes as shown in the following examples:
+.LP
+
+
+.nf
+      \&'super\&.eua\&.ericsson\&.se\&'\&.
+      \&'renat\&.eua\&.ericsson\&.se\&'\&.
+      \&'grouse\&.eua\&.ericsson\&.se\&'\&.
+      \&'gauffin1\&.eua\&.ericsson\&.se\&'\&.
+      ^ (new line)
+.fi
+.SH AUTHOR
+.nf
+ Claes Wikstrom - support@erlang.ericsson.se
+.fi

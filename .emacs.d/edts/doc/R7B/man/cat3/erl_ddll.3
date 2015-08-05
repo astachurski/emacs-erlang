@@ -1,0 +1,198 @@
+
+
+
+erl_ddll(3)         ERLANG MODULE DEFINITION          erl_ddll(3)
+
+
+
+MODULE
+     erl_ddll - Dynamic Driver Loader and Linker
+
+DESCRIPTION
+     The _e_r_l__d_d_l_l module can load and link a linked-in driver, if
+     run-time  loading  and linking of shared objects, or dynamic
+     libraries, is supported by the underlying operating system.
+
+
+EXPORTS
+     start() -> {ok, Pid} | {error, Reason}
+
+          Starts _d_d_l_l__s_e_r_v_e_r. The error  return  values  are  the
+          same as for _g_e_n__s_e_r_v_e_r.
+
+     start_link() -> {ok, Pid} | {error, Reason}
+
+          Starts _d_d_l_l__s_e_r_v_e_r and links it to the calling process.
+          The error return values are the same as for _g_e_n__s_e_r_v_e_r.
+
+     stop() -> ok
+
+          Stops _d_d_l_l__s_e_r_v_e_r.
+
+     load_driver(Path, Name) -> ok | {error, ErrorDescriptor}
+
+          Types
+               Name = string() | atom()
+               Path = string() | atom()
+
+          Loads and links the dynamic driver _N_a_m_e. _N_a_m_e  must  be
+          sharable  object/dynamic library. Two drivers with dif-
+          ferent _P_a_t_hs cannot be loaded under the same name.  The
+          number  of  dynamically loadable drivers are limited by
+          the size of _d_r_i_v_e_r__t_a_b in _c_o_n_f_i_g._c.
+
+          If the server is not started the caller will crash.
+
+     unload_driver(Name) -> ok | {error, ErrorDescriptor}
+
+          Types
+               Name = string() | atom()
+
+          Unloads the dynamic driver _N_a_m_e. This will fail if  any
+          port  programs  are  running  the  code  that  is being
+          unloaded. Linked-in driver cannot be unloaded. The pro-
+          cess  must previously have called load_driver/1 for the
+          driver.
+
+          There is no guarantee that the memory where the  driver
+          was  loaded  is  freed.  This depends on the underlying
+          operating system.
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+erl_ddll(3)         ERLANG MODULE DEFINITION          erl_ddll(3)
+
+
+
+          If the server is not started the caller will crash.
+
+     loaded_drivers() -> {ok, DriverList}
+
+          Types
+               DriverList = [Driver()]
+               Driver = string()
+
+          Returns a list  of  all  the  available  drivers,  both
+          (statically) linked-in and dynamically loaded ones.
+
+          If the server is not started the caller will crash.
+
+     format_error(ErrorDescriptor) -> string()
+
+          Takes an _E_r_r_o_r_D_e_s_c_r_i_p_t_o_r which has been returned by one
+          of  _l_o_a_d__d_r_i_v_e_r/_2  and  _u_n_l_o_a_d__d_r_i_v_e_r/_1  and  returns a
+          string which describes the error or warning.
+
+Differences Between Statically Linked-in Drivers and
+     Except for the following minor changes, all  information  in
+     Appendix  E of Concurrent Programming in Erlang, second edi-
+     tion, still applies.
+
+     The _d_r_i_v_e_r__e_n_t_r_y struct has two new members: _f_i_n_i_s_h and _h_a_n_-
+     _d_l_e.
+
+     Before the  driver  is  unloaded,  the  _f_i_n_i_s_h  function  is
+     called,  without  arguments,  to  give  the  driver writer a
+     chance  to  clean  up  and  release  memory   allocated   in
+     _d_r_i_v_e_r__i_n_i_t.
+
+     The member _h_a_n_d_l_e  contains  a  pointer  obtained  from  the
+     operating  system  when the driver was loaded. Without this,
+     the driver cannot be unloaded!
+
+     The  _i_n_i_t  function  in  _s_t_r_u_c_t  _d_r_i_v_e_r__e_n_t_r_y  is  not  used
+     anymore.  After  the  driver  is loaded, the function _s_t_r_u_c_t
+     _d_r_i_v_e_r__e_n_t_r_y *_d_r_i_v_e_r__i_n_i_t(_v_o_i_d *) is called with  _h_a_n_d_l_e  as
+     argument. If the operating system loader cannot find a func-
+     tion called _d_r_i_v_e_r__i_n_i_t, the driver will not be loaded.  The
+     _d_r_i_v_e_r__i_n_i_t  function  _m_u_s_t initialize a _s_t_r_u_c_t _d_r_i_v_e_r__e_n_t_r_y
+     and return a pointer to it.
+
+     Example:
+
+     #include <stdio.h>
+     #include "driver.h"
+     static long my_start();
+     static int my_stop(), my_read();
+     static struct driver_entry my_driver_entry;
+     /*
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+erl_ddll(3)         ERLANG MODULE DEFINITION          erl_ddll(3)
+
+
+
+      * Initialize and return a driver entry struct
+      */
+     struct driver_entry *driver_init(void *handle)
+     {
+       my_driver_entry.init = null_func;   /* Not used */
+       my_driver_entry.start = my_start;
+       my_driver_entry.stop = my_stop;
+       my_driver_entry.output = my_read;
+       my_driver_entry.ready_input = null_func;
+       my_driver_entry.ready_output = null_func;
+       my_driver_entry.driver_name = "my_driver";
+       my_driver_entry.finish = null_func;
+       my_driver_entry.handle = handle;  /* MUST set this!!! */
+       return &my_driver_entry;
+     }
+
+config.c
+     The size of the _d_r_i_v_e_r__t_a_b array, defined in _c_o_n_f_i_g._c,  lim-
+     its the number of dynamically loadable drivers.
+
+Compiling Your Driver
+     Please refer to your C compiler or operating system documen-
+     tation  for information about producing a sharable object or
+     DLL.
+
+     The include file _d_r_i_v_e_r._h is found in the _u_s_r/_i_n_c_l_u_d_e direc-
+     tory of the Erlang installation.
+
+AUTHOR
+     Jan-Erik Dahlin - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+

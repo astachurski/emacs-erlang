@@ -1,0 +1,462 @@
+.TH ets 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+ets \- Built-in Term Storage 
+.SH DESCRIPTION
+.LP
+This module acts as an interface to the Erlang built-in term storage BIFs\&. The module provides the ability to store very large quantities of data in an Erlang runtime system, and to have \fIconstant\fR access time to this data (or in the case of the \fIordered_set\fR data-type access time proportional to the logarithm of the number of elements in the table)\&. Data is organized as a set of dynamic tables\&. Each table is created by a process\&. When the process terminates, the table is automatically destroyed\&. A table can store tuples\&. Every table has access rights set at creation\&. 
+.LP
+The number of tables stored on one Erlang node is limited\&. The current default limit is approximately 1400 tables\&. The upper limit can be increased by setting the environment variable \fIERL_MAX_ETS_TABLES\fR before starting the Erlang runtime system (i\&.e\&. with the \fI-env\fR option to \fIerl\fR/\fIwerl\fR)\&. The actual limit may be slightly higher than the one specified, but never lower\&. 
+.LP
+Tables are divided into four different types, \fIset\fR, \fIordered_set\fR, \fIbag\fR and \fIduplicate_bag\fR\&. A \fIset\fR or \fIordered_set\fR table can only have one tuple associated with each key, a \fIbag\fR table can have multiple tuples associated with a single key whereas a \fIduplicate_bag\fR table can have multiple identical objects in the same table\&. 
+.LP
+In the current implementation, every object insert and look-up operation results in one copy of the object\&. 
+.LP
+This module provides very limited support for concurrent updates\&. No locking is available, but the \fIsafe_fixtable/2\fR function can be used to guarantee that a sequence of \fIfirst/1\fR and \fInext/2\fR calls will traverse the table without errors even if another process (or the same process) simultaneously deletes or inserts elements in the table\&. 
+.LP
+If desired, locking and transactions must be implemented on top of these functions\&. This is done by the mnesia database system\&. 
+.LP
+There is no automatic garbage collection for tables\&. The table is not destroyed automatically if there are no references to it from a process\&. The table has to be destroyed explicitly at user level\&. It is destroyed if the owner terminates, or with \fIdelete/1\fR\&. 
+.LP
+\fI\&'$end_of_table\&'\fR should not be used as a key since this atom is used to mark the end of the table when using first/next\&. 
+.LP
+In general, the functions will exit with reason \fIbadarg\fR if any argument is of the wrong format, or if the table ID is invalid\&. 
+
+.SH EXPORTS
+.LP
+.B
+new(Name, Type) 
+.br
+.RS
+.LP
+Creates a new table and returns a table identifier which can be used in subsequent operations\&. This table ID can also be sent to other processes so that a table can be shared between processes\&. It is completely location transparent and can be sent to processes at other nodes\&. Accordingly, the table identifier can be used as a location transparent store\&. Large amounts of data can be distributed to locations where it can be stored\&. 
+.LP
+
+.LP
+The parameter \fIType\fR is a list which defaults to \fI[set, protected]\fR if \fI[]\fR is specified\&. The list may contain the following atoms:
+.RS 2
+.TP 2
+*
+\fIset\fR The table is a \fIset\fR table - one key, one object, no order among elements\&. 
+.TP 2
+*
+\fIordered_set\fR The table is a \fIordered_set\fR table - one key, one object, ordered in Erlang term order, which is the order implied by the < and > operators\&. Tables of this type behave slightly differently in some situations\&. Each API function of concern notes this different behaviour\&. 
+.TP 2
+*
+\fIbag\fR The table is a \fIbag\fR table which can have multiple objects per key\&. 
+.TP 2
+*
+\fIduplicate_bag\fR The table is a \fIduplicate_bag\fR table which can have multiple copies of the same object\&. 
+.TP 2
+*
+\fIpublic\fR The table is open to both read and write operations\&. Any process may read or write to the table\&. If this option is used, the \fIets\fR table can be seen as a shared memory segment which is shared by all Erlang processes\&. 
+.TP 2
+*
+\fIprotected\fR The owner can read and write to the table\&. Other processes can only read the table\&. 
+.TP 2
+*
+\fIprivate\fR Only the owner process can read or write to the table\&. 
+.TP 2
+*
+\fInamed_table\fR If this option is present, the table can be accessed by name\&. With this option, it is possible to have globally accessible tables without passing the table identifier around\&. 
+.TP 2
+*
+\fI{keypos, Pos}\fR By default, the first element of each tuple inserted in a table is the key\&. However, this might not always be appropriate\&. In particular, we do not want the first element to be the key if we want to insert Erlang records in a table\&. When creating a table, it is possible to specify which tuple position is the key\&.
+.RE
+.SS Warning:
+.LP
+Do not assume anything about the datatype of the table identifier\&. 
+
+.RE
+.LP
+.B
+insert(Tab, Object) 
+.br
+.RS
+.LP
+Inserts \fIObject\fR into the table \fITab\fR\&. The object must be a tuple with a size equal to or greater than one\&. If the table was created with the \fIkeypos\fR option, the size can also be supplied there\&. By default, the first element of the object is the key of the object\&. Returns \fItrue\fR\&. 
+.RE
+.LP
+.B
+lookup(Tab, Key) 
+.br
+.RS
+.LP
+Searches the table \fITab\fR for object(s) with the key \fIKey\fR and returns a list of the found object(s)\&. Insert and look-up times in tables of type \fIset\fR, \fIbag\fR and \fIduplicate_bag\fR are constant, regardless of the size of the table\&. For the \fIordered_set\fR data-type, the look-up time is proportional to the (binary) logarithm of the number of elements (it is implemented as a tree)\&. 
+.LP
+The following example illustrates: 
+
+.nf
+1>T=ets:new(mytab, [bag, public])\&.      
+{6, <0\&.19\&.0>}
+2>ets:insert(T, {a, 2, xx, yy})\&.           
+true
+3>ets:insert(T, {a, 2, {peter, pan}, 77})\&.
+true
+4>ets:lookup(T, a)\&.
+[{a, 2, xx, yy}, {a, 2, {peter, pan}, 77}]
+5>ets:insert(T, {b, 123, {peter,  pan}, 77})\&.
+true
+6>ets:lookup(T, b)\&.                       
+[{b, 123, {peter, pan}, 77}]
+.fi
+.LP
+If the table is of type \fIset\fR or \fIordered_set\fR, the function returns either \fI[]\fR, or a list of maximum length of one (there can be only be one object with a single key in a set)\&. 
+.LP
+If the table is of type \fIbag\fR or \fIduplicate_bag\fR , a look-up returns a list of arbitrary length\&. It is also worthwhile to note that \fIbag\fR tables have the following two properties\&. 
+.RS 2
+.TP 2
+*
+The same object cannot occur twice in the same table (no duplicates)\&. 
+.TP 2
+*
+The time order of object insertions is preserved\&. If object\fI{x, X}\fR is inserted before object \fI{x, Y}\fR, the call \fIets:lookup(T, x)\fR is guaranteed to return the list \fI[{x, X}, {x, Y}]\fR, as opposed to the list \fI[{x, Y}, {x, X}]\fR
+.RE
+.RE
+.LP
+.B
+lookup_element(Tab, Key, Pos)
+.br
+.RS
+.LP
+This function looks up the Pos\&'th element of the object in table \fITab\fR, with key \fIKey\fR\&. If no such object exists, the function exists with reason \fIbadarg\fR\&. If the table is of type \fIbag\fR or \fIduplicate_bag\fR, a list of the elements is returned\&. 
+.RE
+.LP
+.B
+delete(Tab, Key) -> true 
+.br
+.RS
+.LP
+Deletes object(s) with the key \fIKey\fR in the table \fITab\fR\&. Returns \fItrue\fR, or exits with reason \fIbadarg\fR if \fITab\fR is not a valid Table\&. 
+.RE
+.LP
+.B
+delete(Tab) 
+.br
+.RS
+.LP
+Deletes the table \fITab\fR\&. Returns \fItrue\fR, or exits with reason \fIbadarg\fR if \fITab\fR is not a valid Table\&. 
+.RE
+.LP
+.B
+update_counter(Tab, Key, Incr)
+.br
+.RS
+.LP
+In a table of type \fIset\fR or \fIordered_set\fR, an efficient way of managing counters is to use an object with one or more integers to associate one or more counters with \fIKey\fR\&. The function \fIupdate_counter/3\fR destructively changes the object with key \fIKey\fR by adding the integer value \fIIncr\fR to the counter\&. The return value is the new value of the counter\&. \fIIncr\fR can be either:
+.RS 2
+.TP 2
+*
+An integer that is added to the (integer) element directly following the key in the tuple (i\&.e\&. at position <keypos> + 1)
+.TP 2
+*
+A tuple \fI{Pos, Increment}\fR where \fIPos\fR is the position of the counter element in the tuple and \fIIncrement\fR is the integer value to be added to that element\&.
+.RE
+.LP
+This function fails with \fIbadarg\fR if:
+.RS 2
+.TP 2
+*
+no object with the right key exists
+.TP 2
+*
+the object in the counter position is not an integer
+.TP 2
+*
+the table is of type \fIduplicate_bag\fR or \fIbag\fR
+.TP 2
+*
+the object in the table has the wrong arity\&.
+.RE
+.RE
+.LP
+.B
+first(Tab) 
+.br
+.RS
+.LP
+Returns the \&'first\&' \fIKey\fR in the table \fITab\fR\&. There is no apparent order among the objects in tables of other types than \fIordered_set\fR, but there is always an internal order known only by the table itself\&. In the case of the \fIordered_set\fR table type, the first key in Erlang term order is returned\&. Returns \fI\&'$end_of_table\&'\fR if there is no first key (the table is empty)\&. 
+.RE
+.LP
+.B
+next(Tab, Key) 
+.br
+.RS
+.LP
+Returns the \&'next\&' table key after \fIKey\fR\&. \fI\&'$end_of_table\&'\fR is returned if the object associated with \fIKey\fR is the \&'last\&' object in the table\&. As with \fIfirst/1\fR the only table type where the order has a meaning is \fIordered_set\fR\&. For the table types \fIset\fR, \fIbag\fR and \fIduplicate_bag\fR the function fails with \fIbadarg\fR if there is no object with the key \fIKey\fR, except for the case when the object with the associated key has been deleted from a (still) \fIfixed\fR table (see \fIsafe_fixtable/2\fR below)\&. If the table is of type \fIordered_set\fR the function returns the next object in order, disregarding the fact that the key \fIKey\fR may or may not exist\&. 
+.RE
+.LP
+.B
+last(Tab) 
+.br
+.RS
+.LP
+Works exactly as \fIfirst/1\fR but returns the last object in Erlang term order for the \fIordered_set\fR table type\&. For all other table types, \fIfirst/1\fR and \fIlast/1\fR are synonyms\&. 
+.RE
+.LP
+.B
+prev(Tab, Key) 
+.br
+.RS
+.LP
+Returns the previous table key, which only has meaning for the \fIordered_set\fR table type\&. For all other table types, \fInext/2\fR and \fIprev/2\fR are synonyms, one cannot backup to an \&'object passed earlier\&' in a table of other type than \fIordered_set\fR\&. 
+.RE
+.LP
+.B
+slot(Tab, I) 
+.br
+.RS
+.LP
+This is another way of traversing a table\&. The first \fIslot\fR of a table is 0 and the table can be traversed with consecutive calls to \fIslot/2\fR\&. Each call returns a list of objects\&. \fI\&'$end_of_table\&'\fR is returned when the end of the table is reached\&. This function fails with \fIbadarg\fR if the \fII\fR argument is out of range\&. 
+.LP
+While consecutive calls to \fIslot\fR may look like a safe way to traverse a table even if it is concurrently updated by another process, it \fIis not so\fR\&. A sequence of calls to \fIslot/2\fR may result in unexpected \fIbadarg\fR\&'s if the table is internally resized as an effect of deletes made from another process (or the traversing process itself)\&. By using \fIsafe_fixtable/2\fR, the table will not resize, but then again a sequence of \fIfirst/1\fR and \fInext/2\fR can be used safely on a \fIfixed\fR table, so \fIslot\fR is not safer than \fIfirst/1\fR and \fInext/2\fR\&.
+.LP
+For the \fIordered_set\fR data-type, this function has even more limited usage\&. It will return a list containing the \fII\fR:th element in the table (in Erlang term order)\&. Concurrent updates can make a traversal of an \fIordered_set\fR using \fIslot/2\fR behave very unexpectedly\&. Calls to \fIslot/2\fR on \fIordered_set\fR\&'s with the index given (\fII\fR) equal to the number of objects in the table will return the atom \&'$end_of_table\&'\&. Calls with indexes larger than the number of elements will result in a \fIbadarg\fR exit\&. 
+.LP
+Do not use this function\&. It may be removed in a future release\&. 
+.RE
+.LP
+.B
+fixtable(Tab, true|false) 
+.br
+.RS
+.LP
+This function toggles the table ability to "rehash" itself\&. It is primarily used by the Mnesia DBMS to implement functions which allow write operations in a table, although the table is in the process of being copied to disk or to another node\&. 
+.LP
+The function keeps no track of when and how tables are fixed, it is actually more to be regarded as an internal interface used from the \fIsafe_fixtable/2\fR function\&. It is retained \fIonly\fR for backward compatibility, use \fIsafe_fixtable/2\fR instead\&. 
+.RE
+.LP
+.B
+safe_fixtable(Tab, true|false) 
+.br
+.RS
+.LP
+This function implements limited concurrency support for tables of the \fIset\fR, \fIbag\fR and \fIduplicate_bag\fR table types\&. When a process \&'fixes\&' a table, it remains \fIfixed\fR until that process either \&'releases\&' the table or the process dies\&. If several processes \&'fixes\&' a table, the table will be released when the \fIlast\fR process releases it (or exits)\&. A reference counter is also kept on a per process basis, so \fIN\fR consecutive \&'fixes\&' of a table requires \fIN\fR \&'releases\&' to actually release the table\&.
+.LP
+When a table is \&'fixed\&', a sequence of \fIfirst/1\fR and \fInext/2\fR calls are guaranteed to succeed, that is without generating exits due to deleted keys used in the \fInext/2\fR call\&. An example follows:
+
+.nf
+          clean_all_with_value(Tab, X) ->
+            safe_fixtable(Tab, true), % Make sure the table is
+                                      % not rehashed\&.
+            clean_all_with_value(Tab,X,ets:first(Tab)),
+            safe_fixtable(Tab,false)\&.
+          
+          clean_all_with_value(Tab,X,\&'$end_of_table\&') ->
+            true;
+          clean_all_with_value(Tab,X,Key) ->
+            case ets:lookup(Tab,Key) of
+              [{Key,X}] ->
+                ets:delete(Tab,Key);
+              _ -> % This may be either [{Key,_}] or [] due to
+                   % concurrent updates
+                true
+            end,
+            clean_all_with_value(Tab,X,ets:next(Tab,Key))\&.
+.fi
+.LP
+The above example would have generated a \fIbadarg\fR exit if the table had not been \&'fixed\&' before the loop \fIclean_all_with_value/3\fR\&.
+.LP
+Note that a table which is \&'fixed\&' does not actually remove the elements deleted until it is \&'released\&' by all processes that have \&'fixed\&' it\&. If a process \&'fixes\&' the table and \fInever\fR releases it, the memory used by the deleted objects will never be freed\&. The performance of operations on the table will also degrade significantly\&.
+.LP
+By using calls to \fIinfo/2\fR, one can inspect which processes are \&'fixing\&' the table and when it was first \&'fixed\&'\&. A system where a lot of processes are \&'fixing\&' tables may need a process that monitors those tables and sends alarms when tables have been \&'fixed\&' for to long\&. 
+.LP
+For tables of the \fIordered_set\fR type, \&'fixing\&' has no usage, consecutive calls to \fIfirst/1\fR and \fInext/2\fR will always succeed, regardless of if the table is \&'fixed\&' or not\&.
+.RE
+.LP
+.B
+all() 
+.br
+.RS
+.LP
+Returns a list of all tables on this node\&. 
+.RE
+.LP
+.B
+match(Tab, Pattern) 
+.br
+.RS
+.LP
+Tries to match the object(s) in table \fITab\fR with the pattern \fIPattern\fR\&. \fIPattern\fR may contain \&'_\&' , which matches any object, bound parts, and variables\&. Pattern variables have the form of atoms beginning with a \&'$\&' sign and followed by a number, e\&.g\&., \fI\&'$0\&'\fR or \fI\&'$31\&'\fR\&. If successful, the result of the call is a list of variable bindings\&. The reason for providing a matching function is to scan large portions of a table, searching for a particular object without having to copy the entire table from the table space to the user space\&. 
+.LP
+The following interaction with the Erlang shell illustrates how to use the \fImatch/2\fR function: 
+.LP
+
+
+.nf
+7>ets:match(T, {a, 2, \&'$1\&', \&'$2\&'})\&.
+ [[{peter, pan}, 77], [xx, yy]]
+.fi
+.LP
+The call to \fImatch/2\fR returned an ordered list of the variable bindings which is the first object that matched the pattern, bound the variable \fI$1\fR to \fI{peter, pan}\fR, and the variable \fI$2\fR to \fI77\fR\&. The second object which matched the pattern bound the variable \fI$1\fR to \fIxx\fR, and the variable \fI$2\fR to \fIyy\fR\&. The pattern \&'_\&' can be used as a wild-card\&. It matches everything, but it does not bind any variables\&. 
+
+.nf
+8>ets:match(T, {a, 2, \&'$1\&', \&'_\&'})\&. 
+ [[{peter, pan}], [xx]]
+.fi
+.LP
+\fI[]\fR is returned if no match is found\&. 
+.LP
+The first part of the objects are used as keys in the tables and a match request with the first part of the bound pattern - not a variable or an underscore - is very efficient\&. However, if the key part of the pattern is a variable, the entire table must be searched\&. The search time can be substantial if the table is very large\&. 
+.LP
+The special case where the pattern is a single variable will collect the entire table\&. 
+
+.nf
+9>ets:match(T, \&'$1\&')\&.             
+ [[{a, 2, {peter, pan}, 77}], [{a, 2, xx, yy}], 
+  [{b, 123, {peter, pan}, 77}]]
+.fi
+.LP
+On tables of the \fIordered_set\fR data-type, the result is in the same order as in a \fIfirst/1\fR, \fInext/2\fR sequence\&. 
+.RE
+.LP
+.B
+match_object(Tab, Pattern) 
+.br
+.RS
+.LP
+Tries to match the object(s) in table \fITab\fR with the pattern \fIPattern\fR\&. \fIPattern\fR may contain \&'_\&' , which matches any object, bound parts, and variables\&. Pattern variables have the form of atoms beginning with a \&'$\&' sign and followed by a number, e\&.g\&., \fI\&'$0\&'\fR or \fI\&'$31\&'\fR\&. The result is a list of matching objects (i\&.e complete table objects)\&. This function differs from \fImatch/2\fR in that it returns complete objects and does not return any variable bindings\&. It is thus not very meaningful to use pattern variables, it will have exactly the same effect as using \fI\&'_\&'\fR\&. 
+.LP
+The following interaction with the Erlang shell illustrates how to use the \fImatch_object/2\fR function: 
+.LP
+
+
+.nf
+7>ets:match_object(T, {a, 2, \&'_\&', \&'_\&'})\&.
+ [{a, 2, peter, pan}, {a, 2, captain, hook}]
+.fi
+.LP
+The call to \fImatch_object/2\fR returned an ordered list of objects that matched the pattern, 
+.LP
+\fI[]\fR is returned if no match is found\&. 
+.LP
+The first part of the objects are used as keys in the tables and a match request with the first part of the bound pattern - not a variable or an underscore - is very efficient\&. However, if the key part of the pattern is a variable, the entire table must be searched\&. The search time can be substantial if the table is very large\&. 
+.LP
+The special case where the pattern is a single variable or \fI\&'_\&'\fR will collect the entire table\&.
+.LP
+On tables of the \fIordered_set\fR data-type, the result is in the same order as in a \fIfirst/1\fR, \fInext/2\fR sequence\&. 
+.RE
+.LP
+.B
+match_delete(Tab, Pattern) 
+.br
+.RS
+.LP
+Deletes object(s) which match \fIPattern\fR in the table \fITab\fR\&. This can be especially useful in combination with \fIbag\fR type tables\&. If the first element of \fIPattern\fR is a variable, the entire table must be searched\&. Returns \fItrue\fR\&. 
+.RE
+.LP
+.B
+rename(Tab,NewName)
+.br
+.RS
+.LP
+Renames a (preferably) named table to the name \fINewName\fR\&. \fINewName\fR has to be an atom\&. Renaming a table that is not named will succeed, but is of course quite useless\&. The old name of a named table can no longer be used to access it after it is renamed\&.
+.RE
+.LP
+.B
+info(Tab) 
+.br
+.RS
+.LP
+Returns a tagged structure which describes the table with the following tags: 
+.RS 2
+.TP 2
+*
+\fImemory\fR The number of words allocated to the table\&. 
+.TP 2
+*
+\fIowner\fR The Pid of the owner of the table\&. 
+.TP 2
+*
+\fIsize\fR The number of objects inserted in the table\&. 
+.TP 2
+*
+\fItype\fR Type \fIbag\fR, \fIduplicate_bag\fR or type \fIset\fR\&. 
+.TP 2
+*
+\fIprotection\fR Public, protected, or private\&. 
+.TP 2
+*
+\fInode\fR The name of the node where \fITab\fR is actually stored\&. 
+.TP 2
+*
+\fIname\fR The name of the table, as given to \fInew/2\fR\&. 
+.TP 2
+*
+\fInamed_table\fR true or false\&. 
+.TP 2
+*
+\fIkeypos\fR The position of the tuples which are the key position\&. The default is 1\&. 
+.RE
+.LP
+\fIinfo/1\fR returns \fIundefined\fR if the table does not exist\&. 
+.RE
+.LP
+.B
+info(Tab, Item) 
+.br
+.RS
+.LP
+Same as above, but only for the information that is associated with \fIItem\fR\&. 
+.LP
+Except for the items mentioned above, these to items can be specified in calls to \fIinfo/2\fR:
+.RS 2
+.TP 2
+*
+\fIfixed\fR Returns \fItrue\fR if the table is fixed by any process, otherwise \fIfalse\fR\&. If the table identifier is no longer valid (deleted) the atom \fIundefined\fR is returned\&. 
+.TP 2
+*
+\fIsafe_fixed\fR If the table is \&'fixed\&' using the \fIsafe_fixtable\fR interface, the call returns a tuple: \fI{FixedNowTime, [{Pid, RefCount}]}\fR, where \fIFixedNowTime\fR is the time when the table was fixed by the first process (which may not be one of the processes fixing it now), \fIPid\fR is a process \&'fixing\&' the table right now and \fIRefCount\fR is the reference counter for \&'fixes\&' done by that process\&. There may be any number of processes in the list\&. 
+.RS 2
+.LP
+In \fIall\fR other cases, the atom \fIfalse\fR is returned\&. 
+.LP
+One can use this to write a monitor for \&'fixed\&' tables if desired\&. 
+.RE
+.RE
+.RE
+.LP
+.B
+tab2file(Tab, Filename) 
+.br
+.RS
+.LP
+Dumps a table in the Erlang external term format to the file called \fIFilename\fR\&. Returns \fIok\fR, or \fI{error, Reason}\fR\&. The function may crash if bad arguments are specified\&. The implementation of this function is not efficient\&. 
+.RE
+.LP
+.B
+file2tab(Filename) 
+.br
+.RS
+.LP
+Reads a file produced by the \fItab2file/2\fR function and returns \fI{ok, Tab}\fR if the operation is successful, or \fI{error, Reason}\fR if it fails\&.
+.LP
+The error \fI{error, nofile}\fR is returned whenever the file cannot be read\&. This will be changed in future releases so that \fI{error, nofile}\fR is only returned when the file really does not exist, otherwise another error code will be returned\&. For applications that want to difference between errors, using the routines in the \fIfile\fR module to detect if the file is nonexistent or inaccessible is to be preferred until this interface is changed\&. 
+.RE
+.LP
+.B
+tab2list(Tab) 
+.br
+.RS
+.LP
+Returns a list of all objects in the table\&. 
+.RE
+.LP
+.B
+i() 
+.br
+.RS
+.LP
+Displays a list of all local \fIets\fR tables on the tty\&. 
+.RE
+.LP
+.B
+i(Item) 
+.br
+.RS
+.LP
+Browses an \fIets\fR table on the tty\&. The \fIItem\fR argument is the identifier displayed in the left most field by the \fIi()\fR function\&. 
+.RE
+.SH AUTHOR
+.nf
+ Claes Wikstrom, Tony Rogvall, Patrik Nyblom - support@erlang.ericsson.se
+.fi

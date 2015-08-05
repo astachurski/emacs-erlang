@@ -1,0 +1,132 @@
+
+
+
+ssl(6)            ERLANG APPLICATION DEFINITION            ssl(6)
+
+
+
+APPLICATION
+     ssl - The SSL Application
+
+DESCRIPTION
+     The Secure Socket Layer (SSL)  application  provides  secure
+     socket communication over TCP/IP.
+
+
+Environment
+     The  following  environment  configuration  parameters   are
+     defined for the SSL application. Refer to application(3) for
+     more information about configuration parameters.
+
+       _d_e_b_u_g = _t_r_u_e | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Causes debug information to  be  written  to  standard
+           output. Default is _f_a_l_s_e.
+
+       _d_e_b_u_g_d_i_r = _p_a_t_h() | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Causes debug information output  controlled  by  _d_e_b_u_g
+           and   _m_s_g_d_e_b_u_g   to   be   printed  to  a  file  named
+           _s_s_l__e_s_o_c_k.<_p_i_d>._l_o_g  in  the  directory  specified  by
+           _d_e_b_u_g_d_i_r, where <_p_i_d> is the operating system specific
+           textual representation of the process  indentifier  of
+           the  external  port  program  of  the SSL application.
+           Default is _f_a_l_s_e, i.e. no log file is produced.
+
+       _m_s_g_d_e_b_u_g = _t_r_u_e | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Sets _d_e_b_u_g = _t_r_u_e and causes also the contents of  low
+           level  messages  to  be  printed  to  standard output.
+           Default is _f_a_l_s_e.
+
+       _p_o_r_t__p_r_o_g_r_a_m = _s_t_r_i_n_g() | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Name of port program. The default is _s_s_l__e_s_o_c_k.
+
+       _p_p_r_o_x_y_l_s_p_o_r_t = _i_n_t_e_g_e_r() | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Define the port number of the listen port of  the  SSL
+           port program. Almost never is this option needed.
+
+       _p_p_r_o_x_y_l_s_b_a_c_k_l_o_g = _i_n_t_e_g_e_r() | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Set the listen queue size of the listen  port  of  the
+           SSL port program. The default is 5.
+
+SSL libraries
+     The current implementation of the SSL application  is  based
+     on  the  _S_S_L_e_a_y package version 0.9.0 available from various
+     sites,       see       e.g.         http://www.cryptsoft.com
+     <http://www.cryptosoft.com>.
+
+     The user has  to  fetch  the  SSLeay  package,  compile  and
+     install  the libraries _l_i_b_c_r_y_p_t_o._s_o and _l_i_b_s_s_l._s_o (UNIX), or
+     the libraries _l_i_b_e_a_y_3_2._d_l_l  and  _s_s_l_e_a_y_3_2._d_l_l  (WIN32).  The
+     WIN32 libraries must be compiled and linked with WinSock2.
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    1
+
+
+
+
+
+
+ssl(6)            ERLANG APPLICATION DEFINITION            ssl(6)
+
+
+
+     In order to build SSLeay-0.9.0 for WinSock2  on  Windows  NT
+     4.0 do as follows:
+
+       1.  In _c_r_y_p_t_o/_b_i_o/_b__s_o_c_k._c:_i_n_t _B_I_O__s_o_c_k__i_n_i_t() remove  the
+           call to _W_S_A_C_a_n_c_e_l_B_l_o_c_k_i_n_g_C_a_l_l().
+
+       2.  In _c_r_y_p_t_o/_b_n/_b_n._h replace #_d_e_f_i_n_e  _B_N__U_L_L_O_N_G  _u_n_s_i_g_n_e_d
+           __i_n_t_6_4 by #_d_e_f_i_n_e _B_N__U_L_L_O_N_G _u_n_s_i_g_n_e_d ___i_n_t_6_4.
+
+       3.  In     _c_r_y_p_t_o/_b_n/_b_n__m_u_l_w._c:_b_n__a_d_d__w_o_r_d_s()      replace
+           _r_e_t_u_r_n(_l_l&_B_N__M_A_S_K_2);             by             _r_e_t_u_r_n
+           (_B_N__U_L_O_N_G)(_l_l&_B_N__M_A_S_K_2);.
+
+       4.  In _a_p_p_s/_s__s_o_c_k_e_t._c:_s_o_c_k__c_l_e_a_n_u_p() remove call to  _W_S_A_-
+           _C_a_n_c_e_l_B_l_o_c_k_i_n_g_C_a_l_l().
+
+       5.  In  Configure   replace   "_V_C-_W_I_N_3_2",   "_c_l:::_B_N__L_L_O_N_G
+           _R_C_4__I_N_D_E_X    ".$_x_8_6__g_c_c__o_p_t_s.":::"    by   "_V_C-_W_I_N_3_2",
+           "_c_l:::_R_C_4__I_N_D_E_X ".$_x_8_6__g_c_c__o_p_t_s.":::".
+
+       6.  In _m_f-_d_d_l._n_t replace _w_s_o_c_k_3_2._l_i_b by _w_s_2__3_2._l_i_b.
+
+     The _s_s_l__e_s_o_c_k port program has to be built by linking object
+     files  and libraries. An example _M_a_k_e_f_i_l_e is provided in the
+     _s_s_l-_X._Y/_p_r_i_v/_o_b_j directory, where also the object files  are
+     found.
+
+     There are also commercially available  SSL  libraries,  e.g.
+     _C/_S_S_L       from       Baltimore       Technologies      Ltd
+     <http://www.baltimoretechnologies.com>, and _S_S_L-_C  from  RSA
+     Data  Security  Australia  Pty Ltd <http://www.aus.rsa.com>,
+     which may be supported by the SSL application in the future.
+
+Restrictions
+     Users must be aware of export restrictions and patent rights
+     concerning cryptographic software.
+
+SEE ALSO
+     application(3)
+
+AUTHOR
+     Peter Hogfeldt - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: ssl  2.3.1                    2
+
+
+

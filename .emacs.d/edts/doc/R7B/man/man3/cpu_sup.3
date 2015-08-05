@@ -1,0 +1,86 @@
+.TH cpu_sup 3 "os_mon  1.3.9" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+cpu_sup \- A CPU Load Supervisor Process
+.SH DESCRIPTION
+.LP
+\fIcpu_sup\fR is part of the \fIos_mon\fR application and all configuration parameters are defined in the reference documentation for the \fIos_mon\fR application\&. 
+.LP
+\fIcpu_sup\fR is a process which supervises the CPU load in the operating system\&. The load is obtained via the Solaris kernel statistics library, \fIkstat\fR\&. The same underlying mechanism is used by many other well known UNIX programs, such as \fIrup\fR, \fItop\fR and \fIxload\fR\&. 
+.LP
+The Solaris kernel continuously maintains a large number of statistics, of which the current load values are just a few\&. Whenever an Erlang process requests a load measurement, \fIcpu_sup\fR just reads the latest statistical values\&. 
+.LP
+The Solaris kernel load values are proportional to how long time a runnable UNIX process has to spend in the run queue before it is scheduled\&. Accordingly, higher values mean more system load\&. The returned value divided by 256 produces the figure displayed by \fIrup\fR and \fItop\fR\&. What is displayed as 2\&.00 in \fIrup\fR, is displayed as as load up to the second mark in \fIxload\fR\&. 
+.LP
+For example, \fIrup\fR displays a load of 128 as 0\&.50, and 512 as 2\&.00\&. 
+.LP
+If the user wants to view load values as percentages of machine capacity, then this way of measuring presents a problem, because the load values are not restricted to a fixed interval\&. In this case, the following simple mathematical transformation can produce the load value as a percentage: 
+.LP
+PercentLoad = 100 * (1 - D/(D + Load)) 
+.LP
+\fID\fR determines which load value should be associated with which percentage\&. Choosing \fID\fR = 50 means that 128 is 60% load, 256 is 80%, 512 is 90%, and so on\&. 
+.LP
+Another way of measuring system load is to divide the number of busy CPU cycles by the total number of CPU cycles\&. This method is used by some systems, including Windows NT for example, and it produces values in the 0-100 range immediately\&. However, this method hides the fact that a machine can be more or less saturated\&. 
+.LP
+A server which receives just enough requests to never become idle would score 100% with this measurement method\&. If the server receives 50% more requests, it would still score 100%\&. With the measurement method used in this module, the load would increase from 80% to 87% when calculated with the percentage formula shown previously\&. 
+
+.SH EXPORTS
+.LP
+.B
+nprocs() -> UnixProcesses
+.br
+.RS
+.TP
+Types
+UnixProcesses = integer()
+.br
+.RE
+.RS
+.LP
+Returns the number of UNIX processes running on this machine\&. This is a crude way of measuring the system load, but it may be of interest in some cases\&. 
+.RE
+.LP
+.B
+avg1() -> SystemLoad
+.br
+.RS
+.TP
+Types
+SystemLoad = integer()
+.br
+.RE
+.RS
+.LP
+Returns the average system load in the last 60 seconds, as described above\&. 0 represents no load, 256 represents the load reported as 1\&.00 by \fIrup\fR\&. 
+.RE
+.LP
+.B
+avg5() -> SystemLoad
+.br
+.RS
+.TP
+Types
+SystemLoad = integer()
+.br
+.RE
+.RS
+.LP
+Returns the average system load from the last 300 seconds, as described above\&. 0 represents no load, 256 represents the load reported as 1\&.00 by \fIrup\fR\&. 
+.RE
+.LP
+.B
+avg15() -> SystemLoad
+.br
+.RS
+.TP
+Types
+SystemLoad = integer()
+.br
+.RE
+.RS
+.LP
+Returns the average system load from the last 900 seconds, as described above\&. 0 represents no load, 256 represents the load reported as 1\&.00 by \fIrup\fR\&. 
+.RE
+.SH AUTHOR
+.nf
+Janne Lindblad - support@erlang.ericsson.se
+.fi

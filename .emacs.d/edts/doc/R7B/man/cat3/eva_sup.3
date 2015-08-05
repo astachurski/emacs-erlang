@@ -1,0 +1,198 @@
+
+
+
+eva_sup(3)          ERLANG MODULE DEFINITION           eva_sup(3)
+
+
+
+MODULE
+     eva_sup  - A Supervisor for the EVA Application
+
+DESCRIPTION
+     This module provides a supervisor for the entire EVA  appli-
+     cation. An application can use this supervisor, or write its
+     own, using the _s_t_a_r_t__l_i_n_k functions of the  individual  ser-
+     vices.
+
+     The supervisor can be configured to start the different  EVA
+     services  independently,  such  as  the basic _e_v_a__s_e_r_v_e_r and
+     _e_v_a__l_o_g functionality, and to start the SNMP implementations
+     of  the respective service. For each possible combination of
+     services, there is a corresponding start function, for exam-
+     ple  _s_t_a_r_t__l_i_n_k__l_o_g/_1  which starts the basic eva server and
+     the log functionality.
+
+     Before the services can be used, the Mnesia tables  involved
+     must  be created. For each combination of services, there is
+     a corresponding function which creates the tables. Each such
+     function takes a list of nodes as its argument. This list of
+     nodes defines to which  nodes  the  Mnesia  tables  will  be
+     replicated.  These  nodes  should be the same nodes as where
+     the application where EVA is included can  run  distributed.
+     This  is  as  per the _k_e_r_n_e_l configuration parameter _d_i_s_t_r_i_-
+     _b_u_t_e_d.
+
+
+EXPORTS
+     create_tables(Nodes) -> void()
+
+          Types
+               Nodes = [node()]
+
+          Creates the Mnesia tables for  the  basic  EVA  service
+          (_e_v_a__s_e_r_v_e_r) only.
+
+     create_tables_log(Nodes) -> void()
+
+          Types
+               Nodes = [node()]
+
+          Creates the Mnesia tables for  the  basic  EVA  service
+          (_e_v_a__s_e_r_v_e_r) and EVA log service (_e_v_a__l_o_g).
+
+     create_tables_log_snmp(Nodes) -> void()
+
+          Types
+               Nodes = [node()]
+
+          Creates the Mnesia tables for  the  basic  EVA  service
+          (_e_v_a__s_e_r_v_e_r),  EVA  log  service (_e_v_a__l_o_g), and for the
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   1
+
+
+
+
+
+
+eva_sup(3)          ERLANG MODULE DEFINITION           eva_sup(3)
+
+
+
+          SNMP implementation of these  (_e_v_a__s_n_m_p__a_d_a_p_t_a_t_i_o_n  and
+          _e_v_a__l_o_g__s_n_m_p).
+
+     create_tables_snmp(Nodes) -> void()
+
+          Types
+               Nodes = [node()]
+
+          Creates the Mnesia tables for  the  basic  EVA  service
+          (_e_v_a__s_e_r_v_e_r),  and  for the SNMP implementation of this
+          service (_e_v_a__s_n_m_p__a_d_a_p_t_a_t_i_o_n).
+
+     start_link() -> {ok, Pid} | {error, Reason}
+
+          Starts  the  supervisor  and  the  basic  EVA   service
+          (_e_v_a__s_e_r_v_e_r) only.
+
+     start_link_log(DefaultLog) -> {ok, Pid} | {error, Reason}
+
+          Types
+               DefaultLog = string() | false
+
+          Starts  the   supervisor,   the   basic   EVA   service
+          (_e_v_a__s_e_r_v_e_r) and EVA log service (_e_v_a__l_o_g).
+
+          _D_e_f_a_u_l_t_L_o_g is passed to _e_v_a__l_o_g:_s_t_a_r_t__l_i_n_k(_D_e_f_a_u_l_t_L_o_g).
+
+     start_link_log_snmp(DefaultLog, LogDir, MaxDirSize) ->  {ok,
+     Pid} | {error, Reason}
+
+          Types
+               DefaultLog = string() | false
+               LogDir = string()
+               MaxDirSize = integer()
+
+          Starts  the   supervisor,   the   basic   EVA   service
+          (_e_v_a__s_e_r_v_e_r),  EVA  log  service (_e_v_a__l_o_g) and the SNMP
+          implementations  of  these   (_e_v_a__s_n_m_p__a_d_a_p_t_a_t_i_o_n   and
+          _e_v_a__l_o_g__s_n_m_p).
+
+          _D_e_f_a_u_l_t_L_o_g is passed to _e_v_a__l_o_g:_s_t_a_r_t__l_i_n_k(_D_e_f_a_u_l_t_L_o_g),
+          _L_o_g_D_i_r            and           _M_a_x_D_i_r_S_i_z_e           to
+          _e_v_a__l_o_g__s_n_m_p:_s_t_a_r_t__l_i_n_k(_L_o_g_D_i_r, _M_a_x_D_i_r_S_i_z_e).
+
+     start_link_snmp() -> {ok, Pid} | {error, Reason}
+
+          Starts  the   supervisor,   the   basic   EVA   service
+          (_e_v_a__s_e_r_v_e_r)  and  the SNMP implementation of this ser-
+          vice (_e_v_a__s_n_m_p__a_d_a_p_t_a_t_i_o_n).
+
+SEE ALSO
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   2
+
+
+
+
+
+
+eva_sup(3)          ERLANG MODULE DEFINITION           eva_sup(3)
+
+
+
+     eva_log(3),         eva_server(3),          eva_log_snmp(3),
+     eva_snmp_adaptation(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   3
+
+
+

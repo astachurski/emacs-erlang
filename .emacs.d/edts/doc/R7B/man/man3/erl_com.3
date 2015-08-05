@@ -1,0 +1,316 @@
+.TH erl_com 3 "comet  1.0" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+erl_com  \- Comet gen_server with API to Erlang COM client\&.
+.SH DESCRIPTION
+.LP
+The erl_com module is a gen_server that exposes an API to the port program and port driver that is used to call COM services from Erlang\&. 
+.LP
+There is a mapping between types in Erlang and types in COM\&. The following table shows how Erlang types are converted by the port program to COM types\&. 
+
+.nf
+ COM type       Erlang type             Comment
+ --------       -----------             -------
+ VT_I4          integer()
+ VT_U4          integer()
+ VT_BOOL                true | false
+ VT_BSTR                string()                Strings are 
+                                         translated between
+                                         Ascii and Unicode
+ VT_DATE                {integer(), integer(), integer()}       
+                                         Same format as returned 
+                                         from now()
+                 {{Year, Month, Day}, {Hour, Min, Sec}}
+                                         Date and time, 
+                                         with integers in tuples
+ VT_PTR         {vt_*, out}             Any output parameter, 
+                                         including return value
+ VT_I1          {vt_i1, integer()}
+ VT_U1          {vt_u1, integer()}
+ VT_I2          {vt_i2, integer()}
+ VT_U2          {vt_u2, integer()}
+ VT_UNKNOWN     integer()               Should be sent to 
+                                         package_interface
+ VT_DISPATCH    integer()               Should be sent to 
+                                         package_interface
+ other types    unsupported
+.fi
+.LP
+Some of the internal Erlang types map to types in COM\&. Most types in COM, however, have no corresponding type in Erlang\&. In these cases, a special tuple is used, of the form \fI{ComType, Value}\fR, where \fIComType\fR is the corresponding type-name as defined in \fIole2\&.h\fR in the Microsoft Windows SDK\&. 
+
+.SH EXPORTS
+.LP
+.B
+start_driver() -> {ok, Pid}
+.br
+.RS
+.TP
+Types
+Pid = pid()
+.br
+ServerName = {local, atom()} | {global, atom()}
+.br
+.RE
+.RS
+.LP
+Starts a new server, and initializes the COM port\&. The port is loaded as a port driver\&. This is the most efficient way to use COM, since the com port resides in the same process as the Erlang emulator\&. However this also means that crashing COM-objects will bring down the emulator\&. 
+.LP
+The server can be started with or without a registered name\&. There is no advantage of having two servers on the same node\&. 
+.LP
+This way to launch Comet should only be used in two situations: 
+.RS 2
+.TP 2
+*
+When the COM servers are in separate processes, where they will not bring down the emulator in case of a crash\&. 
+.TP 2
+*
+When the COM server is well-known and unlikely to crash, and the overhead of using a separate port process is unacceptable\&.
+.RE
+.RE
+.LP
+.B
+start_process() -> {ok, Pid}
+.br
+.B
+start_process(ServerName) -> {ok, Pid}
+.br
+.RS
+.TP
+Types
+Pid = pid()
+.br
+ServerName = {local, atom()} | {global, atom()}
+.br
+.RE
+.RS
+.LP
+Starts a new server, and initializes the COM port\&. 
+.LP
+This function starts the COM port as a port-program, in a separate process\&. The erl_com gen_server uses (as usual in Erlang), a pipe to communicate with the port\&. This has the benifit that a crash in the COM port, will not crash the emulator\&. 
+.LP
+Each \fIerl_com\fR starts a separate port-program\&. 
+.LP
+The server can be started with or without a registered name\&. 
+.LP
+Normally, only one \fIerl_com\fR server is started on a node, with possibly several threads for several clients\&. The only reason to start two servers on the same node is if one might crash, then the other will keep running\&. 
+.LP
+This way to launch Comet should be used when: 
+.RS 2
+.TP 2
+*
+The COM server is not 100% certain and crashproof\&.
+.TP 2
+*
+The overhead of using a separate port process is acceptable\&.
+.RE
+.LP
+Since this way is safer, it is the preferred way of using Comet\&. 
+.RE
+.LP
+.B
+stop(ServerRef) -> ok | Error
+.br
+.RS
+.TP
+Types
+ServerRef = Name | {Name, Node} | {global, Name} | Pid
+.br
+Name = atom()
+.br
+Node = atom()
+.br
+Pid = pid()
+.br
+Thread = integer()
+.br
+Error = {error, Errcode}
+.br
+Errcode = string()
+.br
+.RE
+.RS
+.LP
+Shuts the \fIerl_com\fR server down\&. This will stop any threads\&. Interfaces should be released before\&. 
+.LP
+(Remember COM has no garbage collection!) 
+.RE
+.LP
+.B
+new_thread(ServerRef) -> ComThread | Error
+.br
+.RS
+.TP
+Types
+ComThread = {com_thread, ServerRef, Thread}
+.br
+Thread = integer()
+.br
+Error = {error, Errcode}
+.br
+Errcode = string()
+.br
+.RE
+.RS
+.LP
+Creates a new Windows thread that can be used to create and manipulate COM objects\&. This must be done after \fIerl_com\fR is started\&. At least one thread has to be created\&. 
+.LP
+To allow COM calls to take time without blocking the emulator, \fIerl_com\fR allows multi-threaded execution\&. The maximum number of threads is 60\&. However, creating more than a few is not useful for practical reasons\&. 
+.LP
+When a COM-thread is created, it is suspended with a select function (which is called WaitForMultipleObjects in the Win32 API)\&. Calling any COM-functions from the thread, is done by setting up a parameter buffer and signaling an event, that wakes up the thread\&. 
+.LP
+The return value is a tuple that includes \fIThread\fR, a thread index that is an integer between 0 and 60, which is unique for each thread, and allocated incrementally\&. Thread index values will be reused if a thread is ended\&. 
+.RE
+.LP
+.B
+end_thread(ComThread) -> ok | Error
+.br
+.RS
+.TP
+Types
+ComThread = {com_thread, ServerRef, Thread}
+.br
+Thread = integer()
+.br
+Error = {error, Errcode}
+.br
+Errcode = string()
+.br
+.RE
+.RS
+.LP
+Ends a thread previously created with \fInew_thread\fR\&. If the thread has any interfaces, these must be released before the thread is ended, otherwise resource leakage can occur\&. (Remember COM has no garbage collection!) 
+.LP
+The thread is signaled and will exit\&. The thread index will be marked as available, internally in the port program\&. 
+.RE
+.LP
+.B
+create_object(ComThread, Class, Ctx) -> ComInterface | Error
+.br
+.B
+create_object(ComThread, Class, RefID, Ctx) -> ComInterface | Error
+.br
+.B
+create_dispatch(ComThread, Class, Ctx) -> ComInterface | Error
+.br
+.RS
+.TP
+Types
+ComThread = {com_thread, ServerRef, Thread}
+.br
+Class = string()
+.br
+Ctx = integer()
+.br
+Thread = integer()
+.br
+Error = {error, Errcode}
+.br
+Errcode = string()
+.br
+ComInterface = {com_interface, ServerRef, Thread, InterfaceNum}
+.br
+InterfaceNum = integer()
+.br
+.RE
+.RS
+.LP
+This function creates a COM object\&. It calls the Win32 API function, \fICoCreateFunction\fR\&. Refer to Windows documentation and COM books\&. The string \fIClass\fR can be either a GUID for a class, or a COM program string\&. Values for the \fICtx\fR are defined in \fIerl_com\&.hrl\fR\&. 
+.LP
+When successful, this function creates a COM object, and returns a tuple \fIComInterface\fR, which is a handle for the object, that is used for calling methods, and releasing the object\&. 
+.LP
+In the case of an error, the COM error code is returned as part of the \fIErrcode\fR string, as a hexadecimal number\&. 
+.LP
+The \fIcreate_dispatch\fR variant creates an object with the \fIIDispatch\fR interface\&. The interface wanted can be specified in the \fIRefID\fR parameters\&. The default is \fIIUnknown\fR\&. 
+.RE
+.LP
+.B
+query_interface(ComInterface, Iid)
+.br
+.RS
+.TP
+Types
+Iid = string()
+.br
+.RE
+.RS
+.LP
+Calls \fIquery_interface\fR on the given interface\&. Note that in COM, an object is also considered an interface\&. 
+.LP
+This function is used to see what interfaces an object implements and to do down-casting\&. 
+.RE
+.LP
+.B
+release(ComInterface)
+.br
+.RS
+.LP
+In COM, all interfaces are reference-counted\&. The release function decrements the reference counter, and releases the interface (or object) if it reaches zero\&. Note that it is important to release all objects created, and interfaces acquired\&. Otherwise resource leaking will occur\&. 
+.RE
+.LP
+.B
+com_call(ComInterface, MethodOffs, Pars)
+.br
+.RS
+.TP
+Types
+MethodOffs = integer()
+.br
+Pars = list()
+.br
+.RE
+.RS
+.LP
+This is the way to call a method in a COM interface\&. Beware that the parameter types must match the types in the COM interface function\&. 
+.LP
+Note that return values are handled with \fIout\fR parameters when using \fIcom_call/3\fR\&. (As opposed to \fIinvoke/3\fR\&. 
+.RE
+.SH EXPORTS
+.LP
+.B
+invoke(ComInterface, MethodID, Pars)
+.br
+.B
+invoke(ComInterface, MethodName, Pars)
+.br
+.RS
+.LP
+There are two ways to call a method in a COM interface\&. A dual- or dispatch-interface, has a method invoke, that is used to call methods\&. This method is intended for interpreted languages\&. The invoke method is safer than \fIcom_call\fR, but also much slower\&. 
+.RE
+.SH EXPORTS
+.LP
+.B
+property_get(ComInterface, MethodID)
+.br
+.B
+property_get(ComInterface, MethodID, [Parameters])
+.br
+.B
+property_get(ComInterface, MethodName)
+.br
+.B
+property_get(ComInterface, MethodName, [Parameters])
+.br
+.RS
+.LP
+To get a property value through the dispatch-interface, this function is used\&. 
+.RE
+.LP
+.B
+property_put(ComInterface, MethodID, Value)
+.br
+.B
+property_put(ComInterface, MethodID, [Parameters], Value)
+.br
+.B
+property_put(ComInterface, MethodName, Value)
+.br
+.B
+property_put(ComInterface, MethodName, [Parameters], Value)
+.br
+.RS
+.LP
+To set a property value through the dispatch-interface, this function is used\&. 
+.RE
+.SH AUTHOR
+.nf
+Jakob Cederlund - support@erlang.ericsson.se
+.fi

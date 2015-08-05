@@ -1,0 +1,123 @@
+.TH eva_log 3 "eva  2.0.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+eva_log  \- Log functionality for events and alarms in EVA
+.SH DESCRIPTION
+.LP
+The EVA log service uses the generic Log Control service to implement log functionality for events and alarms defined in EVA\&. 
+.LP
+In the rest of this description, the term \fIevent\fR refers to both events and alarms as defined in EVA\&. 
+.LP
+This log functionality supports logging of events from EVA\&. It uses the module \fIdisk_log\fR for logging of events, using the internal log format defined by \fIdisk_log\fR\&. There can be several logs active at the same time\&. Each log uses a filter function to decide whether an event should be stored in the log or not\&. 
+.LP
+There are several ways to control whether an event should be stored in a log or not\&. First of all, \fIeva_log\fR checks if the \fIlog\fR flag in \fIeventTable\fR is set (see \fIeva(3)\fR)\&. If it is set to \fIfalse\fR, the event is not stored in any log, even if there are logs that are configured to log the event\&. In this way, logging of individual events can be turned on/off by a manager\&. If the \fIlog\fR flag is \fItrue\fR, \fIeva_log\fR checks the operational status of the log\&. If it is \fIdown\fR, the event is not stored\&. If it is \fIup\fR, the associated filter function is called\&. If this function returns \fItrue\fR, the event is stored, otherwise it is discarded\&. To summarize, all these conditions must be true for an event to be stored: 
+.RS 2
+.TP 2
+*
+The \fIlog\fR flag for the event is \fItrue\fR\&. 
+.TP 2
+*
+The operational status for the log is \fIup\fR\&. 
+.TP 2
+*
+The filter function for the log returns \fItrue\fR, when applied to the event\&. 
+.RE
+.LP
+There is a concept of a default log\&. The default log is used to log any event that has the \fIlog\fR flag in \fIeventTable\fR set to \fItrue\fR, but no log is currently able to store the event (or there is no other log defined to log the event)\&. The usage of the default log is optional\&. 
+
+.SH EXPORTS
+.LP
+.B
+close(Name) -> ok
+.br
+.RS
+.TP
+Types
+Name = string()
+.br
+.RE
+.RS
+.LP
+Closes an event log\&. 
+.RE
+.LP
+.B
+get_logs() -> [#eva_log]
+.br
+.RS
+.LP
+Returns all event logs known to \fIeva_log\fR\&. The record \fI#eva_log\fR is defined in the file \fIeva_log\&.hrl\fR\&. 
+.RE
+.LP
+.B
+open(Name, FilterFunction, WrapTime) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Name = string()
+.br
+FilterFunction = {M, F, A}
+.br
+M = F = atom()
+.br
+A = list()
+.br
+WrapTime = integer()
+.br
+.RE
+.RS
+.LP
+Makes \fIeva_log\fR aware of the log \fIName\fR\&. The log must be an open \fIdisk_log\fR log, with log format \fIinternal\fR\&. This function will call \fIlog:open(Name, eva_log, WrapTime)\fR in order to register the log in the generic Log Control service\&. 
+.LP
+The \fIFilterFunction\fR is used when an event is received from EVA\&. It is then called as \fIM:F(Event ++ A)\fR, and supposed to return \fItrue\fR if the event should be stored in the log\&. All other return values makes the event be discarded\&. The filter function can be exchanged during runtime, by using \fIset_filter/2\fR\&. 
+.RE
+.LP
+.B
+set_filter(Name, FilterFunction)
+.br
+.RS
+.TP
+Types
+Name = string()
+.br
+FilterFunction = {M, F, A}
+.br
+M = F = atom()
+.br
+A = list()
+.br
+.RE
+.RS
+.LP
+Changes the filter function for the event log\&. 
+.RE
+.LP
+.B
+start_link()
+.br
+.B
+start_link(DefaultLog) -> {ok, Pid} | {error, Reason}
+.br
+.RS
+.TP
+Types
+DefaultLog = {Name, WrapTime} | false
+.br
+Name = string()
+.br
+WrapTime = integer()
+.br
+.RE
+.RS
+.LP
+Starts the eva log service\&. This function can be used to include the service in a supervisor\&. Normally, functions in the supervisor \fIeva_sup\fR can be used instead\&. 
+.LP
+\fIDefaultLog\fR is either the name and wrap time of the default log to use, or \fIfalse\fR\&. If it is not \fIfalse\fR, the log must have been created with \fIdisk_log\fR, just as any other log (see \fIopen/3\fR)\&. The default log is used to log any event that has the \fIlog\fR flag set to true in \fIeventTable\fR, but no log has actually logged the event, either because there was no such log, or the log had operational status \fIdown\fR\&. If the \fIDefaultLog\fR argument is omitted, it defaults to \fIfalse\fR\&. If the default log is used, it will be made known to the generic Log Control service as \fIlog:open(Name, eva_log, WrapTime)\fR\&. 
+.RE
+.SH SEE ALSO
+.LP
+disk_log(3), eva(3), eva_sup(3), file(3), log(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

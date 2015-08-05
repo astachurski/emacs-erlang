@@ -1,0 +1,113 @@
+.TH os_mon 3 "os_mon  1.3.9" "Ericsson Utvecklings AB" "ERLANG APPLICATION DEFINITION"
+.SH APPLICATION
+os_mon \- OS Monitoring Application
+.SH DESCRIPTION
+.LP
+This section describes the \fIos_mon\fR application in Erlang\&. The OS Monitoring application provides the following services: 
+.RS 2
+.TP 2
+*
+\fIcpu_sup\fR 
+.TP 2
+*
+\fIdisksup\fR 
+.TP 2
+*
+\fImemsup\fR 
+.TP 2
+*
+\fIos_sup\fR 
+.RE
+
+.SH Configuration
+.LP
+The following configuration parameters are defined for the OS Monitoring application\&. Refer to application(3) for more information about configuration parameters\&. 
+.RS 2
+.TP 4
+.B
+\fIstart_disksup = bool() <optional>\fR:
+Specifies if \fIdisksup\fR should be started\&. The default is \fItrue\fR\&. 
+.TP 4
+.B
+\fIstart_memsup = bool() <optional>\fR:
+Specifies if \fImemsup\fR should be started\&. The default is \fItrue\fR\&. 
+.TP 4
+.B
+\fIstart_os_sup = bool() <optional>\fR:
+Specifies if \fIos_sup\fR should be started\&. The default is \fIfalse\fR\&. 
+.TP 4
+.B
+\fIdisk_space_check_interval = integer() <optional>\fR:
+Defines how often, in minutes, the \fIdisksup\fR process should check the disk space\&. The default is 30 minutes\&.
+.RS 4
+.LP
+
+.RE
+.TP 4
+.B
+\fIdisk_almost_full_threshold = float() <optional>\fR:
+Defines what percentage of total disk space can be utilized before the \fIdisk_almost_full\fR alarm is set\&. The default is 0\&.80 (80%)\&.
+.RS 4
+.LP
+
+.RE
+.TP 4
+.B
+\fImemory_check_interval = integer() <optional>\fR:
+Defines how often, in minutes, the \fImemsup\fR process should check the memory\&. The default is one minute\&.
+.RS 4
+.LP
+
+.RE
+.TP 4
+.B
+\fIsystem_memory_high_watermark = float() <optional>\fR:
+Defines what percentage of the available system memory can be allocated before the corresponding alarm is set\&. The default is 0\&.8 (80%)\&.
+.RS 4
+.LP
+
+.RE
+.TP 4
+.B
+\fIprocess_memory_high_watermark = float() <optional>\fR:
+Defines what percentage of the available system memory can be allocated by one Erlang process before the corresponding alarm is set\&. The default is 0\&.05 (5%)\&. 
+.TP 4
+.B
+\fIos_sup_own = string() \fR:
+Defines which directory contains the backup copy and the Erlang specific configuration files for \fIsyslogd\fR, and the named pipe to receive the messages from \fIsyslogd\fR\&. 
+.br
+ Usually, this parameter has the value "/etc"\&. 
+.TP 4
+.B
+\fIos_sup_syslogconf = string() \fR:
+Defines the full file name of the configuration file for \fIsyslogd\fR\&. 
+.br
+ Usually, this parameter has the value "/etc/syslog\&.conf"\&. 
+.TP 4
+.B
+\fIos_sup_errortag = atom() \fR:
+Defines the atom with which to tag messages received from \fIsyslogd\fR before forwarding them to the error logger in the Erlang runtime system\&. 
+.RE
+.SH SNMP MIBs
+.LP
+The following MIBs are defined in OS_MON: 
+.RS 2
+.TP 4
+.B
+OTP-OS-MON-MIB:
+This MIB contains objects for instrumentation of disk, memory and cpu usage of the nodes in the system\&. 
+.RE
+.LP
+The MIB is stored in the \fImibs\fR directory\&. It is defined in SNMPv2 SMI syntax\&. An SNMPv1 version of the mib is delivered in the \fImibs/v1\fR directory\&. 
+.LP
+The compiled MIB is located under \fIpriv/mibs\fR, and the generated \fI\&.hrl\fR file under the \fIinclude\fR directory\&. To compile a MIB that IMPORTS the \fIOTP-OS-MON-MIB\fR, give the option \fI{il, ["os_mon/priv/mibs"]}\fR to the MIB compiler\&. 
+.LP
+If the MIB should be used in a system, it should be loaded into an agent with a call to \fIos_mon_mib:init(Agent)\fR, where \fIAgent\fR is the Pid or registered name of an SNMP agent\&. Use \fIos_mon_mib:stop(Agent)\fR to unload the MIB\&. The implementation of this MIB uses Mnesia to store a cache with data needed\&. This means that Mnesia must run if this implementation of the MIB should be used\&. It also use functions defined for the \fIOTP-MIB\fR, thus that MIB must be loaded as well\&. 
+.SH See Also
+.LP
+cpu_sup(3), memsup(3), disksup(3), os_sup(3), application(3), snmp(6) 
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Mats Nilsson - support@erlang.ericsson.se
+.fi

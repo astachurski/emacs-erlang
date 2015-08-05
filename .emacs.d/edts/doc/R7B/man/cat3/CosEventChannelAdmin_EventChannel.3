@@ -1,0 +1,132 @@
+
+
+
+CosEventChannelAdmin_EEvReLnAtNCGhaMnCOnoDesUlEL(vE3e)nDEtFCIhNaInTnIeOlNAdmin_EventChannel(3)
+
+
+
+MODULE
+     CosEventChannelAdmin_EventChannel -  This module  implements
+     an Event Channel interface, which plays the role of a media-
+     tor between consumers and suppliers.
+
+DESCRIPTION
+     An event channel is an object that allows multiple suppliers
+     to  communicate  with  multiple consumers in a highly decou-
+     pled, asynchronous manner. The event  channel  is  built  up
+     incrementally.  An  event  channel factory could be used for
+     creating an event channel. This factory could  be  found  in
+     OrberEventChannel_EventChannelFactory  module. When an event
+     channel is created no suppliers or consumers  are  connected
+     to  it.  Event  Channel can implement group communication by
+     serving as a replicator, broadcaster,  or  multicaster  that
+     forward events from one or more suppliers to multiple consu-
+     mers.
+
+     It is up to the user to decide  when  an  event  channel  is
+     created   and  how  references  to  the  event  channel  are
+     obtained. By representing the event channel as an object, it
+     has  all of the properties that apply to objects. One way to
+     manage an event channel is to register it in a  naming  con-
+     text, or export it through an operation on an object.
+
+     Any object that possesses an object reference that  supports
+     the  ProxyPullConsumer  interface  can perform the following
+     operations:
+
+
+EXPORTS
+     for_consumers(Object) -> Return
+
+          Types
+               Object = #objref
+               Return = #objref
+
+          This operation returns a  ConsumerAdmin  object  refer-
+          ence. If ConsumerAdmin object does not exist already it
+          creates one.
+
+     for_suppliers(Object) -> Return
+
+          Types
+               Object = #objref
+               Return = #objref
+
+          This operation returns a  SupplierAdmin  object  refer-
+          ence. If SupplierAdmin object does not exist already it
+          creates one.
+
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                1
+
+
+
+
+
+
+CosEventChannelAdmin_EEvReLnAtNCGhaMnCOnoDesUlEL(vE3e)nDEtFCIhNaInTnIeOlNAdmin_EventChannel(3)
+
+
+
+     destroy(Object) -> Return
+
+          Types
+               Object = #objref
+               Return = #objref
+
+AUTHOR
+     Helen Airiyan - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                2
+
+
+

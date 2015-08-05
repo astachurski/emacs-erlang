@@ -1,0 +1,132 @@
+
+
+
+CosNotifyChannelAdmin_CEEoRvsLeNAnoNttGCihfMayOnCDnhUeaLlnEFnaeDclEtAFodIrmNyiI(nT3_I)EONventChannelFactory(3)
+
+
+
+MODULE
+     CosNotifyChannelAdmin_EventChannelFactory -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_N_o_t_i_f_i_c_a_t_i_o_n/_i_n_c_l_u_d_e/*._h_r_l").
+
+
+EXPORTS
+     create_channel(ChannelFactory, InitialQoS, InitialAdmin)  ->
+     Return
+
+          Types
+               ChannelFactory = #objref
+               InitialQoS = CosNotification::QoSProperties
+               InitialAdmin = CosNotification::AdminProperties
+               Return = {EventChannel, ChannelID}
+               EventChannel = #objref
+               ChannelID = long()
+
+          This operation creates a new event channel. Along  with
+          the  channel  reference  an id is returned which can be
+          used when invoking other operations  exported  by  this
+          module.  The  Quality of Service argument supplied will
+          be inherited by objects created  by  the  channel.  For
+          more  information  about  QoS  settings  see the _U_s_e_r'_s
+          _G_u_i_d_e.
+
+     get_all_channels(ChannelFactory) -> ChannelIDSeq
+
+          Types
+               ChannelFactory = #objref
+               ChannelIDSeq = [long()]
+
+          This operation returns a id sequnce  of  all  channel's
+          created by this ChannelFactory.
+
+     get_event_channel(ChannelFactory, ChannelID) -> Return
+
+          Types
+               ChannelFactory = #objref
+               ChannelID = long()
+               Retrurn    =    EventChannel    |    {'EXCEPTION',
+               #'CosNotifyChannelAdmin_ChannelNotFound'{}}
+               EventChannel = #objref
+
+          This operation returns the EventChannel associated with
+          the  given id. If no channel is associated with the id,
+          i.e., never existed or have been terminated, an  excep-
+          tion is raised.
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              1
+
+
+
+
+
+
+CosNotifyChannelAdmin_CEEoRvsLeNAnoNttGCihfMayOnCDnhUeaLlnEFnaeDclEtAFodIrmNyiI(nT3_I)EONventChannelFactory(3)
+
+
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklLiansgtscAhBange: cosNotification  1.0.2              2
+
+
+

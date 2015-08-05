@@ -1,0 +1,77 @@
+.TH httpd_socket 3 "inets  2.5.3" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+httpd_socket \- Communication utility functions to be used by the EWSAPI programmer\&. 
+.SH DESCRIPTION
+.LP
+This module provides the EWSAPI module programmer with utility functions for generic sockets communication\&. The appropriate communication mechanism is transparently used, that is \fIip_comm\fR or \fIssl\fR\&. 
+.SS Warning:
+.LP
+The current implementation of EWSAPI is under review and feedback is welcomed\&. 
+
+
+.SH EXPORTS
+.LP
+.B
+deliver(SocketType,Socket,Binary) -> Result
+.br
+.RS
+.TP
+Types
+SocketType = ip_comm | {ssl, SSLConfigString}
+.br
+SSLConfigString = string()
+.br
+Socket = socket()
+.br
+Binary = binary()
+.br
+Result = socket_closed | void()
+.br
+.RE
+.RS
+.LP
+\fIdeliver/3\fR sends a \fIBinary\fR over a \fISocket\fR in 2kB chunks using the specified \fISocketType\fR\&. \fISSLConfigString\fR is a SSL configuration string as described in the SSL application documentation\&. 
+.RE
+.LP
+.B
+peername(SocketType,Socket) -> {Port,IPAddress}
+.br
+.RS
+.TP
+Types
+SocketType = ip_comm | {ssl, SSLConfigString}
+.br
+SSLConfigString = string()
+.br
+Socket = socket()
+.br
+Port = integer()
+.br
+IPAddress = string()
+.br
+.RE
+.RS
+.LP
+\fIpeername/3\fR returns the \fIPort\fR and \fIIPAddress\fR of the remote \fISocket\fR\&. \fISSLConfigString\fR is a SSL configuration string as described in the SSL application documentation\&. 
+.RE
+.LP
+.B
+resolve() -> HostName
+.br
+.RS
+.TP
+Types
+HostName = string()
+.br
+.RE
+.RS
+.LP
+\fIresolve/0\fR returns the official \fIHostName\fR of the current host\&. 
+.RE
+.SH SEE ALSO
+.LP
+httpd(3) 
+.SH AUTHOR
+.nf
+Joakim Grebeno  - support@erlang.ericsson.se
+.fi

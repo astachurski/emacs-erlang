@@ -1,0 +1,462 @@
+
+
+
+ftp(3)              ERLANG MODULE DEFINITION               ftp(3)
+
+
+
+MODULE
+     ftp  - A File Transfer Protocol client
+
+DESCRIPTION
+     The _f_t_p module implements a client for file transfer accord-
+     ing  to  a  subset  of  the File Transfer Protocol (see  RFC
+     959).
+
+     The following is a simple example of an ftp  session,  where
+     the  user _g_u_e_s_t with password _p_a_s_s_w_o_r_d logs on to the remote
+     host _e_r_l_a_n_g._o_r_g, and where the file _a_p_p_l._e_r_l is  transferred
+     from  the  remote  to  the  local  host. When the session is
+     opened,  the  current  directory  at  the  remote  host   is
+     /_h_o_m_e/_g_u_e_s_t,  and  /_h_o_m_e/_f_r_e_d  at  the  local  host.  Before
+     transferring  the  file,  the  current  local  directory  is
+     changed to /_h_o_m_e/_e_p_r_o_j/_e_x_a_m_p_l_e_s, and the remote directory is
+     set to /_h_o_m_e/_g_u_e_s_t/_a_p_p_l/_e_x_a_m_p_l_e_s.
+
+     1>{ok, Pid} = ftp:open("erlang.org").
+     {ok,<0.22.0>}
+     2>ftp:user(Pid, "guest", "password").
+     ok
+     3>ftp:pwd(Pid).
+     {ok, "/home/guest"}
+     4>ftp:cd(Pid, "appl/examples").
+     ok
+     5>ftp:lpwd(Pid).
+     {ok, "/home/fred"}.
+     6>ftp:lcd(Pid, "/home/eproj/examples").
+     ok
+     7>ftp:recv(Pid, "appl.erl").
+     ok
+     8>ftp:close(Pid).
+     ok
+
+     In addition to the  ordinary  functions  for  receiving  and
+     sending  files (see _r_e_c_v/_2, _r_e_c_v/_3, _s_e_n_d/_2 and _s_e_n_d/_3) there
+     are functions for receiving remote files  as  binaries  (see
+     _r_e_c_v__b_i_n/_2)  and  for  sending  binaries  to to be stored as
+     remote files (see _s_e_n_d__b_i_n/_3).
+
+     There is also a set  of  functions  for  sending  contiguous
+     parts  of  a  file  to  be  stored  in  a  remote  file (see
+     _s_e_n_d__c_h_u_n_k__s_t_a_r_t/_2, _s_e_n_d__c_h_u_n_k/_2 and _s_e_n_d__c_h_u_n_k__e_n_d/_1).
+
+     The particular return values of the functions  below  depend
+     very  much  on  the  implementation of the FTP server at the
+     remote host. In particular the results  from  _l_s  and  _n_l_i_s_t
+     varies.  Often real errors are not reported as errors by _l_s,
+     even if for instance a file or  directory  does  not  exist.
+     _n_l_i_s_t  is usually more strict, but some implementations have
+     the peculiar behaviour of responding with an error,  if  the
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+ftp(3)              ERLANG MODULE DEFINITION               ftp(3)
+
+
+
+     request  is  a  listing  of  the contents of directory which
+     exists but is empty.
+
+
+EXPORTS
+     cd(Pid, Dir) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               Dir = string()
+               Reason = epath | elogin | econn
+
+          Changes the working directory at the remote  server  to
+          _D_i_r.
+
+     close(Pid) -> ok
+
+          Types
+               Pid = pid()
+
+          Ends the ftp session.
+
+     delete(Pid, File) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               File = string()
+               Reason = epath | elogin | econn
+
+          Deletes the file _F_i_l_e at the remote server.
+
+     formaterror(Tag) -> string()
+
+          Types
+               Tag = {error, atom()} | atom()
+
+          Given an error return value {_e_r_r_o_r, _R_e_a_s_o_n}, this func-
+          tion returns a readable string describing the error.
+
+     lcd(Pid, Dir) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               Dir = string()
+               Reason = epath
+
+          Changes the working directory  to  _D_i_r  for  the  local
+          client.
+
+     lpwd(Pid) -> {ok, Dir}
+
+          Types
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+
+
+
+
+ftp(3)              ERLANG MODULE DEFINITION               ftp(3)
+
+
+
+               Pid = pid()
+
+          Returns the current  working  directory  at  the  local
+          client.
+
+     ls(Pid [, Dir]) -> {ok, Listing} | {error, Reason}
+
+          Types
+               Pid = pid()
+               Dir = string()
+               Listing = string()
+               Reason = epath | elogin | econn
+
+          Returns a listing of the contents of the remote current
+          directory (_l_s/_1) or the specified directory (_l_s/_2). The
+          format of _L_i_s_t_i_n_g is  operating  system  dependent  (on
+          UNIX it is typically produced from the output of the _l_s
+          -_l shell command).
+
+     mkdir(Pid, Dir) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               Dir = string()
+               Reason = epath | elogin | econn
+
+          Creates the directory _D_i_r at the remote server.
+
+     nlist(Pid [, Dir]) -> {ok, Listing} | {error, Reason}
+
+          Types
+               Pid = pid()
+               Dir = string()
+               Listing = string()
+               Reason = epath | elogin | econn
+
+          Returns a listing of the contents of the remote current
+          directory   (_n_l_i_s_t/_1)   or   the   specified  directory
+          (_n_l_i_s_t/_2). The format of _L_i_s_t_i_n_g is a  stream  of  file
+          names,  where each name is separated by <CRLF> or <NL>.
+          Contrary to the _l_s function, the purpose of _n_l_i_s_t is to
+          make it possible for a program to automatically process
+          file name information.
+
+     open(Host [, Flags]) -> {ok, Pid} | {error, Reason}
+
+          Types
+               Host = string() | ip_address()
+               ip_address() = {byte(), byte(), byte(), byte()}
+               byte() = 0 | 1 | ... | 255
+               Flags = [Flag]
+               Flag = verbose
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   3
+
+
+
+
+
+
+ftp(3)              ERLANG MODULE DEFINITION               ftp(3)
+
+
+
+               Pid = pid()
+               Reason = ehost
+
+          Opens a session with the ftp server at _H_o_s_t. The  argu-
+          ment  _H_o_s_t  is  either  the  name  of  the host, its IP
+          address    in    dotted    decimal    notation    (e.g.
+          "_1_5_0._2_3_6._1_4._1_3_6"),  or  a  tuple of arity 4 (e.g. {_1_5_0,
+          _2_3_6, _1_4, _1_3_6}).
+
+          If _F_l_a_g_s is set,  response  messages  from  the  remote
+          server will be written to standard output.
+
+          The file transfer type is set to _b_i_n_a_r_y when  the  ses-
+          sion is opened.
+
+          The current local working directory (cf. _l_p_w_d/_1) is set
+          to  the  value  reported  by _f_i_l_e:_g_e_t__c_w_d/_1. the wanted
+          local directory.
+
+          The return value _P_i_d is used  as  a  reference  to  the
+          newly  created  ftp  client in all other functions. The
+          ftp client process is linked to the caller.
+
+     pwd(Pid) -> {ok, Dir} | {error, Reason}
+
+          Types
+               Pid = pid()
+               Reason = elogin | econn
+
+          Returns the current working  directory  at  the  remote
+          server.
+
+     recv(Pid, RemoteFile [, LocalFile]) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               RemoteFile = LocalFile = string()
+               Reason = epath | elogin | econn
+
+          Transfer the file _R_e_m_o_t_e_F_i_l_e from the remote server  to
+          the  the  file system of the local client. If _L_o_c_a_l_F_i_l_e
+          is specified, the local file will be _L_o_c_a_l_F_i_l_e;  other-
+          wise it will be _R_e_m_o_t_e_F_i_l_e.
+
+     recv_bin(Pid, RemoteFile) -> {ok, Bin} | {error, Reason}
+
+          Types
+               Pid = pid()
+               Bin = binary()
+               RemoteFile = string()
+               Reason = epath | elogin | econn
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   4
+
+
+
+
+
+
+ftp(3)              ERLANG MODULE DEFINITION               ftp(3)
+
+
+
+          Transfers the file _R_e_m_o_t_e_F_i_l_e from  the  remote  server
+          and receives it as a binary.
+
+     rename(Pid, Old, New) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               CurrFile = NewFile = string()
+               Reason = epath | elogin | econn
+
+          Renames _O_l_d to _N_e_w at the remote server.
+
+     rmdir(Pid, Dir) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               Dir = string()
+               Reason = epath | elogin | econn
+
+          Removes directory _D_i_r at the remote server.
+
+     send(Pid, LocalFile [, RemoteFile]) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               LocalFile = RemoteFile = string()
+               Reason = epath  |  elogin  |  econn  |  etnospc  |
+               epnospc | efnamena
+
+          Transfers the file _L_o_c_a_l_F_i_l_e to the remote  server.  If
+          _R_e_m_o_t_e_F_i_l_e is specified, the name of the remote file is
+          set to _R_e_m_o_t_e_F_i_l_e; otherwise the name is set to  _L_o_c_a_l_-
+          _F_i_l_e.
+
+     send_bin(Pid, Bin, RemoteFile) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               Bin = binary()()
+               RemoteFile = string()
+               Reason = epath | elogin |  enotbinary  |  econn  |
+               etnospc | epnospc | efnamena
+
+          Transfers the binary _B_i_n into the  file  _R_e_m_o_t_e_F_i_l_e  at
+          the remote server.
+
+     send_chunk(Pid, Bin) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               Bin = binary()
+               Reason = elogin | echunk | enotbinary | econn
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   5
+
+
+
+
+
+
+ftp(3)              ERLANG MODULE DEFINITION               ftp(3)
+
+
+
+          Transfer the chunk _B_i_n  to  the  remote  server,  which
+          writes  it  into  the  file  specified  in  the call to
+          _s_e_n_d__c_h_u_n_k__s_t_a_r_t/_2.
+
+          Note that for some errors, e.g. file system full, it is
+          neccessery  to to call _s_e_n_d__c_h_u_n_k__e_n_d to get the proper
+          reason.
+
+     send_chunk_start(Pid, File) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               File = string()
+               Reason = epath | elogin | econn
+
+          Start transfer of chunks into  the  file  _F_i_l_e  at  the
+          remote server.
+
+     send_chunk_end(Pid) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               Reason = elogin |  echunk  |  econn  |  etnospc  |
+               epnospc | efnamena
+
+          Stops transfer of chunks to the remote server. The file
+          at   the  remote  server,  specified  in  the  call  to
+          _s_e_n_d__c_h_u_n_k__s_t_a_r_t/_2 is closed by the server.
+
+     type(Pid, Type) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               Type = ascii | binary
+               Reason = etype | elogin | econn
+
+          Sets the file transfer type to _a_s_c_i_i or _b_i_n_a_r_y. When an
+          ftp  session  is  opened,  the  transfer type is set to
+          _b_i_n_a_r_y.
+
+     user(Pid, User, Password) -> ok | {error, Reason}
+
+          Types
+               Pid = pid()
+               User = Password = string()
+               Reason = euser | econn
+
+          Performs login of _U_s_e_r with _P_a_s_s_w_o_r_d.
+
+ERRORS
+     The possible error reasons and the corresponding  diagnostic
+     strings returned by _f_o_r_m_a_t_e_r_r_o_r/_1 are as follows:
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   6
+
+
+
+
+
+
+ftp(3)              ERLANG MODULE DEFINITION               ftp(3)
+
+
+
+       _e_c_h_u_n_k:
+           Synchronisation error during chunk sending.
+
+           A   call   has   been   made   to   _s_e_n_d__c_h_u_n_k/_2    or
+           _s_e_n_d__c_h_u_n_k__e_n_d/_1, before a call to _s_e_n_d__c_h_u_n_k__s_t_a_r_t/_2;
+           or a call has been made to another  transfer  function
+           during   chunk   sending,   i.e.   before  a  call  to
+           _s_e_n_d__c_h_u_n_k__e_n_d/_1.
+
+       _e_c_l_o_s_e_d:
+           The session has been closed.
+
+       _e_c_o_n_n:
+           Connection to remote server prematurely closed.
+
+       _e_h_o_s_t:
+           Host not found, FTP server not  found,  or  connection
+           rejected by FTP server.
+
+       _e_l_o_g_i_n:
+           User not logged in.
+
+       _e_n_o_t_b_i_n_a_r_y:
+           Term is not a binary.
+
+       _e_p_a_t_h:
+           No  such  file  or  directory,  or  directory  already
+           exists, or permission denied.
+
+       _e_t_y_p_e:
+           No such type.
+
+       _e_u_s_e_r:
+           User name or password not valid.
+
+       _e_t_n_o_s_p_c:
+           Insufficient storage space in system [452].
+
+       _e_p_n_o_s_p_c:
+           Exceeded storage allocation (for current directory  or
+           dataset) [552].
+
+       _e_f_n_a_m_e_n_a:
+           File name not allowed [553].
+
+SEE ALSO
+     file, filename, J. Postel and  J.  Reynolds:  File  Transfer
+     Protocol (RFC 959).
+
+AUTHOR
+     Peter Hogfeldt - support@erlang.ericsson.se
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   7
+
+
+

@@ -1,0 +1,198 @@
+
+
+
+mod_disk_log(3)     ERLANG MODULE DEFINITION      mod_disk_log(3)
+
+
+
+MODULE
+     mod_disk_log - Standard logging using  the  "Common  Logfile
+     Format" and disk_log(3).
+
+DESCRIPTION
+     This module uses _d_i_s_k__l_o_g(_3) to make it possible to log  all
+     incoming  requests to an access log file. The de-facto stan-
+     dard Common Logfile Format is used for this  purpose.  There
+     are  numerous statistic programs available to analyze Common
+     Logfile Format log files. The Common Logfile Format looks as
+     follows:
+
+     _r_e_m_o_t_e_h_o_s_t _r_f_c_9_3_1 _a_u_t_h_u_s_e_r [_d_a_t_e] "_r_e_q_u_e_s_t" _s_t_a_t_u_s _b_y_t_e_s
+
+       _r_e_m_o_t_e_h_o_s_t:
+           Remote hostname (or IP number if the DNS  hostname  is
+           not available).
+
+       _r_f_c_9_3_1:
+           The client's remote username (RFC 931).
+
+       _a_u_t_h_u_s_e_r:
+           The username with which  the  user  has  authenticated
+           himself.
+
+       [_d_a_t_e]:
+           Date and time of the request (RFC 1123).
+
+       "_r_e_q_u_e_s_t":
+           The request line exactly as it came  from  the  client
+           (RFC 1945).
+
+       _s_t_a_t_u_s:
+           The HTTP status  code  returned  to  the  client  (RFC
+           1945).
+
+       _b_y_t_e_s:
+           The content-length of the document transferred.
+
+     This module furthermore uses _d_i_s_k__l_o_g(_3) to support the  use
+     of  an  error log file to record internal server errors. The
+     error log format is more ad hoc than Common Logfile  Format,
+     but conforms to the following syntax:
+
+     [_d_a_t_e] access to _p_a_t_h failed for _r_e_m_o_t_e_h_o_s_t, reason: _r_e_a_s_o_n
+
+
+DIRECTIVE: ErrorDiskLog
+     _S_y_n_t_a_x: _E_r_r_o_r_D_i_s_k_L_o_g filename
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_disk_log(3)
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+mod_disk_log(3)     ERLANG MODULE DEFINITION      mod_disk_log(3)
+
+
+
+     _E_r_r_o_r_D_i_s_k_L_o_g defines the _f_i_l_e_n_a_m_e of the  _d_i_s_k__l_o_g(_3)  error
+     log  file  to  be used to log server errors. If the _f_i_l_e_n_a_m_e
+     does not begin with a slash (/) it is assumed to be relative
+     to the ServerRoot, for example:
+
+     ErrorDiskLog logs/error_disk_log_8080
+
+     and    errors    will    be    logged    in    the    server
+     root($SERVER_ROOT/logs/error_disk_log_8080) space.
+
+DIRECTIVE: ErrorDiskLogSize
+     _S_y_n_t_a_x: _E_r_r_o_r_D_i_s_k_L_o_g_S_i_z_e max-bytes max-files
+      _D_e_f_a_u_l_t: _E_r_r_o_r_D_i_s_k_L_o_g_S_i_z_e _5_1_2_0_0_0 _8
+      _M_o_d_u_l_e: mod_disk_log(3)
+
+     _E_r_r_o_r_D_i_s_k_L_o_g_S_i_z_e defines the properties of  the  _d_i_s_k__l_o_g(_3)
+     error  log  file.  The _d_i_s_k__l_o_g(_3) error log file is of type
+     _w_r_a_p _l_o_g and _m_a_x-_b_y_t_e_s will be  written  to  each  file  and
+     _m_a_x-_f_i_l_e_s  will  be  used before the first file is truncated
+     and reused.
+
+DIRECTIVE: TransferDiskLog
+     _S_y_n_t_a_x: _T_r_a_n_s_f_e_r_D_i_s_k_L_o_g filename
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_disk_log(3)
+
+     _T_r_a_n_s_f_e_r_D_i_s_k_L_o_g defines  the  _f_i_l_e_n_a_m_e  of  the  _d_i_s_k__l_o_g(_3)
+     access  log  file  which  logs  incoming  requests.  If  the
+     _f_i_l_e_n_a_m_e does not begin with a slash (/) it is assumed to be
+     relative to the ServerRoot, for example:
+
+     TransferDiskLog logs/transfer_disk_log_8080
+
+     and    errors    will    be    logged    in    the    server
+     root($SERVER_ROOT/logs/transfer_disk_log_8080) space.
+
+DIRECTIVE: TransferDiskLogSize
+     _S_y_n_t_a_x: _T_r_a_n_s_f_e_r_D_i_s_k_L_o_g_S_i_z_e max-bytes max-files
+      _D_e_f_a_u_l_t: _T_r_a_n_s_f_e_r_D_i_s_k_L_o_g_S_i_z_e _5_1_2_0_0_0 _8
+      _M_o_d_u_l_e: mod_disk_log(3)
+
+     _T_r_a_n_s_f_e_r_D_i_s_k_L_o_g_S_i_z_e   defines   the   properties   of    the
+     _d_i_s_k__l_o_g(_3) access log file. The _d_i_s_k__l_o_g(_3) access log file
+     is of type _w_r_a_p _l_o_g and _m_a_x-_b_y_t_e_s will be  written  to  each
+     file  and  _m_a_x-_f_i_l_e_s  will  be used before the first file is
+     truncated and reused.
+
+EWSAPI MODULE INTERACTION
+     Uses the following EWSAPI interaction data, if available:
+
+       {_r_e_m_o_t_e__u_s_e_r, _R_e_m_o_t_e_U_s_e_r}:
+           as defined in mod_auth(3).
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+
+
+
+
+mod_disk_log(3)     ERLANG MODULE DEFINITION      mod_disk_log(3)
+
+
+
+     This module furthermore exports a batch of functions  to  be
+     used by other EWSAPI modules:
+
+EXPORTS
+     error_log(Socket,SocketType,ConfigDB,Date,Reason)  ->  ok  |
+     no_error_log
+
+          Types
+               Socket = socket()
+               SocketType = ip_comm | ssl
+               ConfigDB = config_db()
+               Date = Reason = string()
+
+          _e_r_r_o_r__l_o_g/_5 uses _d_i_s_k__l_o_g(_3) to log  an  error  in  the
+          error log file. _S_o_c_k_e_t is a handler to a socket of type
+          _S_o_c_k_e_t_T_y_p_e and _c_o_n_f_i_g__d_b() is the server config file in
+          ETS  table  format  as described in httpd(3). _D_a_t_e is a
+          RFC    1123    date    string    as    generated     by
+          httpd_util:rfc1123_date/0.
+
+SEE ALSO
+     httpd(3), mod_auth(3), mod_security(3), mod_log(3)
+
+AUTHOR
+     Joakim Grebeno  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   3
+
+
+

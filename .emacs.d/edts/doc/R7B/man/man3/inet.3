@@ -1,0 +1,864 @@
+.TH inet 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+inet \- Access to TCP/IP protocols\&.
+.SH DESCRIPTION
+.LP
+Inet provides access to TCP/IP protocols\&. 
+.LP
+Some functions returns a \fIhostent\fR record\&. Use this line in your module 
+.br
+\fI-include_lib("kernel/include/inet\&.hrl")\&.\fR
+.br
+ to include the record definition\&. 
+.LP
+
+.RS 2
+.TP 4
+.B
+:
+.TP 4
+.B
+\fIh_addr_list\fR:
+List of addresses for this host
+.TP 4
+.B
+\fIh_addrtype\fR:
+Type of address: \fIinet\fR or \fIinet6\fR
+.TP 4
+.B
+\fIh_aliases\fR:
+List of aliases (additional names for host)
+.TP 4
+.B
+\fIh_length\fR:
+Length of address in bytes
+.TP 4
+.B
+\fIh_name\fR:
+Official name for host
+.RE
+.LP
+Addresses as inputs to functions can be either a string or a tuple\&. For instance, the IP address 150\&.236\&.20\&.73 can be passed to \fIgethostbyaddr/1\fR either as the string "150\&.236\&.20\&.73" or as the tuple \fI{150, 236, 20, 73}\fR\&. Addresses returned by any function in the \fIinet\fR module will be a tuple\&. 
+.LP
+Hostnames may be specified as either atoms or a strings\&. 
+.LP
+Where an address family is required, valid values are \fIinet\fR (standard IPv4 addresses) or \fIinet6\fR (IPv6)\&. 
+
+.SH EXPORTS
+.LP
+.B
+format_error(Tag)
+.br
+.RS
+.TP
+Types
+Tag = atom()
+.br
+.RE
+.RS
+.LP
+Returns a diagnostic error string\&. See the section below for possible \fITag\fR values and the corresponding strings\&. 
+.RE
+.LP
+.B
+gethostbyaddr(Address) -> {ok, Hostent} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Address = address()
+.br
+Hostent = hostent()
+.br
+.RE
+.RS
+.LP
+Returns a \fIhostent\fR record given an address\&. 
+.RE
+.LP
+.B
+gethostbyname(Name) -> {ok, Hostent} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Hostname = hostname()
+.br
+Hostent = hostent()
+.br
+.RE
+.RS
+.LP
+Returns a \fIhostent\fR record given a hostname\&. 
+.RE
+.LP
+.B
+gethostbyname(Name, Family) -> {ok, Hostent} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Hostname = hostname()
+.br
+Family = family()
+.br
+Hostent = hostent()
+.br
+.RE
+.RS
+.LP
+Returns a \fIhostent\fR record given a hostname, restricted to the given address family\&. 
+.RE
+.LP
+.B
+gethostname() -> {ok, Name} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Hostname = hostname()
+.br
+.RE
+.RS
+.LP
+Returns the local hostname\&. Will never fail\&. 
+.RE
+.LP
+.B
+sockname(Socket) -> {ok, {IP, Port}} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = socket()
+.br
+Address = address()
+.br
+Port = integer()
+.br
+.RE
+.RS
+.LP
+Returns the local address and port number for a socket\&. 
+.RE
+.LP
+.B
+peername(Socket) -> {ok, {Address, Port}} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = socket()
+.br
+Address = address()
+.br
+Port = integer()
+.br
+.RE
+.RS
+.LP
+Returns the address and port for the other end of a connection\&. 
+.RE
+.LP
+.B
+port(Socket) -> {ok, Number}
+.br
+.RS
+.TP
+Types
+Socket = socket()
+.br
+Number = integer()
+.br
+.RE
+.RS
+.LP
+Returns the local port number for a socket\&. 
+.RE
+.LP
+.B
+close(Socket) -> ok
+.br
+.RS
+.TP
+Types
+Socket = socket()
+.br
+.RE
+.RS
+.LP
+Closes a socket of any type\&. 
+.RE
+.LP
+.B
+getaddr(IP,inet) -> {ok,{A1,A2,A3,A4}} | {error, Reason}
+.br
+.RS
+.TP
+Types
+IP = {A1, A2, A3, A4} | string() | atom()
+.br
+A1 = A2 = A3 = A4 = integer()
+.br
+Reason = term()
+.br
+.RE
+.RS
+.LP
+Returns the IP-address as a tuple with integers for \fIIP\fR which can be an IP-address a single hostname or a fully qualified hostname\&. At present only IPv4 adresses (the \fIinet\fR argument) is supported, but the function is prepared to support IPv6 (\fIinet6\fR) in a near future\&. 
+.RE
+.LP
+.B
+setopts(Socket, Options) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+Socket = term()
+.br
+Options = list()
+.br
+.RE
+.RS
+.LP
+Sets one or more options for a socket\&. The following options are available: 
+.RS 2
+.TP 4
+.B
+\fI{active, Boolean}\fR:
+If the active option is \fItrue\fR, which is the default, everything received from the socket will be sent as messages to the receiving process\&. If the active option is set to \fIfalse\fR (passive mode), the process must explicitly receive incoming data by calling \fIgen_tcp:recv/N\fR or \fIgen_udp:recv/N\fR (depending on the type of socket)\&. Note: Passive mode provides flow control; the other side will not be able send faster than the receiver can read\&. Active mode provides no flow control; a fast sender could easily overflow the receiver with incoming messages\&. Use active mode only if your high-level protocol provides its own flow control (for instance, acknowledging received messages) or the amount of data exchanged is small\&.
+.TP 4
+.B
+\fI{broadcast, Boolean}\fR:
+Enable/disable permission to send broadcasts\&. (UDP)
+.TP 4
+.B
+\fI{dontroute, true|false}\fR:
+Use \fI{dontroute, true}\fR to enable/disable routing bypass for outgoing messages\&.
+.TP 4
+.B
+\fI{header, Size}\fR:
+This option is only meaningful if the \fIbinary\fR option was specified when the socket was created\&. If the \fIheader\fR option is specified, the first Size number bytes of data received from the socket will be elements of a list, and the rest of the data will be a binary given as the tail of the same list\&. If for example \fISize\fR=2 the data received will match \fI[Byte1, Byte2|Binary]\fR\&.
+.TP 4
+.B
+\fI{keepalive, Boolean}\fR:
+(TCP/IP sockets) Enables periodic transmission on a connected socket, when no other data is being exchanged\&. If the other end does not respond, the connection is considered broken and an error message will be sent to the controlling process\&. Default disabled\&.
+.TP 4
+.B
+\fI{nodelay, Boolean}\fR:
+If Boolean is \fItrue\fR, the \fITCP_NODELAY\fR option is turned on for the socket, which means that even small amounts of data will be sent immediately\&. (TCP/IP sockets)
+.TP 4
+.B
+\fI{packet, PacketType}\fR:
+(TCP/IP sockets) Defines the type of packets to use for a socket\&. The following values are valid: 
+.RS 4
+.RS 2
+.TP 4
+.B
+\fIraw | 0\fR:
+No packaging is done\&.
+.TP 4
+.B
+\fI1 | 2 | 4\fR:
+Packets consist of a header specifying the number of bytes in the packet, followed by that number of bytes\&. The length of header can be one, two, or four bytes; the order of the bytes is big-endian\&. Each send operation will generate the header, and the header will be stripped off on each receive operation\&.
+.TP 4
+.B
+\fIasn1 | cdr | sunrm | fcgi | tpkt | line\fR:
+These packet types only have effect on receiving\&. When sending a packet, it is the responsibility of the application to supply a correct header\&. On receiving, however, there will be one message sent to the controlling process for each complete packet received, and, similarily, each call to \fIgen_tcp:recv/N\fR returns one complete packet\&. The header is \fInot\fR stripped off\&. 
+.RS 4
+.LP
+The meanings of the packet types are as follows: 
+.br
+\fIasn1\fR - ASN\&.1 BER, 
+.br
+\fIsunrm\fR - Sun\&'s RPC encoding, 
+.br
+\fIcdr\fR - Corba (GIOP 1\&.1), 
+.br
+\fIfcgi\fR - Fast CGI, 
+.br
+\fItpkt\fR - TPKT format [RFC1006], 
+.br
+\fIline\fR - Line mode, a packet is a line terminated with newline, lines longer than the receive buffer are truncated\&. 
+.RE
+.RE
+.RE
+.TP 4
+.B
+\fI{recbuf, Integer}\fR:
+Gives the size of the receive buffer to use for the socket\&.
+.TP 4
+.B
+\fI{reuseaddr, Boolean}\fR:
+Allows or disallows local reuse of port numbers\&. By default, reuse is disallowed\&.
+.TP 4
+.B
+\fI{sndbuf, Integer}\fR:
+Gives the size of the send buffer to use for the socket\&.
+.RE
+.RE
+.SH ERRORS
+.LP
+The possible error reasons and the corresponding diagnostic strings returned by \fIformat_error/1\fR are as follows:
+.RS 2
+.TP 4
+.B
+\fI\fR:
+
+.TP 4
+.B
+\fIe2big\fR:
+argument list too long
+.TP 4
+.B
+\fIeacces\fR:
+permission denied
+.TP 4
+.B
+\fIeaddrinuse\fR:
+address already in use
+.TP 4
+.B
+\fIeaddrnotavail\fR:
+cannot assign requested address
+.TP 4
+.B
+\fIeadv\fR:
+advertise error
+.TP 4
+.B
+\fIeafnosupport\fR:
+address family not supported by protocol family
+.TP 4
+.B
+\fIeagain\fR:
+resource temporarily unavailable
+.TP 4
+.B
+\fIealign\fR:
+EALIGN
+.TP 4
+.B
+\fIealready\fR:
+operation already in progress
+.TP 4
+.B
+\fIebade\fR:
+bad exchange descriptor
+.TP 4
+.B
+\fIebadf\fR:
+bad file number
+.TP 4
+.B
+\fIebadfd\fR:
+file descriptor in bad state
+.TP 4
+.B
+\fIebadmsg\fR:
+not a data message
+.TP 4
+.B
+\fIebadr\fR:
+bad request descriptor
+.TP 4
+.B
+\fIebadrpc\fR:
+RPC structure is bad
+.TP 4
+.B
+\fIebadrqc\fR:
+bad request code
+.TP 4
+.B
+\fIebadslt\fR:
+invalid slot
+.TP 4
+.B
+\fIebfont\fR:
+bad font file format
+.TP 4
+.B
+\fIebusy\fR:
+file busy
+.TP 4
+.B
+\fIechild\fR:
+no children
+.TP 4
+.B
+\fIechrng\fR:
+channel number out of range
+.TP 4
+.B
+\fIecomm\fR:
+communication error on send
+.TP 4
+.B
+\fIeconnaborted\fR:
+software caused connection abort
+.TP 4
+.B
+\fIeconnrefused\fR:
+connection refused
+.TP 4
+.B
+\fIeconnreset\fR:
+connection reset by peer
+.TP 4
+.B
+\fIedeadlk\fR:
+resource deadlock avoided
+.TP 4
+.B
+\fIedeadlock\fR:
+resource deadlock avoided
+.TP 4
+.B
+\fIedestaddrreq\fR:
+destination address required
+.TP 4
+.B
+\fIedirty\fR:
+mounting a dirty fs w/o force
+.TP 4
+.B
+\fIedom\fR:
+math argument out of range
+.TP 4
+.B
+\fIedotdot\fR:
+cross mount point
+.TP 4
+.B
+\fIedquot\fR:
+disk quota exceeded
+.TP 4
+.B
+\fIeduppkg\fR:
+duplicate package name
+.TP 4
+.B
+\fIeexist\fR:
+file already exists
+.TP 4
+.B
+\fIefault\fR:
+bad address in system call argument
+.TP 4
+.B
+\fIefbig\fR:
+file too large
+.TP 4
+.B
+\fIehostdown\fR:
+host is down
+.TP 4
+.B
+\fIehostunreach\fR:
+host is unreachable
+.TP 4
+.B
+\fIeidrm\fR:
+identifier removed
+.TP 4
+.B
+\fIeinit\fR:
+initialization error
+.TP 4
+.B
+\fIeinprogress\fR:
+operation now in progress
+.TP 4
+.B
+\fIeintr\fR:
+interrupted system call
+.TP 4
+.B
+\fIeinval\fR:
+invalid argument
+.TP 4
+.B
+\fIeio\fR:
+I/O error
+.TP 4
+.B
+\fIeisconn\fR:
+socket is already connected
+.TP 4
+.B
+\fIeisdir\fR:
+illegal operation on a directory
+.TP 4
+.B
+\fIeisnam\fR:
+is a named file
+.TP 4
+.B
+\fIel2hlt\fR:
+level 2 halted
+.TP 4
+.B
+\fIel2nsync\fR:
+level 2 not synchronized
+.TP 4
+.B
+\fIel3hlt\fR:
+level 3 halted
+.TP 4
+.B
+\fIel3rst\fR:
+level 3 reset
+.TP 4
+.B
+\fIelbin\fR:
+ELBIN
+.TP 4
+.B
+\fIelibacc\fR:
+cannot access a needed shared library
+.TP 4
+.B
+\fIelibbad\fR:
+accessing a corrupted shared library
+.TP 4
+.B
+\fIelibexec\fR:
+cannot exec a shared library directly
+.TP 4
+.B
+\fIelibmax\fR:
+attempting to link in more shared libraries than system limit
+.TP 4
+.B
+\fIelibscn\fR:
+\&.lib section in a\&.out corrupted
+.TP 4
+.B
+\fIelnrng\fR:
+link number out of range
+.TP 4
+.B
+\fIeloop\fR:
+too many levels of symbolic links
+.TP 4
+.B
+\fIemfile\fR:
+too many open files
+.TP 4
+.B
+\fIemlink\fR:
+too many links
+.TP 4
+.B
+\fIemsgsize\fR:
+message too long
+.TP 4
+.B
+\fIemultihop\fR:
+multihop attempted
+.TP 4
+.B
+\fIenametoolong\fR:
+file name too long
+.TP 4
+.B
+\fIenavail\fR:
+not available
+.TP 4
+.B
+\fIenet\fR:
+ENET
+.TP 4
+.B
+\fIenetdown\fR:
+network is down
+.TP 4
+.B
+\fIenetreset\fR:
+network dropped connection on reset
+.TP 4
+.B
+\fIenetunreach\fR:
+network is unreachable
+.TP 4
+.B
+\fIenfile\fR:
+file table overflow
+.TP 4
+.B
+\fIenoano\fR:
+anode table overflow
+.TP 4
+.B
+\fIenobufs\fR:
+no buffer space available
+.TP 4
+.B
+\fIenocsi\fR:
+no CSI structure available
+.TP 4
+.B
+\fIenodata\fR:
+no data available
+.TP 4
+.B
+\fIenodev\fR:
+no such device
+.TP 4
+.B
+\fIenoent\fR:
+no such file or directory
+.TP 4
+.B
+\fIenoexec\fR:
+exec format error
+.TP 4
+.B
+\fIenolck\fR:
+no locks available
+.TP 4
+.B
+\fIenolink\fR:
+link has be severed
+.TP 4
+.B
+\fIenomem\fR:
+not enough memory
+.TP 4
+.B
+\fIenomsg\fR:
+no message of desired type
+.TP 4
+.B
+\fIenonet\fR:
+machine is not on the network
+.TP 4
+.B
+\fIenopkg\fR:
+package not installed
+.TP 4
+.B
+\fIenoprotoopt\fR:
+bad proocol option
+.TP 4
+.B
+\fIenospc\fR:
+no space left on device
+.TP 4
+.B
+\fIenosr\fR:
+out of stream resources or not a stream device
+.TP 4
+.B
+\fIenosym\fR:
+unresolved symbol name
+.TP 4
+.B
+\fIenosys\fR:
+function not implemented
+.TP 4
+.B
+\fIenotblk\fR:
+block device required
+.TP 4
+.B
+\fIenotconn\fR:
+socket is not connected
+.TP 4
+.B
+\fIenotdir\fR:
+not a directory
+.TP 4
+.B
+\fIenotempty\fR:
+directory not empty
+.TP 4
+.B
+\fIenotnam\fR:
+not a named file
+.TP 4
+.B
+\fIenotsock\fR:
+socket operation on non-socket
+.TP 4
+.B
+\fIenotsup\fR:
+operation not supported
+.TP 4
+.B
+\fIenotty\fR:
+inappropriate device for ioctl
+.TP 4
+.B
+\fIenotuniq\fR:
+name not unique on network
+.TP 4
+.B
+\fIenxio\fR:
+no such device or address
+.TP 4
+.B
+\fIeopnotsupp\fR:
+operation not supported on socket
+.TP 4
+.B
+\fIeperm\fR:
+not owner
+.TP 4
+.B
+\fIepfnosupport\fR:
+protocol family not supported
+.TP 4
+.B
+\fIepipe\fR:
+broken pipe
+.TP 4
+.B
+\fIeproclim\fR:
+too many processes
+.TP 4
+.B
+\fIeprocunavail\fR:
+bad procedure for program
+.TP 4
+.B
+\fIeprogmismatch\fR:
+program version wrong
+.TP 4
+.B
+\fIeprogunavail\fR:
+RPC program not available
+.TP 4
+.B
+\fIeproto\fR:
+protocol error
+.TP 4
+.B
+\fIeprotonosupport\fR:
+protocol not supported
+.TP 4
+.B
+\fIeprototype\fR:
+protocol wrong type for socket
+.TP 4
+.B
+\fIerange\fR:
+math result unrepresentable
+.TP 4
+.B
+\fIerefused\fR:
+EREFUSED
+.TP 4
+.B
+\fIeremchg\fR:
+remote address changed
+.TP 4
+.B
+\fIeremdev\fR:
+remote device
+.TP 4
+.B
+\fIeremote\fR:
+pathname hit remote file system
+.TP 4
+.B
+\fIeremoteio\fR:
+remote i/o error
+.TP 4
+.B
+\fIeremoterelease\fR:
+EREMOTERELEASE
+.TP 4
+.B
+\fIerofs\fR:
+read-only file system
+.TP 4
+.B
+\fIerpcmismatch\fR:
+RPC version is wrong
+.TP 4
+.B
+\fIerremote\fR:
+object is remote
+.TP 4
+.B
+\fIeshutdown\fR:
+cannot send after socket shutdown
+.TP 4
+.B
+\fIesocktnosupport\fR:
+socket type not supported
+.TP 4
+.B
+\fIespipe\fR:
+invalid seek
+.TP 4
+.B
+\fIesrch\fR:
+no such process
+.TP 4
+.B
+\fIesrmnt\fR:
+srmount error
+.TP 4
+.B
+\fIestale\fR:
+stale remote file handle
+.TP 4
+.B
+\fIesuccess\fR:
+Error 0
+.TP 4
+.B
+\fIetime\fR:
+timer expired
+.TP 4
+.B
+\fIetimedout\fR:
+connection timed out
+.TP 4
+.B
+\fIetoomanyrefs\fR:
+too many references
+.TP 4
+.B
+\fIetxtbsy\fR:
+text file or pseudo-device busy
+.TP 4
+.B
+\fIeuclean\fR:
+structure needs cleaning
+.TP 4
+.B
+\fIeunatch\fR:
+protocol driver not attached
+.TP 4
+.B
+\fIeusers\fR:
+too many users
+.TP 4
+.B
+\fIeversion\fR:
+version mismatch
+.TP 4
+.B
+\fIewouldblock\fR:
+operation would block
+.TP 4
+.B
+\fIexdev\fR:
+cross-domain link
+.TP 4
+.B
+\fIexfull\fR:
+message tables full
+.TP 4
+.B
+\fInxdomain\fR:
+the hostname or domain name could not be found
+.RE
+.SH AUTHOR
+.nf
+tony@erix\&.ericsson\&.se - support@erlang.ericsson.se
+.fi

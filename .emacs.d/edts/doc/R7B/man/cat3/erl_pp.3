@@ -1,0 +1,198 @@
+
+
+
+erl_pp(3)           ERLANG MODULE DEFINITION            erl_pp(3)
+
+
+
+MODULE
+     erl_pp - The Erlang Pretty Printer
+
+DESCRIPTION
+     The functions in this module are used to generate  aestheti-
+     cally  attractive  representations  of abstract forms, which
+     are suitable for printing. All  functions  return  (possibly
+     deep)  lists of characters and generate an error if the form
+     is wrong.
+
+     All functions can have an optional argument which  specifies
+     a  hook  that  is  called  if an attempt is made to print an
+     unknown form.
+
+
+EXPORTS
+     form(Form) -> DeepCharList
+     form(Form, HookFunction) -> DeepCharList
+
+          Types
+               Form = term()
+               HookFunction = see separate description below.
+               DeepCharList = [char()|DeepCharList]
+
+          Pretty prints a _F_o_r_m which is an  abstract  form  of  a
+          type which is returned by _e_r_l__p_a_r_s_e:_p_a_r_s_e__f_o_r_m.
+
+     attribute(Attribute) -> DeepCharList
+     attribute(Attribute, HookFunction) -> DeepCharList
+
+          Types
+               Attribute = term()
+               HookFunction = see separate description below.
+               DeepCharList = [char()|DeepCharList]
+
+          The same as _f_o_r_m, but only for the attribute _A_t_t_r_i_b_u_t_e.
+
+     function(Function) -> DeepCharList
+     function(Function, HookFunction) -> DeepCharList
+
+          Types
+               Function = term()
+               HookFunction = see separate description below.
+               DeepCharList = [char()|DeepCharList]
+
+          The same as _f_o_r_m, but only for the function _F_u_n_c_t_i_o_n.
+
+     guard(Guard) -> DeepCharList
+     guard(Guard, HookFunction) -> DeepCharList
+
+          Types
+               Form = term()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+erl_pp(3)           ERLANG MODULE DEFINITION            erl_pp(3)
+
+
+
+               HookFunction = see separate description below.
+               DeepCharList = [char()|DeepCharList]
+
+          The same as _f_o_r_m, but only for the guard test _G_u_a_r_d.
+
+     exprs(Expressions) -> DeepCharList
+     exprs(Expressions, HookFunction) -> DeepCharList
+     exprs(Expressions, Indent, HookFunction) -> DeepCharList
+
+          Types
+               Expressions = term()
+               HookFunction = see separate description below.
+               Indent = integer()
+               DeepCharList = [char()|DeepCharList]
+
+          The same as _f_o_r_m, but only for the sequence of  expres-
+          sions in _E_x_p_r_e_s_s_i_o_n_s.
+
+     expr(Expression) -> DeepCharList
+     expr(Expression, HookFunction) -> DeepCharList
+     expr(Expression, Indent, HookFunction) -> DeepCharList
+     expr(Expression,  Indent,  Precedence,  HookFunction)   ->->
+     DeepCharList
+
+          Types
+               Expression = term()
+               HookFunction = see separate description below.
+               Indent = integer()
+               Precedence =
+               DeepCharList = [char()|DeepCharList]
+
+          This function prints one expression. It is  useful  for
+          implementing hooks (see below).
+
+Unknown Expression Hooks
+     The optional argument _H_o_o_k_F_u_n_c_t_i_o_n, shown in  the  functions
+     described  above, defines a function which is called when an
+     unknown form occurs where there should be  a  valid  expres-
+     sion. It can have the following formats:
+
+       _F_u_n_c_t_i_o_n:
+           The hook function is called by:
+
+           Function(Expr,
+                    CurrentIndentation,
+                    CurrentPrecedence,
+                    HookFunction)
+
+       _n_o_n_e:
+           There is no hook function
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+erl_pp(3)           ERLANG MODULE DEFINITION            erl_pp(3)
+
+
+
+     The called hook function should  return  a  (possibly  deep)
+     list of characters. _e_x_p_r/_4 is useful in a hook.
+
+     If _C_u_r_r_e_n_t_I_n_d_e_n_t_a_t_i_o_n is negative, there  will  be  no  line
+     breaks and only a space is used as a separator.
+
+Bugs
+     It should be possible to have  hook  functions  for  unknown
+     forms at places other than expressions.
+
+See Also
+     io, erl_parse, erl_eval
+
+AUTHOR
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+

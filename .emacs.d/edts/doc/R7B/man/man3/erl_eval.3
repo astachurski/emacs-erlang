@@ -1,0 +1,161 @@
+.TH erl_eval 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+erl_eval \- The Erlang Meta Interpreter
+.SH DESCRIPTION
+.LP
+This module provides an interpreter for Erlang expressions\&. The expressions are in the abstract syntax as returned by \fIerl_parse\fR, the Erlang parser, or a call to \fIio:parse_erl_exprs/2\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+exprs(Expressions, Bindings) -> {value, Value, NewBindings}
+.br
+.B
+exprs(Expressions, Bindings, LocalFunctionHandler) -> {value, Value, NewBindings}
+.br
+.RS
+.TP
+Types
+Expressions = as returned by erl_parse or io:parse_erl_exprs/2
+.br
+Bindings = as returned by bindings/1
+.br
+LocalFunctionHandler = {value, Func} | {eval, Func} | none
+.br
+.RE
+.RS
+.LP
+Evaluates \fIExpressions\fR with the set of bindings \fIBindings\fR, where \fIExpressions\fR is a sequence of expressions (in abstract syntax) of a type which may be returned by \fIio:parse_erl_exprs/2\fR\&. See below for an explanation of how and when to use the argument \fILocalFunctionHandler\fR\&. 
+.LP
+Returns \fI{value, Value, NewBindings}\fR 
+.RE
+.LP
+.B
+expr(Expression, Bindings) -> { value, Value, NewBindings }
+.br
+.B
+expr(Expression, Bindings, LocalFunctionHandler) -> { value, Value, NewBindings }
+.br
+.RS
+.TP
+Types
+Expression = as returned by io:parse_erl_form/2, for example
+.br
+Bindings = as returned by bindings/1
+.br
+LocalFunctionHandler = {value, Func} | {eval, Func} | none
+.br
+.RE
+.RS
+.LP
+Evaluates \fIExpression\fR with the set of bindings \fIBindings\fR\&. \fIExpression\fR is an expression (in abstract syntax) of a type which may be returned by \fIio:parse_erl_form/2\fR\&. See below for an explanation of how and when to use the argument \fILocalFunctionHandler\fR\&. 
+.LP
+Returns \fI{value, Value, NewBindings}\fR\&. 
+.RE
+.LP
+.B
+expr_list(ExpressionList, Bindings) -> {ValueList, NewBindings}
+.br
+.B
+expr_list(ExpressionList, Bindings, LocalFunctionHandler) -> {ValueList, NewBindings}
+.br
+.RS
+.LP
+Evaluates a list of expressions in parallel, using the same initial bindings for each expression\&. Attempts are made to merge the bindings returned from each evaluation\&. This function is useful in the \fILocalFunctionHandler\fR\&. See below\&. 
+.LP
+Returns \fI{ValueList, NewBindings}\fR\&. 
+.RE
+.LP
+.B
+new_bindings() -> BindingStruct
+.br
+.RS
+.LP
+Returns an empty binding structure\&. 
+.RE
+.LP
+.B
+bindings(BindingStruct) -> Bindings
+.br
+.RS
+.LP
+Returns the list of bindings contained in the binding structure\&. 
+.RE
+.LP
+.B
+binding(Name, BindingStruct) -> Binding
+.br
+.RS
+.LP
+Returns the binding of \fIName\fR in \fIBindingStruct\fR\&. 
+.RE
+.LP
+.B
+add_binding(Name, Value, Bindings) -> BindingStruct
+.br
+.RS
+.LP
+Adds the binding \fIName = Value\fR to \fIBindings\fR\&. Returns an updated binding structure\&. 
+.RE
+.LP
+.B
+del_binding(Name, Bindings) -> BindingStruct
+.br
+.RS
+.LP
+Removes the binding of \fIName\fR in \fIBindings\fR\&. Returns an updated binding structure\&. 
+.RE
+.SH Local Function Handler
+.LP
+During evaluation of a function, no calls can be made to local functions\&. An undefined function error would be generated\&. However, the optional argument \fILocalFunctionHandler\fR may be used to define a function which is called when there is a call to a local function\&. The argument can have the following formats: 
+.RS 2
+.TP 4
+.B
+\fI{value, Func}\fR:
+This defines a local function handler which is called with:
+.RS 4
+
+.nf
+Func(Name, Arguments)
+.fi
+.LP
+
+.LP
+\fIName\fR is the name of the local function and \fIArguments\fR is a list of the \fIevaluated\fR arguments\&. The function handler returns the value of the local function\&. In this case, it is not possible to access the current bindings\&. To signal an error, the function handler just calls \fIexit/1\fR with a suitable exit value\&. 
+.RE
+.TP 4
+.B
+\fI{eval, Func}\fR:
+This defines a local function handler which is called with:
+.RS 4
+
+.nf
+Func(Name, Arguments, Bindings)
+.fi
+.LP
+
+.LP
+\fIName\fR is the name of the local function, \fIArguments\fR is a list of the \fIunevaluated\fR arguments, and \fIBindings\fR are the current variable bindings\&. The function handler returns:
+
+.nf
+{value,Value,NewBindings}
+.fi
+.LP
+
+.LP
+\fIValue\fR is the value of the local function and \fINewBindings\fR are the updated variable bindings\&. In this case, the function handler must itself evaluate all the function arguments and manage the bindings\&. To signal an error, the function handler just calls \fIexit/1\fR with a suitable exit value\&. 
+.RE
+.TP 4
+.B
+\fInone\fR:
+There is no local function handler\&. 
+.RE
+.SH Bugs
+.LP
+The evaluator is not complete\&. \fIreceive\fR cannot be handled properly\&. 
+.LP
+Any undocumented functions in \fIerl_eval\fR should not be used\&. 
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

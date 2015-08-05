@@ -1,0 +1,132 @@
+
+
+
+relup(4)                      FILES                      relup(4)
+
+
+
+NAME
+     relup - Release upgrade file
+
+DESCRIPTION
+     The _r_e_l_e_a_s_e _u_p_g_r_a_d_e _f_i_l_e describes how a system is  upgraded
+     in runtime.
+
+     This file is used by _s_y_s_t_o_o_l_s to generate start scripts  and
+     release upgrade files.
+
+     The  tedious  work  of  writing  the  _r_e_l_u_p  file  has  been
+     automated  and  in most cases this file can be automatically
+     generated from the ._r_e_l file and ._a_p_p_u_p files for the appli-
+     cations in the release.
+
+
+FILE SYNTAX
+     A release upgrade file is called _r_e_l_u_p. In the  target  sys-
+     tem, this file must be located in the _O_T_P__R_O_O_T/_e_r_t_s-_E_V_s_n/_V_s_n
+     directory.
+
+     The _r_e_l_u_p file contains one single Erlang term,  which  con-
+     tains  instructions  on  how to upgrade from old versions to
+     this version, and how to  downgrade  from  this  version  to
+     older versions. The file has the following syntax:
+
+         {Vsn, [{FromVsn, Descr, RuScript}], [{ToVsn, Descr, RuScript}]}.
+
+       * _V_s_n = _s_t_r_i_n_g() is the version of the release.
+
+       * _F_r_o_m_V_s_n = _s_t_r_i_n_g() is a version of a release that we can
+         upgrade  from.  If  the  current  version  of the system
+         matches this version, the corresponding upgrade instruc-
+         tions  in _R_u_S_c_r_i_p_t is used to install the release in the
+         system.
+
+       * _T_o_V_s_n = _s_t_r_i_n_g() is a version of a release that  we  can
+         downgrade  to.  If  this  release  (_V_s_n)  is the current
+         release, and we are about to  downgrade  to  _T_o_V_s_n,  the
+         corresponding  upgrade  instructions in _R_u_S_c_r_i_p_t is used
+         to install the old release in the system.
+
+       * _D_e_s_c_r is a user defined parameter which is not processed
+         by  any  release  handling  functions. It can be used to
+         describe the release to an operator. Eventually, it will
+         be  returned  by  _r_e_l_e_a_s_e__h_a_n_d_l_e_r:_i_n_s_t_a_l_l__r_e_l_e_a_s_e/_1  and
+         _r_e_l_e_a_s_e__h_a_n_d_l_e_r:_c_h_e_c_k__i_n_s_t_a_l_l__r_e_l_e_a_s_e/_1.
+
+       * _R_u_S_c_r_i_p_t is a release upgrade script. Refer to the  sec-
+         tion  Release  Handling  Instructions in the SASL User's
+         Guide for a description of this script.
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    1
+
+
+
+
+
+
+relup(4)                      FILES                      relup(4)
+
+
+
+     There is one tuple {_F_r_o_m_V_s_n, _D_e_s_c_r, _R_u_S_c_r_i_p_t} for  each  old
+     system  version  which  can be upgraded to this version, and
+     one tuple {_T_o_V_s_n, _D_e_s_c_r, _R_u_S_c_r_i_p_t} for each old version that
+     this version can be downgraded to.
+
+     When        upgrading        from        _F_r_o_m_V_s_n        with
+     _r_e_l_e_a_s_e__h_a_n_d_l_e_r:_i_n_s_t_a_l_l__r_e_l_e_a_s_e/_1, there does not have to be
+     an exact match of versions. _F_r_o_m_V_s_n can be a  sub-string  of
+     the  current  version  of  the  system.  For example, if the
+     current version is "_2._1._1",  we  can  upgrade  from  _F_r_o_m_V_s_n
+     "_2._1"  or "_2._1._1", but not from "_2._0" or "_2._1._1._2". However,
+     if this scheme is used, the same release upgrade  script  is
+     used  to  go from both "_2._1" and "_2._1._1". Therefore, "_2._1._1"
+     must be compatible with "_2._1". If you do  not  want  to  use
+     this  feature,  you  must make sure that the current version
+     and the new version match before you call _i_n_s_t_a_l_l__r_e_l_e_a_s_e/_1.
+
+SEE ALSO
+     app(4), appup(4), rel(4), systools(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    2
+
+
+

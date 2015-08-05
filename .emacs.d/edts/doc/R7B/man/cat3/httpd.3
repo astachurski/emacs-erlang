@@ -1,0 +1,726 @@
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+MODULE
+     httpd - An implementation  of  an  HTTP  1.0  compliant  Web
+     server, as defined in RFC 1945.
+
+DESCRIPTION
+     HTTP (Hypertext Transfer Protocol) is  an  application-level
+     protocol  with the lightness and speed necessary for distri-
+     buted, collaborative and  hyper-media  information  systems.
+     The  _h_t_t_p_d module handles HTTP 1.0 as described in  RFC 1945
+     with a few exceptions such  as   Gateway  and   Proxy  func-
+     tionality.  The same is true for servers written by NCSA and
+     others.
+
+     The server implements numerous features such as SSL  (Secure
+     Sockets  Layer), ESI (Erlang Scripting Interface), CGI (Com-
+     mon Gateway Interface),  User  Authentication(using  Mnesia,
+     dets or plain text database), Common Logfile Format (with or
+     without _d_i_s_k__l_o_g(_3) support), URL Aliasing, Action Mappings,
+     Directory Listings and SSI (Server-Side Includes).
+
+     The  configuration  of  the  server  is  done  using  Apache
+     <http://www.apache.org>-style  run-time configuration direc-
+     tives. The goal is to be plug-in compatible with Apache  but
+     with   enhanced   fault-tolerance,   scalability  and  load-
+     balancing characteristics.
+
+     All server functionality has been implemented using an espe-
+     cially  crafted  server API; EWSAPI (Erlang Web Server API).
+     This API can be used  to  advantage  by  all  who  wants  to
+     enhance  the  server  core functionality, for example custom
+     logging and authentication.
+
+
+RUN-TIME CONFIGURATION
+     All functionality in the  server  can  be  configured  using
+     Apache-style  run-time  configuration directives stored in a
+     configuration file. Take a look at the example config  files
+     in                          the                         conf
+     directory($INETS_ROOT/examples/server_root/conf/)   of   the
+     server root for a complete understanding.
+
+     An alphabetical list of all config directives:
+
+       * Action
+
+       * Alias
+
+       * allow
+
+       * deny
+
+       * AuthName
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+       * AuthGroupFile
+
+       * AuthUserFile
+
+       * BindAddress
+
+       * DefaultType
+
+       * <Directory>
+
+       * DirectoryIndex
+
+       * DocumentRoot
+
+       * ErlScriptAlias
+
+       * ErrorLog
+
+       * ErrorDiskLog
+
+       * ErrorDiskLogSize
+
+       * EvalScriptAlias
+
+       * MaxClients
+
+       * Modules
+
+       * Port
+
+       * require
+
+       * ServerAdmin
+
+       * ServerName
+
+       * ServerRoot
+
+       * Script
+
+       * ScriptAlias
+
+       * SocketType
+
+       * SSLCertificateFile
+
+       * SSLCertificateKeyFile
+
+       * SSLVerifyClient
+
+       * KeepAlive
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+       * KeepAliveTimeout
+
+       * TransferLog
+
+       * TransferDiskLog
+
+       * TransferDiskLogSize
+
+EWSAPI MODULES
+     All server functionality below has  been  implemented  using
+     EWSAPI  (Erlang  Web  Server  API)  modules.  The  following
+     modules  all  have  separate   manual   pages   (_m_o_d__c_g_i(_3),
+     _m_o_d__a_u_t_h(_3), ...):
+
+       httpd_core:
+           Core features.
+
+       mod_actions:
+           Filetype/method-based script execution.
+
+       mod_alias:
+           Aliases and redirects.
+
+       mod_auth:
+           User authentication using text files, mnesia or dets
+
+       mod_cgi:
+           Invoking of CGI scripts.
+
+       mod_dir:
+           Basic directory handling.
+
+       mod_esi:
+           Efficient Erlang Scripting.
+
+       mod_get:
+           HTTP GET Method
+
+       mod_head:
+           HTTP HEAD Method
+
+       mod_include:
+           Server-parsed documents.
+
+       mod_log:
+           Standard logging in the Common  Logfile  Format  using
+           text files.
+
+       mod_disk_log:
+           Standard logging in the Common  Logfile  Format  using
+           _d_i_s_k__l_o_g(_3).
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   3
+
+
+
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+     The Modules config directive can be used to alter the server
+     behavior,  that  is  to alter the EWSAPI Module Sequence. An
+     example module sequence can be found in the  example  config
+     directory.  If  this  needs  to  be  altered read the EWSAPI
+     Module Interaction section below.
+
+EXPORTS
+     start()
+     start(ConfigFile) -> ServerRet
+     start_link()
+     start_link(ConfigFile) -> ServerRet
+
+          Types
+               ConfigFile = string()
+               ServerRet = {ok, Pid} | ignore | {error,  EReason}
+               | {stop, SReason}
+               Pid = pid()
+               EReason = {already_started, Pid} | term()
+               SReason = string()
+
+          _s_t_a_r_t/_1 and _s_t_a_r_t__l_i_n_k/_1 starts a server  as  specified
+          in  the  given  _C_o_n_f_i_g_F_i_l_e.  The  _C_o_n_f_i_g_F_i_l_e supports a
+          number of config directives specified below.
+
+          _s_t_a_r_t/_0 and _s_t_a_r_t/_0 starts a server as specified  in  a
+          hard-wired       config       file,       that       is
+          _s_t_a_r_t("/_v_a_r/_t_m_p/_s_e_r_v_e_r__r_o_o_t/_c_o_n_f/_8_8_8_8._c_o_n_f").    Before
+          utilizing  _s_t_a_r_t/_0  or  _s_t_a_r_t__l_i_n_k/_0,  copy the example
+          server  root($INETS_ROOT/examples/server_root/)  to   a
+          specific installation directory(/var/tmp/) and you have
+          a server running in no time.
+
+          If you copy the example server  root  to  the  specific
+          installation  directory it is furthermore easy to start
+          an      SSL      enabled      server,      that      is
+          _s_t_a_r_t("/_v_a_r/_t_m_p/_s_e_r_v_e_r__r_o_o_t/_c_o_n_f/_s_s_l._c_o_n_f").
+
+     restart()
+     restart(Port) -> ServerRet
+     restart(ConfigFile) -> ServerRet
+     restart(Address,Port) -> ServerRet
+
+          Types
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               ConfigFile = string()
+               ServerRet = ok | not_started
+
+          _r_e_s_t_a_r_t restarts the  server  and  reloads  its  config
+          file.  _r_e_s_t_a_r_t/_2  restarts  the server which listens to
+          the specified _P_o_r_t on _A_d_d_r_e_s_s. _r_e_s_t_a_r_t(_i_n_t_e_g_e_r())  res-
+          tarts  a  server  which  listens  to  a  specific _P_o_r_t.
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   4
+
+
+
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+          _r_e_s_t_a_r_t(_s_t_r_i_n_g()) extracts _B_i_n_d_A_d_d_r_e_s_s  and  _P_o_r_t  from
+          the config file and calls _r_e_s_t_a_r_t/_2 _r_e_s_t_a_r_t/_0. restarts
+          a server which listens  to  port  8888,  that  is  _r_e_s_-
+          _t_a_r_t(_8_8_8_8).
+
+     stop()
+     stop(Port) -> ServerRet
+     stop(ConfigFile) -> ServerRet
+     stop(Address,Port) -> ServerRet
+
+          Types
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               ConfigFile = string()
+               ServerRet = ok | not_started
+
+          _s_t_o_p/_2 stops the server which listens to the  specified
+          _P_o_r_t  on  _A_d_d_r_e_s_s. _s_t_o_p(_i_n_t_e_g_e_r()) stops a server which
+          listens to a  specific  _P_o_r_t.  _s_t_o_p(_s_t_r_i_n_g())  extracts
+          _B_i_n_d_A_d_d_r_e_s_s and _P_o_r_t from the config file and stops the
+          server which listens to the specified _P_o_r_t on  _A_d_d_r_e_s_s.
+          _s_t_o_p/_0  stops a server which listens to port 8888, that
+          is _s_t_o_p(_8_8_8_8).
+
+     parse_query(QueryString) -> ServerRet
+
+          Types
+               QueryString = string()
+               ServerRet = [{Key, Value}]
+               Key = Value = string()
+
+          _p_a_r_s_e__q_u_e_r_y/_1 parses incoming  data  to  _e_r_l  and  _e_v_a_l
+          scripts (See mod_esi(3)) as defined in the standard URL
+          format, that is '+' becomes  'space'  and  decoding  of
+          hexadecimal characters (%_x_x).
+
+EWSAPI MODULE PROGRAMMING
+  Note:
+     The Erlang/OTP programming knowledge required  to  undertake
+     an  EWSAPI  module  is quite high and is not recommended for
+     the average server user. It is best to only use  it  to  add
+     core functionality, e.g. custom authentication or a RFC 2109
+     <ftp://ftp.isi.edu/in-notes/rfc2109.txt> implementation.
+
+
+  Warning:
+     The current implementation of EWSAPI  is  under  review  and
+     feedback is welcomed.
+
+
+     EWSAPI should only be used to add _c_o_r_e functionality to  the
+     server.  In  order  to generate dynamic content, for example
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   5
+
+
+
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+     on-the-fly generated HTML,  use  the  standard  CGI  or  ESI
+     facilities instead.
+
+     As seen above the major part of the server functionality has
+     been  realized  as  EWSAPI  modules (from now on only called
+     modules). If you intend to write your own  server  extension
+     start  with examining the standard modules($INETS_ROOT/src/)
+     _m_o_d_*._e_r_l and note how to they are configured in the example
+     config directory($INETS_ROOT/examples/server_root/conf/).
+
+     Each module implements _d_o/_1 (mandatory), _l_o_a_d/_2, _s_t_o_r_e/_2 and
+     _r_e_m_o_v_e/_1. The latter functions are needed only when new con-
+     fig directives are to be introduced (See EWSAPI Module  Con-
+     figuration below).
+
+     A module can choose to export functions to be used by  other
+     modules  in  the  EWSAPI Module Sequence (See Modules config
+     directive). This should only be done as  an  exception!  The
+     goal  is  to  keep each module self-sustained thus making it
+     easy to alter the EWSAPI Module Sequence without any  unnec-
+     cesary module dependencies.
+
+     A module can furthermore  use  data  generated  by  previous
+     modules in the EWSAPI Module Sequence or generate data to be
+     used by consecutive EWSAPI modules. This  is  made  possible
+     due  to  an  internal  list  of key-value tuples (See EWSAPI
+     Module Interaction below).
+
+  Note:
+     The server executes _d_o/_1 (using  _a_p_p_l_y/_1)  for  each  module
+     listed  in  the  Modules  config  directive.  _d_o/_1 takes the
+     record  _m_o_d  as  an  argument,  as  described   below.   See
+     httpd.hrl($INETS_ROOT/src/httpd.hrl):
+
+
+     -record(mod,{data=[],
+                  socket_type=ip_comm,
+                  socket,
+                  config_db,
+                  method,
+                  request_uri,
+                  http_version,
+                  request_line,
+                  parsed_header=[],
+                  entity_body}).
+
+     The fields of the _m_o_d record has the following meaning:
+
+       _d_a_t_a:
+           Type [{_I_n_t_e_r_a_c_t_i_o_n_K_e_y, _I_n_t_e_r_a_c_t_i_o_n_V_a_l_u_e}] is  used  to
+           propagate  data  between  modules  (See  EWSAPI Module
+           Interaction  below).  Depicted  _i_n_t_e_r_a_c_t_i_o_n__d_a_t_a()  in
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   6
+
+
+
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+           function type declarations.
+
+       _s_o_c_k_e_t__t_y_p_e:
+           Type _i_p__c_o_m_m | _s_s_l, that is the socket type.
+
+       _s_o_c_k_e_t:
+           The actual socket in _i_p__c_o_m_m or _s_s_l  format  depending
+           on the _s_o_c_k_e_t__t_y_p_e.
+
+       _c_o_n_f_i_g__d_b:
+           The config file directives stored as key-value  tuples
+           in an ETS-table. Depicted _c_o_n_f_i_g__d_b() in function type
+           declarations.
+
+       _m_e_t_h_o_d:
+           Type "_G_E_T" | "_P_O_S_T" | "_D_E_L_E_T_E" | "_P_U_T",  that  is  the
+           HTTP method.
+
+       _r_e_q_u_e_s_t__u_r_i:
+           The _R_e_q_u_e_s_t-_U_R_I as defined in RFC  1945,  for  example
+           "/_c_g_i-_b_i_n/_f_i_n_d._p_l?_p_e_r_s_o_n=_j_o_c_k_e"
+
+       _r_e_q_u_e_s_t__l_i_n_e:
+           The _R_e_q_u_e_s_t-_L_i_n_e as defined in RFC 1945,  for  example
+           "_G_E_T /_c_g_i-_b_i_n/_f_i_n_d._p_l?_p_e_r_s_o_n=_j_o_c_k_e _H_T_T_P/_1._0".
+
+       _p_a_r_s_e_d__h_e_a_d_e_r:
+           Type [{_H_e_a_d_e_r_K_e_y,  _H_e_a_d_e_r_V_a_l_u_e}],  that  is  all  HTTP
+           header  fields  stored  in a list of key-value tuples.
+           See RFC 1945 for a listing of all header  fields,  for
+           example {_d_a_t_e, "_W_e_d, _1_5 _O_c_t _1_9_9_7 _1_4:_3_5:_1_7 _G_M_T"}.
+
+       _e_n_t_i_t_y__b_o_d_y:
+           The _E_n_t_i_t_y-_B_o_d_y as defined in RFC  1945,  for  example
+           data sent from a CGI-script using the POST method.
+
+     A _d_o/_1 function typically uses a restricted set of  the  _m_o_d
+     record's  fields  to  do  its  stuff and then returns a term
+     depending on the  outcome,  that  is  {_p_r_o_c_e_e_d,  _N_e_w_D_a_t_a}  |
+     {_b_r_e_a_k,  _N_e_w_D_a_t_a}  |  _d_o_n_e  which  has the following meaning
+     (_O_l_d_D_a_t_a refers to  the  _d_a_t_a  field  in  the  incoming  _m_o_d
+     record):
+
+       {_p_r_o_c_e_e_d, _O_l_d_D_a_t_a}:
+           Proceed to next module as nothing happened.
+
+       {_p_r_o_c_e_e_d, [{_r_e_s_p_o_n_s_e, {_S_t_a_t_u_s_C_o_d_e, _R_e_s_p_o_n_s_e}}|_O_l_d_D_a_t_a]}:
+           A generated response (_R_e_s_p_o_n_s_e) should be sent back to
+           the  client  including  a  status code (_S_t_a_t_u_s_C_o_d_e) as
+           defined in RFC 1945.
+
+    _S_i_z_e}}|_O_l_d_D_a_t_a]}:
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   7
+
+
+
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+       {_p_r_o_c_e_e_d,      [{_r_e_s_p_o_n_s_e,      {_a_l_r_e_a_d_y__s_e_n_t,      _S_t_a_t_u_s_C_o_d_e,
+           A  generated  response  has already manually been sent
+           back to the client, using the _s_o_c_k_e_t provided  by  the
+           _m_o_d  record (see above), including a valid status code
+           (_S_t_a_t_u_s_C_o_d_e) as defined  in  RFC  1945  and  the  size
+           (_S_i_z_e) of the response in bytes.
+
+    _R_e_a_s_o_n}}}|_O_l_d_D_a_t_a]}:
+       {_p_r_o_c_e_e_d,       [{_s_t_a_t_u_s,       {_S_t_a_t_u_s_C_o_d_e,        _P_h_r_a_s_e_A_r_g_s,
+           A  generic  status  message should be sent back to the
+           client (if  the  next  module  in  the  EWSAPI  Module
+           Sequence  does  not  think  otherwise!)  including  at
+           status code (_S_t_a_t_u_s_C_o_d_e) as defined  in  RFC  1945,  a
+           term  describing  how  the  client  will  be  informed
+           (_P_h_r_a_s_e_A_r_g_s) and a reason (_R_e_a_s_o_n) to why it happened.
+           Read more about _P_h_r_a_s_e_A_r_g_s in httpd_util:message/3.
+
+       {_b_r_e_a_k, _N_e_w_D_a_t_a}:
+           Has the same semantics as _p_r_o_c_e_e_d above but  with  one
+           important  exception;  No  more  modules in the EWSAPI
+           Module Sequence are executed. Use with care!
+
+       _d_o_n_e:
+           No more modules in the EWSAPI Module Sequence are exe-
+           cuted  and  no  response  should  be  sent back to the
+           client. If no response is sent  back  to  the  client,
+           using  the  _s_o_c_k_e_t  provided  by  the  _m_o_d record, the
+           client will typically  get  a  "_D_o_c_u_m_e_n_t  _c_o_n_t_a_i_n_s  _n_o
+           _d_a_t_a...".
+
+  Warning:
+     Each consecutive module in the EWSAPI  Module  Sequence  _c_a_n
+     choose  to  ignore  data  returned  from the previous module
+     either by trashing it or by "enhancing" it.
+
+
+     Keep in mind that there exist numerous utility functions  to
+     help  you  as an EWSAPI module programmer, e.g. nifty lookup
+     of data in ETS-tables/key-value lists and socket  utilities.
+     You   are   well   advised   to   read   httpd_util(3)   and
+     httpd_socket(3).
+
+EWSAPI MODULE CONFIGURATION
+     An EWSAPI module can define new config directives thus  mak-
+     ing  it  configurable for a server end-user. This is done by
+     implementing _l_o_a_d/_2 (mandatory), _s_t_o_r_e/_2 and _r_e_m_o_v_e/_1.
+
+     The config file is scanned twice (_l_o_a_d/_2 and _s_t_o_r_e/_2) and  a
+     cleanup  is done (_r_e_m_o_v_e/_1) during server shutdown. The rea-
+     son for this is:  "A  directive  A  can  be  dependent  upon
+     another  directive  B  which  occur  either  before or _a_f_t_e_r
+     directive A in the config file". If  a  directive  does  not
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   8
+
+
+
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+     depend  upon other directives; _s_t_o_r_e/_2 can be left out. Even
+     _r_e_m_o_v_e/_1 can be left out if neither _l_o_a_d/_2 nor _s_t_o_r_e/_2  open
+     files or create ETS-tables etc.
+
+     _l_o_a_d/_2 takes two arguments. The first being a row  from  the
+     config  file,  that  is  a config directive in string format
+     such as "_P_o_r_t _8_0". The second  being  a  list  of  key-value
+     tuples  (which  can be empty!) defining a context. A context
+     is needed because there are directives which  defines  inner
+     contexts,  that  is  directives  within  directives, such as
+     <Directory>. _l_o_a_d/_2 is expected to return:
+
+       _e_o_f:
+           End-of-file found.
+
+       _o_k: Ignore the directive.
+
+       {_o_k, _C_o_n_t_e_x_t_L_i_s_t}:
+           Introduces a new context by adding a tuple to the con-
+           text list or reverts to a previous context by removing
+           a tuple from the context list. See  <Directory>  which
+           introduces   a  new  context  and  </Directory>  which
+           reverts to a previous one (Advice: Look at the  source
+           code for _m_o_d__a_u_t_h:_l_o_a_d/_2).
+
+       {_o_k, _C_o_n_t_e_x_t_L_i_s_t, [{_D_i_r_e_c_t_i_v_e_K_e_y, _D_i_r_e_c_t_i_v_e_V_a_l_u_e}]}:
+           Introduces a new context (see above) and defines a new
+           config directive, e.g. {_p_o_r_t, _8_0}.
+
+       {_o_k, _C_o_n_t_e_x_t_L_i_s_t, [{_D_i_r_e_c_t_i_v_e_K_e_y, _D_i_r_e_c_t_i_v_e_V_a_l_u_e}]}:
+           Introduces a new context (see  above)  and  defines  a
+           several new config directives, e.g. [{_p_o_r_t, _8_0}, {_f_o_o,
+           _o_n}].
+
+       {_e_r_r_o_r, _R_e_a_s_o_n}:
+           An invalid directive.
+
+     A naive example from _m_o_d__l_o_g._e_r_l:
+
+     load([$T,$r,$a,$n,$s,$f,$e,$r,$L,$o,$g,$ |TransferLog],[]) ->
+       {ok,[],{transfer_log,httpd_conf:clean(TransferLog)}};
+     load([$E,$r,$r,$o,$r,$L,$o,$g,$ |ErrorLog],[]) ->
+       {ok,[],{error_log,httpd_conf:clean(ErrorLog)}}.
+
+     _s_t_o_r_e/_2  takes  two  arguments.  The  first  being  a  tuple
+     describing  a directive ({_D_i_r_e_c_t_i_v_e_K_e_y, _D_i_r_e_c_t_i_v_e_V_a_l_u_e}) and
+     the second argument a list of tuples describing  all  direc-
+     tives ([{_D_i_r_e_c_t_i_v_e_K_e_y, _D_i_r_e_c_t_i_v_e_V_a_l_u_e}]). This makes it pos-
+     sible for directive A to be  dependent  upon  the  value  of
+     directive B. _s_t_o_r_e/_2 is expected to return:
+
+       {_o_k, {_D_i_r_e_c_t_i_v_e_K_e_y, _N_e_w_D_i_r_e_c_t_i_v_e_V_a_l_u_e}}:
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   9
+
+
+
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+           Introduces a new value  for  the  specified  directive
+           replacing the old one generated by _l_o_a_d/_2.
+
+       {_o_k, [{_D_i_r_e_c_t_i_v_e_K_e_y, _N_e_w_D_i_r_e_c_t_i_v_e_V_a_l_u_e}]}:
+           Introduces new values  for  the  specified  directives
+           replacing the old ones generated by _l_o_a_d/_2.
+
+       {_e_r_r_o_r, _R_e_a_s_o_n}:
+           An invalid directive.
+
+     A naive example from _m_o_d__l_o_g._e_r_l:
+
+     store({error_log,ErrorLog},ConfigList) ->
+       case create_log(ErrorLog,ConfigList) of
+         {ok,ErrorLogStream} ->
+           {ok,{error_log,ErrorLogStream}};
+         {error,Reason} ->
+           {error,Reason}
+       end.
+
+     _r_e_m_o_v_e/_1 takes the ETS-table representation of  the  config-
+     file  as  input.  It  is  up  to you to cleanup anything you
+     opened or created in _l_o_a_d/_2 or _s_t_o_r_e/_2. _r_e_m_o_v_e/_1 is expected
+     to return:
+
+       _o_k: If the cleanup was successful.
+
+       {_e_r_r_o_r, _R_e_a_s_o_n}:
+           If the cleanup failed.
+
+     A naive example from _m_o_d__l_o_g._e_r_l:
+
+     remove(ConfigDB) ->
+       lists:foreach(fun([Stream]) -> file:close(Stream) end,
+                     ets:match(ConfigDB,{transfer_log,'$1'})),
+       lists:foreach(fun([Stream]) -> file:close(Stream) end,
+                     ets:match(ConfigDB,{error_log,'$1'})),
+       ok.
+
+     Keep in mind that there exists numerous utility functions to
+     help  you  as an EWSAPI module programmer, e.g. nifty lookup
+     of data in ETS-tables/key-value lists and  configure  utili-
+     ties.  You  are  well  advised  to  read  httpd_conf(3)  and
+     httpd_util(3).
+
+EWSAPI MODULE INTERACTION
+     Modules in the EWSAPI Module Sequence uses the _m_o_d  record's
+     _d_a_t_a  field  to  propagate responses and status messages, as
+     seen above. This data type can be used in a  more  versatile
+     fashion.  A module can prepare data to be used by subsequent
+     EWSAPI modules, for example the mod_alias module appends the
+     tuple  {_r_e_a_l__n_a_m_e,  _s_t_r_i_n_g()}  to  inform subsequent modules
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                  10
+
+
+
+
+
+
+httpd(3)            ERLANG MODULE DEFINITION             httpd(3)
+
+
+
+     about the actual file system location for the current URL.
+
+     Before altering the EWSAPI Modules  Sequence  you  are  well
+     advised  to  observe what types of data each module uses and
+     propagates. Read the "EWSAPI Interaction" section  for  each
+     module.
+
+     An EWSAPI module can furthermore export functions to be used
+     by  other  EWSAPI  modules  but also for other purposes, for
+     example  mod_alias:path/3  and  mod_auth:add_user/5.   These
+     functions should be described in the module documentation.
+
+  Note:
+     When designing  an  EWSAPI  module  _t_r_y  to  make  it  self-
+     contained,  that  is  avoid being dependent on other modules
+     both concerning exchange of interaction data and the use  of
+     exported functions. If you are dependent on other modules do
+     state this clearly in the module documentation!
+
+
+     You   are   well   advised   to   read   httpd_util(3)   and
+     httpd_conf(3).
+
+BUGS
+     If a Web browser connect itself to  an  SSL  enabled  server
+     using  a URL _n_o_t starting with _h_t_t_p_s:// the server will hang
+     due to an ugly bug in the SSLeay package!
+
+SEE ALSO
+     httpd_core(3),        httpd_conf(3),        httpd_socket(3),
+     httpd_util(3),   inets(6),   mod_actions(3),   mod_alias(3),
+     mod_auth(3),   mod_security(3),   mod_cgi(3),    mod_dir(3),
+     mod_disk_log(3), mod_esi(3), mod_include(3), mod_log(3)
+
+AUTHORS
+     Joakim Grebeno  - support@erlang.ericsson.se
+     Torbjorn Tornkvist  - support@erlang.ericsson.se
+     Joe Armstrong  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                  11
+
+
+

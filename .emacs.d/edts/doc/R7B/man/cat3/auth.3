@@ -1,0 +1,198 @@
+
+
+
+auth(3)             ERLANG MODULE DEFINITION              auth(3)
+
+
+
+MODULE
+     auth -  The Erlang Network Authentication Server
+
+DESCRIPTION
+     Authentication determines which nodes are allowed to commun-
+     icate  with  each  other.  In  a network of different Erlang
+     nodes, it is built into the system at  the  lowest  possible
+     level.  Each  node  has its _M_a_g_i_c _C_o_o_k_i_e, which is an Erlang
+     atom.
+
+     Whenever a message is transferred from one node to  another,
+     it is accompanied by the _M_a_g_i_c _C_o_o_k_i_e of the receiving node.
+     For example, a message transferred from node _A to node _B  is
+     accompanied by what node _A believes to be the_M_a_g_i_c _C_o_o_k_i_e of
+     node _B.
+
+     When the message arrives  at  node  _B,  the  runtime  system
+     immediately checks that the accompanying cookie is the right
+     one. If it is, the message is passed on in the  normal  way.
+     If  it  is  not, the message is transformed into a _b_a_d_c_o_o_k_i_e
+     message, which is sent to the system process _n_e_t__k_e_r_n_e_l.  By
+     default,  the  _n_e_t__k_e_r_n_e_l  process passes the message to the
+     registered process _a_u_t_h, which is then responsible for  tak-
+     ing  the appropriate action for the unauthorized message. In
+     the standard system, the default action is to shut down con-
+     nection to that node.
+
+     At start-up, the first action of the standard _a_u_t_h server is
+     to read a file named $_H_O_M_E/_e_r_l_a_n_g._c_o_o_k_i_e. An atom is created
+     from the contents of this file and the cookie of the node is
+     set  to  this atom with the use of _e_r_l_a_n_g:_s_e_t__c_o_o_k_i_e(_n_o_d_e(),
+     _C_o_o_k_i_e_A_t_o_m).
+
+     If the file does not exist, it is created. The UNIX  permis-
+     sions  mode  of  the  file is set to octal 400 (read-only by
+     owner) and filled with a random string. For this reason, the
+     same  user,  or  group of users with identical cookie files,
+     can have Erlang  nodes  which  can  communicate  freely  and
+     without interference from the _M_a_g_i_c _C_o_o_k_i_e system. Users who
+     want to run nodes on separate file systems must  be  certain
+     that  their cookie files are identical on the different file
+     systems.
+
+     Initially, each node has a random atom assigned as its magic
+     cookie.  Once  the  procedure  described above has been con-
+     cluded,  the  cookie  is  set  to  the   contents   of   the
+     $_H_O_M_E/_e_r_l_a_n_g._c_o_o_k_i_e file.
+
+     To communicate with another node, the magic cookie  of  that
+     node  must be known. The BIF _e_r_l_a_n_g:_s_e_t__c_o_o_k_i_e(_N_o_d_e, _C_o_o_k_i_e)
+     sets the cookie for _N_o_d_e to _C_o_o_k_i_e. From then on,  all  mes-
+     sages  will  be  accompanied  by  the  cookie _C_o_o_k_i_e. If the
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+auth(3)             ERLANG MODULE DEFINITION              auth(3)
+
+
+
+     cookie is not correct when messages arrive at _N_o_d_e, they are
+     sent    to    the    _a_u_t_h   _s_e_r_v_e_r   at   _N_o_d_e.   The   call
+     _e_r_l_a_n_g:_s_e_t__c_o_o_k_i_e(_n_o_d_e(), _C_o_o_k_i_e_A_t_o_m) will set  the  current
+     cookie  to _C_o_o_k_i_e_A_t_o_m. It will, however, also set the cookie
+     of all other unknown nodes to _C_o_o_k_i_e_A_t_o_m. In the case of the
+     default  _a_u_t_h  server, this is the first thing done when the
+     system starts. The default then, is to assume that _a_l_l nodes
+     which  communicate  have  the  same cookie. In the case of a
+     single user on a single file system, this is indeed true and
+     no  further action is required. The original cookie can also
+     be fetched by the BIF _e_r_l_a_n_g:_g_e_t__c_o_o_k_i_e().
+
+     If nodes which communicate do not have the same cookie, they
+     can  be  set  explicitly  on  each  node  with  the  aid  of
+     _e_r_l_a_n_g:_s_e_t__c_o_o_k_i_e(_N_o_d_e, _C_o_o_k_i_e). All messages  sent  to  the
+     node  _N_o_d_e  will  then  be accompanied by the cookie _C_o_o_k_i_e.
+     Distributed systems with multiple User IDs can be handled in
+     this way.
+
+     Initially, the system cookie is set to a  random  atom,  and
+     the  (assumed) cookie of all other nodes is initially set to
+     the atom _n_o_c_o_o_k_i_e. Thus, an Erlang node is completely unpro-
+     tected  when  _e_r_l_a_n_g:_s_e_t__c_o_o_k_i_e(_n_o_d_e(),  _n_o_c_o_o_k_i_e)  is  run.
+     Sometimes, this may be appropriate for systems which are not
+     normally  networked,  and  it  can  also  be appropriate for
+     maintenance purposes.
+
+     In the standard system, the default when two nodes are  con-
+     nected is to immediately connect all other involved nodes as
+     well. This way, there is always a fully  connected  network.
+     If there are nodes with different cookies, this method might
+     be  inappropriate  and  the  host  OS  command  line  option
+     -_c_o_n_n_e_c_t__a_l_l _f_a_l_s_e must be issued to the Erlang runtime sys-
+     tem. See _g_l_o_b_a_l(_3).
+
+     This module uses  the  two  BIFs  _e_r_l_a_n_g:_g_e_t__c_o_o_k_i_e()  which
+     returns   the   magic   cookie   of   the  local  node,  and
+     _e_r_l_a_n_g:_s_e_t__c_o_o_k_i_e(_N_o_d_e, _C_o_o_k_i_e) which sets the magic  cookie
+     of _N_o_d_e to _C_o_o_k_i_e. If _N_o_d_e is the user's node, the cookie of
+     all other unknown nodes are also set to _C_o_o_k_i_e by this BIF.
+
+
+EXPORTS
+     start()
+
+          Starts the _a_u_t_h server.
+
+     stop()
+
+          Stops the _a_u_t_h server.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+auth(3)             ERLANG MODULE DEFINITION              auth(3)
+
+
+
+     open(Name)
+
+          This function opens up the server with the  name  _N_a_m_e.
+          If, for example, node _N is run with the cookie _C, it is
+          impossible for other nodes with other cookies  to  com-
+          municate  with node _N. The call _o_p_e_n/_1 opens the server
+          with the registered name _N_a_m_e so it can be accessed  by
+          any  other  node, irrespective of cookie. The call must
+          be executed on both nodes to have any effect. All  mes-
+          sages  to  the server must have the form _N_a_m_e ! _M_s_g and
+          all replies from the server {_N_a_m_e,  _R_e_p_l_y},  or  {_N_a_m_e,
+          _N_o_d_e, _R_e_p_l_y}. With this feature, it is possible to per-
+          form specific tasks on publicly announced  Erlang  net-
+          work servers.
+
+     is_auth(Node)
+
+          Returns the value _y_e_s if  communication  with  _N_o_d_e  is
+          authorized,  _n_o if _N_o_d_e does not exist or communication
+          is not authorized.
+
+     exists(Node)
+
+          Returns _y_e_s if _N_o_d_e exists, otherwise _n_o.
+
+     cookie()
+
+          Reads _c_o_o_k_i_e from  $_H_O_M_E/._e_r_l_a_n_g._c_o_o_k_i_e  and  sets  it.
+          This function is used by the _a_u_t_h server at start-up.
+
+     node_cookie(Node, Cookie)
+
+          If the cookie of _N_o_d_e is known to the  user  as  _C_o_o_k_i_e
+          but  the user's cookie is not known at _N_o_d_e, this func-
+          tion informs _N_o_d_e of the identity of the user's cookie.
+
+     node_cookie([Node, Cookie])
+
+          Another version of the previous function with the argu-
+          ments  in a list which can be given on the host OS com-
+          mand line.
+
+     cookie([Cookie])
+
+          Equivalent to  _e_r_l_a_n_g:_s_e_t__c_o_o_k_i_e(_n_o_d_e(),  _C_o_o_k_i_e),  but
+          with  the  argument in a list so it can be given on the
+          host OS command line.
+
+AUTHOR
+      Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+

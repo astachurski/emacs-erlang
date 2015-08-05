@@ -1,0 +1,132 @@
+
+
+
+eva(6)            ERLANG APPLICATION DEFINITION            eva(6)
+
+
+
+APPLICATION
+     eva  - The Event and Alarm Handling Application
+
+DESCRIPTION
+     The Event and Alarm handling appliction  (EVA)  is  a  Fault
+     Management application that provides support to applications
+     and managers for sending and controlling events and  alarms,
+     and for control and transfer of logs in the system.
+
+     EVA is modular and provides two different management  proto-
+     col  independent services. These two services are basic _e_v_a,
+     which provides event and alarm definition and  sending,  and
+     _l_o_g  which provides support for controlling logs in the sys-
+     tem, and for transferring logs to remote systems.  There  is
+     also  a service called _e_v_a__l_o_g, which provides a specializa-
+     tion of the generic log mechanism, for logging of events and
+     alarms.  The basic _e_v_a can be used independently of _l_o_g. EVA
+     defines an API that can be used to make management  protocol
+     specific interfaces to EVA, for example SNMP, CORBA, or HTTP
+     interfaces. Currently, an SNMP interface to the two  generic
+     services are defined.
+
+     EVA is designed to be used as an included application, which
+     means  that  it  needs another application to include it, in
+     order to run. That application is  an  ordinary  application
+     which  starts  the  EVA services it needs in its supervision
+     tree. The services can either be started individually, or by
+     using the supervisor _e_v_a__s_u_p.
+
+     EVA is designed to  be  a  distributed  global  application,
+     which means that the super application that includes EVA may
+     be specified as a distributed application which runs at  one
+     node  at a time only, with the other nodes as standby nodes.
+     The basic EVA service - the eva server - is a global server,
+     which  means  that  clients can access the EVA functionality
+     from any node.
+
+     EVA uses the Mnesia DBMS to  store  data.  This  means  that
+     Mnesia  must  be running on all nodes where EVA can run, and
+     that  the  tables  EVA  uses  are  created  and   configured
+     correctly.  Each EVA service provides a function that should
+     be called to create the tables, and to define  the  replicas
+     for  Mnesia. Each such function is called _c_r_e_a_t_e__t_a_b_l_e_s* and
+     takes one parameter that is a  list  of  nodes.  The  Mnesia
+     tables  will be replicated on these nodes; some on disk, and
+     some in RAM. It is important that these nodes are  the  same
+     as  where the super application that includes EVA is defined
+     to run as a distributed application.
+
+
+CONFIGURATION
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   1
+
+
+
+
+
+
+eva(6)            ERLANG APPLICATION DEFINITION            eva(6)
+
+
+
+     The following configuration parameters are defined  for  the
+     EVA  application;  for  more information about configuration
+     parameters see application(3):
+
+       _u_s_e__s_n_m_p_e_a__l_o_g = _t_r_u_e | _f_a_l_s_e <_o_p_t_i_o_n_a_l>:
+           Specifies if the audit trail log  in  snmp  should  be
+           visible  and  controllable  in  the  log  application.
+           Default is _f_a_l_s_e.
+
+SNMP MIBs
+     The following MIBs are defined in EVA:
+
+       OTP-EVA-MIB (eva):
+           This MIB contains objects for instrumentation and con-
+           trol of the events and alarms in the system.
+
+       OTP-LOG-MIB (eva):
+           This MIB contains objects for instrumentation and con-
+           trol of the logs and FTP transfer of logs.
+
+       OTP-EVA-LOG-MIB (eva):
+           This MIB contains objects for instrumentation and con-
+           trol of the events and alarm logs in the system.
+
+       OTP-SNMPEA-LOG-MIB (eva):
+           This MIB contains objects for instrumentation and con-
+           trol of the snmp audit trail log in the system.
+
+     The MIBs are stored in the  _m_i_b_s  directory.  All  MIBs  are
+     defined  in  SNMPv2  SMI syntax. SNMPv1 versions of the mibs
+     are delivered in the _m_i_b_s/_v_1 directory.
+
+     The compiled MIBs are located under _p_r_i_v/_m_i_b_s, and the  gen-
+     erated  ._h_r_l files under the _i_n_c_l_u_d_e directory. To compile a
+     MIB  that  IMPORTS  an  EVA  MIB,  give  the   option   {_i_l,
+     ["_e_v_a/_p_r_i_v/_m_i_b_s"]} to the MIB compiler.
+
+     The MIBs are loaded into the agent  when  the  services  are
+     started.
+
+SEE ALSO
+     eva(3),     eva_log(3),      eva_server(3),      eva_sup(3),
+     eva_log_snmp(3),       eva_snmp_adaptation(3),       log(3),
+     log_snmp(3), log_snmpea(3), snmp(6)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   2
+
+
+

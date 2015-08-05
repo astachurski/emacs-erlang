@@ -1,0 +1,462 @@
+
+
+
+Module_Interface(3) ERLANG MODULE DEFINITION  Module_Interface(3)
+
+
+
+MODULE
+     Module_Interface - Orber generated stubs/skeletons.
+
+DESCRIPTION
+     This module contains the stub/skeleton  functions  generated
+     by IC.
+
+     Starting a Orber server can be done in three ways:
+
+       * Normal  -  when  the  server  dies  Orber  forgets   all
+         knowledge of the server.
+
+       * Supervisor child - adding  the  configuration  parameter
+         {_s_u_p__c_h_i_l_d,  _t_r_u_e} the _o_e__c_r_e_a_t_e__l_i_n_k/_2 function returns
+         {_o_k, _P_i_d, _O_b_j_R_e_f} which can be handled by  the  applica-
+         tion _s_u_p_e_r_v_i_s_o_r/_s_t_d_l_i_b-_1._7 or later.
+
+       * Persistent object reference - adding  the  configuration
+         parameters  {_p_e_r_s_i_s_t_e_n_t,  _t_r_u_e}  and  {_r_e_g_n_a_m_e, {_g_l_o_b_a_l,
+         _t_e_r_m()}} Orber will remember the object reference  until
+         the  server  terminates  with reason _n_o_r_m_a_l or _s_h_u_t_d_o_w_n.
+         Hence, if the server is started as a _t_r_a_n_s_i_e_n_t  supervi-
+         sor  child we do not receive a 'OBJECT_NOT_EXIST' excep-
+         tion when it has crashed and is being restarted.
+
+     The Orber stub can be used to start a _p_s_e_u_d_o  _o_b_j_e_c_t,  which
+     will  create  a  non-server  implementation. A pseudo object
+     introduce some limitations:
+
+       * The functions _o_e__c_r_e_a_t_e__l_i_n_k/_2 is equal to  _o_e__c_r_e_a_t_e/_2,
+         i.e., no link can or will be created.
+
+       * The  _B_I_F:_s  _s_e_l_f()  and  _p_r_o_c_e_s_s__f_l_a_g(_t_r_a_p__e_x_i_t,   _t_r_u_e)
+         behaves incorrectly.
+
+       * The _I_C option  {{_i_m_p_l,  "_M::_I"},  "_o_t_h_e_r__i_m_p_l"}  has  no
+         effect. The call-back functions must be implemented in a
+         file called _M__I__i_m_p_l._e_r_l
+
+       * The call-back functions must be implemented as if the _I_C
+         option {_t_h_i_s, "_M::_I"} was used.
+
+       * The gen_server _S_t_a_t_e changes have no  effect.  The  user
+         can  provide information via the _E_n_v start parameter and
+         the State returned from _i_n_i_t/_2 will be the State  passed
+         in following invocations.
+
+       * The gen_server reply _T_i_m_e_o_u_t have no effect.
+
+       * The option {_p_s_e_u_d_o,  _t_r_u_e}  overrides  all  other  start
+         options.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   1
+
+
+
+
+
+
+Module_Interface(3) ERLANG MODULE DEFINITION  Module_Interface(3)
+
+
+
+       * Only the  functions,  besides  own  definitions,  _i_n_i_t/_2
+         (called  via  oe_create*/2)  and _t_e_r_m_i_n_a_t_e/_2 (called via
+         corba:dispose/1) must be implemented.
+
+     By adopting the rules for _p_s_e_u_d_o objects described above  we
+     can  use  _o_e__c_r_e_a_t_e/_2 to create _s_e_r_v_e_r or _p_s_e_u_d_o objects, by
+     excluding or including the option  {_p_s_e_u_d_o,  _t_r_u_e},  without
+     changing the call-back module.
+
+     If you start a object without {_r_e_g_n_a_m_e, _R_e_g_N_a_m_e} it can only
+     be  accessed through the returned object key. Started with a
+     {_r_e_g_n_a_m_e, _R_e_g_N_a_m_e} the name is registered  locally  or  glo-
+     bally.
+
+  Warning:
+     To avoid flooding Orber with  old  object  references  start
+     erlang  using the flag -_o_r_b_e_r _o_b_j_e_c_t_k_e_y_s__g_c__t_i_m_e _T_i_m_e, which
+     will remove all object references related to  servers  being
+     dead  for  Time seconds. To avoid extra overhead, i.e., per-
+     forming  garbage  collect  if  no  persistent  objects   are
+     started,  the  objectkeys_gc_time default value is _i_n_f_i_n_i_t_y.
+     For more information, see the orber and corba documentation.
+
+
+
+EXPORTS
+     typeID() -> TypeId
+
+          Types
+               TypeId         =          string(),          e.g.,
+               "IDL:Module/Interface:1.0"
+
+          Returns the Type ID related to this stub/skeleton
+
+     oe_create() -> ObjRef
+
+          Types
+               ObjRef = #object reference
+
+          Start a Orber server.
+
+     oe_create_link() -> ObjRef
+
+          Types
+               ObjRef = #object reference
+
+          Start a linked Orber server.
+
+     oe_create(Env) -> ObjRef
+
+          Types
+               Env = term()
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   2
+
+
+
+
+
+
+Module_Interface(3) ERLANG MODULE DEFINITION  Module_Interface(3)
+
+
+
+               ObjRef = #object reference
+
+          Start a Orber server passing Env to _i_n_i_t/_1.
+
+     oe_create_link(Env) -> ObjRef
+
+          Types
+               Env = term()
+               ObjRef = #object reference
+
+          Start a linked Orber server passing Env to _i_n_i_t/_1.
+
+     oe_create(Env, Options) -> ObjRef
+
+          Types
+               Env = term()
+               ObjRef = #object reference
+               Options = [{sup_child, false} | {persistent, Bool}
+               | {regname, RegName} | {pseudo, Bool}]
+               Bool = true | false
+               RegName = {global, term()} | {local, atom()}
+
+          Start a Orber server passing Env to _i_n_i_t/_1.
+
+          If the option {_p_s_e_u_d_o, _t_r_u_e} is used, all other options
+          are  overridden.  As  default,  this  option  is set to
+          false.
+
+          This function cannot be used for starting a  server  as
+          supervisor child. If started as _p_e_r_s_i_s_t_e_n_t, the options
+          [{_p_e_r_s_i_s_t_e_n_t, _t_r_u_e}, {_r_e_g_n_a_m_e, {_g_l_o_b_a_l, _t_e_r_m()}}]  must
+          be used and Orber will only forget the object reference
+          if it terminates with reason _n_o_r_m_a_l or _s_h_u_t_d_o_w_n.
+
+     oe_create_link(Env, Options) -> Return
+
+          Types
+               Env = term()
+               Return = ObjRef | {ok, Pid, ObjRef}
+               ObjRef = #object reference
+               Options = [{sup_child, Bool} | {persistent,  Bool}
+               | {regname, RegName} | {pseudo, Bool}]
+               Bool = true | false
+               RegName = {global, term()} | {local, atom()}
+
+          Start a linked Orber server passing Env to _i_n_i_t/_1.
+
+          If the option {_p_s_e_u_d_o, _t_r_u_e} is used, all other options
+          are overridden and no link will be created. As default,
+          this option is set to false.
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   3
+
+
+
+
+
+
+Module_Interface(3) ERLANG MODULE DEFINITION  Module_Interface(3)
+
+
+
+          This function can be used for starting a server as per-
+          sistent  or  supervisor  child.  At  the  moment [{_p_e_r_-
+          _s_i_s_t_e_n_t, _t_r_u_e}, {_r_e_g_n_a_m_e, {_g_l_o_b_a_l,  _t_e_r_m()}}]  must  be
+          used to start a server as persistent, i.e., if a server
+          died and is in the process of being restarted a call to
+          the server will not raise '_O_B_J_E_C_T__N_O_T__E_X_I_S_T' exception.
+          Orber will only forget the object reference if it  ter-
+          minates  with  reason  _n_o_r_m_a_l  or  _s_h_u_t_d_o_w_n, hence, the
+          server must be started as _t_r_a_n_s_i_e_n_t (for more  informa-
+          tion see the supervisor documentation).
+
+     Module_Interface:own_functions(ObjRef, Arg1, ...,  ArgN)  ->
+     Reply
+
+          Types
+               ObjRef = #object reference
+               ArgX = specified in the IDL-code.
+               Reply = specified in the IDL-code.
+
+          If    the     configuration     parameter     {_t_i_m_e_o_u_t,
+          "_M_o_d_u_l_e::_I_n_t_e_r_f_a_c_e"}  is _n_o_t passed to IC this function
+          must be called when invoking an operation.
+
+     Module_Interface:own_functions(ObjRef, Timeout,  Arg1,  ...,
+     ArgN) -> Reply
+
+          Types
+               ObjRef = #object reference
+               Timeout = int() >= 0 | infinity
+               ArgX = specified in the IDL-code.
+               Reply = specified in the IDL-code.
+
+          If    the     configuration     parameter     {_t_i_m_e_o_u_t,
+          "_M_o_d_u_l_e::_I_n_t_e_r_f_a_c_e"} is passed to IC this function must
+          be called when invoking an operation.
+
+     Module_Interface_impl:init(Env) -> CallReply
+
+          Types
+               Env = term()
+               CallReply = {ok, State} | {ok, State,  Timeout}  |
+               ignore | {stop, StopReason}
+               State = term()
+               Timeout = int() >= 0 | infinity
+               StopReason = term()
+
+          Whenever a new server is started, _i_n_i_t/_1 is  the  first
+          function called in the specified call-back module.
+
+     Module_Interface_impl:terminate(Reason, State) -> ok
+
+          Types
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   4
+
+
+
+
+
+
+Module_Interface(3) ERLANG MODULE DEFINITION  Module_Interface(3)
+
+
+
+               Reason = term()
+               State = term()
+
+          This call-back function is called whenever  the  server
+          is about to terminate.
+
+     Module_Interface_impl:code_change(OldVsn, State,  Extra)  ->
+     CallReply
+
+          Types
+               OldVsn = undefined | term()
+               State = term()
+               Extra = term()
+               CallReply = {ok, NewState}
+               NewState = term()
+
+          Update the internal _S_t_a_t_e.
+
+     Module_Interface_impl:handle_info(Info, State) -> CallReply
+
+          Types
+               Info = term()
+               State = term()
+               CallReply = {noreply, State}  |  {noreply,  State,
+               Timeout} | {stop, StopReason, State}
+               Timeout = int() >= 0 | infinity
+               StopReason = normal | shutdown | term()
+
+          If   the   configuration    parameter    {{_h_a_n_d_l_e__i_n_f_o,
+          "_M_o_d_u_l_e::_I_n_t_e_r_f_a_c_e"},   _t_r_u_e}   is  passed  to  IC  and
+          _p_r_o_c_e_s_s__f_l_a_g(_t_r_a_p__e_x_i_t,_t_r_u_e)  is  set  in  the   _i_n_i_t()
+          call-back this function must be exported.
+
+  Note:
+     To be able to handle the _T_i_m_e_o_u_t option in _C_a_l_l_R_e_p_l_y in  the
+     call-back  module the configuration parameter {{_h_a_n_d_l_e__i_n_f_o,
+     "_M_o_d_u_l_e::_I_n_t_e_r_f_a_c_e"}, _t_r_u_e} must be passed to IC.
+
+
+     Module_Interface_impl:own_functions(This, State, Arg1,  ...,
+     ArgN) -> CallReply
+
+          Types
+               This = the servers #object reference
+               State = term()
+               ArgX = specified in the IDL-code.
+               CallReply = {reply, Reply, State} | {reply, Reply,
+               State,  Timeout}  |  {noreply,  State} | {noreply,
+               State, Timeout} | {stop, StopReason, Reply, State}
+               | {stop, StopReason, State}
+               Reply = specified in the IDL-code.
+               Timeout = int() >= 0 | infinity
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   5
+
+
+
+
+
+
+Module_Interface(3) ERLANG MODULE DEFINITION  Module_Interface(3)
+
+
+
+               StopReason = normal | shutdown | term()
+
+          If     the     configuration      parameter      {_t_h_i_s,
+          "_M_o_d_u_l_e::_I_n_t_e_r_f_a_c_e"}  is  passed to IC and the function
+          is  defined  to  be  two-way  this  function  must   be
+          exported.
+
+     Module_Interface_impl:own_functions(State, Arg1, ...,  ArgN)
+     -> CallReply
+
+          Types
+               State = term()
+               CallReply = {reply, Reply, State} | {reply, Reply,
+               State,  Timeout}  |  {noreply,  State} | {noreply,
+               State, Timeout} | {stop, StopReason, Reply, State}
+               | {stop, StopReason, State}
+               ArgX = specified in the IDL-code.
+               Reply = specified in the IDL-code.
+               Timeout = int() >= 0 | infinity
+               StopReason = normal | shutdown | term()
+
+          If     the     configuration      parameter      {_t_h_i_s,
+          "_M_o_d_u_l_e::_I_n_t_e_r_f_a_c_e"}  is _n_o_t passed to IC and the func-
+          tion is defined to be two-way  this  function  must  be
+          exported.
+
+     Module_Interface_impl:own_functions(This, State, Arg1,  ...,
+     ArgN) -> CallReply
+
+          Types
+               This = the servers #object reference
+               State = term()
+               CallReply = {noreply, State}  |  {noreply,  State,
+               Timeout} | {stop, StopReason, State}
+               ArgX = specified in the IDL-code.
+               Reply = specified in the IDL-code.
+               Timeout = int() >= 0 | infinity
+               StopReason = normal | shutdown | term()
+
+          If     the     configuration      parameter      {_t_h_i_s,
+          "_M_o_d_u_l_e::_I_n_t_e_r_f_a_c_e"}  is  passed to IC and the function
+          is  defined  to  be  one-way  this  function  must   be
+          exported.
+
+     Module_Interface_impl:own_functions(State, Arg1, ...,  ArgN)
+     -> CallReply
+
+          Types
+               State = term()
+               CallReply = {noreply, State}  |  {noreply,  State,
+               Timeout} | {stop, StopReason, State}
+               ArgX = specified in the IDL-code.
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   6
+
+
+
+
+
+
+Module_Interface(3) ERLANG MODULE DEFINITION  Module_Interface(3)
+
+
+
+               Reply = specified in the IDL-code.
+               Timeout = int() >= 0 | infinity
+               StopReason = normal | shutdown | term()
+
+          If     the     configuration      parameter      {_t_h_i_s,
+          "_M_o_d_u_l_e::_I_n_t_e_r_f_a_c_e"}  is _n_o_t passed to IC and the func-
+          tion is defined to be one-way  this  function  must  be
+          exported.
+
+AUTHOR
+     Niclas Eklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   7
+
+
+

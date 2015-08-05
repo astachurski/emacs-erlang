@@ -1,0 +1,62 @@
+.TH net_kernel 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+net_kernel \- Erlang Networking Kernel 
+.SH DESCRIPTION
+.LP
+The net kernel is a system process which must be running for distributed Erlang to work\&. The purpose of this process is to implement parts of the BIFs \fIspawn/4\fR and \fIspawn_link/4\fR, and to provide authentication and monitoring of the network\&. 
+.LP
+An Erlang runtime system can be started from the UNIX command line as follows: 
+
+.nf
+      % erl -name foobar
+.fi
+.LP
+With this command line, the \fInet_kernel\fR is started as \fInet_kernel:start([foobar])\fR\&. See erl(1)\&. 
+.LP
+This is done by the system itself, but the \fIstart([Name])\fR function can also be called directly from the normal Erlang shell prompt, and a normal Erlang runtime system is then converted to a node\&. The kernel can be shut down with the function \fIstop()\fR, but only if the kernel was not started by the system itself\&. The node is then converted into a normal Erlang runtime system\&. All other nodes on the network will regard this as a total node crash\&. 
+.LP
+If the system is started as \fI% erl -sname foobar\fR, the node name of the node will be \fIfoobar@Host\fR, where \fIHost\fR is the short name of the host (not the fully qualified domain name)\&. The \fI-name\fR flag gives a node with the fully qualified domain name\&. See erl(1)\&.
+.LP
+The system can be started with the flag \fI-dist_auto_connect\fR to control automatic connection of remote nodes\&. See \fIconnect_node/1\fR below and erl(1)\&.
+.LP
+
+
+.SH EXPORTS
+.LP
+.B
+kernel_apply(M, F, A) 
+.br
+.RS
+.LP
+As the net kernel runs in the \&'user space\&', it is easy to provide another net kernel which is tailor made for a specific application\&. For example, the user supplied kernel can limit the set of registered processes which can be accessed from remote nodes, or it can spawn a new process for each \fI{nodeup, Node}\fR message and perform some application specific user authentication, a log-in procedure for example\&. The \fIkernel_apply(M, F, A)\fR function is supplied for this purpose\&. 
+.RE
+.LP
+.B
+monitor_nodes(Flag) 
+.br
+.RS
+.LP
+A process which evaluates this function receives copies of the \fI{nodeup, Node}\fR and \fI{nodedown, Node}\fR messages that the net kernel receives from the runtime system\&. The flag \fIFlag\fR is set to \fItrue\fR to turn the service on, and \fIfalse\fR to turn it off\&. 
+.RE
+.LP
+.B
+allow(NodeList) 
+.br
+.RS
+.LP
+In a simple way, this function limits access to a node from a specific number of named nodes\&. A node which evaluates this function can only be accessed from nodes listed in the \fINodeList\fR variable\&. Any access attempts made from nodes not listed in \fINodeList\fR are rejected\&. 
+.RE
+.LP
+.B
+connect_node(Node) 
+.br
+.RS
+.LP
+Explicitly establishes a connection to the node specified by the atom \fINode\fR\&. Returns \fItrue\fR if succesful, \fIfalse\fR if not, and \fIignored\fR if \fInet_kernel\fR is not started\&.
+.LP
+This function is only necessary if the system is started with the flag \fI-dist_auto_connect\fR\&. See erl(1)\&.
+.RE
+.SH AUTHOR
+.nf
+ Claes Wikstrom - support@erlang.ericsson.se
+.fi

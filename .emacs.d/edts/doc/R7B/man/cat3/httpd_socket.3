@@ -1,0 +1,132 @@
+
+
+
+httpd_socket(3)     ERLANG MODULE DEFINITION      httpd_socket(3)
+
+
+
+MODULE
+     httpd_socket - Communication utility functions to be used by
+     the EWSAPI programmer.
+
+DESCRIPTION
+     This module provides the EWSAPI module programmer with util-
+     ity   functions   for  generic  sockets  communication.  The
+     appropriate communication mechanism is  transparently  used,
+     that is _i_p__c_o_m_m or _s_s_l.
+
+  Warning:
+     The current implementation of EWSAPI  is  under  review  and
+     feedback is welcomed.
+
+
+
+EXPORTS
+     deliver(SocketType,Socket,Binary) -> Result
+
+          Types
+               SocketType = ip_comm | {ssl, SSLConfigString}
+               SSLConfigString = string()
+               Socket = socket()
+               Binary = binary()
+               Result = socket_closed | void()
+
+          _d_e_l_i_v_e_r/_3 sends a _B_i_n_a_r_y over a _S_o_c_k_e_t  in  2kB  chunks
+          using  the  specified  _S_o_c_k_e_t_T_y_p_e. _S_S_L_C_o_n_f_i_g_S_t_r_i_n_g is a
+          SSL configuration string as described in the SSL appli-
+          cation documentation.
+
+     peername(SocketType,Socket) -> {Port,IPAddress}
+
+          Types
+               SocketType = ip_comm | {ssl, SSLConfigString}
+               SSLConfigString = string()
+               Socket = socket()
+               Port = integer()
+               IPAddress = string()
+
+          _p_e_e_r_n_a_m_e/_3 returns the _P_o_r_t and _I_P_A_d_d_r_e_s_s of the remote
+          _S_o_c_k_e_t.  _S_S_L_C_o_n_f_i_g_S_t_r_i_n_g  is a SSL configuration string
+          as described in the SSL application documentation.
+
+     resolve() -> HostName
+
+          Types
+               HostName = string()
+
+          _r_e_s_o_l_v_e/_0 returns the official _H_o_s_t_N_a_m_e of the  current
+          host.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+httpd_socket(3)     ERLANG MODULE DEFINITION      httpd_socket(3)
+
+
+
+SEE ALSO
+     httpd(3)
+
+AUTHOR
+     Joakim Grebeno  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+

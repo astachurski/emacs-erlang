@@ -1,0 +1,66 @@
+
+
+
+unix(3)             ERLANG MODULE DEFINITION              unix(3)
+
+
+
+MODULE
+     unix - Calls to the UNIX Shell
+
+DESCRIPTION
+     This module makes it possible to  make  calls  to  the  UNIX
+     shell.  The  shell used is /_b_i_n/_s_h, so the environment might
+     be different to the one you commonly use. C shell expansions
+     cannot  be  used.  The  module  is extremely easy to use and
+     there is only one function.
+
+     Note that most UNIX commands produce a trailing new line.
+
+
+EXPORTS
+     cmd(String)
+
+          Makes the call _S_t_r_i_n_g to _s_h and returns the answer in a
+          list of characters.
+
+          Example: (bizarre version of ls)
+
+          1> unix:cmd("for i in *; do echo $i; done").
+
+AUTHOR
+      Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+

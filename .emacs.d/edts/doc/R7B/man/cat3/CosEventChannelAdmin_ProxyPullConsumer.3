@@ -1,0 +1,132 @@
+
+
+
+CosEventChannelAdmin_PErRoLxCAyoNPsGuElvMleOCnDotUnCLshEuamnDenEreF(lI3AN)dITmIiOnN_ProxyPullConsumer(3)
+
+
+
+MODULE
+     CosEventChannelAdmin_ProxyPullConsumer -  This module imple-
+     ments  a ProxyPullConsumer interface which acts as a middle-
+     man between pull supplier and the event channel.
+
+DESCRIPTION
+     The ProxyPullConsumer interface defines the second step  for
+     connecting pull suppliers to the event channel. A proxy con-
+     sumer is similar to a normal consumer, but includes an addi-
+     tional  method for connecting a supplier to the proxy consu-
+     mer.
+
+     There are a number of exceptions that can be  returned  from
+     functions in this interface.
+
+       * AlreadyConnected         is          defined          as
+         -_r_e_c_o_r_d('_A_l_r_e_a_d_y_C_o_n_n_e_c_t_e_d', {}).
+
+       * CORBA    standard    BAD_PARAM     is     defined     as
+         -_r_e_c_o_r_d('_B_A_D__P_A_R_A_M',           {'_O_E__I_D',          _m_i_n_o_r,
+         _c_o_m_p_l_e_t_i_o_n__s_t_a_t_u_s}).
+
+     The first exception is defined in the file _e_v_e_n_t__s_e_r_v_i_c_e._h_r_l
+     and the second one in the file _c_o_r_b_a._h_r_l.
+
+     Any object that possesses an object reference that  supports
+     the  ProxyPullConsumer  interface  can perform the following
+     operations:
+
+
+EXPORTS
+     connect_pull_supplier(Object, PullSupplier) -> Return
+
+          Types
+               Object = #objref
+               PullSupplier = #objref of PullSupplier type
+               Return = void
+
+          This operation  connects  PullSupplier  object  to  the
+          ProxyPullConsumer  object. If a nil object reference is
+          passed CORBA standard _B_A_D__P_A_R_A_M exception is raised. If
+          the   ProxyPullConsumer   is  already  connected  to  a
+          PullSupplier, then the  _A_l_r_e_a_d_y_C_o_n_n_e_c_t_e_d  _e_x_c_e_p_t_i_o_n  is
+          raised.
+
+     disconnect_pull_consumer(Object) -> Return
+
+          Types
+               Object = #objref
+               Return = void
+
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                1
+
+
+
+
+
+
+CosEventChannelAdmin_PErRoLxCAyoNPsGuElvMleOCnDotUnCLshEuamnDenEreF(lI3AN)dITmIiOnN_ProxyPullConsumer(3)
+
+
+
+          This operation disconnects proxy pull consumer from the
+          event  channel  and sends a notification about the loss
+          of the connection to the pull supplier attached to it.
+
+AUTHOR
+     Helen Airiyan - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingLsasAtBchange: cosEvent  1.0.1.1                2
+
+
+

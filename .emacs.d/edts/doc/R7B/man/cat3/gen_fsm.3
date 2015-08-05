@@ -1,0 +1,594 @@
+
+
+
+gen_fsm(3)          ERLANG MODULE DEFINITION           gen_fsm(3)
+
+
+
+MODULE
+     gen_fsm - A Finite State Machine Behaviour
+
+DESCRIPTION
+     This module provides a standard way of writing Finite  State
+     Machine  (FSM) processes. All FSMs written as gen_fsms share
+     a common set of interface functions. The  generic  parts  of
+     the  FSM  contains functions for debugging, for handling the
+     termination of the parent process, and for  presentation  of
+     illustrative  error  information  if something goes wrong in
+     the process.
+
+     The state of the FSM is defined by two parameters, the  _S_t_a_-
+     _t_e_N_a_m_e  and the _S_t_a_t_e_D_a_t_a. For each _S_t_a_t_e_N_a_m_e, there must be
+     a corresponding function exported from the call-back module.
+     When  an event is received, and the current state of the FSM
+     is _S_t_a_t_e_N_a_m_e, _M_o_d_u_l_e:_S_t_a_t_e_N_a_m_e(_E_v_e_n_t, _S_t_a_t_e_D_a_t_a) is  called.
+     This  function  should  return  the next state, which is the
+     next _S_t_a_t_e_N_a_m_e.
+
+     It   is    also    possible    to    define    a    function
+     _M_o_d_u_l_e:_h_a_n_d_l_e__e_v_e_n_t(_E_v_e_n_t,  _S_t_a_t_e_N_a_m_e,  _S_t_a_t_e_D_a_t_a)  to  take
+     care of events which should always be handled, regardless of
+     their     state.    This    function    is    called    when
+     _g_e_n__f_s_m:_s_e_n_d__a_l_l__s_t_a_t_e__e_v_e_n_t/_2 is used to generate an event.
+
+     Events can be handled synchronously as well. This means that
+     the caller waits for a reply to the event.
+
+     The relationship between  the  generic  interface  functions
+     (and  received  messages)  and the callback functions can be
+     illustrated as follows:
+
+     Callback module                            gen_fsm
+     ----------------                            -------
+     gen_fsm:start_link                 ----->   start a new fsm process
+     Module:init/1                     <-----
+                                                 looping
+
+     gen_fsm:send_event                ----->
+     Module:StateName/2                <-----
+
+     gen_fsm:sync_send_event           ----->
+     Module:StateName/3                <-----
+
+     gen_fsm:send_all_state_event      ----->
+     Module:handle_event/3             <-----
+
+     gen_fsm:sync_send_all_state_event ----->
+     Module:handle_sync_event/4        <-----
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+gen_fsm(3)          ERLANG MODULE DEFINITION           gen_fsm(3)
+
+
+
+     Module:handle_info/3              <-----     other message
+                                                  received.
+
+     Module:terminate/3                <-----     clean up before
+                                                  termination.
+
+  Note:
+     Trapping of exits, if required, must be done explicitly.
+
+
+     An instance of the _g_e_n__f_s_m  behaviour  can  be  debugged  by
+     using the module _s_y_s.
+
+
+EXPORTS
+     start(Module, StartArgs, Options) -> StartRet
+     start_link(Module, StartArgs, Options) -> StartRet
+     start(Name, Module, StartArgs, Options) -> StartRet
+     start_link(Name, Module, StartArgs, Options) -> StartRet
+
+          Types
+               Name = {local, atom()} | {global, atom()}
+               Module = atom()
+               StartArgs = term()
+               Options = [Opt]
+               Opt = {debug, [Dbg]} | {timeout, Time}
+               Dbg = trace | log  |  statistics  |  {log_to_file,
+               FileName} | {install, {Func, FuncState}}
+               StartRet = {ok, Pid} | ignore | {error, Reason}
+               Pid = pid()
+               Reason = {already_started, Pid} | term()
+
+          Starts an FSM process. An anonymous process is  started
+          if  _N_a_m_e  is  not  specified.  This process can only be
+          called by using the returned _P_i_d identifier.
+
+          A process which is started with  _s_t_a_r_t  does  not  care
+          about  the  parent,  which means that the parent is not
+          handled explicitly in  the  generic  process  part.  If
+          started  in this manner, this function _m_u_s_t _n_o_t be used
+          if the FSM is a worker in a supervision tree.
+
+          A process started with _s_t_a_r_t__l_i_n_k is  initially  linked
+          to  the  caller - the parent - and will terminate when-
+          ever the parent process terminates, and with  the  same
+          reason  as  the parent. If started in this manner, this
+          function _s_h_o_u_l_d be used if the FSM is  a  worker  in  a
+          supervision tree.
+
+          The  function  _M_o_d_u_l_e:_i_n_i_t(_S_t_a_r_t_A_r_g_s)  is  called  (see
+          below).
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+gen_fsm(3)          ERLANG MODULE DEFINITION           gen_fsm(3)
+
+
+
+          _T_i_m_e specifies how  long  time,  in  milliseconds,  the
+          server is allowed to initialize itself.
+
+          The debug options are described in _s_y_s(_3).
+
+     send_event(ProcessRef,Event) -> void()
+
+          Types
+               ProcessRef = Name | {Name, Node} | {global,  Name}
+               | pid()
+               Name = atom()
+               Node = atom()
+               Event = term()
+
+          Sends an event asynchronously to the  FSM  process.  In
+          the   callback  module,  the  function  _S_t_a_t_e_N_a_m_e/_2  is
+          called, where _S_t_a_t_e_N_a_m_e is  the  name  of  the  current
+          state.
+
+     send_all_state_event(ProcessRef,Event) -> void()
+
+          Types
+               ProcessRef = Name | {Name, Node} | {global,  Name}
+               | pid()
+               Name = atom()
+               Node = atom()
+               Event = term()
+
+          An event, which can be handled in all states,  is  sent
+          asynchronously  to  the  FSM  process.  In the callback
+          module, _h_a_n_d_l_e__e_v_e_n_t/_3 is called.
+
+     sync_send_event(ProcessRef,Event) -> Reply
+     sync_send_event(ProcessRef,Event, Timeout) -> Reply
+
+          Types
+               ProcessRef = Name | {Name, Node} | {global,  Name}
+               | pid()
+               Name = atom()
+               Node = atom()
+               Event = term()
+               Timeout = int() > 0 | infinity
+               Reply = term()
+
+          Sends an event synchronously to  the  FSM  process  and
+          waits for the answer. In the callback module, the func-
+          tion _S_t_a_t_e_N_a_m_e/_3 is called, where _S_t_a_t_e_N_a_m_e is the name
+          of the current state.
+
+          _T_i_m_e_o_u_t should be set to  some  reasonable  value.  The
+          special  value  _i_n_f_i_n_i_t_y can be used if the user has no
+          idea how long the request  is  supposed  to  take.  The
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+gen_fsm(3)          ERLANG MODULE DEFINITION           gen_fsm(3)
+
+
+
+          default is 5000.
+
+          If _T_i_m_e_o_u_t has an integer value and if no response  has
+          been  delivered within _T_i_m_e_o_u_t milliseconds, the client
+          will  terminate   with   reason   {_t_i_m_e_o_u_t,   {_g_e_n__f_s_m,
+          _s_y_n_c__s_e_n_d__e_v_e_n_t, [_P_r_o_c_e_s_s_R_e_f, _E_v_e_n_t, _T_i_m_e_o_u_t]}}.
+
+          If the server should crash during the request  and  the
+          client  is linked to the server and the client is trap-
+          ping exits, (phew) the exit message is  read  out  from
+          the  clients  receive queue and then this function call
+          fails with the exit reason that was  read.  This  is  a
+          remnant  from when monitors did not exist and links was
+          the  only  way  to  supervise  the  request,  and   the
+          behaviour  may  change  in  a  future  release. In this
+          release, unfortuneately,  under  certain  circumstances
+          (e.g.  _P_r_o_c_e_s_s_R_e_f  =  {_N_a_m_e, _N_o_d_e}, _N_o_d_e crashes during
+          call) the exit message cannot be read out. Note that if
+          the  server  crashes  in between calls, the client must
+          take care of the exit message anyway.
+
+     sync_send_all_state_event(ProcessRef,Event) -> Reply
+     sync_send_all_state_event(ProcessRef,Event,Timeout) -> Reply
+
+          Types
+               ProcessRef = Name | {Name, Node} | {global,  Name}
+               | pid()
+               Name = atom()
+               Node = atom()
+               Event = term()
+               Timeout = int() > 0 | infinity
+               Reply = term()
+
+          An event, which can be handled in all states,  is  sent
+          synchronously  to  the  FSM  process.  In  the callback
+          module, _h_a_n_d_l_e__e_v_e_n_t/_4 is called.
+
+          _T_i_m_e_o_u_t should be set to  some  reasonable  value.  The
+          special  value  _i_n_f_i_n_i_t_y can be used if the user has no
+          idea how long the request  is  supposed  to  take.  The
+          default is 5000.
+
+          If _T_i_m_e_o_u_t has an integer value  and  no  response  has
+          been  delivered within _T_i_m_e_o_u_t milliseconds, the client
+          will  terminate   with   reason   {_t_i_m_e_o_u_t,   {_g_e_n__f_s_m,
+          _s_y_n_c__s_e_n_d__a_l_l__s_t_a_t_e__e_v_e_n_t,      [_P_r_o_c_e_s_s_R_e_f,     _E_v_e_n_t,
+          _T_i_m_e_o_u_t]}}.
+
+     reply(To, Reply) -> true
+
+          Types
+               To = {pid(), Tag}
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+
+
+
+
+gen_fsm(3)          ERLANG MODULE DEFINITION           gen_fsm(3)
+
+
+
+               Tag = term()
+               Reply = term()
+
+          If a reply cannot be  returned  immediately  -  as  the
+          return      value      of     _M_o_d_u_l_e:_S_t_a_t_e_N_a_m_e/_3     or
+          _M_o_d_u_l_e:_h_a_n_d_l_e__s_y_n_c__e_v_e_n_t/_4 - this function can be  used
+          to make an explicit reply. _T_o has the same value as the
+          _F_r_o_m argument in these functions.
+
+Callback Functions
+     The following functions should be exported  from  a  _g_e_n__f_s_m
+     callback module.
+
+EXPORTS
+     Module:init(StartArgs) -> Return
+
+          Types
+               StartArgs = term()
+               StateName = atom()
+               StateData = term()
+               Timeout = int() > 0 | infinity
+               StopReason = term()
+               Return = {ok, StateName, StateData}  |  {ok,  Sta-
+               teName,  StateData,  Timeout}  |  ignore  | {stop,
+               StopReason}
+
+          This function initializes the FSM process  and  returns
+          the  initial state. The _T_i_m_e_o_u_t variable specifies that
+          the process shall wait for _T_i_m_e_o_u_t milliseconds for the
+          first  message.  If  no  message has arrived within the
+          specified time, _M_o_d_u_l_e:_S_t_a_t_e_N_a_m_e(_t_i_m_e_o_u_t, _S_t_a_t_e_D_a_t_a) is
+          called.
+
+          The _S_t_a_r_t_A_r_g_s argument supplied to the _i_n_i_t/_1  function
+          is   the   same   as   the  argument  supplied  to  the
+          _g_e_n__f_s_m:_s_t_a_r_t functions.
+
+          If the process should trap exits, this has to be expli-
+          citly   expressed   here  with  _p_r_o_c_e_s_s__f_l_a_g(_t_r_a_p__e_x_i_t,
+          _t_r_u_e).
+
+          The representation of the FSM _S_t_a_t_e_D_a_t_a is an implemen-
+          tation  specific  detail which has to be decided by the
+          designer of the FSM. It can be any Erlang term.  _S_t_a_t_e_-
+          _D_a_t_a  will  be  visible  as an argument to all callback
+          functions. To change  something  in  _S_t_a_t_e_D_a_t_a,  a  new
+          value  is returned from the callback function using the
+          terms described below.
+
+          If the initializing procedure fails, the reason is sup-
+          plied  as _S_t_o_p_R_e_a_s_o_n with the {_s_t_o_p, _S_t_o_p_R_e_a_s_o_n} return
+          value.
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  5
+
+
+
+
+
+
+gen_fsm(3)          ERLANG MODULE DEFINITION           gen_fsm(3)
+
+
+
+          This function can return _i_g_n_o_r_e in order to inform  the
+          parent, especially if it is a supervisor, that the FSM,
+          as an example, has not started in accordance  with  the
+          configuration data.
+
+     Module:StateName(Event, StateData) -> Return
+
+          Types
+               Event = term()
+               StateData = term()
+               Return =  {next_state,  NextStateName,  NextState-
+               Data} | {next_state, NextStateName, NextStateData,
+               Timeout} | {stop, Reason, NewStateData}
+               NextStateName = atom()
+               NextStateData = term()
+               Reason = normal | shutdown | term()
+
+          Handles events in  the  state  _S_t_a_t_e_N_a_m_e.  The  _T_i_m_e_o_u_t
+          variable is as in _M_o_d_u_l_e:_i_n_i_t/_1 above.
+
+          Whenever the  function  _g_e_n__f_s_m:_s_e_n_d__e_v_e_n_t  is  called,
+          this function is called to handle the event. If the FSM
+          times out, this function is also called  with  _E_v_e_n_t  =
+          _t_i_m_e_o_u_t.
+
+          _E_v_e_n_t is the same term as supplied in the above  client
+          call.
+
+          If the FSM decides to terminate, this  function  should
+          return  {_s_t_o_p,  _R_e_a_s_o_n, _N_e_w_S_t_a_t_e_D_a_t_a}, and the function
+          _M_o_d_u_l_e:_t_e_r_m_i_n_a_t_e(_R_e_a_s_o_n,  _S_t_a_t_e_N_a_m_e,  _N_e_w_S_t_a_t_e_D_a_t_a)  is
+          called.  If  _R_e_a_s_o_n  is  something other than _n_o_r_m_a_l or
+          _s_h_u_t_d_o_w_n, the FSM is assumed to have terminated with  a
+          runtime  failure.  In  this  case, a lot of information
+          about the failure is reported. The atom _n_o_r_m_a_l causes a
+          normal  termination  while _s_h_u_t_d_o_w_n causes an abnormal,
+          but faultless, termination of the process.
+
+     Module:StateName(Event, From, StateData) -> Return
+
+          Types
+               Event = term()
+               From = {pid(), Tag}
+               StateData = term()
+               Return =  {next_state,  NextStateName,  NextState-
+               Data} | {next_state, NextStateName, NextStateData,
+               Timeout} |  {reply,  Reply,  NextStateName,  Next-
+               StateData}  |  {reply, Reply, NextStateName, Next-
+               StateData, Timeout} | {stop, Reason, NewStateData}
+               | {stop, Reason, Reply, NewStateData}
+               NextStateName = atom()
+               NextStateData = term()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  6
+
+
+
+
+
+
+gen_fsm(3)          ERLANG MODULE DEFINITION           gen_fsm(3)
+
+
+
+               Reply = term()
+               Reason = normal | shutdown | term()
+
+          Handles synchronous events in the state _S_t_a_t_e_N_a_m_e.  The
+          _T_i_m_e_o_u_t variable is as in _M_o_d_u_l_e:_i_n_i_t/_1 above.
+
+          Whenever the function _g_e_n__f_s_m:_s_y_n_c__s_e_n_d__e_v_e_n_t/_2,  _3  is
+          called, this function is called to handle the event.
+
+          _E_v_e_n_t is the same as the term supplied with  the  above
+          client call.
+
+          The FSM decides if  a  reply  is  sent  to  the  caller
+          directly   ({_r_e_p_l_y,   ...}),  indirectly  ({_n_e_x_t__s_t_a_t_e,
+          ...}), or if the FSM has to terminate ({_s_t_o_p, ...})  as
+          a  result  of  the  request.  If  {_n_e_x_t__s_t_a_t_e,  ...} is
+          returned, a reply can be sent to the caller  using  the
+          _r_e_p_l_y/_2 function.
+
+          If the FSM decides to terminate, this function  returns
+          {_s_t_o_p,  _R_e_a_s_o_n,  _N_e_w_S_t_a_t_e_D_a_t_a} or {_s_t_o_p, _R_e_a_s_o_n, _R_e_p_l_y,
+          _N_e_w_S_t_a_t_e_D_a_t_a},         and         the         function
+          _M_o_d_u_l_e:_t_e_r_m_i_n_a_t_e(_R_e_a_s_o_n,  _S_t_a_t_e_N_a_m_e,  _N_e_w_S_t_a_t_e_D_a_t_a)  is
+          called. If _R_e_a_s_o_n is something  other  than  _n_o_r_m_a_l  or
+          _s_h_u_t_d_o_w_n,  the FSM is assumed to have terminated with a
+          runtime failure. In this case,  a  lot  of  information
+          about the failure is reported. The atom _n_o_r_m_a_l causes a
+          normal termination while _s_h_u_t_d_o_w_n causes  an  abnormal,
+          but faultless, termination of the process.
+
+     Module:handle_event(Event, StateName, StateData) -> Return
+
+          Types
+               Event = term()
+               StateName = atom()
+               StateData = term()
+
+          Handles   events   generated    with    the    function
+          _g_e_n__f_s_m:_s_e_n_d__a_l_l__s_t_a_t_e__e_v_e_n_t/_2.
+
+          The _R_e_t_u_r_n value is the same as for _M_o_d_u_l_e:_S_t_a_t_e_N_a_m_e/_2.
+
+     Module:handle_sync_event(Event, From, StateName,  StateData)
+     -> Return
+
+          Types
+               Event = term()
+               From = {pid(), Tag}
+               StateName = atom()
+               StateData = term()
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  7
+
+
+
+
+
+
+gen_fsm(3)          ERLANG MODULE DEFINITION           gen_fsm(3)
+
+
+
+          Handles   events   generated    with    the    function
+          _g_e_n__f_s_m:_s_y_n_c__s_e_n_d__a_l_l__s_t_a_t_e__e_v_e_n_t/_2, _3.
+
+          The _R_e_t_u_r_n value is the same as for _M_o_d_u_l_e:_S_t_a_t_e_N_a_m_e/_3.
+
+     Module:handle_info(Info, StateName, StateData) -> Return
+
+          Types
+               Info = term()
+               StateName = atom()
+               StateData = term()
+
+          This function receives all messages sent to  this  pro-
+          cess  which  are not generated by _g_e_n__f_s_m:_s_e_n_d__e_v_e_n_t/_2,
+          _g_e_n__f_s_m:_s_e_n_d__a_l_l__s_t_a_t_e__e_v_e_n_t/_2,
+          _g_e_n__f_s_m:_s_y_n_c__s_e_n_d__e_v_e_n_t/_2,             _3,            or
+          _g_e_n__f_s_m:_s_y_n_c__s_e_n_d__a_l_l__s_t_a_t_e__e_v_e_n_t/_2,  _3.  Typical  mes-
+          sages handled here include:
+
+            {'_E_X_I_T', _P_i_d, _R_e_a_s_o_n}:
+                If  the   process   traps   exit   signals,   the
+                corresponding messages are handled here.
+
+            {_n_o_d_e_d_o_w_n, _N_o_d_e}:
+                If  another  Erlang  node   is   monitored,   the
+                corresponding _n_o_d_e_d_o_w_n message is handled here.
+
+            _M_s_g:
+                All other messages sent to the process using  _F_s_m
+                ! _M_s_g are also handled here.
+
+  Note:
+     Communication with the FSM  should  always  go  through  the
+     interface functions described above.
+
+
+     The _R_e_t_u_r_n value is the same as for _M_o_d_u_l_e:_S_t_a_t_e_N_a_m_e/_2.
+
+     Module:terminate(Reason, StateName, StateData) -> void()
+
+          Types
+               Reason = term()
+               StateName = atom()
+               StateData = term()
+
+          This callback function is called whenever  the  FSM  is
+          about  to  terminate.  Either one of the above callback
+          functions have returned  {_s_t_o_p,  _S_t_o_p_R_e_a_s_o_n,  ...},  in
+          which case _R_e_a_s_o_n is equal to _S_t_o_p_R_e_a_s_o_n; or some other
+          fault  has  been  caught.  _R_e_a_s_o_n  is  any  term  which
+          describes  the  termination  reason.  If  the FSM traps
+          exits, the _t_e_r_m_i_n_a_t_e function is called  if  the  FSM's
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  8
+
+
+
+
+
+
+gen_fsm(3)          ERLANG MODULE DEFINITION           gen_fsm(3)
+
+
+
+          parent  (normally  a supervisor) dies or orders the FSM
+          to die. If the FSM does not trap exits, it dies immedi-
+          ately if the parent dies.
+
+          With this function, the FSM can  clean  up  before  the
+          process  terminates.  It  can, for example, de-allocate
+          external resources.
+
+          The termination reason cannot be changed here. The  FSM
+          will  terminate  due  to_R_e_a_s_o_n  regardless  of what was
+          returned from this function.
+
+     Module:code_change(OldVsn, StateName, StateData,  Extra)  ->
+     {ok, NewState, NewStateData}
+
+          Types
+               OldVsn = undefined | term()
+               StateName = atom()
+               StateData = term()
+               Extra = term()
+               NewStateName = atom()
+               NewStateData = term()
+
+          This function is called when  a  code  change  is  per-
+          formed, which implies that the internal data structures
+          of the FSM have changed. The function  is  supposed  to
+          convert the old state to the new one. _O_l_d_V_s_n is the _v_s_n
+          attribute of the old version of the module. If no  such
+          attribute  was  defined,  the  atom  _u_n_d_e_f_i_n_e_d is sent.
+          _E_x_t_r_a is an optional term,  typically  defined  in  the
+          release upgrade script.
+
+System events
+     The _g_e_n__f_s_m behaviour generates the following system events,
+     handled by the _s_y_s module:
+
+       * {_i_n, _M_s_g} when a message is received.
+
+       * {_o_u_t, _M_s_g, _T_o, _S_t_a_t_e_N_a_m_e} when a message is sent.
+
+       * _r_e_t_u_r_n when an event handling callback function returns.
+
+See Also
+     sys(3)
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  9
+
+
+

@@ -1,0 +1,94 @@
+.TH make 3 "tools  1.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+make \- Functions Similar to UNIX Type Make Program\&.
+.SH DESCRIPTION
+.LP
+These functions are similar to the UNIX type \fIMake\fR functions\&. They can be used to develop programs which consist of several files\&. \fImake\fR can also be used to recompile entire directories\&. If updates are made, \fImake\fR exits with the value \fIup_to_date\fR\&.
+
+.SH EXPORTS
+.LP
+.B
+all() -> up_to_date | error
+.br
+.RS
+.LP
+This function is the same as \fIall([])\fR\&. 
+.RE
+.LP
+.B
+all(Options) -> up_to_date | error
+.br
+.RS
+.LP
+Checks all Erlang files in the current directory and compiles those files which have been modified after the creation of the object file\&.\fIOptions\fR is a list of valid options for \fImake\fR, together with valid options for \fIcompile\fR\&.
+.LP
+Compares time stamps of \fI\&.erl\fR and object code files\&. If the time stamp of the source file is later than the object file, or the object file is missing, the source file is recompiled\&.
+.LP
+The list of files to be compared is taken from the file \fIEmakefile\fR, if it exists\&. Failing this, it is taken from the current directory\&.
+.LP
+This function returns \fIerror\fR if compilation fails for any file\&.
+.LP
+The elements of \fIOptions\fR can be:
+.RS 2
+.TP 4
+.B
+\fInoexec\fR:
+No execution mode\&. It just specifies that the files should be compiled\&. 
+.TP 4
+.B
+\fIload\fR:
+Load mode\&. Loads all recompiled files\&. 
+.TP 4
+.B
+\fInetload\fR:
+Net load mode\&. Loads all recompiled files on the compiling node, and all other nodes in the network, with \fInet:broadcast/3\fR, 
+.TP 4
+.B
+\fIpar\fR:
+\fImake\fR is used in parallel on all nodes included in the expression \fI(node () | nodes ()\fR
+.RE
+.LP
+For example:
+
+.nf
+        1> make:all ([par, netload, trace])\&.
+.fi
+.LP
+\fImake\fR is used in parallel on all nodes\&. This ensures that the produced object files are loaded on all nodes and the \fItrace\fR flag is passed to the compiler\&. This produces traceable code\&.
+.RE
+.LP
+.B
+files(FileList) -> up_to_date
+.br
+.RS
+.LP
+
+.RE
+.LP
+.B
+files(FileList, Options) -> up_to_date | error
+.br
+.RS
+.LP
+This is the same as \fIall/0\fR and \fIall/1\fR, but with an explicit list of files\&.
+.LP
+This function returns \fIerror\fR if compilation fails for any file or if a non-existing file is specified\&.
+.RE
+.SH Files
+.LP
+This program assumes that a file named \fIEmakefile\fR exists and that it is located in the current directory\&. The file must be named \fIEmakefile\fR and it must contain the names of the files concerned as atoms, each followed by a period\&. For example:
+
+.nf
+     file1\&.
+     file2\&.
+     \&'\&.\&./foo/file3\&'\&.
+     \&'File4\&'\&.
+             ^ (a new line )
+.fi
+.LP
+If the \fIEmakefile\fR does not exist, all Erlang files in the current directory are used as input\&. This is useful when recompiling entire directories\&.
+.SH AUTHORS
+.nf
+Claes Wikstrom - support@erlang.ericsson.se
+Joe Armstrong - support@erlang.ericsson.se
+.fi

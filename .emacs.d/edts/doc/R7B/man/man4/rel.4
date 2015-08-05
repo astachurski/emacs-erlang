@@ -1,0 +1,59 @@
+.TH rel 4 "sasl  1.9" "Ericsson Utvecklings AB" "FILES"
+.SH NAME
+rel \- Release resource file
+.SH DESCRIPTION
+.LP
+The \fIrelease resource file\fR describes each release of an entire system based on OTP\&. This file defines which applications are included in a certain version of the system\&. 
+.LP
+This file is used by \fIsystools\fR to generate start scripts and release upgrade files\&. 
+.LP
+Releases can also be upgraded and instructions for this should be written in the \fIrelup\fR file (see the definition of the relup file)\&. The tedious work of writing the \fIrelup\fR file has been automated and in most cases the file can be automatically generated from the \fI\&.appup\fR files for the applications in the release\&. 
+
+.SH FILE SYNTAX
+.LP
+A release resource file is called \fIRelName\&.rel\fR where \fIRelName\fR is the name of the release\&. 
+.LP
+The \fI\&.rel\fR file contains one single Erlang term, which is called a \fIrelease specification\fR\&. The file has the following syntax: 
+
+.nf
+{release, {Name,Vsn}, {erts, EVsn},
+  [{AppName, AppVsn} |
+   {AppName, AppVsn, AppType} |
+   {AppName, AppVsn, IncApps} |
+   {AppName, AppVsn, AppType, IncApps}]}\&.
+.fi
+.RS 2
+.TP 2
+*
+\fIName = string()\fR is the name of the release \fIName\fR need not be the same as \fIRelName\fR above in the file name\&. 
+.TP 2
+*
+\fIVsn = string()\fR is the version of the release\&. 
+.TP 2
+*
+\fIEVsn = string()\fR indicates which Erlang runtime system version \fIEVsn\fR the release is intended for, for example "4\&.4"\&. 
+.TP 2
+*
+\fIAppName = atom()\fR is the name of an application included in the release\&. 
+.TP 2
+*
+\fIAppVsn = string()\fR is the version of the \fIAppName\fR application\&. 
+.TP 2
+*
+\fIAppType = permanent | transient | temporary | load | none\fR is the start type of the \fIAppName\fR application\&. This parameter specifies how the application is treated in the systools-generated start script\&. If it is \fIpermanent\fR, \fItransient\fR or \fItemporary\fR, the application is started with a call to \fIapplication:start(AppName, AppType)\fR\&. If it is \fIload\fR, the application is loaded, but not started\&. If it is \fInone\fR, the application is neither loaded nor started\&. 
+.TP 2
+*
+\fIIncApps = [atom()]\fR is a list of applications that are included by an application, for example \fI[AppName, \&.\&.\&.]\fR\&. This list overrides the \fIincluded_applications\fR key in the application resource file \fI\&.app\fR\&. This list must be a subset of the list of included applications which are specified in the \fI\&.app\fR file\&. 
+.RE
+.SS Note:
+.LP
+The list of applications must contain the \fIkernel\fR and the \fIstdlib\fR applications\&. 
+
+.SH SEE ALSO
+.LP
+app(4), appup(4), relup(4), systools(3) 
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Magnus Froberg - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,198 @@
+
+
+
+CORBA_Environment_alloc(C3)LIBRARY FUNCTIOCNOSRBA_Environment_alloc(3)
+
+
+
+NAME
+     CORBA_Environment_alloc  -  Allocation  function   for   the
+     CORBA_Environement struct
+
+DESCRIPTION
+     The _C_O_R_B_A__E_n_v_i_r_o_n_m_e_n_t__a_l_l_o_c() function is the function  used
+     to allocate and initiate the _C_O_R_B_A__E_n_v_i_r_o_n_m_e_n_t structure.
+
+
+EXPORTS
+     CORBA_Environment   *CORBA_Environment_alloc(inbufsz,   out-
+     bufsz)
+
+          Types
+               int inbufsz;
+               int outbufsz;
+
+          This  funtion  is  used  to  create  and  initiate  the
+          _C_O_R_B_A__E_n_v_i_r_o_n_m_e_n_t  structure. In particular, it is used
+          to dynamically allocate a  CORBA_Environment  structure
+          and set the default values for the structure's fields.
+
+          _i_n_b_u_f_s_i_z_e is the wished size of input buffer.
+
+          _o_u_t_b_u_f_s_i_z_e is the wished size of output buffer.
+
+          _C_O_R_B_A__E_n_v_i_r_o_n_m_e_n_t is the CORBA 2.0 state structure used
+          by the generated stub.
+
+          This function will set all needed  default  values  and
+          allocate  buffers  equal to the values passed, but will
+          not  allocate  space  for  the  _to_pid  and  _from_pid
+          fields.
+
+          To      free      the      space      allocated      by
+          CORBA_Environment_alloc/2 :
+
+            * First call CORBA_free  for  the  input  and  output
+              buffers.
+
+            * After freeing the buffer space, call CORBA_free for
+              the CORBA_Environment space.
+
+The CORBA_Environment structure
+     Here is the complete  definition  of  the  CORBA_Environment
+     structure, defined in file _i_c._h :
+
+     /* Environment definition */
+     typedef struct {
+
+       /*----- CORBA compatibility part ------------------------*/
+       /* Exception tag, initially set to CORBA_NO_EXCEPTION ---*/
+
+
+
+Ericsson Utvecklings ABLast change: ic  4.0.5                    1
+
+
+
+
+
+
+CORBA_Environment_alloc(C3)LIBRARY FUNCTIOCNOSRBA_Environment_alloc(3)
+
+
+
+       CORBA_exception_type   _major;
+
+       /*----- External Implementation part - initiated by the user ---*/
+       /* File descriptor                                              */
+       int                    _fd;
+       /* Size of input buffer                                         */
+       int                    _inbufsz;
+       /* Pointer to always dynamically allocated buffer for input     */
+       char                  *_inbuf;
+       /* Size of output buffer                                        */
+       int                    _outbufsz;
+       /* Pointer to always dynamically allocated buffer for output    */
+       char                  *_outbuf;
+      /* Size of memory chunks in bytes, used for increasing the outpuy
+         buffer, set to >= 32, should be around >= 1024 for performance
+         reasons                                                       */
+      int                    _memchunk;
+      /* Pointer for registered name                                   */
+       char                   _regname[256];
+      /* Process identity for caller                                   */
+       erlang_pid            *_to_pid;
+       /* Process identity for callee                                  */
+       erlang_pid            *_from_pid;
+
+       /*- Internal Implementation part - used by the server/client ---*/
+       /* Index for input buffer                                       */
+       int                    _iin;
+       /* Index for output buffer                                      */
+       int                    _iout;
+       /* Pointer for operation name                                   */
+       char                   _operation[256];
+        /* Used to count parameters                                    */
+       int                    _received;
+       /* Used to identify the caller                                  */
+       erlang_pid             _caller;
+      /* Used to identify the call                                     */
+       erlang_ref             _unique;
+       /* Exception id field                                           */
+       CORBA_char            *_exc_id;
+       /* Exception value field                                        */
+        void                  *_exc_value;
+
+
+     } CORBA_Environment;
+
+  Note:
+     Remember  to  set  the  field  values   __f_d  ,   __r_e_g_n_a_m_e  ,
+     *__t_o__p_i_d  and/or  *__f_r_o_m__p_i_d  to the appropriate application
+     values. These are not automatically set by the stubs.
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: ic  4.0.5                    2
+
+
+
+
+
+
+CORBA_Environment_alloc(C3)LIBRARY FUNCTIOCNOSRBA_Environment_alloc(3)
+
+
+
+  Warning:
+     Never assign static buffers to the  buffer  pointers,  never
+     set the __m_e_m_c_h_u_n_k field to a value less than _3_2.
+
+
+SEE ALSO
+     ic(3)
+
+AUTHOR
+     Babbis Xagorarakis - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: ic  4.0.5                    3
+
+
+

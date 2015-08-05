@@ -1,0 +1,293 @@
+.TH shell 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+shell \- The Erlang Shell
+.SH DESCRIPTION
+.LP
+The module \fIshell\fR implements an Erlang shell\&. 
+.LP
+The shell is a user interface program for entering expression sequences\&. The expressions are evaluated and a value is returned\&. A history mechanism saves previous commands and their values, which can then be incorporated in later commands\&. 
+.LP
+Variable bindings, and local process dictionary changes which are generated in user expressions, are preserved and the variables can be used in later commands to access their values\&. The bindings can also be forgotten so the variables can be re-used\&. 
+.LP
+The special shell commands all have the syntax of (local) function calls\&. They are evaluated as normal function calls and many commands can be used in one expression sequence\&. 
+.LP
+If a command (local function call) is not recognized by the shell, an attempt is first made to find the function in the module \fIuser_default\fR, where customized local commands can be placed\&. If found, then the function is evaluated\&. Otherwise, an attempt is made to evaluate the function in the module \fIshell_default\fR\&. The module \fIuser_default\fR must be explicitly loaded\&. 
+.LP
+The shell also permits the user to start multiple concurrent jobs\&. A job can be regarded as a set of processes which can communicate with the shell\&.
+.LP
+The shell runs in two modes: 
+.RS 2
+.TP 2
+*
+\fINormal\fR mode, in which commands can be edited and expressions evaluated
+.TP 2
+*
+Job Control Mode \fIJCL\fR, in which jobs can be started, killed, detached and connected\&.
+.RE
+.LP
+Only the currently connected job can \&'talk\&' to the shell\&. 
+
+.SH Shell Commands
+.RS 2
+.TP 4
+.B
+\fIb()\fR:
+Prints the current variable bindings\&. 
+.TP 4
+.B
+\fIf()\fR:
+Removes all variable bindings\&. 
+.TP 4
+.B
+\fIf(X)\fR:
+Removes the binding of variable \fIX\fR\&. 
+.TP 4
+.B
+\fIh()\fR:
+Prints the history list\&. 
+.TP 4
+.B
+\fIe(N)\fR:
+Repeats the command \fIN\fR, if \fIN\fR is positive\&. If it is negative, the \fIN\fRth previous command is repeated (i\&.e\&. \fIe(-1)\fR repeats the previous command)\&. 
+.TP 4
+.B
+\fIv(N)\fR:
+Uses the return value of the command \fIN\fR in the current command\&. 
+.TP 4
+.B
+\fIhelp()\fR:
+Evaluates \fIshell_default:help()\fR\&. 
+.TP 4
+.B
+\fIc(File)\fR:
+Evaluates \fIshell_default:c(File)\fR\&. This compiles and loads code in \fIFile\fR and purges old versions of code, if necessary\&. Assumes that the file and module names are the same\&. 
+.RE
+.SH Example
+.LP
+The following example is a long dialogue with the shell\&. Commands starting with \fI>\fR are inputs to the shell\&. All other lines are output from the shell\&. All commands in this example are explained at the end of the dialogue\&. \&.
+
+.nf
+strider 1>erl
+Erlang (BEAM) emulator version 4\&.9
+
+Eshell V4\&.9  (abort with ^G)
+1> Str = "abcd"\&.
+"abcd"
+2>L = length(Str)\&.
+4
+3>Descriptor = {L, list_to_atom(Str)}\&.
+{4,abcd}
+4>L\&. 
+4
+5>b()\&.
+Descriptor = {4,abcd}
+L =4
+Str = "abcd"
+ok
+6>f(L)\&. 
+ok
+7>b()\&.
+Descriptor = {4,abcd}
+Str = "abcd"
+ok
+8>f(L)\&.
+ok
+9>{L, _} = Descriptor\&.
+{4,abcd}
+10>L\&.
+4
+11>{P, Q, R} = Descriptor\&.
+** exited: {{badmatch,{4,abcd}},{erl_eval,expr,3}} **
+12>P\&.
+** exited: {{unbound,\&'P\&'},{erl_eval,expr,3}} **
+13>Descriptor\&.
+{4,abcd}
+14> {P, Q} = Descriptor\&.
+{4,abcd}
+15>P\&.
+4
+16>f()\&.
+ok
+17>put(aa, hello)\&.
+undefined
+18>get(aa)\&.
+hello
+19>Y = test1:demo(1)\&.
+11
+20>get()\&.
+[{aa,worked}]
+21>put(aa, hello)\&.
+worked
+22>Z = test1:demo(2)\&.
+** exited: {{badmatch,1},{test1,demo,[2]}} **
+
+=ERROR REPORT==== 24-Jan-1997::07:48:46 ===
+!!! Error in process <0\&.22\&.0> with exit value: {{badmatch,1}
+,{test1,demo,[2]}}
+23>Z\&.
+** exited: {{unbound,\&'Z\&'},{erl_eval,expr,3}} **
+24>get(aa)\&.
+hello
+25>erase(), put(aa, hello)\&.
+undefined
+26>spawn(test1, demo, [1])\&.
+<0\&.25\&.0>
+27>get(aa)\&.
+hello
+28>io:format("hello hello\\n")\&.
+hello hello
+ok
+29>e(28)\&.
+hello hello
+ok
+30> v(28)\&.
+ok
+31>test1:loop(0)\&.
+Hello Number: 0
+Hello Number: 1
+Hello Number: 2
+Hello Number: 3
+
+User switch command
+ --> i
+ --> c
+\&.
+\&.
+\&.
+Hello Number: 3374
+Hello Number: 3375
+Hello Number: 3376
+Hello Number: 3377
+Hello Number: 3378
+** exited: killed **
+32>halt()\&.
+strider 2>
+.fi
+.SH Comments
+.LP
+Command 1 sets the variable \fIStr\fR to the string \fI"abcd"\fR\&. 
+.LP
+Command 2 sets \fIL\fR to the length of the string evaluating the BIF \fIatom_to_list\fR\&. 
+.LP
+Command 3 builds the tuple \fIDescriptor\fR\&. 
+.LP
+Command 4 prints the value of the variable \fIL\fR\&. 
+.LP
+Command 5 evaluates the internal shell command \fIb()\fR, which is an abbreviation of "bindings"\&. This prints the current shell variables and their bindings\&. The \fIok\fR at the end is the return value of the \fIb()\fR function\&. 
+.LP
+Command 6 \fIf(L)\fR evaluates the internal shell command \fIf(L)\fR (abbreviation of "forget")\&. The value of the variable \fIL\fR is removed\&. 
+.LP
+Command 7 prints the new bindings\&. 
+.LP
+Command 8 shows that the value of \fIL\fR has disappeared from the bindings\&. 
+.LP
+Command 9 performs a pattern matching operation on \fIDescriptor\fR, binding a new value to \fIL\fR\&. 
+.LP
+Command 10 prints the current value of \fIL\fR\&. 
+.LP
+Command 11 tries to match \fI{P, Q, R}\fR against \fIDescriptor\fR which is \fI{4, abc}\fR\&. The match fails and none of the new variables become bound\&. The printout starting with "\fI** exited:\fR" is not the value of the expression (the expression had no value because its evaluation failed), but rather a warning printed by the system to inform the user that an error has occurred\&. The values of the other variables (\fIL\fR, \fIStr\fR, etc\&.) are unchanged\&. 
+.LP
+Commands 12 and 13 show that \fIP\fR is unbound because the previous command failed, and that \fIDescriptor\fR has not changed\&. 
+.LP
+Commands 14 and 15 show a correct match where \fIP\fR and \fIQ\fR are bound\&. 
+.LP
+Command 16 clears all bindings\&. 
+.LP
+The next few commands assume that \fItest1:demo(X)\fR is defined in the following way:
+
+.nf
+demo(X) ->
+    put(aa, worked),
+    X = 1,
+    X + 10\&.
+.fi
+.LP
+Commands 17 and 18 set and inspect the value of the item \fIaa\fR in the process dictionary\&. 
+.LP
+Command 19 evaluates \fItest1:demo(1)\fR\&. The evaluation succeeds and the changes made in the process dictionary become visible to the shell\&. The new value of the dictionary item \fIaa\fR can be seen in command 20\&. 
+.LP
+Commands 21 and 22 change the value of the dictionary item \fIaa\fR to \fIhello\fR and call \fItest1:demo(2)\fR\&. Evaluation fails and the changes made to the dictionary in \fItest1:demo(2)\fR, before the error occurred, are discarded\&. 
+.LP
+Commands 23 and 24 show that \fIZ\fR was not bound and that the dictionary item \fIaa\fR has retained its original value\&. 
+.LP
+Commands 25, 26 and 27 show the effect of evaluating \fItest1:demo(1)\fR in the background\&. In this case, the expression is evaluated in a newly spawned process\&. Any changes made in the process dictionary are local to the newly spawned process and therefore not visible to the shell\&. 
+.LP
+Commands 28, 29 and 30 use the history facilities of the shell\&. 
+.LP
+Command 29 is \fIe(28)\fR\&. This re-evaluates command 28\&. Command 30 is \fIv(28)\fR\&. This uses the value (result) of command 28\&. In the cases of a pure function (a function with no side effects), the result is the same\&. For a function with side effects, the result can be different\&. 
+.LP
+For the next command, it is assumed that \fItest1:loop(N)\fR is defined in the following way: 
+
+.nf
+loop(N) ->
+    io:format("Hello Number: ~w~n", [N]), 
+    loop(N+1)\&.
+.fi
+.LP
+Command 31 evaluates \fItest1:loop(0)\fR, which puts the system into an infinite loop\&. At this point the user types \fIControl G\fR, which suspends output from the current process, which is stuck in a loop, and activates \fIJCL\fR mode\&. In \fIJCL\fR mode the user can start and stop jobs\&. 
+.LP
+In this particular case, the \fIi\fR command ("interrupt") is used to terminate the looping program, and the \fIc\fR command is used to connect to the shell again\&. Since the process was running in the background before we killed it, there will be more printouts before the "\fI** exited: killed **\fR" message is shown\&. 
+.LP
+The \fIhalt()\fR command exits the Erlang runtime system\&. 
+.SH JCL Mode
+.LP
+When the shell starts, it starts a single evaluator process\&. This process, together with any local processes which it spawns, is referred to as a \fIjob\fR\&. Only the current job, which is said to be \fIconnected\fR, can perform operations with standard IO\&. All other jobs, which are said to be \fIdetached\fR, are \fIblocked\fR if they attempt to use standard IO\&. 
+.LP
+All jobs which do not use standard IO run in the normal way\&. 
+.LP
+\fI^G\fR (Control G) detaches the current job and JCL mode is activated\&. The \fIJCL\fR mode prompt is \fI"-->"\fR\&. If \fI "?"\fR is entered at the prompt, the following help message is displayed:
+
+.nf
+          --> ?
+          c [nn]   - connect to job 
+          i [nn]   - interrupt job
+          k [nn]   - kill job
+          j        - list all jobs
+          s        - start local shell
+          r [node] - start remote shell
+          q        - quit Erlang
+          ?  | h   - this message
+.fi
+.LP
+The \fIJCL\fR commands have the following meaning: 
+.RS 2
+.TP 4
+.B
+\fIc [nn]\fR:
+Connects to job number \fI<nn>\fR or the current job\&. The standard shell is resumed\&. Operations which use standard IO by the current job will be interleaved with user inputs to the shell\&. 
+.TP 4
+.B
+\fIi [nn]\fR:
+Stops the current evaluator process for job number \fInn\fR or the current job, but does not kill the shell process\&. Accordingly, any variable bindings and the process dictionary will be preserved and the job can be connected again\&. This command can be used to interrupt an endless loop\&. 
+.TP 4
+.B
+\fIk [nn]\fR:
+Kills job number \fInn\fR or the current job\&. All spawned processes in the job are killed, provided they have not evaluated the \fIgroup_leader/1\fR BIF and are located on the local machine\&. Processes spawned on remote nodes will not be killed\&. 
+.TP 4
+.B
+\fIj\fR:
+Lists all jobs\&. A list of all known jobs is printed\&. The current job name is prefixed with \&'*\&'\&. 
+.TP 4
+.B
+\fIs\fR:
+Starts a new job\&. This will be assigned the new index \fI[nn]\fR which can be used in references\&. 
+.TP 4
+.B
+\fIr [node]\fR:
+Starts a remote job on \fInode\fR\&. This is used in distributed Erlang to allow a shell running on one node to control a number of applications running on a network of nodes\&. 
+.TP 4
+.B
+\fIq\fR:
+Quits Erlang\&. 
+.TP 4
+.B
+\fI?\fR:
+Displays this message\&. 
+.RE
+.SH Bugs
+.LP
+There is no way of changing the length of the history list or saving it between sessions\&. 
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

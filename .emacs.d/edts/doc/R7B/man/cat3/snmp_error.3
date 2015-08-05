@@ -1,0 +1,66 @@
+
+
+
+snmp_error(3)       ERLANG MODULE DEFINITION        snmp_error(3)
+
+
+
+MODULE
+     snmp_error - Functions for Reporting SNMP Errors
+
+DESCRIPTION
+     The module _s_n_m_p__e_r_r_o_r contains two callback functions  which
+     are  called  if  an  error  occurs at different times during
+     agent operation.
+
+     A simple implementation of this module is provided with  the
+     toolkit.  In this implementation, the errors are sent to the
+     _e_r_r_o_r__l_o_g_g_e_r. The module can be modified  to  customize  the
+     way errors are reported.
+
+
+EXPORTS
+     config_err(Format,Args) -> void()
+
+          Types
+               Format = string()
+               Args = list()
+
+          The function is called if an error  occurs  during  the
+          configuration  phase,  for example if a syntax error is
+          found in a configuration file.
+
+          _F_o_r_m_a_t and _A_r_g_s are as in _i_o:_f_o_r_m_a_t(_F_o_r_m_a_t, _A_r_g_s).
+
+     user_err(Format,Args) -> void()
+
+          Types
+               Format = string()
+               Args = list()
+
+          The function is called if a user related  error  occurs
+          at  runtime, for example if a user defined instrumenta-
+          tion function returns erroneous.
+
+          _F_o_r_m_a_t and _A_r_g_s are as in _i_o:_f_o_r_m_a_t(_F_o_r_m_a_t, _A_r_g_s).
+
+SEE ALSO
+     error_logger(3)
+
+AUTHORS
+     Martin Bjorklund - support@erlang.ericsson.se
+     Klas Eriksson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   1
+
+
+

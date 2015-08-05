@@ -1,0 +1,264 @@
+
+
+
+proc_lib(3)         ERLANG MODULE DEFINITION          proc_lib(3)
+
+
+
+MODULE
+     proc_lib  -   Plug-in   Replacements   for   spawn/3,4   and
+     spawn_link/3,4.
+
+DESCRIPTION
+     The _p_r_o_c__l_i_b module is used to initialize some useful infor-
+     mation  when  a process starts. The registered names, or the
+     process identities, of the _p_a_r_e_n_t process,  and  the  parent
+     ancestors,  are  stored  together with information about the
+     function initially called in the process.
+
+     A crash report is generated if the process terminates with a
+     reason  other  than  _n_o_r_m_a_l or _s_h_u_t_d_o_w_n. _s_h_u_t_d_o_w_n is used to
+     terminate an abnormal process  in  a  controlled  manner.  A
+     crash report contains the previously stored information such
+     as ancestors and initial function, the  termination  reason,
+     and information regarding other processes which terminate as
+     a result of this process terminating.
+
+     The crash report is  sent  to  the  _e_r_r_o_r__l_o_g_g_e_r.  An  event
+     handler  has  to  be  installed  in  the  _e_r_r_o_r__l_o_g_g_e_r event
+     manager in order to handle these reports. The  crash  report
+     is  tagged  _c_r_a_s_h__r_e_p_o_r_t and the _f_o_r_m_a_t/_1 function should be
+     called in order to format the report.
+
+
+EXPORTS
+     spawn(Module,Func,Args) -> Pid
+     spawn(Node,Module,Func,Args) -> Pid
+
+          Types
+               Module = atom()
+               Func = atom()
+               Args = [Arg]
+               Arg = term()
+               Node = atom()
+               Pid = pid()
+
+          Spawns a new process and initializes  it  as  described
+          above.  The process is spawned using the _s_p_a_w_n BIF. The
+          process can be spawned on another _N_o_d_e.
+
+     spawn_link(Module,Func,Args) -> Pid
+     spawn_link(Node,Module,Func,Args) -> Pid
+
+          Types
+               Module = atom()
+               Func = atom()
+               Args = [Arg]
+               Arg = term()
+               Node = atom()
+               Pid = pid()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+
+
+
+
+proc_lib(3)         ERLANG MODULE DEFINITION          proc_lib(3)
+
+
+
+          Spawns a new process and initializes  it  as  described
+          above. The process is spawned using the _s_p_a_w_n__l_i_n_k BIF.
+          The process can be spawned on another _N_o_d_e.
+
+     start(Module,Func,Args) -> Ret
+     start(Module,Func,Args,Time) -> Ret
+     start_link(Module,Func,Args) -> Ret
+     start_link(Module,Func,Args,Time) -> Ret
+
+          Types
+               Module = atom()
+               Func = atom()
+               Args = [Arg]
+               Arg = term()
+               Time = integer >= 0 | infinity
+               Ret = term() | {error, Reason}
+
+          Starts a new process synchronously. Spawns the  process
+          using  _p_r_o_c__l_i_b:_s_p_a_w_n/_3  or  _p_r_o_c__l_i_b:_s_p_a_w_n__l_i_n_k/_3, and
+          waits for the process to start. When  the  process  has
+          started, it _m_u_s_t call _p_r_o_c__l_i_b:_i_n_i_t__a_c_k(_P_a_r_e_n_t, _R_e_t) or
+          _p_r_o_c__l_i_b:_i_n_i_t__a_c_k(_R_e_t), where  _P_a_r_e_n_t  is  the  process
+          that  evaluates  _s_t_a_r_t.  At  this time, _R_e_t is returned
+          from _s_t_a_r_t.
+
+          If the _s_t_a_r_t__l_i_n_k function  is  used  and  the  process
+          crashes  before  _p_r_o_c__l_i_b:_i_n_i_t__a_c_k  is  called, {_e_r_r_o_r,
+          _R_e_a_s_o_n} is returned if the calling process traps exits.
+
+          If _T_i_m_e is specified as an integer, this function waits
+          for   _T_i_m_e   milliseconds  for  the  process  to  start
+          (_p_r_o_c__l_i_b:_i_n_i_t__a_c_k). If it has not started within  this
+          time,  {_e_r_r_o_r, _t_i_m_e_o_u_t} is returned, and the process is
+          killed.
+
+     init_ack(Parent, Ret) -> void()
+     init_ack(Ret) -> void()
+
+          Types
+               Parent = pid()
+               Ret = term()
+
+          This function is  used  by  a  process  that  has  been
+          started  by  a _p_r_o_c__l_i_b:_s_t_a_r_t function. It tells _P_a_r_e_n_t
+          that the process has initialized itself,  has  started,
+          or  has  failed  to  initialize  itself. The _i_n_i_t__a_c_k/_1
+          function uses the parent value previously stored by the
+          _p_r_o_c__l_i_b:_s_t_a_r_t  function.  If  the _i_n_i_t__a_c_k function is
+          not called (e.g. if  the  init  function  crashes)  and
+          _p_r_o_c__l_i_b:_s_t_a_r_t/_3  is  used, that function never returns
+          and the parent hangs forever. This can  be  avoided  by
+          using  a  time  out  in  the call to _s_t_a_r_t, or by using
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  2
+
+
+
+
+
+
+proc_lib(3)         ERLANG MODULE DEFINITION          proc_lib(3)
+
+
+
+          _s_t_a_r_t__l_i_n_k.
+
+          The following example illustrates how this function and
+          _p_r_o_c__l_i_b:_s_t_a_r_t__l_i_n_k are used.
+
+          -module(my_proc).
+          -export([start_link/0]).
+          start_link() ->
+              proc_lib:start_link(my_proc, init, [self()]).
+          init(Parent) ->
+              case do_initialization() of
+                  ok ->
+                      proc_lib:init_ack(Parent, {ok, self()});
+                  {error, Reason} ->
+                      exit(Reason)
+              end,
+              loop().
+          loop() ->
+              receive
+                  ....
+
+     format(CrashReport) -> string()
+
+          Types
+               CrashReport = void()
+
+          Formats a previously generated crash report.  The  for-
+          matted report is returned as a string.
+
+     initial_call(PidOrPinfo) -> {Module,Function,Args} | false
+
+          Types
+               PidOrPinfo = pid() | {X, Y, Z} | ProcInfo
+               X = Y = Z = int()
+               ProcInfo = [void()]
+               Module = atom()
+               Function = atom()
+               Args = [term()]
+
+          Extracts the initial call of a process that was spawned
+          using  the  spawn functions described above. _P_i_d_O_r_P_i_n_f_o
+          can either be a Pid, an integer tuple (from which a pid
+          can  be  created), or the process information of a pro-
+          cess (fetched through a _e_r_l_a_n_g:_p_r_o_c_e_s_s__i_n_f_o/_1  function
+          call).
+
+     translate_initial_call(PidOrPinfo)                        ->
+     {Module,Function,Arity}
+
+          Types
+               PidOrPinfo = pid() | {X, Y, Z} | ProcInfo
+               X = Y = Z = int()
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  3
+
+
+
+
+
+
+proc_lib(3)         ERLANG MODULE DEFINITION          proc_lib(3)
+
+
+
+               ProcInfo = [void()]
+               Module = atom()
+               Function = atom()
+               Arity = int()
+
+          Extracts the  initial  call  of  a  process  which  was
+          spawned  using  the spawn functions described above. If
+          the initial call  is  to  one  of  the  system  defined
+          behaviours  such  as  _g_e_n__s_e_r_v_e_r  or  _g_e_n__e_v_e_n_t,  it is
+          translated to more useful information. If a  _g_e_n__s_e_r_v_e_r
+          is  spawned,  the  returned  _M_o_d_u_l_e  is the name of the
+          callback module and _F_u_n_c_t_i_o_n is _i_n_i_t (the function that
+          initiates the new server).
+
+          A  _s_u_p_e_r_v_i_s_o_r  and   a   _s_u_p_e_r_v_i_s_o_r__b_r_i_d_g_e   are   also
+          _g_e_n__s_e_r_v_e_r  processes.  In  order to return information
+          that this process is a supervisor and the name  of  the
+          call-back  module, _M_o_d_u_l_e is _s_u_p_e_r_v_i_s_o_r and _F_u_n_c_t_i_o_n is
+          the name of the supervisor callback module. _A_r_i_t_y is  _1
+          since  the  _i_n_i_t/_1  function is called initially in the
+          callback module.
+
+          By default, {_p_r_o_c__l_i_b, _i_n_i_t__p, _5}  is  returned  if  no
+          information  about the initial call can be found. It is
+          assumed that the caller knows that the process has been
+          spawned with the _p_r_o_c__l_i_b module.
+
+          _P_i_d_O_r_P_i_n_f_o can either be a Pid, an integer tuple  (from
+          which a pid can be created), or the process information
+          of a process (fetched through  a  _e_r_l_a_n_g:_p_r_o_c_e_s_s__i_n_f_o/_1
+          function call).
+
+          This function is used by the c:I/0 and  c:regs/0  func-
+          tions in order to present process information.
+
+See Also
+     error_logger(3)
+
+AUTHOR
+     Magnus Froberg - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  4
+
+
+

@@ -1,0 +1,198 @@
+
+
+
+os_sup(3)           ERLANG MODULE DEFINITION            os_sup(3)
+
+
+
+MODULE
+     os_sup - This module,  together  with  some  dedicated  UNIX
+     processes,  implements  a  message  passing service from the
+     Solaris operating system to the error logger in  the  Erlang
+     runtime   system.  The  Solaris  (SunOS  5.x)  messages  are
+     retrieved from the syslog-daemon, syslogd.
+
+DESCRIPTION
+     This module starts a server written  in  Erlang  (and  later
+     referenced only as server), which receives messages from the
+     Solaris operating system. The messages are  tagged  with  an
+     atom  and  subsequently forwarded to the _e_r_r_o_r__l_o_g_g_e_r in the
+     Erlang runtime system. If the atom is  _s_t_d__e_r_r_o_r,  the  mes-
+     sages are handled the same way as the bulk of internal error
+     messages in the Erlang runtime system.
+
+     This module, together  with  the  dedicated  UNIX-processes,
+     makes  a number of reconfigurations to the Solaris operating
+     system when the service  is  enabled.  These  configurations
+     include:
+
+       * the installation of a new configuration file for _s_y_s_l_o_g_d
+
+       * the creation of a named pipe
+
+       * the start of a port program.
+
+     As a consequence of these modifications:
+
+       1.  _s_y_s_l_o_g_d writes messages of interest to the named pipe
+
+       2.  the port program reads messages from  the  named  pipe
+           and forwards them to the server
+
+       3.  the server delivers them to the error  logger  of  the
+           Erlang runtime system.
+
+     When the service is disabled, the original configuration  is
+     restored.
+
+
+EXPORTS
+     start() -> Result
+
+          Types
+               Result = {ok,  Pid}  |  {error,  {already_started,
+               Pid}}
+               Pid = pid()
+
+          This function starts the server together with its dedi-
+          cated UNIX processes. It returns {_o_k, _P_i_d} if the start
+          was successful, otherwise {_e_r_r_o_r, _a_l_r_e_a_d_y__s_t_a_r_t_e_d}.
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  1
+
+
+
+
+
+
+os_sup(3)           ERLANG MODULE DEFINITION            os_sup(3)
+
+
+
+     start_link() -> Result
+
+          Types
+               Result = {ok,  Pid}  |  {error,  {already_started,
+               Pid}}
+               Pid = pid()
+
+          This function starts the server together with its dedi-
+          cated  UNIX processes. The caller is also linked to the
+          server. It returns {_o_k, _P_i_d} if the start was  success-
+          ful, otherwise {_e_r_r_o_r, _a_l_r_e_a_d_y__s_t_a_r_t_e_d} .
+
+     stop() -> Result
+
+          Types
+               Result = ok | not_started
+
+          This function stops the server and restores the  origi-
+          nal  configuration  of the operating system. It returns
+          _o_k if successful, otherwise _n_o_t__s_t_a_r_t_e_d.
+
+Operation
+       1.  This module is normally started by the _s_u_p_e_r_v_i_s_o_r  and
+           _s_u_p_e_r_v_i_s_o_r__b_r_i_d_g_e  behaviours.  Consequently, the user
+           should not call the functions described above.
+
+       2.  This module cannot be run in multiple instances on the
+           same  hardware.  Special  care must be taken if two or
+           more Erlang nodes execute on the same  hardware  plat-
+           form  so  that  only one node uses this service _i_n _a_n_y
+           _o_n_e _i_n_s_t_a_n_c_e.
+
+       3.  This module requires that a number of actions be  been
+           taken prior to starting it. These actions must be per-
+           formed with _r_o_o_t privileges on  SunOS  5  and  include
+           change  of ownership and file privileges of an execut-
+           able binary file, and copying and creating a  modified
+           copy  of  the configuration file for the syslog-daemon
+           _s_y_s_l_o_g_d. In addition, a  the  following  configuration
+           parameters must be set.
+
+             (A) implement the server using _g_e_n__s_e_r_v_e_r.
+
+             (B) implement protection  against  starting  two  or
+                 more  instances  of  the  service  on  the  same
+                 hardware platform.
+
+See also
+       * os_mon(3), error_logger(3), Installation Guide for  your
+         platform.
+
+       * syslogd(1M),    syslog.conf(4)    in     the     Solaris
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  2
+
+
+
+
+
+
+os_sup(3)           ERLANG MODULE DEFINITION            os_sup(3)
+
+
+
+         documentation.
+
+AUTHOR
+     Mats Nilsson - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: os_mon  1.3.9                  3
+
+
+

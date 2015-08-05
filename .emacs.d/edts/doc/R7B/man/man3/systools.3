@@ -1,0 +1,325 @@
+.TH systools 3 "sasl  1.9" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+systools \- A Set of script Generators\&.
+.SH DESCRIPTION
+.LP
+This module contains functions to generate boot scripts, release upgrade scripts, and release packages\&. A release file (\&.rel), application definition files (\&.app), and application upgrade files (\&.appup) are required as input to these functions\&. The syntax definitions for these files can be found in rel(4), app(4) and appup(4) respectively, and also in the Design Principles chapter and in the SASL User\&'s Guide\&. 
+.LP
+If a boot script is written without using the generator, it can be transformed to a binary form with the \fIscript2boot/1\fR function, as required by the Erlang runtime system during start-up\&. 
+.LP
+The behaviour functions described below can be used to obtain a list of the system defined behaviours, and information about which callback functions are required for each of them\&. 
+
+.SH EXPORTS
+.LP
+.B
+behaviour_info() -> [Behaviour]
+.br
+.RS
+.TP
+Types
+Behaviour = atom()
+.br
+.RE
+.RS
+.LP
+Returns a list of the behaviours defined in Erlang/OTP\&. \fIgen_server\fR and \fIgen_event\fR are examples of behaviours\&. 
+.RE
+.LP
+.B
+behaviour_info(Behaviour) -> [Function]
+.br
+.RS
+.TP
+Types
+Behaviour = atom()
+.br
+Function = {Name, Arity}
+.br
+Name = atom()
+.br
+Arity = int()
+.br
+.RE
+.RS
+.LP
+A behaviour calls a number of functions in the callback module\&. The functions that a callback module has to export are returned by this function\&. \fIBehaviour\fR is the same as returned from the \fIbehaviour_info/0\fR function\&. 
+.RE
+.LP
+.B
+make_script(ReleaseName) -> MakeRet
+.br
+.B
+make_script(ReleaseName,Opts) -> MakeRet
+.br
+.RS
+.TP
+Types
+ReleaseName = string()
+.br
+Opts = [{path, Path} | silent | local | no_module_tests | {variables, Vars} | {machine, Machine} | exref | {exref, [AppName]}]
+.br
+Path = [Dir]
+.br
+Dir = string()
+.br
+Vars = [Var]
+.br
+Var = {VarName, PreFixDir}
+.br
+VarName = atom() | string()
+.br
+PreFixDir = string()
+.br
+Machine = atom()
+.br
+AppName = atom()
+.br
+MakeRet = ok | error | {ok, Module, Warnings} | {error, Module, Error}
+.br
+Warnings = void()
+.br
+Module = atom()
+.br
+Error = void()
+.br
+.RE
+.RS
+.LP
+A boot script file is generated from the \fIReleaseName\&.rel\fR file\&. The \fIReleaseName\&.script\fR and \fIReleaseName\&.boot\fR files are generated\&. The release file contains a specification of the version of the release, and the name and version of the applications that are included\&. 
+.LP
+The script generator searches the normal code server path for the \fIReleaseName\&.rel\fR file and the application files \fIApplicationName\&.app\fR\&. A path \fI{path, Path}\fR can be specified and appended to the code server path\&. Each directory in \fIPath\fR can be given with the wildcard \fI*\fR ( * is the only wildcard recognized)\&. A directory given with wildcards is expanded to all matching directories\&. \fI*\fR is translated to "any character except \fI/\fR"\&. If \fI/*/\fR is specified - \fI*\fR is the only character given between two \fI/\fR characters - the corresponding regular expression is \fI[^/]+\fR and it represents a directory\&. 
+.LP
+The compiled Erlang modules should be located in the same directory as the \fI\&.app\fR file\&. The function searches for the source code in the corresponding \fIsrc\fR or \fIsrc/e_src\fR directory if the directory name of the \fI\&.app\fR file directory ends with \fI/ebin\fR\&. Otherwise, it searches for the source code in the \fI\&.app\fR file directory\&. 
+.LP
+The correctness of each application is checked\&. The following checks are performed: 
+.RS 2
+.TP 2
+*
+The version of the application file found\&. 
+.TP 2
+*
+Dependencies to applications not included in the release\&. 
+.TP 2
+*
+Circular dependencies among applications\&. 
+.TP 2
+*
+Duplicated module names\&. 
+.TP 2
+*
+Version compliance between modules and versions specified in the application file\&. 
+.TP 2
+*
+Currency of object code for each module\&. 
+.RE
+.LP
+The boot script is generated if all checks are satisfactory\&. The applications are loaded and started in the order specified in the release file\&. The exception to this order are dependencies between applications as specified in the application files\&. These dependencies specify that applications on which other applications depend must be started first\&. 
+.LP
+If the \fIno_module_tests\fR option is specified, the module version and object code checks are excluded\&. This implies that a boot script can be generated without the requirement that each \fI\&.app\fR file must be located in the same directory as the modules which belong to the application\&. 
+.LP
+The checks performed before the boot script is generated can be extended with some rudimentary cross reference checks by specifying the \fIexref\fR option\&. These checks are performed with the \fIexref\fR tool\&. All modules specified in the application resource files are loaded into the \fIexref\fR tool\&. A warning is generated for each call to an undefined function, but only explicit function calls are checked\&. No cross reference checks are performed if the \fIexref\fR option is specified in combination with the \fIno_module_tests\fR option\&. 
+.LP
+As the cross reference checks can be heavy, the set of modules to be checked can be limited\&. The \fI{exref, [AppName]}\fR option specifies the applications in which modules should be cross referenced checked\&. One warning only is generated for each application whenever calls are found to functions in applications which are not cross reference checked\&. 
+.LP
+The generated boot script contains a search path to all included applications\&. By default, all directories in the path are relative to the installation directory of the Erlang runtime system which uses the boot script\&. 
+.LP
+The \fIvariables\fR option can be used to specify an installation directory other than the Erlang installation directory for user provided applications\&. If the option \fI{variables, [{"TEST", "/home/xxx/applications"}]}\fR is supplied, all applications found underneath this directory will have \fI$TEST\fR substituted in place of the directory\&. The variable substitution mechanism needs absolute paths\&. Therefore, the paths specified (either in the code server path, or with the \fIpath\fR option) must be absolute\&. The following example illustrates this: 
+
+.nf
+/home/xxx/applications/type1/app1/ebin
+                            /app2/ebin
+                       type2/app3/ebin
+                       app4/ebin
+.fi
+.LP
+The boot script is generated as: 
+
+.nf
+systools:make_script(RelName,
+                     [{path,["/home/xxx/applications/*/ebin"]},
+                      {variables,[{"TEST","/home/xxx/applications"}]}])
+.fi
+.LP
+In the generated boot script, the path looks as follows for the applications \fIapp1\fR - \fIapp4\fR: 
+
+.nf
+[\&.\&.\&.
+ "$TEST/type1/app1-Vsn/ebin",
+ "$TEST/type1/app2-Vsn/ebin",
+ "$TEST/type2/app3-Vsn/ebin",
+ "$TEST/app4-Vsn/ebin"]
+.fi
+.LP
+When starting the system with the generated boot script, the \fITEST\fR variable is given a value using the \fI-boot_var Var Value\fR command line flag\&. In the previous example, \fIVar\fR is \fITEST\fR and \fIValue\fR is the name of the directory where these applications are installed\&. The \fI-boot_var\fR flag is described for the \fIinit\fR module\&. 
+.LP
+The \fIlocal\fR option can also be used to change the default path as well\&. If the \fIlocal\fR option is supplied, the path includes the actual directories where the applications were found\&. This is a useful way to test a generated boot script locally\&. 
+.LP
+The \fImachine\fR option can be used to generate a boot script for an Erlang machine other than the running machine\&. This is important when checking the object code, as the file extension can differ between the machines (for example \fI\&.beam\fR)\&. 
+.LP
+By default, this function writes all errors and warnings to the tty and returns \fIok\fR or \fIerror\fR\&. Nothing is written to the tty if the \fIsilent\fR option is supplied, but the function returns \fI{ok, Module, Warnings}\fR or \fI{error, Module, Errors}\fR instead\&. To convert the \fIWarnings\fR and \fIErrors\fR terms to strings, the \fIModule\fR:format_warning(\fIWarnings\fR) and \fIModule\fR:format_error(\fIErrors\fR) functions are called respectively\&. 
+.RE
+.LP
+.B
+make_relup(ReleaseName,UpNameList,DownNameList) -> RelRet
+.br
+.B
+make_relup(ReleaseName,UpNameList,DownNameList,Opts) -> RelRet
+.br
+.RS
+.TP
+Types
+ReleaseName = string() | atom()
+.br
+UpNameList = NameList
+.br
+DownNameList = NameList
+.br
+NameList = [ReleaseName | {ReleaseName, Description}]
+.br
+Description = term()
+.br
+Opts = [{path, Path} | silent | noexec | restart_emulator]
+.br
+Path = [Dir]
+.br
+Dir = string()
+.br
+RelRet = ok | error | {ok, Relup, Module, Warnings} | {error, Module, Error}
+.br
+Relup = {Vsn, UpScript, DownScript}
+.br
+UpScript = RelupScript
+.br
+DownScript = RelupScript
+.br
+RelupScript = [{Vsn, Description, Script}]
+.br
+Script = [low_level_release_upgrade_instructions]
+.br
+Warnings = void()
+.br
+Module = atom()
+.br
+Error = void()
+.br
+.RE
+.RS
+.LP
+A \fIrelup\fR file is generated which describes how to upgrade the system from a number of previous releases, and also how to downgrade from a number of previous releases\&. 
+.LP
+The \fIrelup\fR file is built by gathering all the application release upgrade scripts and picking those applicable for each combination of release versions\&. The scripts are also translated from high level release instructions to low level instructions\&. The normal code server path is searched for release files (\fIReleaseName\&.rel\fR) and application files (\fIApplicationName\&.app\fR), as well as the application upgrade scripts files (\fIApplicationName\&.appup\fR)\&. The \fIApplicationName\&.app\fR and \fIApplicationName\&.appup\fR files must be in the same directory\&. The code server path can be appended with a path specified with the \fI{path, Path}\fR option\&. \fIPath\fR can contain wildcards (*) as described for the \fImake_script\fR function\&. 
+.LP
+A \fIReleaseName\&.rel\fR file must be available for each \fIUpName\fR and \fIDownName\fR since the versions of the applications are compared\&. For each change in the application versions, there must be an entry in the \fIApplication\&.appup\fR file\&. 
+.LP
+The optional \fIDescription\fR parameter which can be supplied to either of the input name lists is passed to the correct output script in the \fIrelup\fR file\&. The parameter defaults to the empty list \fI[]\fR\&. 
+.LP
+Basically, \fImake_relup\fR combines a re-ordering of the \fIReleaseName\&.rel\fR file and the \fIApplication\&.appup\fR files, so that the new release version and a target release version is a list of release upgrade scripts for all applications that have changed between the two release versions\&. 
+.LP
+By default, this function writes the relup script to a file named \fIrelup\fR and all errors and warnings to the tty and returns \fIok\fR or \fIerror\fR\&. If the \fIsilent\fR option is supplied, nothing is written to the tty and the function returns \fI{ok, Relup, Module, Warnings}\fR or \fI{error, Module, Error}\fR instead, where \fIRelup\fR is the structure written to the \fIrelup\fR file\&. The Warnings and Errors can be converted to strings with the \fIModule\fR:format_warning(Warning) and \fIModule\fR:format_error(Error) functions\&. If the \fInoexec\fR option is supplied, then nothing is written to the \fIrelup\fR file and the function returns one of the verbose return values\&. 
+.LP
+If the \fIrestart_emulator\fR option is supplied, the low-level instruction \fIrestart_new_emulator\fR is appended to the relup scripts\&. This ensures that a complete reboot of the system is done when the system is upgraded or downgraded\&. 
+.RE
+.LP
+.B
+make_tar(ReleaseName) -> TarRet
+.br
+.B
+make_tar(ReleaseName,Opts) -> TarRet
+.br
+.RS
+.TP
+Types
+ReleaseName = string()
+.br
+Opts = [{path, Path} | silent | {dirs, Dirs} | {erts, ErtsDir} | no_module_tests | {variables, Vars} | {var_tar, VarTar} | {machine, Machine} | exref | {exref, [AppName]}]
+.br
+Path = [Dir]
+.br
+Dir = string()
+.br
+Dirs = [atom()]
+.br
+ErtsDir = string()
+.br
+Vars = [Var]
+.br
+Var = {VarName, PreFixDir}
+.br
+VarName = atom() | string()
+.br
+PreFixDir = string()
+.br
+VarTar = include | ownfile | omit
+.br
+Machine = atom()
+.br
+AppName = atom()
+.br
+TarRet = ok | error | {ok, Module, Warnings} | {error, Module, Error}
+.br
+Warnings = void()
+.br
+Module = atom()
+.br
+Error = void()
+.br
+.RE
+.RS
+.LP
+A release package file is generated from the \fIReleaseName\&.rel\fR file\&. The \fIReleaseName\&.tar\&.gz\fR file is generated\&. This file must be uncompressed and unpacked on the target system before the new release can be activated, using the \fIrelease_handler\fR\&. 
+.LP
+By default, the generated release package contains a directory under the \fIlib\fR directory for each included application\&. Each application directory is named \fIApplicationName-ApplicationVsn\fR\&. For each application, the \fIebin\fR and \fIpriv\fR directories are included\&. These directories are copied from where the applications were found\&. If more directories are needed, it is possible to specify these with the \fI{dirs, Dirs}\fR option\&. For example, if the src and example directories should be included for each application in the release package, the \fI{dirs, [src, examples]}\fR option should be supplied\&. 
+.LP
+The \fIvariables\fR option can be used to specify an installation directory other than the Erlang installation directory for the user provided applications\&. If the option\fI{variables, [{"TEST", "/home/xxx/applications"}]}\fR is supplied, all applications found underneath this directory will be packed into the \fITEST\&.tar\&.gz\fR file\&. Accordingly, a separate package is created for each defined variable\&. By default, all these files are included at the top level in the \fIReleaseName\&.tar\&.gz\fR file and should be unpacked to an appropriate installation directory\&. The \fI{var_tar, VarTar}\fR option can be used to specify if and where a separate package should be stored\&. In this option, \fIVarTar\fR is: 
+.RS 2
+.TP 2
+*
+\fIinclude\fR\&. Each separate (variable) package is included in the main \fIReleaseName\&.tar\&.gz\fR file\&. This is the default\&. 
+.TP 2
+*
+\fIownfile\fR\&. Each separate (variable) package is generated as separate files in the same directory as the \fIReleaseName\&.tar\&.gz\fR file\&. 
+.TP 2
+*
+\fIomit\fR\&. No separate (variable) packages are generated and applications which are found underneath a variable directory are ignored\&. 
+.RE
+.LP
+The normal code server path is searched for the release file \fIReleaseName\&.rel\fR and the application files (\fIApplicationName\&.app\fR)\&. The code server path can be appended with a path specified with the \fI{path, Path}\fR option\&. \fIPath\fR can contain wildcards (*) as described for the \fImake_script\fR function\&. 
+.LP
+The \fImachine\fR option can be used to generate a release package file for an Erlang machine other than the running machine\&. This ensures that object code files with the expected file extension are included in the package, for example \fI\&.beam\fR files\&. 
+.LP
+A directory called \fIreleases/RelVsn\fR is also included in the release package\&. The release version \fIRelVsn\fR is found in the release package\&. This directory contains the boot script (\fIReleaseName\&.boot\fR copied to \fIstart\&.boot\fR), the \fIrelup\fR file (generated by \fImake_relup\fR), and the system configuration file (\fIsys\&.config\fR)\&. 
+.LP
+If the release package shall contain a new Erlang runtime system, the \fIbin\fR directory of the specified (\fI{erts, ErtsDir}\fR) runtime system is copied to \fIerts-ErtsVsn/bin\fR\&. 
+.LP
+Finally, the \fIreleases\fR directory contains the \fIReleaseName\&.rel\fR file\&. 
+.LP
+All checks performed with the \fImake_script\fR function are performed before the release package is created\&. The \fIno_module_tests\fR and \fIexref\fR options are also valid here\&. 
+.LP
+The return value \fITarRet\fR and the handling of errors and warnings are as described for the \fImake_script\fR function above\&. 
+.RE
+.LP
+.B
+script2boot(File) -> ok | error
+.br
+.RS
+.TP
+Types
+File = string()
+.br
+.RE
+.RS
+.LP
+The Erlang runtime system requires that the contents of the script used to boot the system is a binary Erlang term\&. This function transforms the \fIFile\&.script\fR boot script to a binary term which is stored in the file \fIFile\&.boot\fR\&. 
+.LP
+A boot script generated using the \fImake_script\fR function is already transformed to the binary form\&. 
+.RE
+.SH See also
+.LP
+release_handler(3), init(3), exref(3) 
+.SH AUTHORS
+.nf
+Joe Armstrong - support@erlang.ericsson.se
+Martin Bjorklund - support@erlang.ericsson.se
+Magnus Froberg - support@erlang.ericsson.se
+Peter Lundell - support@erlang.ericsson.se
+.fi

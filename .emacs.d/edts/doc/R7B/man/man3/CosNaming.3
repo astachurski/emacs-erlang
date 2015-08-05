@@ -1,0 +1,127 @@
+.TH CosNaming 3 "orber  3.1.8" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+CosNaming \-  The CosNaming service is a collection of interfaces that together define the naming service\&. 
+.SH DESCRIPTION
+.LP
+The naming service provides the principal mechanism for clients to find objects in an ORB based world\&. The naming service provides an initial naming context that functions as the root context for all names\&. Given this context clients can navigate in the name space\&. 
+.LP
+Types that are declared on the CosNaming level are: 
+
+.nf
+typedef string Istring;
+struct NameComponent {
+      Istring id;  
+      Istring kind;
+};
+  
+typedef sequence <NameComponent> Name;
+  
+enum BindingType {nobject, ncontext};
+  
+struct Binding {
+      Name    binding_name;
+      BindingType binding_type;
+};
+
+typedef sequence <Binding> BindingList;
+.fi
+.LP
+To get access to the record definitions for the structs use: \fI-include_lib("orber/COSS/CosNaming\&.hrl")\&.\fR\&. 
+.LP
+Names are not an ORB object but the can be structured in components as seen by the definition above\&. There are no requirements on names so the service can support many different conventions and standards\&. 
+.LP
+There are two different interfaces supported in the service: 
+.RS 2
+.TP 2
+*
+NamingContext
+.TP 2
+*
+BindingIterator
+.RE
+.LP
+IDL specification for CosNaming: 
+
+.nf
+// Naming Service v1\&.0 described in CORBAservices: 
+// Common Object Services Specification, chapter 3
+// OMG IDL for CosNaming Module, p 3-6
+
+#pragma prefix "omg\&.org"
+
+module CosNaming
+{
+  typedef string Istring;
+  struct NameComponent {
+    Istring id;
+    Istring kind;
+  };
+  
+  typedef sequence <NameComponent> Name;
+  
+  enum BindingType {nobject, ncontext};
+  
+  struct Binding {
+    Name    binding_name;
+    BindingType binding_type;
+  };
+  
+  typedef sequence <Binding> BindingList;
+   
+
+  interface BindingIterator;
+  interface NamingContext;
+  
+  interface NamingContext {
+    
+    enum NotFoundReason { missing_node, not_context, not_object};
+    
+    exception NotFound {
+      NotFoundReason why;
+      Name rest_of_name;
+    };
+    
+    exception CannotProceed {
+      NamingContext cxt;
+      Name rest_of_name;
+    };
+    
+    exception InvalidName{};
+    exception AlreadyBound {};
+    exception NotEmpty{};
+    
+    void bind(in Name n, in Object obj)
+      raises(NotFound, CannotProceed, InvalidName, AlreadyBound);
+    void rebind(in Name n, in Object obj)
+      raises(NotFound, CannotProceed, InvalidName);
+    void bind_context(in Name n, in NamingContext nc)
+      raises(NotFound, CannotProceed,InvalidName, AlreadyBound);
+    void rebind_context(in Name n, in NamingContext nc)
+      raises(NotFound, CannotProceed, InvalidName);
+    Object resolve (in Name n)
+      raises(NotFound, CannotProceed, InvalidName);
+    void unbind(in Name n)
+      raises(NotFound, CannotProceed, InvalidName);
+    NamingContext new_context();
+    NamingContext bind_new_context(in Name n)
+      raises(NotFound, AlreadyBound, CannotProceed, InvalidName);
+    void destroy( )
+      raises(NotEmpty);
+    void list (in unsigned long how_many,
+               out BindingList bl,
+               out BindingIterator bi);
+  };
+  
+  interface BindingIterator {
+    boolean next_one(out Binding b);
+    boolean next_n(in unsigned long how_many,
+                   out BindingList bl);
+    void destroy();
+  };
+};
+.fi
+
+.SH AUTHOR
+.nf
+Lars Thorsen - support@erlang.ericsson.se
+.fi

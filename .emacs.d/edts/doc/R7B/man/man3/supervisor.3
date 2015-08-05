@@ -1,0 +1,241 @@
+.TH supervisor 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+supervisor \- A Behaviour for Supervision of Processes\&.
+.SH DESCRIPTION
+.LP
+A \fIsupervisor\fR is a process that supervises \fIchild\fR processes\&. A child can be another supervisor or a \fIworker\fR process\&. A supervisor is always linked to its children\&. This structure is used to build a \fIsupervision tree\fR, which is a nice way to structure an application for fault tolerance\&. 
+.LP
+The basic idea of a supervisor is that it keeps its children alive\&. If a child terminates abnormally, it is restarted\&. There are three basic types of restart strategies for supervisors, \fIone-for-one\fR, \fIone-for-all\fR, and \fIrest-for-one\fR
+.RS 2
+.TP 2
+*
+If a child in a one-for-one supervisor dies abnormally, it is restarted\&.
+.TP 2
+*
+If a child in a one-for-all supervisor dies, the supervisor shuts down all of the other children and then restarts all children\&. This strategy can be used when there are dependencies among the children\&.
+.TP 2
+*
+If a child in a rest-for-one supervisor dies, all children started \fIafter\fR the faulty child are shut down, then restarted\&. The children started before the faulty child are not affected\&.
+.RE
+.LP
+There is yet another restart strategy which is a variant of the ordinary one-for-one\&. It is called \fIsimple-one-for-one\fR\&. It should be used for dynamic processes of the same type, for example processes which represent a call\&. Compared to one-for-one, this type has reduced overheads in starting dynamic children \&. 
+.LP
+Each child can be one of three types: \fIpermanent\fR, \fItransient\fR, or \fItemporary\fR\&. A permanent child is always restarted when it dies\&. A transient child is restarted if it dies abnormally, and a temporary child is never restarted\&. 
+.LP
+The supervisors have a built-in mechanism to prevent situations where a child dies, is restarted by the supervisor, only to die again for the same reason, is restarted again, and so on\&. It limits the number of restarts which can occur in a given time interval\&. This is determined by the values of two parameters, \fIMaxR\fR and \fIMaxT\fR\&. If more than \fIMaxR\fR restarts are performed in the last \fIMaxT\fR seconds, then the supervisor shuts down all the children which it supervises and then dies\&. 
+.LP
+An instance of the supervisor behaviour can be debugged using the module \fIsys\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+start_link(Module,StartArgs) -> SupRet
+.br
+.B
+start_link(SupName,Module,StartArgs) -> SupRet
+.br
+.RS
+.TP
+Types
+SupName = {local, atom()} | {global, atom()}
+.br
+Module = atom()
+.br
+StartArgs = term()
+.br
+SupRet = {ok, Pid} | ignore | {error, Reason}
+.br
+Pid = pid()
+.br
+Reason = {already_started, Pid} | term()
+.br
+.RE
+.RS
+.LP
+Starts a new instance of the supervisor behaviour\&. The function \fIModule:init(StartArgs)\fR is called in order to create a start specification (see below)\&. 
+.LP
+If the supervisor is started without \fISupName\fR, it can only be called using the returned \fIPid\fR identifier\&. If it is started with \fISupName\fR, the name is registered locally or globally\&. 
+.RE
+.LP
+.B
+start_child(Supervisor,ChildSpec | ExtraStartArgs) -> {ok, Child} | {ok, Child, Info} | {error, Reason}
+.br
+.RS
+.TP
+Types
+Supervisor = pid() | SupName | {global, SupName}
+.br
+ChildSpec = child_spec()
+.br
+ExtraStartArgs = [term()]
+.br
+child_spec() = {Name, Start, Restart, Shutdown, Type, Modules}
+.br
+SupName = atom()
+.br
+Name = term()
+.br
+Start = {M, F, A}
+.br
+Restart = permanent | transient | temporary
+.br
+Shutdown = int() >= 0 | brutal_kill | infinity
+.br
+Type = worker | supervisor
+.br
+Modules = [atom()] | dynamic
+.br
+Child = pid() | undefined
+.br
+Info = term()
+.br
+.RE
+.RS
+.LP
+Use this function to dynamically add a child to a supervisor\&. The start function \fIStart\fR is supposed to return \fI{ok, Pid} | {ok, Pid, Info} | ignore | {error, Reason}\fR\&. If \fIignore\fR is returned, the supervisor ignores the child and returns \fI{ok, undefined}\fR\&. The start function is executed by the supervisor process\&. It must return a Pid that is linked to the caller (i\&.e\&. the supervisor)\&. The supervisor uses this link to monitor and control the child\&. If \fI{ok, Pid, Info}\fR is returned from the start function, the same is returned from this function\&. The \fIInfo\fR is not interpreted in any way by the supervisor\&. 
+.LP
+\fIName\fR is an internal name, which is used by the supervisor to identify its children\&. 
+.LP
+\fIModules\fR is used for the code change procedure\&. It should be \fIdynamic\fR if the modules that the child uses can change dynamically at runtime, for example a \fIgen_event\fR process\&. (Note that this refers to the names of the modules rather than the implementation of the module\&.) Otherwise, it should be a list of the module with which the child is implemented, This information is used by the release handler to find all processes which execute a module\&. For example, if the child is a \fIgen_server\fR, \fIModules\fR is a list with the name of the callback module as its only element\&. 
+.LP
+The \fIShutdown\fR value \fIinfinity\fR must be used with care\&. The supervisor tries to shut down the child by calling \fIexit(Child, shutdown)\fR and waits for the child to terminate\&. If the child does not terminate, the supervisor will hang forever\&. \fIinfinity\fR should be used for children which themselves are supervisors, but it is not allowed for workers\&. This is to make sure that the system can be shut down without hanging forever\&. 
+.LP
+If the supervisor is a \fIsimple_one_for_one\fR supervisor, this function should be called as \fIstart_child(Supervisor, ExtraStartArgs)\fR\&. It starts a new child of the same type and calls the child\&'s start function as \fIapply(M, F, A ++ ExtraStartArgs)\fR\&. \fIM\fR, \fIF\fR, and \fIA\fR are returned from the supervisor\&'s \fIinit\fR function\&. The new child does not get a unique name by which is identified in the supervisor\&. Therefore, the functions \fIterminate_child/2\fR, \fIdelete_child/2\fR and \fIrestart_child/2\fR cannot be used for a \fIsimple_one_for_one\fR supervisor\&. When a \fItemporary\fR child dies for any reason or a \fItransient\fR child dies normally, the child is removed from the supervisor\&. Compare this with a ordinary supervisor, where the child specification remains until \fIdelete_child/2\fR is called\&. No progress report is generated when the child is started\&. This is to reduce overheads\&. 
+.RE
+.LP
+.B
+terminate_child(Supervisor, Name) -> ok | {error, not_found}
+.br
+.RS
+.TP
+Types
+Supervisor = pid() | SupName | {global, SupName}
+.br
+SupName = atom()
+.br
+Name = term()
+.br
+.RE
+.RS
+.LP
+Terminates a child\&. The child is not removed from the supervisor\&'s set of children\&. This means that it can be restarted explicitly by calling \fIrestart_child/2\fR, or started implicitly if the supervisor has to restart all children\&. 
+.RE
+.LP
+.B
+delete_child(Supervisor,Name) -> ok | {error, running | not_found}
+.br
+.RS
+.TP
+Types
+Supervisor = pid() | SupName | {global, SupName}
+.br
+SupName = atom()
+.br
+Name = term()
+.br
+.RE
+.RS
+.LP
+Deletes a child from the supervisor\&. The child must be terminated\&. 
+.RE
+.LP
+.B
+restart_child(Supervisor,Name) -> {ok, Pid} | {ok, Pid, Info} | {error, running | not_found | Reason}
+.br
+.RS
+.TP
+Types
+Supervisor = pid() | SupName | {global, SupName}
+.br
+SupName = atom()
+.br
+Name = term()
+.br
+Info = term()
+.br
+.RE
+.RS
+.LP
+Starts a child which has been terminated and not restarted according to the restart specification\&. This can include a temporary child which terminates, or a child that was terminated explicitly by calling the function \fIterminate_child/2\fR\&. 
+.RE
+.LP
+.B
+which_children(Supervisor) -> [{Name, Pid, Type, Modules}]
+.br
+.RS
+.TP
+Types
+Supervisor = pid() | SupName | {global, SupName}
+.br
+SupName = atom()
+.br
+Name = term()
+.br
+Pid = pid() | undefined
+.br
+Type = worker | supervisor
+.br
+Modules = [atom()] | dynamic
+.br
+.RE
+.RS
+.LP
+Returns a list of the supervisor\&'s children\&. \fIName\fR, \fIType\fR and \fIModules\fR are as defined in the child specification\&. 
+.RE
+.LP
+.B
+check_childspecs([ChildSpec]) -> ok | {error, Reason}
+.br
+.RS
+.TP
+Types
+ChildSpec = child_spec()
+.br
+.RE
+.RS
+.LP
+Checks if a list of child specifications are syntactically correct\&. 
+.RE
+.SH Callback Functions
+.LP
+The following functions should be exported from a \fIsupervisor\fR callback module\&. 
+.SH EXPORTS
+.LP
+.B
+Module:init(StartArgs) -> {ok, {SupFlags, [ChildSpec]}} | ignore | {error, Reason}
+.br
+.RS
+.TP
+Types
+SupFlags = {restart_strategy(), MaxR, MaxT}
+.br
+restart_strategy() = one_for_all | one_for_one | rest_for_one | simple_one_for_one
+.br
+MaxR = int() >= 0
+.br
+MaxT = int() > 0
+.br
+ChildSpec = child_spec()
+.br
+.RE
+.RS
+.LP
+This function returns a supervisor specification\&. \fIChildSpec\fR is as previously defined in the \fIstart_child/2\fR function\&. \fIMaxR\fR is the maximum number of restarts which can be performed within \fIMaxT\fR seconds\&. 
+.LP
+When the restart strategy is \fIsimple_one_for_one\fR, the list of child specifications must be a list with one element only\&. This child is not started during the initialization phase, but all children are started dynamically\&. Each dynamically started child is of the same type, which means that all children are instances of the initial child specification\&. New children are created with a call to \fIstart_child(Supervisor, ExtraStartArgs)\fR\&. 
+.LP
+If a child start function returns \fIignore\fR, the child is kept in the supervisor\&'s list of children\&. The child can be restarted explicitly by calling \fIrestart_child/2\fR\&. The child is also restarted if the supervisor is \fIone_for_all\fR and performs a restart of all children, or if the supervisor is \fIrest_for_one\fR and performs a restart of this child\&. The supervisor start-up fails and terminates if the child start function returns \fI{error, Reason}\fR 
+.LP
+This function can return \fIignore\fR in order to inform the parent, especially if it is another supervisor, that the supervisor is not started according to configuration data, for instance\&. 
+.RE
+.SH System Events
+.LP
+The supervisor behaviour generates the same system events as the \fIgen_server\fR behaviour\&. System events are handled by the \fIsys\fR module\&. 
+.SH See Also
+.LP
+gen_server(3), sys(3) 
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Magnus Froberg - support@erlang.ericsson.se
+.fi

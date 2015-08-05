@@ -1,0 +1,330 @@
+
+
+
+exref(3)            ERLANG MODULE DEFINITION             exref(3)
+
+
+
+MODULE
+     exref - Cross Reference Tool
+
+DESCRIPTION
+  Note:
+     The _e_x_r_e_f tool has some limitations and is  no  longer  sup-
+     ported.  Please  consider using the new cross reference tool
+     xref.
+
+
+     The _e_x_r_e_f tool is  an  incremental  cross  reference  server
+     which  builds a cross reference graph for all modules loaded
+     into it. Information which can be  derived  from  the  cross
+     reference graph includes use graphs and module dependencies.
+     The call graph is  represented  as  a  directed  graph  (see
+     digraph(3)). A function vertex is represented as:
+
+           {{Mod, Fun, Arity}, {Type, File, Line}}
+
+     In this code:
+
+           Type = local | exported | {exported, compiler} |
+                  {local, compiler} | {void(), record}
+
+     A call edge is represented as:
+
+           {EdgeId, {Mod1, Fun1, Arity1}, {Mod2, Fun2, Arity2}, Line}.
+
+
+EXPORTS
+     start()-> {ok, Pid} | {error, {already_started, Pid}}
+
+          Starts the _e_x_r_e_f  server.  The  _e_x_r_e_f  server  must  be
+          started  before any other functions in module _e_x_r_e_f can
+          be used.
+
+     stop() -> stopped
+
+          Stops the _e_x_r_e_f server.
+
+     module(Module) -> true
+
+          This  is  a  short  form  for  calling   _m_o_d_u_l_e(_M_o_d_u_l_e,
+          [_s_e_a_r_c_h, _v_e_r_b_o_s_e]) (see below).
+
+     module(Module, Options) -> true
+
+          Types
+               Module = atom() | [atom()]
+               Options = [Option]
+               Option = search | verbose  |  auto  |  warnings  |
+               recursive | no_libs
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   1
+
+
+
+
+
+
+exref(3)            ERLANG MODULE DEFINITION             exref(3)
+
+
+
+          Loads the module _M_o_d_u_l_e into the cross reference graph.
+          _M_o_d_u_l_e can also be a list of modules. _O_p_t_i_o_n_s is a list
+          with the following possible options:
+
+            _s_e_a_r_c_h:
+                Searches  for  source  file  in  code  path   and
+                replaces the path _X/_e_b_i_n with the path _X/_s_r_c.
+
+            _v_e_r_b_o_s_e:
+                Creates an output of module names during loading.
+
+            _a_u_t_o:
+                Automatically loads all referenced  modules  into
+                the  cross reference graph, with the exception of
+                modules specified with the  _e_x_c_l_u_d_e_s/_1  function.
+                See also the _n_o__l_i_b_s option.
+
+            _r_e_c_u_r_s_i_v_e:
+                Recursively includes all files  in  a  directory.
+                See also the _n_o__l_i_b_s option.
+
+            _w_a_r_n_i_n_g_s:
+                Emits warnings  about  the  application  and  the
+                spawning  of  variables.  The  reason for this is
+                that _a_p_p_l_y, with variable modules  or  functions,
+                leads to an incomplete call graph. The _a_p_p_l_y call
+                will be inserted into the call graph  instead  of
+                the actual call. The same applies to spawn.
+
+            _n_o__l_i_b_s:
+                Used together with the options  _a_u_t_o  and  _r_e_c_u_r_-
+                _s_i_v_e,  this options prevents modules in the stan-
+                dard libraries from being loaded into  the  cross
+                reference graph.
+
+     directory(Directory)
+     directory(Directory, Options)
+
+          Loads all modules found in the directory _D_i_r_e_c_t_o_r_y into
+          the  cross reference graph. Options are the same as for
+          _m_o_d_u_l_e/_2. The function  _d_i_r_e_c_t_o_r_y/_1  is  equivalent  to
+          _d_i_r_e_c_t_o_r_y(_D_i_r_e_c_t_o_r_y, [_v_e_r_b_o_s_e]).
+
+     directory_module(Directory, Module)
+     directory_module(Directory, Module, Options)
+
+          Loads the module _M_o_d_u_l_e located in the directory _D_i_r_e_c_-
+          _t_o_r_y. _M_o_d_u_l_e can also be a list of modules. Options are
+          the   same    as    for    _m_o_d_u_l_e/_2.    The    function
+          _d_i_r_e_c_t_o_r_y__m_o_d_u_l_e/_2        is        equivalent       to
+          _d_i_r_e_c_t_o_r_y__m_o_d_u_l_e(_D_i_r_e_c_t_o_r_y, _M_o_d_u_l_e, [_v_e_r_b_o_s_e]).
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   2
+
+
+
+
+
+
+exref(3)            ERLANG MODULE DEFINITION             exref(3)
+
+
+
+     delete_module(Module)
+
+          Deletes the module  _M_o_d_u_l_e  from  the  cross  reference
+          graph. _M_o_d_u_l_e can also be a list of modules.
+
+     excludes(Modules)
+
+          Appends the modules of the _M_o_d_u_l_e_s list to the list  of
+          modules  which  are  excluded  from the cross reference
+          graph.
+
+     includes(Dirs)
+
+          Appends the directories of the _D_i_r_s list to the include
+          search path for Erlang include files (see epp(3)).
+
+     defs(Defs)
+
+          Appends the definitions in the _D_e_f_s list to the defini-
+          tion list used by _e_p_p (see epp(3)).
+
+     analyse(Type [,Arg]) -> Result
+
+          Performs various analyses of the cross reference  graph
+          and  returns  an Erlang term with a format that depends
+          on the _T_y_p_e of analyse. Some analyse types can have  an
+          optional argument _A_r_g. The result can be formatted to a
+          textual printout with _p_r_e_t_t_y/_1. The available _T_y_p_e  and
+          _A_r_g combinations are:
+
+            _c_a_l_l:
+                Emits the calls from the functions, for all func-
+                tions in the graph.
+
+            _c_a_l_l, _M_o_d_u_l_e:
+                Emits the calls for all functions in  the  module
+                _M_o_d_u_l_e,
+
+            _c_a_l_l, _F_u_n_c_t_i_o_n:
+                Emits the calls from the function _F_u_n_c_t_i_o_n, which
+                has the format {_M_o_d, _F_u_n, _A_r_i_t_y}.
+
+            _u_s_e:
+                Emits the use of functions, for all functions  in
+                the graph.
+
+            _u_s_e, _M_o_d_u_l_e:
+                Emits the use of functions, for all functions  of
+                the module _M_o_d_u_l_e.
+
+            _u_s_e, _F_u_n_c_t_i_o_n:
+                Emits the use of the function _F_u_n_c_t_i_o_n, which has
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   3
+
+
+
+
+
+
+exref(3)            ERLANG MODULE DEFINITION             exref(3)
+
+
+
+                the format {_M_o_d, _F_u_n, _A_r_i_t_y}.
+
+            _m_o_d_u_l_e__c_a_l_l:
+                Emits the module dependency graph.  For  example,
+                if module _M_1 has calls to _M_2, this analysis emits
+                _M_1: _M_2 ...
+
+            _m_o_d_u_l_e__u_s_e:
+                Emits a module graph which is the reverse of  the
+                module  dependency  graph. For example, if module
+                _M_1 is called by modules _M_2 and _M_3,  the  analysis
+                emits _M_1: _M_2 _M_3.
+
+            _e_x_p_o_r_t_s__n_o_t__c_a_l_l_e_d:
+                Reports all  exported  functions  which  are  not
+                used.  This means that all entry points to a pro-
+                gram can be found, also exported  functions  that
+                should be local.
+
+            _l_o_c_a_l_s__n_o_t__c_a_l_l_e_d:
+                Reports all local functions which are used. These
+                functions  can  be  removed  without  the program
+                being affected.
+
+            _u_n_d_e_f_i_n_e_d__f_u_n_c_t_i_o_n_s:
+                Reports all function calls  which  are  calls  to
+                functions  outside the cross reference graph. The
+                library functions and Erlang BIFs are never  con-
+                sidered undefined.
+
+            _r_e_c_u_r_s_i_v_e__m_o_d_u_l_e_s:
+                Reports modules that are (partially)  recursively
+                defined,  which  means that they contain function
+                calls outside the module which in turn  call  the
+                functions in that module.
+
+            _u_s_e_r__d_e_f_i_n_e_d, {_M_o_d, _F_u_n}:
+                Calls  user-defined  analysis.  The  reason   for
+                user-defined  analysis being attached in this way
+                is that the call graph cannot easily be copied to
+                other  processes.  It  should be performed within
+                the _e_x_r_e_f server process.
+
+                The function definition must be  as  follows  for
+                user supplied analysis:
+
+                              my_analysis(G) ->
+                                 io:format("MY ANALYSIS ... ~n", Args),
+                                 ...
+
+                _G is  the  cross  reference  graph  as  described
+                above.  The  return  value  from  a  user-defined
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   4
+
+
+
+
+
+
+exref(3)            ERLANG MODULE DEFINITION             exref(3)
+
+
+
+                analysis is ignored.
+
+     pretty(AnalyseResult) -> ok
+
+          This function pretty-prints a verbose textual represen-
+          tation  of  _A_n_a_l_y_s_e_R_e_s_u_l_t which must be the output from
+          _a_n_a_l_y_s_e(_T_y_p_e[, _A_r_g]). The result  from  a  user-defined
+          analysis cannot be used as input to this function.
+
+See Also
+     digraph(3), xref(3)
+
+AUTHORS
+     Joakim Hirsch (modifications) - support@erlang.ericsson.se
+     Kenneth Lundin (modifications) - support@erlang.ericsson.se
+     Tony Rogvall (originally) - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: tools  1.6.1                   5
+
+
+

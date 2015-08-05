@@ -1,0 +1,330 @@
+
+
+
+global_group(3)     ERLANG MODULE DEFINITION      global_group(3)
+
+
+
+MODULE
+     global_group - Grouping Nodes to  Global  Name  Registration
+     Groups
+
+DESCRIPTION
+     The global group function makes it  possible  to  group  the
+     nodes in a system into partitions, each partition having its
+     own global name space, refer to _g_l_o_b_a_l(_3). These  partitions
+     are called global groups.
+     The main advantage of dividing systems to global  groups  is
+     that the background load decreases while the number of nodes
+     to  be  updated  is  reduced  when   manipulating   globally
+     registered names.
+
+     The _g_l_o_b_a_l__g_r_o_u_p_s-key in the ._c_o_n_f_i_g file defines the global
+     groups:
+
+     {_g_l_o_b_a_l__g_r_o_u_p_s, [{_G_r_o_u_p_N_a_m_e, [_N_o_d_e]}] }
+
+     _G_r_o_u_p_N_a_m_e is an _a_t_o_m() naming a global group.
+     _N_o_d_e is an _a_t_o_m() naming a node.
+
+     The command _e_r_l -_c_o_n_f_i_g _F_i_l_e starts a node with a configura-
+     tion file named _F_i_l_e._c_o_n_f_i_g. If the _g_l_o_b_a_l__g_r_o_u_p_s-key is not
+     defined the system will start as a whole, without any parti-
+     tions.  When  the  key  is not defined, the services of this
+     function will not give any extra value to _g_l_o_b_a_l(_3).
+
+     For the processes and nodes to run smoothly using this func-
+     tion the following criteria must be met:
+
+       * The global group function must have  a  server  process,
+         _g_l_o_b_a_l__g_r_o_u_p, running on each node.
+          _N_O_T_E: The processes are automatically started and  syn-
+         chronized when a node is started.
+
+       * All processes must agree with the  group  definition  in
+         the  immediate  global group. If two nodes do not agree,
+         these nodes will not synchronize their name space and an
+         error message will be logged in the error logger.
+         Example: If one node has an illegal global group defini-
+         tion, such a node will run isolated from the other nodes
+         regarding the global name space; but not regarding other
+         system  functions,  e.g  distribution  of  applications,
+         refer to chapter _N_O_T_E below.
+
+       * Nodes can only belong to one global group.
+
+     When the global group definitions are to  be  changed  in  a
+     system  upgrade,  the  upgrade  must  fulfill  the following
+     steps:
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+global_group(3)     ERLANG MODULE DEFINITION      global_group(3)
+
+
+
+       1.  First, all nodes which are to be removed from a global
+           group must be taken down.
+
+       2.  Nodes which are not affected by  the  redefinition  of
+           the  global  groups  are to be upgraded to be aware of
+           the new global group definitions.
+            _N_O_T_E:  All  nodes  in  the  system,  also  nodes   in
+           unchanged   global  groups,  must  be  upgraded.  This
+           because e.g _s_e_n_d must have an  accurate  view  of  the
+           total system.
+
+       3.  Finally, all nodes which are new to a global group can
+           be started.
+
+     When a non partitioned system is to be upgraded to become  a
+     partitioned  system,  all  nodes belonging to a global group
+     will be disconnected from all nodes  not  belonging  to  its
+     immediate global group.
+
+
+EXPORTS
+     global_groups() -> {OwnGroupName, [OtherGroupName]} |  unde-
+     fined
+
+          Types
+               OwnGroupName = atom()
+               OtherGroupName = atom()
+               ErrorMsg = term()
+
+          Returns the names of all the global groups known to the
+          immediate global group.
+
+     info()  ->  [{state,   State},   {own_group_name,   atom()},
+     {own_group_nodes,     [Node]},    {synced_nodes,    [Node]},
+     {sync_error, [Node]}, {no_contact,  [Node]},  {other_groups,
+     Other_grps}, {monitoring, [pid()]}]
+
+          Types
+               State = no_conf | synced
+               Other_grps = [{OtherGrpName, [Node]}]
+               OtherGrpName = atom()
+               Node = atom()
+
+          Returns the state of the global group process.  In  the
+          following 'nodes' refers to nodes in the immediate glo-
+          bal group. _s_y_n_c_e_d__n_o_d_e_s lists the nodes  this  node  is
+          synchronized  with  at  this  moment.   lists the nodes
+          defining the own global  group.  _s_y_n_c__e_r_r_o_r  lists  the
+          nodes   with   this  node  could  not  be  synchronize.
+          _n_o__c_o_n_t_a_c_t lists nodes with this node do not  yet  have
+          established  contact. _o_t_h_e_r__g_r_o_u_p_s shows the definition
+          of the other global groups in  the  system.  _m_o_n_i_t_o_r_i_n_g
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+
+
+
+
+global_group(3)     ERLANG MODULE DEFINITION      global_group(3)
+
+
+
+          lists the processes which have subscribed on _n_o_d_e_u_p and
+          _n_o_d_e_d_o_w_n messages.
+
+     monitor_nodes(Flag) -> ok
+
+          Types
+               Flag = bool()
+
+          The requesting  process  receives  {_n_o_d_e_u_p,  _N_o_d_e}  and
+          {_n_o_d_e_d_o_w_n,  _N_o_d_e}  messages  about  the  nodes from the
+          immediate global group. If the flag _F_l_a_g is set to _t_r_u_e
+          the service is turned on; _f_a_l_s_e turns it off.
+
+     own_nodes() -> [Node] | {error, ErrorMsg}
+
+          Types
+               Node = atom()
+               ErrorMsg = term()
+
+          Returns the names of all nodes from the immediate  glo-
+          bal  group,  despite  of  the  status of the nodes. Use
+          _i_n_f_o/_0 to get the information of the current status  of
+          the nodes.
+
+     registered_names({node, Node}) -> [Name] | {error, ErrorMsg}
+     registered_names({group, GlobalGroupName}) -> [Name]
+
+          Types
+               Name = term()
+               Node = atom()
+               GlobalGroupName = atom()
+               ErrorMsg = term()
+
+          Returns a lists of all globally registered names on the
+          specified node or from the specified global group.
+
+     send(Name, Msg) -> Pid | {badarg, Msg} | {error, ErrorMsg}
+     send({node, Node}, Name, Msg)  ->  Pid  |  {badarg,  Msg}  |
+     {error, ErrorMsg}
+     send({group, GlobalGroupName}, Name, Msg) -> Pid |  {badarg,
+     Msg} | {error, ErrorMsg}
+
+          Types
+               GlobalGroupName = atom()
+               Msg = term()
+               Name = term()
+               Node = atom()
+               Pid = pid()
+               ErrorMsg = term()
+
+          _s_e_n_d/_2 searches for the registered _N_a_m_e in  all  global
+          groups  defined,  in  the  order  of  appearance in the
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  3
+
+
+
+
+
+
+global_group(3)     ERLANG MODULE DEFINITION      global_group(3)
+
+
+
+          ._c_o_n_f_i_g-file, until the registered name is found or all
+          groups  are searched. If _N_a_m_e is found, the message _M_s_g
+          is sent to it. If it is not found, the  function  exits
+          with reason {_b_a_d_a_r_g, {_N_a_m_e, _M_s_g}}.
+
+          _s_e_n_d/_3 searches for the registered _N_a_m_e in  either  the
+          specified  node  or  the specified global group. If the
+          registered name is found, the message _M_s_g  is  sent  to
+          that  process. If _N_a_m_e is not found, the function exits
+          with reason {_b_a_d_a_r_g, {_N_a_m_e, _M_s_g}}.
+
+     sync() -> ok
+
+          _s_y_n_c synchronizes the global name servers on the  nodes
+          in the immediate global group. It also unregisteres the
+          names registered in the immediate global group on known
+          nodes outside to the immediate global group.
+
+          If it the  _g_l_o_b_a_l__g_r_o_u_p_s  definition  is  unvalid,  the
+          function    exits   with   reason   {_e_r_r_o_r,   {'_i_n_v_a_l_i_d
+          _g_l_o_b_a_l__g_r_o_u_p_s _d_e_f_i_n_i_t_i_o_n', _N_o_d_e_G_r_p_D_e_f}}.
+
+     whereis_name(Name) -> Pid | undefined | {error, ErrorMsg}
+     whereis_name({node,  Node},  Name)  ->  Pid  |  undefined  |
+     {error, ErrorMsg}
+     whereis_name({group, GlobalGroupName}, Name) -> Pid |  unde-
+     fined | {error, ErrorMsg}
+
+          Types
+               GlobalGroupName = atom()
+               Name = term()
+               Node = atom()
+               Pid = pid()
+
+          _w_h_e_r_e_i_s__n_a_m_e/_1 searches for the registered _N_a_m_e in  all
+          global  groups  defined,  in the order of appearance in
+          the ._c_o_n_f_i_g-file, until the registered name is found or
+          all groups are searched.
+
+          _w_h_e_r_e_i_s__n_a_m_e/_2 searches  for  the  registered  _N_a_m_e  in
+          either  the  specified  node  or  the  specified global
+          group.
+
+          Returns either the atom _u_n_d_e_f_i_n_e_d, or the Pid which  is
+          associated with _N_a_m_e.
+
+     start()
+     start_link() -> {ok, Pid} | {error, Reason}
+
+          This function starts the global group server. Normally,
+          the server is started automatically.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  4
+
+
+
+
+
+
+global_group(3)     ERLANG MODULE DEFINITION      global_group(3)
+
+
+
+     stop() -> void()
+
+          Stops the global group server.
+
+NOTE
+     In the situation where a node has lost  its  connections  to
+     other nodes in its global group but has connections to nodes
+     in other global groups, a  request  from  the  other  global
+     group  may  produce  an incorrect or misleading result. When
+     this occurs the isolated node may not have accurate informa-
+     tion,  for  example,  about  registered  names in its global
+     group.
+
+     Note also that the send function is not secure.
+
+     Distribution of applications is highly dependent of the glo-
+     bal  group definitions. It is not recommended that an appli-
+     cation is distributed over  several  global  groups  of  the
+     obvious  reason  that  the  registered names may be moved to
+     another global group at failover/takeover. There is  nothing
+     preventing doing this, but the application code must in such
+     case handle the situation.
+
+SEE ALSO
+     _e_r_l(_1), _g_l_o_b_a_l(_3)
+
+AUTHOR
+     Esko Vierumaki - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  5
+
+
+

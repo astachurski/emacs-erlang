@@ -1,0 +1,349 @@
+.TH dets 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+dets \- A Disk Based Term Storage
+.SH DESCRIPTION
+.LP
+\fIdets\fR is a disk based version of the module \fIets\fR\&. New users should read the documentation for the \fIets\fR module before reading this description\&. In places where no description is given for the behavior of a function in this module, then the function behaves exactly as its corresponding function in the \fIets\fR module\&. 
+.LP
+This module provides a term (tuple) storage on file\&. It is possible to insert, delete, and search for specific terms in a file\&. The implementation is based on linear hashing\&. This module is used as the underlying file storage mechanism of the Mnesia DBMS\&. The module is provided as is, and without Mnesia, for users who are interested in an efficient storage of Erlang terms on disk only\&. Many applications only need to store some terms in a file\&. Mnesia adds transactions, queries, and distribution\&.
+.LP
+A file must be opened and closed\&. If a file has not been properly closed, the \fIdets\fR module will automatically repair the file\&. This might take some time if the file is very large\&. By default, files are closed if the process which opened the file terminates\&. If several Erlang processes open the same \fIdets\fR file, they will all share the file\&. The file is properly closed when all users has either terminated or closed the file\&.\fIdets\fR files are not properly closed if the Erlang runtime system is terminated abnormally\&. 
+.SS Note:
+.LP
+A ^C command abnormally terminates an Erlang runtime system in a Unix environment with a break-handler\&.
+
+.LP
+Since all operations in this module are disk operations, it is important to realize that a single look-up operation might involve a series of disk seek and read operations\&. For this reason, the operations in this module are much slower than the corresponding operation in \fIets\fR, although this module exports a similar interface\&.
+.LP
+All functions in this module fail and return \fI{error, Reason}\fR if an error occurs\&.
+.LP
+The size of an empty \fIdets\fR file is approximately 34 kilobytes\&. This may seem large, but this is the price paid for searching for an object in an arbitrarily large file with almost constant search time\&.
+.LP
+The implementation of \fIdets\fR is based on the principle of the \fIets\fR module\&. Data is organized as a linear hash list and the hash list grows gracefully the more data is inserted into the file\&. Space management on the file is performed by what is called a buddy system\&. 
+.LP
+It is worth noting that the ordered_set data-type present in \fIets\fR tables is not yet implemented in \fIdets\fR, neither is the limited support for concurrent updates which makes a \fIfirst\fR/\fInext\fR sequence safe to use on \&'fixed\&' \fIets\fR tables\&. Both these features will be implemented for \fIdets\fR in a future release of the Erlang/OTP system\&. Until then, the \fIMnesia\fR DBMS (or some user implemented method for locking) has to be used to implement safe concurrency\&. No supplied library in Erlang/OTP currently has support for ordered disk based term storage\&. 
+
+.SH EXPORTS
+.LP
+.B
+open_file(Name, Args) -> {ok, Name} | {error, Reason} 
+.br
+.RS
+.LP
+This function opens a \fIdets\fR file\&. An empty \fIdets\fR file is created if no file exists\&. 
+.LP
+The \fIName\fR argument is the name of the table\&. The table name must be provided in all subsequent operations on the file\&. This means that \fIdets\fR files have atomic names\&. The name can be used by other processes as well, and several process can share one \fIdets\fR file\&. This behavior is similar to the \fInamed_table\fR option in \fIets\fR\&. If two processes open the same file, give the file the same name and provide the same arguments, then the file will have two users\&. If one user closes the file, it still remains open until the second user closes the file\&. The \fIArgs\fR argument is a list of \fI{Key, Val}\fR tuple where the following values are allowed: 
+.RS 2
+.TP 2
+*
+\fI{type, Type}\fR, where \fIType\fR must be either of the atoms \fIset\fR, \fIbag\fR or \fIduplicate_bag\fR\&. If a file is of type \fIset\fR, it means that each key uniquely identifies either one or zero objects\&. Thus, if a second object is inserted with a key that is already present in the file, then the first object will be overwritten\&. On the contrary, a file of type \fIbag\fR can have multiple objects with same key\&. However, identical instances of the same object cannot occur in the same file\&. If the type is set to \fIduplicate_bag\fR multiple identical objects may occur in the file\&. The default value is \fIset\fR\&. 
+.RS 2
+.LP
+
+.RE
+.TP 2
+*
+\fI{file, Filename}\fR is the name of the file to be opened\&. The default value is the name of the table\&. 
+.RS 2
+.LP
+
+.RE
+.TP 2
+*
+\fI{keypos, Pos}\fR\&. Only tuples can be inserted in a \fIdets\fR file\&. This attribute specifies which position in each tuple to use as the key field\&. The default value is \fI1\fR\&. The ability to change the key position is most convenient when we want to store Erlang records in which the first position of the tuple/record is the name of the record type\&.
+.RS 2
+.LP
+
+.LP
+
+.RE
+.TP 2
+*
+\fI{repair, Value}\fR \fIValue\fR can be either a boolean (\fItrue\fR or \fIfalse\fR), or the atom \fIforce\fR\&. The flag specifies if the \fIdets\fR server invokes the automatic file repair algorithm\&. The default is \fItrue\fR\&. If \fIfalse\fR is specified, there is no attempt to repair the file and the error \fI{error, need_repair}\fR is returned\&. 
+.RS 2
+.LP
+The value \fIforce\fR means that repair should be done even if it is not needed\&. This can be used to convert dets files from an older version of stdlib\&. An example is files hashed with the deprecated \fIerlang:hash/2\fR BIF\&. Files created with dets from a stdlib version of 1\&.8\&.2 and later uses the new erlang:phash/2 function, which may be preferred\&. An older dets file can only be converted by a repair of the file, why forced repairs can be of use\&. 
+.LP
+
+.RE
+.TP 2
+*
+\fI{cache_size, Integer}\fR The dets process can keep a cache of elements read (or written) to the file\&. The cache is "write-through", i\&. e\&. the data is always saved to disk when inserting\&. 
+.RS 2
+.LP
+The integer value is the number of keys kept in the cache, (the objects are also kept in the cache, but there can be more than one object per key in a \fIbag\fR or \fIduplicate bag\fR)\&. The atom \fIinfinity\fR can be supplied as \fIcache_size\fR, which indicates that the cache can grow infinitely (and be as large as the disk based table itself)\&. A infinite cache may be an alternative to manually (or via Mnesia) shadowing a dets table in an ets ditto\&. 
+.LP
+Default is to have no cache at all (0)\&. 
+.LP
+
+.RE
+.TP 2
+*
+\fI{auto_save, Time}\fR If \fIauto_save\fR is specified, the dets table is flushed to disk whenever it is not accessed for \fITime\fR milliseconds\&. A dets table that is flushed will require no repair when reopened after an uncontrolled emulator halt\&. 
+.RS 2
+.LP
+
+.LP
+A \fITime\fR value of \fIinfinity\fR will disable auto save\&.
+.LP
+
+.LP
+The default value is 180000 (3 minutes)\&. 
+.LP
+
+.RE
+.TP 2
+*
+\fI{ram_file, Bool}\fR The \fIdets\fR file is kept in RAM memory if this flag is set\&. This may sound like an anomaly, but this flag can enhance the performance of applications which open a \fIdets\fR file, insert a set of objects, and then close the file\&. When the \fIdets\fR file is closed, its contents are written to the real disk file\&. The default value is \fIfalse\fR\&. 
+.RS 2
+.LP
+
+.RE
+.TP 2
+*
+\fI{estimated_no_object, Int}\fR Application performance can be enhanced with this flag by specifying, when the file is created, the estimated number of objects that will occupy the \fIdets\fR file\&. The default value as well as the minimum value is \fI256\fR\&.
+.RS 2
+.LP
+
+.RE
+.TP 2
+*
+\fI{access, Access}\fR\&. It is possible to open existing \fIdets\fR files in read-only mode\&. The value of the parameter \fIAccess\fR is either \fIread\fR or \fIread_write\fR\&. The default value is \fIread_write\fR\&. A \fIdets\fR file which is opened in read-only mode is not marked as opened, and consequently it is not subjected to the automatic repair process if it is later opened\&.
+.RE
+.LP
+The \fIdets\fR server keeps track of the number of users of each file\&. If a file is opened twice, it must be closed twice\&. 
+.RE
+.LP
+.B
+open_file(Filename) -> ok | {error, Reason}
+.br
+.RS
+.LP
+This function opens an existing \fIdets\fR file\&. If the file is not properly closed, it fails with \fI{error, need_repair}\fR\&. This function is most useful for debugging purposes\&. 
+.RE
+.LP
+.B
+close(Name) -> ok | {error, Reason} 
+.br
+.RS
+.LP
+This function closes a file\&. Only the owner of a \fIdets\fR file (i\&.e\&., the process which opened it) is allowed to close it\&.
+.LP
+All open files must be closed before the system is stopped\&. If we attempt to open a file which has not been properly closed, the \fIdets\fR module tries to automatically repair the file\&. 
+.RE
+.LP
+.B
+insert(Name, Object) -> ok | {error, Reason}
+.br
+.RS
+.LP
+This function inserts an \fIObject\fR in table \fIName\fR\&.
+.RE
+.LP
+.B
+lookup(Name, Key) -> ObjectList | {error, Reason} 
+.br
+.RS
+.LP
+This function searches the table \fIName\fR for object(s) with the key \fIKey\fR and returns a list of the found object(s)\&. Insert and look-up times in tables are constant\&. For example: 
+
+.nf
+2> dets:open_file(abc, [{type, bag}])\&.
+{ok,abc}
+3> dets:insert(abc, {1,2,3})\&.
+ok
+4> dets:insert(abc, {1,3,4})\&.
+ok
+5> dets:lookup(abc, 1)\&.
+[{1,2,3},{1,3,4}]
+.fi
+.LP
+If the table is of type \fIset\fR, the function returns either [ ], or a list with a maximum length of one (there can be only be one object with a single key in a set)\&. If the table is of type \fIbag\fR, a look-up returns a list of arbitrary length\&. 
+.RE
+.LP
+.B
+traverse(Name, Fun) -> Return 
+.br
+.RS
+.LP
+This function makes it possible to traverse a whole \fIdets\fR file and perform some operation on all or some objects in the file\&. Different actions are taken depending on the return value of \fIFun\fR\&. The following \fIFun\fR return values are allowed: 
+.RS 2
+.TP 4
+.B
+\fIcontinue\fR:
+Continue to perform the traversal\&. For example, the following function is supplied in order to print the contents of a file to the terminal: 
+.RS 4
+
+.nf
+fun(X) -> io:format("~p~n", [X]), continue end\&.
+.fi
+.RE
+.TP 4
+.B
+\fI{continue, Val}\fR:
+Continue the traversal\fIand\fR accumulate \fIVal\fR\&. The following function is supplied in order to collect all objects in a file into a list: 
+.RS 4
+
+.nf
+fun(X) -> {continue, X} end\&.
+.fi
+.RE
+.TP 4
+.B
+\fI{done, Value}\fR:
+Terminate the search and return \fI[Value | Previously_accumulated]\fR\&. 
+.RE
+.RE
+.LP
+.B
+delete(Name, Key) -> ok 
+.br
+.RS
+.LP
+This function deletes all objects with a specific key from a table\&.
+.RE
+.LP
+.B
+delete_object(Name, Object) -> ok 
+.br
+.RS
+.LP
+This function deletes a specific object from a table\&. If a table is of type \fIbag\fR, the \fIdelete/2\fR function cannot be used to delete only some of the objects with a specific key\&. This function makes this possible\&. 
+.RE
+.LP
+.B
+first(Name) -> Key | \&'$end_of_table\&' 
+.br
+.RS
+.LP
+This function returns the \&'first\&' object in a table\&. 
+.RE
+.LP
+.B
+ next(Name, Key) -> Key | \&'$end_of_table\&' 
+.br
+.RS
+.LP
+This function returns the next key in a table\&.
+.RE
+.LP
+.B
+slot(Name, I) -> $end_of_table | ObjList 
+.br
+.RS
+.LP
+This function return the list of objects associated with slot \fII\fR\&.
+.RE
+.LP
+.B
+all() -> NameList 
+.br
+.RS
+.LP
+This function returns a list of all open files on this node\&.
+.RE
+.LP
+.B
+sync(Name) -> ok 
+.br
+.RS
+.LP
+This function ensures that all data written to \fIName\fR is written to disk\&. This also applies to files which have been opened with the \fIram_file\fR flag set to \fItrue\fR\&. In this case, the contents of the RAM file is flushed to disk\&. 
+.RE
+.LP
+.B
+match_object(Name, Pattern) -> ObjectList
+.br
+.RS
+.LP
+This function matches objects and returns a list of all objects which match \fIPattern\fR\&. If the keypos\&'th element of \fIPattern\fR is unbound, a full search of file is performed\&. On the contrary, if the keypos\&'th element is not a variable, this function only searches among the objects with the right key\&. 
+.RE
+.LP
+.B
+match(Name, Pattern) -> BindingsList
+.br
+.RS
+.LP
+This function matches objects and returns a list of all bindings which match \fIPattern\fR\&. If the keypos\&'th element of \fIPattern\fR is unbound, a full search over the whole file is performed\&. On the contrary, if the keypos\&'th element is not a variable, this function only searches among the objects with the right key\&. 
+.RE
+.LP
+.B
+ match_delete(Name, Pattern) -> ok 
+.br
+.RS
+.LP
+Deletes all objects which matches \fIPattern\fR from \fIName\fR\&.
+.RE
+.LP
+.B
+ info(Name) -> InfoList 
+.br
+.RS
+.LP
+This function returns a list of \fI{Tag, Value}\fR pairs describing the file\&. The following list of items is returned\&. 
+.RS 2
+.TP 2
+*
+\fI{type, Type}\fR, where \fIType\fR is either of the atoms \fIset\fR or \fIbag\fR\&. 
+.TP 2
+*
+\fI{keypos, Pos}\fR\&. 
+.TP 2
+*
+\fI{size, Size}\fR, where \fISize\fR is the number of objects which reside in the file\&. 
+.TP 2
+*
+\fI{file_size, Fz}\fR, where \fIFz\fR is the size of the file in bytes\&. 
+.TP 2
+*
+\fI{users, U}\fR\&. where \fIU\fR is list of the Pids which currently use the file\&. 
+.TP 2
+*
+\fI{filename, F}\fR, where \fIF\fR is the name of the actual file being used\&. 
+.RE
+.RE
+.LP
+.B
+safe_fixtable(Name, true|false) 
+.br
+.RS
+.LP
+This function works as the corresponding function in \fIets\fR, except that it does \fInot\fR guarantee that \fIfirst\fR/\fInext\fR sequences during concurrent \fIdeletes\fR work as expected\&. The limited support for concurrency implemented in \fIets\fR tables is not yet implemented in \fIdets\fR\&. This interface currently only disables resizing of the hash area in a table\&. Until concurrent deletes are supported, the interface is of limited usage for others than the \fIMnesia\fR DBMS\&. It is documented here for completeness\&. 
+.RE
+.LP
+.B
+info(Name, Key) -> Value
+.br
+.RS
+.LP
+Returns one of the possible information fields which are available by means of \fIinfo/1\fR\&.
+.LP
+Additionally, the following \fIKey\fRs can be specified:
+.RS 2
+.TP 2
+*
+\fIfixed\fR\&. Returns \fItrue\fR if rehashing is disabled either by the \fIMnesia\fR \fIinternal\fR \fIfixtable/2\fR interface or by the \fIsafe_fixtable/2\fR interface\&.
+.RS 2
+.LP
+
+.LP
+The \fIKey\fR is special in that it returns the atom \fIundefined\fR if \fIName\fR is not an open table\&. Other \fIKey\fRs will generate an exit signal (\fIbadarg\fR) in the same situation, which is not compatible with \fIets\fR and may be subject to change in future releases\&.
+.RE
+.TP 2
+*
+\fIsafe_fixed\fR\&. If the table is \&'fixed\&' using \fIsafe_fixtable/2\fR, the call returns a tuple: \fI{FixedNowTime, [{Pid, RefCount}]}\fR, where \fIFixedNowTime\fR is the time when the table was fixed by the first process (which may not be one of the processes fixing it now), \fIPid\fR is a process \&'fixing\&' the table right now and \fIRefCount\fR is the reference counter for \&'fixes\&' done by that process\&. There may be any number of processes in the list\&. In \fIall\fR other cases, the atom \fIfalse\fR is returned\&. 
+.TP 2
+*
+\fIhash\fR\&. Determines which BIF is used to calculate the hashes in the dets table\&. Possible return values are \fIhash\fR, which means the \fIerlang:hash/2\fR BIF, or \fIphash\fR, which means the \fIerlang:phash/2\fR BIF\&. Files created with this version of dets always uses \fIerlang:phash/2\fR\&. Older dets files may need conversion, which is done by using the \fI{repair, force}\fR argument when opening\&. 
+.TP 2
+*
+\fIhash\fR\&. Determines which BIF is used to calculate the hashes in the dets table\&. Possible return values are \fIhash\fR, which means the \fIerlang:hash/2\fR BIF, or \fIphash\fR, which means the \fIerlang:phash/2\fR BIF\&. Files created with this version of dets always uses \fIerlang:phash/2\fR\&. Older dets files may need conversion, which is done by using the \fI{repair, force}\fR argument when opening\&. 
+.RE
+.RE
+.SH See Also
+.LP
+ets(3), mnesia(3) 
+.SH AUTHOR
+.nf
+ Claes Wikstrom - support@erlang.ericsson.se
+.fi

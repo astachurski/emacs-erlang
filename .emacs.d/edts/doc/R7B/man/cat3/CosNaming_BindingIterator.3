@@ -1,0 +1,132 @@
+
+
+
+CosNaming_BindingIteraEtRoLrA(N3G)MODULE DEFCIoNsINTaImOiNng_BindingIterator(3)
+
+
+
+MODULE
+     CosNaming_BindingIterator -  This interface supports  itera-
+     tion over a name binding list.
+
+DESCRIPTION
+     This interface allows a client  to  iterate  over  the  Bin-
+     dinglist it has been initiated with.
+
+     The type _N_a_m_e_C_o_m_p_o_n_e_n_t used below is defined as:
+
+           -record('CosNaming_NameComponent', {id, kind=""}).
+
+     _i_d and _k_i_n_d are strings.
+
+     The type _B_i_n_d_i_n_g used below is defined as:
+
+           -record('CosNaming_Binding', {binding_name, binding_type}).
+
+     _b_i_n_d_i_n_g__n_a_m_e is a _N_a_m_e = [_N_a_m_e_C_o_m_p_o_n_e_n_t] and _b_i_n_d_i_n_g__t_y_p_e is
+     an enum which has the values _n_o_b_j_e_c_t and _n_c_o_n_t_e_x_t.
+
+     Both these records are defined in the file _C_o_s_N_a_m_i_n_g._h_r_l and
+     it is included with:
+
+           -include_lib("orber/COSS/CosNaming/CosNaming.hrl").
+
+
+EXPORTS
+     next_one(BindinIterator) -> Return
+
+          Types
+               BindingIterator = #objref
+               Return = {bool(), Binding}
+
+          This operation returns the next binding. If  there  are
+          no more bindings it returns false otherwise true.
+
+     next_n(BindinIterator, HowMany) -> Return
+
+          Types
+               BindingIterator = #objref
+               HowMany = int()
+               BindingList = [Binding]
+               Return = {bool(), BindingList}
+
+          This operation returns a  binding  list  with  at  most
+          HowMany  bindings.  If  there  are  no more bindings it
+          returns false otherwise true.
+
+     destroy(BindingIterator) -> Return
+
+          Types
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   1
+
+
+
+
+
+
+CosNaming_BindingIteraEtRoLrA(N3G)MODULE DEFCIoNsINTaImOiNng_BindingIterator(3)
+
+
+
+               BindingIterator = #objref
+               Return = ok
+
+          This operation destroys the binding iterator.
+
+AUTHOR
+     Lars Thorsen - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   2
+
+
+

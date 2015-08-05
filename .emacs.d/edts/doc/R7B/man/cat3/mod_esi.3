@@ -1,0 +1,264 @@
+
+
+
+mod_esi(3)          ERLANG MODULE DEFINITION           mod_esi(3)
+
+
+
+MODULE
+     mod_esi - Efficient Erlang Scripting.
+
+DESCRIPTION
+     The Erlang Scripting Interface (ESI) provides  a  tight  and
+     efficient  interface  to  the execution of Erlang functions.
+     Erlang  functions  can  be  executed  with  two  alternative
+     schemes, _e_v_a_l and _e_r_l. Both of these schemes can utilize the
+     functionality in an Erlang node efficiently.
+
+     Even though the server  supports  CGI-1.1  the  use  of  the
+     Erlang  Scripting  Interface (ESI) is encouraged for reasons
+     of efficiency. CGI is  resource  intensive  because  of  its
+     design. CGI requires the server to fork a new OS process for
+     each executable it needs to start.
+
+     An Erlang function can be written  and  executed  as  a  CGI
+     script  by  using  _e_r_l__c_a_l_l(_3) in the erl_interface library,
+     for example. The cost is a forked OS process,  as  described
+     above.  This  is a waste of resources, at least when the Web
+     server itself is written in Erlang (as in this case).
+
+     The following config directives are described:
+
+       * ErlScripAlias
+
+       * EvalScriptAlias
+
+
+ERL SCHEME
+     The _e_r_l scheme is designed to mimic plain CGI,  but  without
+     the  extra  overhead. An URL which calls an Erlang _e_r_l func-
+     tion has the following syntax (regular expression):
+
+     http://your.server.org/***/Mod[:/]Func(?QueryString|/PathInfo)
+
+     The module (_M_o_d) referred to must be found in the code path,
+     and  it  must define a function (_F_u_n_c) with an arity of two,
+     i.e. _F_u_n_c(_E_n_v, _I_n_p_u_t). _E_n_v contains  information  about  the
+     connecting  client (see below), and _I_n_p_u_t the _Q_u_e_r_y_S_t_r_i_n_g or
+     _P_a_t_h_I_n_f_o   as   defined    in    the    CGI    specification
+     <http://hoohoo.ncsa.uiuc.edu/cgi/>. *** above depends on how
+     the ErlScriptAlias config  directive  has  been  used.  Data
+     returned from the function must furthermore take the form as
+     specified       in       the        CGI        specification
+     <http://hoohoo.ncsa.uiuc.edu/cgi/>.
+
+     Take   a   look   at   _h_t_t_p_d__e_x_a_m_p_l_e._e_r_l   in    the    code
+     release($INETS/src) for a clarifying example. Start an exam-
+     ple server as described in httpd:start/0 and test  the  fol-
+     lowing  from  a  browser  (The  server name for your example
+     server _w_i_l_l differ!):
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+mod_esi(3)          ERLANG MODULE DEFINITION           mod_esi(3)
+
+
+
+       _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g:_8_8_8_8/_c_g_i-_b_i_n/_e_r_l/_h_t_t_p_d__e_x_a_m_p_l_e/_g_e_t:
+           and a call will be made to _h_t_t_p_d__e_x_a_m_p_l_e:_g_e_t/_2 and two
+           input  fields  and  a  Submit  button will promptly be
+           shown in the browser. Enter text into the input fields
+           and  click  on  the Submit button. Something like this
+           will promptly be shown in the browser:
+
+           Environment:
+           [{query_string,"input1=blaha&input2=blaha"},
+            {server_software,"eddie/2.2"},
+            {server_name,"localhost"},
+            {gateway_interface,"CGI/1.1"},
+            {server_protocol,"HTTP/1.0"},
+            {server_port,8080},
+            {request_method,"GET"},
+            {remote_addr,"127.0.0.1"},
+            {script_name,"/cgi-bin/erl/httpd_example:get?input1=blaha&
+                                                         input2=blaha"},
+            {http_accept_charset,"iso-8859-1,*,utf-8"},
+            {http_accept_language,"en"},
+            {http_accept,"image/gif, image/x-xbitmap, image/jpeg,
+                                                      image/pjpeg, */*"},
+            {http_host,"localhost:8080"},
+            {http_user_agent,"Mozilla/4.03 [en] (X11; I;
+                                                 Linux 2.0.30 i586)"},
+            {http_connection,"Keep-Alive"}, {http_referer,
+                 "http://localhost:8080/cgi-bin/erl/httpd_example/get"}]
+           Input:
+            input1=blaha&input2=blaha
+           Parsed Input:
+            [{"input1","blaha"},{"input2","blaha"}]
+
+       _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g:_8_8_8_8/_c_g_i-
+           _b_i_n/_e_r_l/_h_t_t_p_d__e_x_a_m_p_l_e:_p_o_s_t:
+           A call will be made to _h_t_t_p_d__e_x_a_m_p_l_e:_p_o_s_t/_2. The  same
+           thing will happen as in the example above but the HTTP
+           POST method will be  used  instead  of  the  HTTP  GET
+           method.
+
+       _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g:_8_8_8_8/_c_g_i-
+           _b_i_n/_e_r_l/_h_t_t_p_d__e_x_a_m_p_l_e:_y_a_h_o_o:
+           A call will be made to  to  _h_t_t_p_d__e_x_a_m_p_l_e:_y_a_h_o_o/_2  and
+           the  Yahoo!  <http://www.yahoo.com> site will promptly
+           be shown in your browser.
+
+  Note:
+     httpd:parse_query/1 is used to generate  the  _P_a_r_s_e_d  _I_n_p_u_t:
+     ... data in the example above.
+
+     If a client closes the connection prematurely a message will
+     be  sent  to the function, that is either {_t_c_p__c_l_o_s_e_d, _} or
+     {_, {_s_o_c_k_e_t__c_l_o_s_e_d, _}}.
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+
+
+
+
+mod_esi(3)          ERLANG MODULE DEFINITION           mod_esi(3)
+
+
+
+EVAL SCHEME
+  Warning:
+     The _e_v_a_l scheme can seriously threaten the integrity of  the
+     Erlang node housing a Web server, for example:
+
+     http://your.server.org/eval?httpd_example:
+            print(atom_to_list(apply(erlang,halt,[])))
+
+     which effectively will close down the Erlang node,  that  is
+     use  the  _e_r_l  scheme instead until this security breach has
+     been fixed.
+
+
+     The _e_v_a_l scheme is straight-forward and does not  mimic  the
+     behavior  of  plain  CGI.  An URL which calls an Erlang _e_v_a_l
+     function has the following syntax:
+
+     http://your.server.org/***/Mod:Func(Arg1,...,ArgN)
+
+     The module (_M_o_d) referred to must be found in the code path,
+     and  data  returned by the function (_F_u_n_c) is passed back to
+     the client. *** depends on how  the  EvalScriptAlias  config
+     directive  has  been  used.  Data returned from the function
+     must furthermore take the  form  as  specified  in  the  CGI
+     specification <http://hoohoo.ncsa.uiuc.edu/cgi/>.
+
+     Take   a   look   at   _h_t_t_p_d__e_x_a_m_p_l_e._e_r_l   in    the    code
+     release($INETS/src)  for an example. Start an example server
+     as described in httpd:start/0 and test the following from  a
+     browser  (The  server  name  for  your  example  server _w_i_l_l
+     differ!):
+
+       _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g:_8_8_8_8/_e_v_a_l?_h_t_t_p_d__e_x_a_m_p_l_e:_p_r_i_n_t("_H_i!"):
+           and  a  call will be made to _h_t_t_p_d__e_x_a_m_p_l_e:_p_r_i_n_t/_1 and
+           "_H_i!" will promptly be shown in your browser.
+
+DIRECTIVE: ErlScriptAlias
+     _S_y_n_t_a_x:  _E_r_l_S_c_r_i_p_t_A_l_i_a_s  url-path  allowed-module   allowed-
+     module ...
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_esi(3)
+
+     _E_r_l_S_c_r_i_p_t_A_l_i_a_s marks  all  URLs  matching  _u_r_l-_p_a_t_h  as  erl
+     scheme  scripts.  A  matching  URL is mapped into a specific
+     module and function. The module must be one of the  _a_l_l_o_w_e_d-
+     _m_o_d_u_l_e:s. For example:
+
+     ErlScriptAlias /cgi-bin/hit_me httpd_example md4
+
+     and     a     request     to     _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g/_c_g_i-
+     _b_i_n/_h_i_t__m_e/_h_t_t_p_d__e_x_a_m_p_l_e:_y_a_h_o_o      would      refer      to
+     _h_t_t_p_d__e_x_a_m_p_l_e:_y_a_h_o_o/_2. Refer to the Erl  Scheme  description
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   3
+
+
+
+
+
+
+mod_esi(3)          ERLANG MODULE DEFINITION           mod_esi(3)
+
+
+
+     above.
+
+DIRECTIVE: EvalScriptAlias
+     _S_y_n_t_a_x:  _E_v_a_l_S_c_r_i_p_t_A_l_i_a_s  url-path  allowed-module  allowed-
+     module ...
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_esi(3)
+
+     _E_v_a_l_S_c_r_i_p_t_A_l_i_a_s marks all URLs  matching  _u_r_l-_p_a_t_h  as  eval
+     scheme  scripts.  A  matching  URL is mapped into a specific
+     module and function. The module must be one of the  _a_l_l_o_w_e_d-
+     _m_o_d_u_l_e:s. For example:
+
+     EvalScriptAlias /cgi-bin/hit_me_to httpd_example md5
+
+     and     a     request     to     _h_t_t_p://_y_o_u_r._s_e_r_v_e_r._o_r_g/_c_g_i-
+     _b_i_n/_h_i_t__m_e__t_o/_h_t_t_p_d__e_x_a_m_p_l_e:_p_r_i_n_t("_H_i!")   would   refer  to
+     _h_t_t_p_d__e_x_a_m_p_l_e:_p_r_i_n_t/_1. Refer to the Eval Scheme  description
+     above.
+
+EWSAPI MODULE INTERACTION
+     Uses the following EWSAPI interaction data, if available:
+
+       {_r_e_m_o_t_e__u_s_e_r, _R_e_m_o_t_e_U_s_e_r}:
+           as defined in mod_auth(3).
+
+     Exports the following EWSAPI interaction data, if possible:
+
+       {_m_i_m_e__t_y_p_e, _M_i_m_e_T_y_p_e}:
+           The file suffix of the  incoming  URL  mapped  into  a
+           _M_i_m_e_T_y_p_e  as defined in the Mime Type Settings section
+           of _h_t_t_p_d__c_o_r_e(_3).
+
+     Uses the following EWSAPI functions:
+
+       * mod_alias:real_name/3
+
+       * mod_cgi:status_code/1
+
+SEE ALSO
+     httpd(3),   mod_alias(3),   mod_auth(3),    mod_security(3),
+     mod_cgi(3)
+
+AUTHOR
+     Joakim Grebeno  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   4
+
+
+

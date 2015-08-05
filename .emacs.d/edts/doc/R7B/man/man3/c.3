@@ -1,0 +1,420 @@
+.TH c 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+c \- Command Interface Module
+.SH DESCRIPTION
+.LP
+The \fIc\fR module enables users to enter the short form of some commonly used commands\&. These functions are are intended for interactive use in the Erlang shell\&.
+
+.SH EXPORTS
+.LP
+.B
+bt(Pid) -> void()
+.br
+.RS
+.TP
+Types
+Pid = pid()
+.br
+.RE
+.RS
+.LP
+This function evaluates \fIerlang:process_display(Pid, backtrace)\fR\&. 
+.RE
+.LP
+.B
+c(File) -> CompileResult
+.br
+.RS
+.LP
+This function is equivalent to: 
+.LP
+\fIcompile:file(File, [report_errors, report_warnings])\fR 
+.RE
+.LP
+.B
+c(File, Flags) -> CompileResult
+.br
+.RS
+.TP
+Types
+File = atom() | string()
+.br
+CompileResult = {ok, ModuleName} | error
+.br
+ModuleName = atom()
+.br
+Flags = [Flag]
+.br
+.RE
+.RS
+.LP
+This function calls the following function and then purges and loads the code for the file: 
+.LP
+\fIcompile:file(File, Flags ++ [report_errors, report_warnings])\fR 
+.LP
+If the module corresponding to \fIFile\fR is being interpreted, then \fIint:i\fR is called with the same arguments and the module is loaded into the interpreter\&. Note that \fIint:i\fR only recognizes a subset of the options recognized by \fIcompile:file\fR\&. 
+.LP
+Extreme care should be exercised when using this command to change running code which is executing\&. The expected result may not be obtained\&. 
+.LP
+Refer to \fIcompiler\fR manual pages for a description of the individual compiler flags\&. 
+.RE
+.LP
+.B
+cd(Dir) -> void()
+.br
+.RS
+.TP
+Types
+Dir = atom() | string()
+.br
+.RE
+.RS
+.LP
+This function changes the current working directory to \fIDir\fR, and then prints the new working directory\&. 
+.RE
+.LP
+.B
+flush() -> void()
+.br
+.RS
+.LP
+This function flushes all messages in the shell message queue\&. 
+.RE
+.LP
+.B
+help() -> void()
+.br
+.RS
+.LP
+This function displays help about the shell and about the command interface module\&. 
+.RE
+.LP
+.B
+i() -> void()
+.br
+.RS
+.LP
+This function provides information about the current state of the system\&. This call uses the BIFs \fIprocesses()\fR and \fIprocess_info/1\fR to examine the current state of the system\&. (The code is a good introduction to these two BIFs)\&. 
+.RE
+.LP
+.B
+zi() -> void()
+.br
+.RS
+.LP
+This function works like \fIi()\fR, but additionally displays information about zombie processes, i\&.e\&., processes which have exited, but which are still kept in the system to be inspected\&. 
+.RE
+.LP
+.B
+ni() -> void()
+.br
+.RS
+.LP
+This function does the same as \fIi()\fR, but for all nodes in the network\&. 
+.RE
+.LP
+.B
+i(X, Y, Z) -> void()
+.br
+.RS
+.TP
+Types
+X = Y = Z = int()
+.br
+.RE
+.RS
+.LP
+This function evaluates \fIprocess_info(pid(X, Y, Z))\fR\&. 
+.RE
+.LP
+.B
+l(Module) -> void()
+.br
+.RS
+.TP
+Types
+Module = atom(), | string()
+.br
+.RE
+.RS
+.LP
+This function evaluates \fIcode:purge(Module)\fR followed by\fIcode:load_module(Module)\fR\&. It reloads the module\&. 
+.RE
+.LP
+.B
+lc(ListOfFiles) -> Result
+.br
+.RS
+.TP
+Types
+ListOfFiles = [File]
+.br
+File = atom() | string()
+.br
+Result = [CompileResult]
+.br
+CompileResult = {ok, ModuleName} | error
+.br
+ModuleName = atom()
+.br
+.RE
+.RS
+.LP
+This function compiles several files by calling \fIc(File)\fR for each file in \fIListOfFiles\fR\&. 
+.RE
+.LP
+.B
+ls() -> void()
+.br
+.RS
+.LP
+This function lists all files in the current directory\&.
+.RE
+.LP
+.B
+ls(Dir) -> void()
+.br
+.RS
+.TP
+Types
+Dir = atom() | string()
+.br
+.RE
+.RS
+.LP
+This function lists all files in the directory \fIDir\fR\&.
+.RE
+.LP
+.B
+m() -> void()
+.br
+.RS
+.LP
+This function lists the modules which have been loaded and the files from which they have been loaded\&. 
+.RE
+.LP
+.B
+m(Module) -> void()
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+.RE
+.RS
+.LP
+This function lists information about \fIModule\fR\&. 
+.RE
+.LP
+.B
+nc(File) -> void()
+.br
+.RS
+.TP
+Types
+File = atom() | string()
+.br
+.RE
+.RS
+.LP
+This function compiles \fIFile\fR and loads it on all nodes in an Erlang nodes network\&. 
+.RE
+.LP
+.B
+nc(File, Flags) -> void()
+.br
+.RS
+.TP
+Types
+File = atom() | string()
+.br
+Flags = [Flag]
+.br
+.RE
+.RS
+.LP
+This function compiles \fIFile\fR with the additional compiler flags \fIFlags\fR and loads it on all nodes in an Erlang nodes network\&. Refer to the \fIcompile\fR manual pages for a description of \fIFlags\fR\&. 
+.RE
+.LP
+.B
+nl(Module) -> void()
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+.RE
+.RS
+.LP
+This function loads \fIModule\fR on all nodes in an Erlang nodes network\&. 
+.RE
+.LP
+.B
+pid(X, Y, Z) -> pid()
+.br
+.RS
+.TP
+Types
+X = Y = Z = int()
+.br
+.RE
+.RS
+.LP
+This function converts the integers \fIX\fR, \fIY\fR, and \fIZ\fR to the Pid \fI<X\&.Y\&.Z>\fR\&. It saves typing and the use of\fIlist_to_pid/1\fR\&. This function should only be used when debugging\&. 
+.RE
+.LP
+.B
+pwd() -> void()
+.br
+.RS
+.LP
+This function prints the current working directory\&. 
+.RE
+.LP
+.B
+q() -> void()
+.br
+.RS
+.LP
+This function is shorthand for \fIinit:stop()\fR, i\&.e\&., it causes the node to stop in a controlled fashion\&. 
+.RE
+.LP
+.B
+regs() -> void()
+.br
+.RS
+.LP
+This function displays formatted information about all registered processes in the system\&. 
+.RE
+.LP
+.B
+nregs() -> void()
+.br
+.RS
+.LP
+This function is the same as \fIregs()\fR, but on all nodes in the system\&. 
+.RE
+.LP
+.B
+memory() -> TupleList
+.br
+.RS
+.TP
+Types
+TupleList = [TwoTuple]
+.br
+TwoTuple = {atom(), int()}
+.br
+.RE
+.RS
+.LP
+A list of tuples is returned\&. Each tuple has two elements\&. The first element is an atom describing memory type\&. The second element is memory size in bytes\&. A description of each tuple follows: 
+.RS 2
+.TP 4
+.B
+\fItotal\fR:
+The total amount of allocated memory\&. \fItotal\fR is the sum of \fIprocesses\fR and \fIsystem\fR\&. 
+.RS 4
+.LP
+
+.LP
+Observe that this is not a complete list of allocated memory; but, it is almost complete\&. 
+.RE
+.TP 4
+.B
+\fIprocesses\fR:
+The total amount of memory allocated by the processes\&. 
+.TP 4
+.B
+\fIsystem\fR:
+The total amount of memory allocated by the system\&. Memory allocated by processes is not included\&. 
+.RS 4
+.LP
+
+.LP
+Observe that this is not a complete list of memory allocated by the system; but, it is almost complete\&. 
+.RE
+.TP 4
+.B
+\fIatom\fR:
+The total amount of memory allocated for atoms\&. 
+.RS 4
+.LP
+
+.LP
+This memory is part of the memory presented as \fIsystem\fR memory\&. 
+.RE
+.TP 4
+.B
+\fIatom_used\fR:
+The total amount of memory actually used for atoms\&. 
+.RS 4
+.LP
+
+.LP
+This memory is part of the memory presented as \fIatom\fR memory\&. 
+.RE
+.TP 4
+.B
+\fIbinary\fR:
+The total amount of memory allocated for binaries\&. 
+.RS 4
+.LP
+
+.LP
+This memory is part of the memory presented as \fIsystem\fR memory\&. 
+.RE
+.TP 4
+.B
+\fIcode\fR:
+The total amount of memory allocated for code\&. 
+.RS 4
+.LP
+
+.LP
+This memory is part of the memory presented as \fIsystem\fR memory\&. 
+.RE
+.TP 4
+.B
+\fIets\fR:
+The total amount of memory allocated for ets tables\&. 
+.RS 4
+.LP
+
+.LP
+This memory is part of the memory presented as \fIsystem\fR memory\&. 
+.RE
+.RE
+.LP
+A process executing this function may be preempted by other processes; therefore, the returned information may not be a consistent snapshot of the memory allocation state\&. 
+.LP
+More tuples in the returned list may be added in the future\&. 
+.RE
+.LP
+.B
+memory(MemoryType) -> int()
+.br
+.RS
+.TP
+Types
+MemoryType = atom()
+.br
+.RE
+.RS
+.LP
+\fIMemoryType\fR is one of the following atoms: \fItotal\fR, \fIprocesses\fR, \fIsystem\fR, \fIatom\fR, \fIatom_used\fR, \fIbinary\fR, \fIcode\fR or \fIets\fR\&. These atoms correspond to the atoms described for \fImemory/0\fR above\&. An integer representing the memory in bytes that corresponds to the argument is returned\&. 
+.LP
+A process executing this function may be preempted by other processes; therefore, the returned information may not be a consistent snapshot of the memory allocation state\&. 
+.LP
+More arguments may be added in the future\&. 
+.LP
+Failure: \fIbadarg\fR if \fIMemoryType\fR is not one of the atoms listed above\&. 
+.RE
+.SH AUTHORS
+.nf
+Joe Armstrong - support@erlang.ericsson.se
+Robert Virding - support@erlang.ericsson.se
+Claes Wikstrom - support@erlang.ericsson.se
+.fi

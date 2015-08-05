@@ -1,0 +1,54 @@
+.TH snmp_error 3 "snmp  3.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+snmp_error \- Functions for Reporting SNMP Errors
+.SH DESCRIPTION
+.LP
+The module \fIsnmp_error\fR contains two callback functions which are called if an error occurs at different times during agent operation\&. 
+.LP
+A simple implementation of this module is provided with the toolkit\&. In this implementation, the errors are sent to the \fIerror_logger\fR\&. The module can be modified to customize the way errors are reported\&. 
+
+.SH EXPORTS
+.LP
+.B
+config_err(Format,Args) -> void()
+.br
+.RS
+.TP
+Types
+Format = string()
+.br
+Args = list()
+.br
+.RE
+.RS
+.LP
+The function is called if an error occurs during the configuration phase, for example if a syntax error is found in a configuration file\&. 
+.LP
+\fIFormat\fR and \fIArgs\fR are as in \fIio:format(Format, Args)\fR\&. 
+.RE
+.LP
+.B
+user_err(Format,Args) -> void()
+.br
+.RS
+.TP
+Types
+Format = string()
+.br
+Args = list()
+.br
+.RE
+.RS
+.LP
+The function is called if a user related error occurs at runtime, for example if a user defined instrumentation function returns erroneous\&. 
+.LP
+\fIFormat\fR and \fIArgs\fR are as in \fIio:format(Format, Args)\fR\&. 
+.RE
+.SH SEE ALSO
+.LP
+error_logger(3) 
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Klas Eriksson - support@erlang.ericsson.se
+.fi

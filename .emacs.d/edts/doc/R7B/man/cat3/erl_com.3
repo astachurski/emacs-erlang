@@ -1,0 +1,396 @@
+
+
+
+erl_com(3)          ERLANG MODULE DEFINITION           erl_com(3)
+
+
+
+MODULE
+     erl_com  - Comet gen_server with API to Erlang COM client.
+
+DESCRIPTION
+     The erl_com module is a gen_server that exposes  an  API  to
+     the  port  program  and port driver that is used to call COM
+     services from Erlang.
+
+     There is a mapping between types in Erlang and types in COM.
+     The  following table shows how Erlang types are converted by
+     the port program to COM types.
+
+      COM type       Erlang type             Comment
+      --------       -----------             -------
+      VT_I4          integer()
+      VT_U4          integer()
+      VT_BOOL                true | false
+      VT_BSTR                string()                Strings are
+                                              translated between
+                                              Ascii and Unicode
+      VT_DATE                {integer(), integer(), integer()}
+                                              Same format as returned
+                                              from now()
+                      {{Year, Month, Day}, {Hour, Min, Sec}}
+                                              Date and time,
+                                              with integers in tuples
+      VT_PTR         {vt_*, out}             Any output parameter,
+                                              including return value
+      VT_I1          {vt_i1, integer()}
+      VT_U1          {vt_u1, integer()}
+      VT_I2          {vt_i2, integer()}
+      VT_U2          {vt_u2, integer()}
+      VT_UNKNOWN     integer()               Should be sent to
+                                              package_interface
+      VT_DISPATCH    integer()               Should be sent to
+                                              package_interface
+      other types    unsupported
+
+     Some of the internal Erlang types map to types in COM.  Most
+     types in COM, however, have no corresponding type in Erlang.
+     In these cases, a special tuple is used, of the  form  {_C_o_m_-
+     _T_y_p_e,  _V_a_l_u_e},  where _C_o_m_T_y_p_e is the corresponding type-name
+     as defined in _o_l_e_2._h in the Microsoft Windows SDK.
+
+
+EXPORTS
+     start_driver() -> {ok, Pid}
+
+          Types
+               Pid = pid()
+               ServerName = {local, atom()} | {global, atom()}
+
+
+
+
+Ericsson Utvecklings ALBast change: comet  1.0                    1
+
+
+
+
+
+
+erl_com(3)          ERLANG MODULE DEFINITION           erl_com(3)
+
+
+
+          Starts a new server, and initializes the COM port.  The
+          port is loaded as a port driver. This is the most effi-
+          cient way to use COM, since the com port resides in the
+          same  process as the Erlang emulator. However this also
+          means that crashing COM-objects  will  bring  down  the
+          emulator.
+
+          The server can be started with or without a  registered
+          name.  There  is  no advantage of having two servers on
+          the same node.
+
+          This way to launch Comet should only  be  used  in  two
+          situations:
+
+            * When the COM servers  are  in  separate  processes,
+              where they will not bring down the emulator in case
+              of a crash.
+
+            * When the COM server is well-known and  unlikely  to
+              crash,  and  the  overhead of using a separate port
+              process is unacceptable.
+
+     start_process() -> {ok, Pid}
+     start_process(ServerName) -> {ok, Pid}
+
+          Types
+               Pid = pid()
+               ServerName = {local, atom()} | {global, atom()}
+
+          Starts a new server, and initializes the COM port.
+
+          This function starts the COM port as a port-program, in
+          a  separate  process.  The  erl_com gen_server uses (as
+          usual in Erlang), a pipe to communicate with the  port.
+          This has the benifit that a crash in the COM port, will
+          not crash the emulator.
+
+          Each _e_r_l__c_o_m starts a separate port-program.
+
+          The server can be started with or without a  registered
+          name.
+
+          Normally, only one _e_r_l__c_o_m server is started on a node,
+          with  possibly several threads for several clients. The
+          only reason to start two servers on the same node is if
+          one might crash, then the other will keep running.
+
+          This way to launch Comet should be used when:
+
+            * The COM server is not 100% certain and crashproof.
+
+            * The overhead of using a separate  port  process  is
+
+
+
+Ericsson Utvecklings ALBast change: comet  1.0                    2
+
+
+
+
+
+
+erl_com(3)          ERLANG MODULE DEFINITION           erl_com(3)
+
+
+
+              acceptable.
+
+          Since this way is safer, it is  the  preferred  way  of
+          using Comet.
+
+     stop(ServerRef) -> ok | Error
+
+          Types
+               ServerRef = Name | {Name, Node} | {global, Name} |
+               Pid
+               Name = atom()
+               Node = atom()
+               Pid = pid()
+               Thread = integer()
+               Error = {error, Errcode}
+               Errcode = string()
+
+          Shuts the _e_r_l__c_o_m  server  down.  This  will  stop  any
+          threads. Interfaces should be released before.
+
+          (Remember COM has no garbage collection!)
+
+     new_thread(ServerRef) -> ComThread | Error
+
+          Types
+               ComThread = {com_thread, ServerRef, Thread}
+               Thread = integer()
+               Error = {error, Errcode}
+               Errcode = string()
+
+          Creates a new Windows thread that can be used to create
+          and  manipulate  COM  objects.  This must be done after
+          _e_r_l__c_o_m is started. At  least  one  thread  has  to  be
+          created.
+
+          To allow COM calls to take time  without  blocking  the
+          emulator,  _e_r_l__c_o_m allows multi-threaded execution. The
+          maximum number of threads is 60. However, creating more
+          than a few is not useful for practical reasons.
+
+          When a COM-thread is created, it is  suspended  with  a
+          select function (which is called WaitForMultipleObjects
+          in the Win32 API). Calling any COM-functions  from  the
+          thread,  is  done  by setting up a parameter buffer and
+          signaling an event, that wakes up the thread.
+
+          The return value is a tuple  that  includes  _T_h_r_e_a_d,  a
+          thread index that is an integer between 0 and 60, which
+          is unique for each thread, and allocated incrementally.
+          Thread  index  values  will  be  reused  if a thread is
+          ended.
+
+
+
+
+Ericsson Utvecklings ALBast change: comet  1.0                    3
+
+
+
+
+
+
+erl_com(3)          ERLANG MODULE DEFINITION           erl_com(3)
+
+
+
+     end_thread(ComThread) -> ok | Error
+
+          Types
+               ComThread = {com_thread, ServerRef, Thread}
+               Thread = integer()
+               Error = {error, Errcode}
+               Errcode = string()
+
+          Ends a thread previously created  with  _n_e_w__t_h_r_e_a_d.  If
+          the  thread  has any interfaces, these must be released
+          before the thread is ended, otherwise resource  leakage
+          can occur. (Remember COM has no garbage collection!)
+
+          The thread is signaled and will exit. The thread  index
+          will  be  marked  as  available, internally in the port
+          program.
+
+     create_object(ComThread, Class, Ctx) -> ComInterface | Error
+     create_object(ComThread, Class, RefID, Ctx) ->  ComInterface
+     | Error
+     create_dispatch(ComThread, Class,  Ctx)  ->  ComInterface  |
+     Error
+
+          Types
+               ComThread = {com_thread, ServerRef, Thread}
+               Class = string()
+               Ctx = integer()
+               Thread = integer()
+               Error = {error, Errcode}
+               Errcode = string()
+               ComInterface = {com_interface, ServerRef,  Thread,
+               InterfaceNum}
+               InterfaceNum = integer()
+
+          This function creates a COM object. It calls the  Win32
+          API  function, _C_o_C_r_e_a_t_e_F_u_n_c_t_i_o_n. Refer to Windows docu-
+          mentation and COM books. The string _C_l_a_s_s can be either
+          a GUID for a class, or a COM program string. Values for
+          the _C_t_x are defined in _e_r_l__c_o_m._h_r_l.
+
+          When successful, this function creates  a  COM  object,
+          and returns a tuple _C_o_m_I_n_t_e_r_f_a_c_e, which is a handle for
+          the object, that  is  used  for  calling  methods,  and
+          releasing the object.
+
+          In the case of an error, the COM error code is returned
+          as part of the _E_r_r_c_o_d_e string, as a hexadecimal number.
+
+          The _c_r_e_a_t_e__d_i_s_p_a_t_c_h variant creates an object with  the
+          _I_D_i_s_p_a_t_c_h interface. The interface wanted can be speci-
+          fied in the _R_e_f_I_D parameters. The default is _I_U_n_k_n_o_w_n.
+
+
+
+
+Ericsson Utvecklings ALBast change: comet  1.0                    4
+
+
+
+
+
+
+erl_com(3)          ERLANG MODULE DEFINITION           erl_com(3)
+
+
+
+     query_interface(ComInterface, Iid)
+
+          Types
+               Iid = string()
+
+          Calls _q_u_e_r_y__i_n_t_e_r_f_a_c_e on the given interface. Note that
+          in COM, an object is also considered an interface.
+
+          This function is used to see what interfaces an  object
+          implements and to do down-casting.
+
+     release(ComInterface)
+
+          In  COM,  all  interfaces  are  reference-counted.  The
+          release  function decrements the reference counter, and
+          releases the interface (or object) if it reaches  zero.
+          Note  that  it  is  important  to  release  all objects
+          created, and interfaces  acquired.  Otherwise  resource
+          leaking will occur.
+
+     com_call(ComInterface, MethodOffs, Pars)
+
+          Types
+               MethodOffs = integer()
+               Pars = list()
+
+          This is the way to call a method in  a  COM  interface.
+          Beware that the parameter types must match the types in
+          the COM interface function.
+
+          Note that return values are handled with _o_u_t parameters
+          when using _c_o_m__c_a_l_l/_3. (As opposed to _i_n_v_o_k_e/_3.
+
+EXPORTS
+     invoke(ComInterface, MethodID, Pars)
+     invoke(ComInterface, MethodName, Pars)
+
+          There are two ways to call a method in a COM interface.
+          A  dual-  or  dispatch-interface,  has a method invoke,
+          that is used to call methods. This method  is  intended
+          for  interpreted  languages. The invoke method is safer
+          than _c_o_m__c_a_l_l, but also much slower.
+
+EXPORTS
+     property_get(ComInterface, MethodID)
+     property_get(ComInterface, MethodID, [Parameters])
+     property_get(ComInterface, MethodName)
+     property_get(ComInterface, MethodName, [Parameters])
+
+          To get a property value through the dispatch-interface,
+          this function is used.
+
+
+
+
+Ericsson Utvecklings ALBast change: comet  1.0                    5
+
+
+
+
+
+
+erl_com(3)          ERLANG MODULE DEFINITION           erl_com(3)
+
+
+
+     property_put(ComInterface, MethodID, Value)
+     property_put(ComInterface, MethodID, [Parameters], Value)
+     property_put(ComInterface, MethodName, Value)
+     property_put(ComInterface, MethodName, [Parameters], Value)
+
+          To set a property value through the dispatch-interface,
+          this function is used.
+
+AUTHOR
+     Jakob Cederlund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: comet  1.0                    6
+
+
+

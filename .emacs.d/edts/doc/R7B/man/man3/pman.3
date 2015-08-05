@@ -1,0 +1,103 @@
+.TH pman 3 "pman  2.4" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+pman \- A graphical interface for inspecting running Erlang processes\&.
+.SH DESCRIPTION
+.LP
+The process manager Pman is a tool that provides functionality for inspecting the state of running processes in an Erlang runtime system\&. 
+.LP
+The user interface provides two main views:
+.RS 2
+.TP 2
+*
+a node overview showing all running processes on the selected node
+.TP 2
+*
+a process trace window for following the execution of one or more selected processes\&.
+.RE
+.LP
+Pman operates either locally or in a distributed Erlang system\&. 
+.LP
+Refer to the Pman User\&'s Guide for a detailed description of the functionality\&. 
+
+.SH EXPORTS
+.LP
+.B
+start() -> Pid
+.br
+.B
+start(LIModuleExcluded) -> Pid
+.br
+.RS
+.TP
+Types
+Pid = pid()
+.br
+LIModuleExcluded = [atom()]
+.br
+.RE
+.RS
+.LP
+\fIstart/0\fR starts the process manager with the user`s saved settings, if there are any\&. 
+.LP
+\fI start/1\fR also starts the process manager, with the difference that it will not show any processes executing code in any of the modules listed in \fILIModuleExcluded\fR 
+.LP
+\fI start/0\fR and \fIstart/1\fR return the Pid of Pmans main window process if the start-up succeeds within 20 seconds, otherwise it will fail with the EXIT reason \fI{startup_timeout, pman}\fR\&. 
+.RE
+.LP
+.B
+start_notimeout() -> Pid
+.br
+.B
+start_notimeout(LIModuleExcluded) -> Pid
+.br
+.RS
+.TP
+Types
+Pid = pid()
+.br
+LIModuleExcluded = [atom()]
+.br
+.RE
+.RS
+.LP
+\fIstart_notimeout/0\fR starts the process manager with the user\&'s saved settings, if there are any\&. 
+.LP
+\fIstart_notimeout/1\fR also starts the process manager, with the difference that it will not show any processes executing code in any of the modules listed in \fILIModuleExcluded\fR\&. 
+.LP
+\fIstart_notimeout/0\fR and \fIstart_notimeout/1\fR return the Pid of Pmans main window process\&. It will hang indefinitely waiting for successful start-up\&. 
+.RE
+.LP
+.B
+proc(Process) -> Pid
+.br
+.B
+proc(A,B,C) -> Pid
+.br
+.RS
+.TP
+Types
+Pid = pid()
+.br
+Process = pid() | atom()
+.br
+A, B, C = integer()
+.br
+.RE
+.RS
+.LP
+\fIproc/1\fR and \fIproc/3\fR both open a trace window for the specified process\&. They are convenience functions for bypassing the process overview window in the graphical user interface\&. \fIProcess\fR can either be an atom representing a registered process, or a PID\&. 
+.LP
+\fIproc/3\fR is merely a convenience function that takes three integers as arguments, representing the three parts of the PID\&. (To avoid having to use the BIF \fIlist_to_pid/1\fR)\&. 
+.LP
+The functions return the PID of the process controlling the trace output window\&. If there is a problem they will fail with the EXIT reason \fIundefined\fR\&. 
+.RE
+.SH See Also
+.LP
+Pman in User\&'s Guide\&. 
+.SH AUTHORS
+.nf
+Francesco Cesarini - support@erlang.ericsson.se
+Catrin Hansson - support@erlang.ericsson.se
+Peter Olin - support@erlang.ericsson.se
+Claes Wikstrom - support@erlang.ericsson.se
+.fi

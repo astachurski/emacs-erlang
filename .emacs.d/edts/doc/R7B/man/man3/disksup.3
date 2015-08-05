@@ -1,0 +1,78 @@
+.TH disksup 3 "os_mon  1.3.9" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+disksup \- A Disk Supervisor Process\&.
+.SH DESCRIPTION
+.LP
+\fIdisksup\fR is part of the \fIos_mon\fR application and all configuration parameters are defined in the reference documentation for the \fIos_mon\fR application\&. 
+.LP
+\fIdisksup\fR is a process which supervises the available disk space in the system\&. Once every \fIdisk_space_check_interval\fR minutes, the disks are checked and an alarm is generated for each disk which uses more than the \fIdisk_almost_full_threshold\fR of available space\&. 
+.RS 2
+.TP 4
+.B
+On UNIX:
+All (locally) mounted disks are checked, including the swap disk if it is present\&.
+.TP 4
+.B
+On WIN32:
+All logical drives of type "FIXED_DISK" are checked\&.
+.RE
+.LP
+The \fIdisksup\fR process defines one alarm which it sends using \fIalarm_handler:set_alarm(Alarm)\fR\&. \fIAlarm\fR is defined as follows: 
+.RS 2
+.TP 4
+.B
+\fI{{disk_almost_full, MountedOn}, []}\fR:
+This alarm is sent when a disk uses more than \fIdisk_almost_full_threshold\fR of its available disk space, and it is cleared automatically when \fIdisksup\fR observes that the disk space is back to normal\&. 
+.RE
+
+.SH EXPORTS
+.LP
+.B
+get_check_interval() -> Time
+.br
+.RS
+.TP
+Types
+Time = integer()
+.br
+.RE
+.RS
+.LP
+Time interval, in milliseconds, which defined how often the disks are checked\&. 
+.RE
+.LP
+.B
+get_disk_data() -> [DiskData]
+.br
+.RS
+.TP
+Types
+DiskData = {Id, KByte, Capacity}
+.br
+Id = string()
+.br
+KByte = integer()
+.br
+Capacity = integer()
+.br
+.RE
+.RS
+.LP
+Gets data for the system disks or partitions\&. \fIId\fR is a string that identifies the disk or partition\&. \fIKByte\fR is the total size of the disk or partition in kbytes\&. \fICapacity\fR is the percentage of disk space used\&. 
+.RE
+.LP
+.B
+get_almost_full_threshold() -> integer()
+.br
+.RS
+.LP
+Threshold as a percentage of the available disk space\&. It specifies how much disk space can be used by each disk or partition before an alarm is sent\&. 
+.RE
+.SH See Also
+.LP
+alarm_handler(3), os_mon(3)
+.SH AUTHORS
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+Peter Hogfeldt - support@erlang.ericsson.se
+.fi

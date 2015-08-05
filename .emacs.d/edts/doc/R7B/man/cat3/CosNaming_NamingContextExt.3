@@ -1,0 +1,132 @@
+
+
+
+CosNaming_NamingContexEtRELxAtN(G3)MODULE DECFoIsNNIaTmIiOnNg_NamingContextExt(3)
+
+
+
+MODULE
+     CosNaming_NamingContextExt -  This interface contains opera-
+     tion for converting a Name sequence to a string and back.
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+
+
+             -include_lib("orber/COSS/CosNaming/CosNaming.hrl").
+
+     This module also exports the functions described in:
+
+       * CosNaming_NamingContext
+
+
+EXPORTS
+     to_string(NamingContext, Name) -> Return
+
+          Types
+               NameContext = #objref
+               Name = [NameComponent]
+               Return     =     string()     |      {'EXCEPTION',
+               NamingContext::InvalidName{}}
+
+          Stringifies a _N_a_m_e sequence to a string.
+
+     to_name(NamingContext, NameString) -> Return
+
+          Types
+               NameContext = #objref
+               NameString = string()
+               Return   =   [NameComponent]    |    {'EXCEPTION',
+               NamingContext::InvalidName{}}
+
+          Converts a stringified _N_a_m_e to a _N_a_m_e sequence.
+
+     to_url(NamingContext, AddressString, NameString) -> Return
+
+          Types
+               NameContext = #objref
+               Address = NameString = string()
+               Return     =     URLString     |     {'EXCEPTION',
+               NamingContext::InvalidName{}}    |   {'EXCEPTION',
+               NamingContextExt::InvalidAddress{}}
+
+          This operation takes a _c_o_r_b_a_l_o_c string and  a  stringi-
+          fied  _N_a_m_e sequence as input and returns a fully formed
+          URL string.
+
+     resolve_str(NamingContext, NameString) -> Return
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   1
+
+
+
+
+
+
+CosNaming_NamingContexEtRELxAtN(G3)MODULE DECFoIsNNIaTmIiOnNg_NamingContextExt(3)
+
+
+
+          Types
+               NameContext = #objref
+               NameString = string()
+               Return     =     #objref      |      {'EXCEPTION',
+               NamingContext::InvalidName{}}    |   {'EXCEPTION',
+               NamingContext::NotFound{why,   rest_of_name}}    |
+               {'EXCEPTION',    NamingContext::CannotProceed{cxt,
+               rest_of_name}}
+
+          This operation takes a  stringified  _N_a_m_e  sequence  as
+          input and returns the associated, if any, object.
+
+AUTHOR
+     support - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   2
+
+
+

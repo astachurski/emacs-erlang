@@ -1,0 +1,30 @@
+.TH OrberEventChannel_EventChannelFactory 3 "cosEvent  1.0.1.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+OrberEventChannel_EventChannelFactory \-  This module implements the EventChannelFactory interface that enables the user to create event channel objects\&. 
+.SH DESCRIPTION
+.LP
+
+.LP
+Any object that possesses an object reference that supports the EventChannelFactory interface can perform the following operations: 
+
+.SH EXPORTS
+.LP
+.B
+create_event_channel(Object) -> Return
+.br
+.RS
+.TP
+Types
+Object = #objref
+.br
+Return = #objref
+.br
+.RE
+.RS
+.LP
+This operation returns an EventChannel object reference\&. 
+.RE
+.SH AUTHOR
+.nf
+Helen Airiyan - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,132 @@
+.TH snmp_mpd 3 "snmp  3.2.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+snmp_mpd \- Message Processing and Dispatch module for SNMP
+.SH DESCRIPTION
+.LP
+The module \fIsnmp_mpd\fR implements the version independent Message Processing and Dispatch functionality in SNMP\&. It is supposed to be used from a Network Interface process (\fInet_if\fR)\&. 
+
+.SH EXPORTS
+.LP
+.B
+init_mpd(Options) -> mpd_state()
+.br
+.RS
+.TP
+Types
+Options = [Option]
+.br
+Option = v1 | v2 | v3
+.br
+.RE
+.RS
+.LP
+This function can be called from the net_if process at startup\&. The options list defines which versions to use\&. 
+.LP
+It also initializes some SNMP counters\&. 
+.RE
+.LP
+.B
+process_packet(Packet, TDomain, TAddress, State) -> {ok, Vsn, Pdu, PduMS, ACMData} | {discarded, Reason}
+.br
+.RS
+.TP
+Types
+Packet = binary()
+.br
+TDomain = snmpUDPDomain
+.br
+TAddress = {Ip, Udp}
+.br
+Ip = {integer(), integer(), integer(), integer()}
+.br
+Udp = integer()
+.br
+State = mpd_state()
+.br
+Vsn = \&'version-1\&' | \&'version-2\&' | \&'version-3\&'
+.br
+Pdu = #pdu
+.br
+PduMs = integer()
+.br
+ACMData = acm_data()
+.br
+.RE
+.RS
+.LP
+Processes an incoming packet\&. Performs authentication and decryption as necessary\&. The return values should be passed the agent\&. 
+.RE
+.LP
+.B
+generate_response_msg(Vsn, RePdu, Type, ACMData) -> {ok, Packet} | {discarded, Reason}
+.br
+.RS
+.TP
+Types
+Vsn = \&'version-1\&' | \&'version-2\&' | \&'version-3\&'
+.br
+RePdu = #pdu
+.br
+Type = atom()
+.br
+ACMData = acm_data()
+.br
+Packet = binary()
+.br
+.RE
+.RS
+.LP
+Generates a possibly encrypted response packet to be sent to the network\&. \fIType\fR is the \fI#pdu\&.type\fR of the original request\&. 
+.RE
+.LP
+.B
+generate_msg(Vsn, Pdu, MsgData, To) -> {ok, PacketsAndAddresses} | {discarded, Reason}
+.br
+.RS
+.TP
+Types
+Vsn = \&'version-1\&' | \&'version-2\&' | \&'version-3\&'
+.br
+Pdu = #pdu
+.br
+MsgData = msg_data()
+.br
+To = [dest_addrs()]
+.br
+PacketsAndAddresses = [{TDomain, TAddress, Packet}]
+.br
+TDomain = snmpUDPDomain
+.br
+TAddress = {Ip, Udp}
+.br
+Ip = {integer(), integer(), integer(), integer()}
+.br
+Udp = integer()
+.br
+Packet = binary()
+.br
+.RE
+.RS
+.LP
+Generates a possibly encrypted request packet to be sent to the network\&. 
+.LP
+\fIMsgData\fR is the message specific data used in the SNMP message\&. This value is received in a \fIsend_pdu\fR or \fIsend_pdu_req\fR message from the agent\&. In SNMPv1 and SNMPv2c, this message data is the community string\&. In SNMPv3, it is the context information\&. \fITo\fR is a list of the destination addresses and their corresponding security parameters\&. This value is also received from the requests mentioned above\&. 
+.RE
+.LP
+.B
+discarded_pdu(Variable) -> void()
+.br
+.RS
+.TP
+Types
+Variable = atom()
+.br
+.RE
+.RS
+.LP
+Increments the variable associated with a discarded pdu\&. This function can be used when the net_if process receives a \fIdiscarded_pdu\fR message from the agent\&. 
+.RE
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,198 @@
+
+
+
+log_snmp(3)         ERLANG MODULE DEFINITION          log_snmp(3)
+
+
+
+MODULE
+     log_snmp - Implements an SNMP interface to the  log  service
+     in the EVA application
+
+DESCRIPTION
+     This module implements an SNMP interface to the log  service
+     in  the EVA application. The MIB implemented by this adapta-
+     tion is OTP-LOG-MIB. The MIB is  located  in  the  directory
+     _m_i_b_s in the distribution.
+
+
+EXPORTS
+     create_tables(Nodes) -> void()
+
+          Types
+               Nodes = [node()]
+
+          This function creates the Mnesia tables required by the
+          log SNMP implementation. _N_o_d_e_s is a list of nodes where
+          the tables should be replicated.  This  list  of  nodes
+          should specify the same nodes where the application EVA
+          can be run distributed, in order for the log server  to
+          always have local access to the tables.
+
+          This function should be called once when installing the
+          EVA application in the system.
+
+     register_type(Type,TypeOid,TypeFunc)
+
+          Types
+               Type = term()
+               TypeOid = oid() = [int()]
+               TypeFunc = {M, F, A}
+               M = F = atom()
+               A = list()
+
+          This function is used to register a type of log to  the
+          SNMP  log  functionality.  The  _T_y_p_e is the same as the
+          _T_y_p_e argument given to _l_o_g:_o_p_e_n/_3.
+
+          The purpose of this function is to tell  the  SNMP  LOG
+          functions  that all logs of type _T_y_p_e have an SNMP type
+          defined in some MIB  (_T_y_p_e_O_i_d,  defined  as  an  OBJECT
+          IDENTITY), and that the _T_y_p_e_F_u_n_c should be used to con-
+          trol creation and transfer of logs of this type.
+
+          The type control function  (_T_y_p_e_F_u_n_c)  will  be  called
+          when  a  manger tries to create or delete a log of type
+          _T_y_p_e_O_i_d, or when he tries to transfer  a  log  of  this
+          type. The purpose of this function is to check if crea-
+          tion is possible, and to format  the  log  when  it  is
+          transferred. The function should be defined as:
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   1
+
+
+
+
+
+
+log_snmp(3)         ERLANG MODULE DEFINITION          log_snmp(3)
+
+
+
+              | {SnmpErr, Col}:
+            M:F(validate_creation, LogIndex, Cols | A) -
+                > true | false
+                Called when the manager tries to create a new log
+                of type _T_y_p_e_O_i_d. It is supposed to check if it is
+                possible to create a new log of this type. If  it
+                is,  it should return _t_r_u_e. If it is never possi-
+                ble to create logs of this type, it should return
+                _f_a_l_s_e.  Otherwise,  the  creation is not possible
+                becasue some resource is not available,  and  the
+                function  should  return  {_S_n_m_p_E_r_r_o_r,  _C_o_l}  (see
+                definition of SNMP instrumenetation functions for
+                a description of this).
+
+            M:F(create, Log | A) -> ok | error:
+                Called when _M:_F(_v_a_l_i_d_a_t_e__c_r_e_a_t_i_o_n, ...)  returned
+                _t_r_u_e.  This  function  is  supposed to create the
+                log. _L_o_g is a #_l_o_g record, defined in _l_o_g._h_r_l.
+
+            M:F(delete, Log | A) -> void():
+                Called when a log previously created by a manager
+                is deleted.
+
+            M:F(search, LogIndex, LogTrIndex | A) -> SearchFunc:
+                Called when the manager activates a log  transfer
+                for a log of this type. The _L_o_g_I_n_d_e_x is the index
+                into _l_o_g_T_a_b_l_e, and {_L_o_g_I_n_d_e_x, _L_o_g_T_r_I_n_d_e_x} is  the
+                index into the _l_o_g_T_r_a_n_s_f_e_r_T_a_b_l_e. This function is
+                supposed to return a search function as specified
+                in  _l_o_g:_t_r_a_n_s_f_e_r/_5.  The records for these tables
+                are defined in _i_n_c_l_u_d_e/_l_o_g__s_n_m_p._h_r_l.
+
+     start_link() -> {ok, Pid} | {error, Reason}
+
+          Starts the LOG SNMP implementation. This  function  can
+          be  used  to  include the service in a supervisor. Nor-
+          mally, functions in the supervisor _l_o_g__s_u_p can be  used
+          instead.
+
+          The function  _c_r_e_a_t_e__t_a_b_l_e_s/_1  must  have  been  called
+          before the server is started.
+
+Instrumentation functions for the OTP-LOG-MIB
+     In some cases other adaptations may need access to the  SNMP
+     specific  data in LOG. To do this, the instrumentation func-
+     tions for the SNMP objects can be used.  These  instrumenta-
+     tion  functions  takes  the  arguments and return the values
+     defined in the application _s_n_m_p.
+
+EXPORTS
+     log_table(Op, RowIndex, Cols) -> InstrumRet
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   2
+
+
+
+
+
+
+log_snmp(3)         ERLANG MODULE DEFINITION          log_snmp(3)
+
+
+
+          Instrumentation function for  _l_o_g_T_a_b_l_e.  This  function
+          assumes  that  access  checks are made according to the
+          MIB, so it may crash if e.g. _l_o_g_O_p_e_r_S_t_a_t_u_s is set.
+
+     log_tr_table(Op, RowIndex, Cols) -> InstrumRet
+
+          Instrumentation  function  for  _l_o_g_T_r_a_n_s_f_e_r_T_a_b_l_e.  This
+          function  assumes that access checks are made according
+          to the MIB.
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: eva  2.0.2.1                   3
+
+
+

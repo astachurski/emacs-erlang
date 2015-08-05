@@ -1,0 +1,198 @@
+
+
+
+CosNaming(3)        ERLANG MODULE DEFINITION         CosNaming(3)
+
+
+
+MODULE
+     CosNaming -  The CosNaming service is a collection of inter-
+     faces that together define the naming service.
+
+DESCRIPTION
+     The naming service  provides  the  principal  mechanism  for
+     clients  to  find  objects in an ORB based world. The naming
+     service provides an initial naming context that functions as
+     the  root  context for all names. Given this context clients
+     can navigate in the name space.
+
+     Types that are declared on the CosNaming level are:
+
+     typedef string Istring;
+     struct NameComponent {
+           Istring id;
+           Istring kind;
+     };
+
+     typedef sequence <NameComponent> Name;
+
+     enum BindingType {nobject, ncontext};
+
+     struct Binding {
+           Name    binding_name;
+           BindingType binding_type;
+     };
+
+     typedef sequence <Binding> BindingList;
+
+     To get access to the record definitions for the structs use:
+     -_i_n_c_l_u_d_e__l_i_b("_o_r_b_e_r/_C_O_S_S/_C_o_s_N_a_m_i_n_g._h_r_l")..
+
+     Names are not an ORB object but the  can  be  structured  in
+     components  as  seen  by  the definition above. There are no
+     requirements on names so the service can support  many  dif-
+     ferent conventions and standards.
+
+     There are two different interfaces supported in the service:
+
+       * NamingContext
+
+       * BindingIterator
+
+     IDL specification for CosNaming:
+
+     // Naming Service v1.0 described in CORBAservices:
+     // Common Object Services Specification, chapter 3
+     // OMG IDL for CosNaming Module, p 3-6
+
+     #pragma prefix "omg.org"
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   1
+
+
+
+
+
+
+CosNaming(3)        ERLANG MODULE DEFINITION         CosNaming(3)
+
+
+
+     module CosNaming
+     {
+       typedef string Istring;
+       struct NameComponent {
+         Istring id;
+         Istring kind;
+       };
+
+       typedef sequence <NameComponent> Name;
+
+       enum BindingType {nobject, ncontext};
+
+       struct Binding {
+         Name    binding_name;
+         BindingType binding_type;
+       };
+
+       typedef sequence <Binding> BindingList;
+
+
+       interface BindingIterator;
+       interface NamingContext;
+
+       interface NamingContext {
+
+         enum NotFoundReason { missing_node, not_context, not_object};
+
+         exception NotFound {
+           NotFoundReason why;
+           Name rest_of_name;
+         };
+
+         exception CannotProceed {
+           NamingContext cxt;
+           Name rest_of_name;
+         };
+
+         exception InvalidName{};
+         exception AlreadyBound {};
+         exception NotEmpty{};
+
+         void bind(in Name n, in Object obj)
+           raises(NotFound, CannotProceed, InvalidName, AlreadyBound);
+         void rebind(in Name n, in Object obj)
+           raises(NotFound, CannotProceed, InvalidName);
+         void bind_context(in Name n, in NamingContext nc)
+           raises(NotFound, CannotProceed,InvalidName, AlreadyBound);
+         void rebind_context(in Name n, in NamingContext nc)
+           raises(NotFound, CannotProceed, InvalidName);
+         Object resolve (in Name n)
+           raises(NotFound, CannotProceed, InvalidName);
+         void unbind(in Name n)
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   2
+
+
+
+
+
+
+CosNaming(3)        ERLANG MODULE DEFINITION         CosNaming(3)
+
+
+
+           raises(NotFound, CannotProceed, InvalidName);
+         NamingContext new_context();
+         NamingContext bind_new_context(in Name n)
+           raises(NotFound, AlreadyBound, CannotProceed, InvalidName);
+         void destroy( )
+           raises(NotEmpty);
+         void list (in unsigned long how_many,
+                    out BindingList bl,
+                    out BindingIterator bi);
+       };
+
+       interface BindingIterator {
+         boolean next_one(out Binding b);
+         boolean next_n(in unsigned long how_many,
+                        out BindingList bl);
+         void destroy();
+       };
+     };
+
+
+AUTHOR
+     Lars Thorsen - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   3
+
+
+

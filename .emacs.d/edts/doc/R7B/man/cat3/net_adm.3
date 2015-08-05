@@ -1,0 +1,132 @@
+
+
+
+net_adm(3)          ERLANG MODULE DEFINITION           net_adm(3)
+
+
+
+MODULE
+     net_adm - Various Erlang Net Administration Routines
+
+DESCRIPTION
+     This module contains various network utility functions.
+
+
+EXPORTS
+     host_file()
+
+          This function reads the ._h_o_s_t_s._e_r_l_a_n_g file. It  returns
+          the hosts in this file as a list, or it returns {_e_r_r_o_r,
+          _R_e_a_s_o_n} if the file cannot be found.
+
+     dns_hostname(Host)
+
+          This function calls epmd for the fully  qualified  name
+          (DNS)  of  _H_o_s_t.  It  returns {_o_k, _L_o_n_g_h_o_s_t_n_a_m_e} if the
+          call is successful, or {_e_r_r_o_r, _H_o_s_t} if _H_o_s_t cannot  be
+          located by DNS.
+
+     localhost()
+
+          This function returns the fully qualified name  of  the
+          local host, if it can be found by DNS.
+
+     names(), names(Host)
+
+          This function returns {_o_k, _L_i_s_t}  or  {_e_r_r_o_r,  _R_e_a_s_o_n}.
+          _L_i_s_t  is a list of tuples on the form {_N_a_m_e, _P_o_r_t}. For
+          example: _n_e_t__a_d_m:_n_a_m_e_s(_e_l_r_o_n_d) -> {_o_k, [{"_f_o_o", _6_1_1_7_8},
+          {"_t_s", _6_1_1_6_0}]}.
+
+     ping(Node)
+
+          This function tries to set up a connection to _N_o_d_e.  It
+          returns _p_a_n_g if it fails, and _p_o_n_g if it is successful.
+
+     world (), world (verbose)
+
+          This function runs _e_p_m_d - _n_a_m_e_s on all hosts which  are
+          specified  in  the Erlang host file ._h_o_s_t_s._e_r_l_a_n_g, col-
+          lects the replies and then evaluates _p_i_n_g on all  those
+          nodes.  Accordingly,  connections  are  created  to all
+          nodes which are running on the hosts specified  in  the
+          ._h_o_s_t_s._e_r_l_a_n_g  file.  An  error  message  is printed if
+          another user node is found when this is done.
+
+          This function can be useful when a node is started, but
+          the  names  of  the  other nodes in the network are not
+          initially known.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  1
+
+
+
+
+
+
+net_adm(3)          ERLANG MODULE DEFINITION           net_adm(3)
+
+
+
+     world_list (Hostlist), world_list (Hostlist, verbose)
+
+          These functions are the same as  _w_o_r_l_d/_0  and  _w_o_r_l_d/_1,
+          but  instead of reading the hostfile from ._h_o_s_t_s._e_r_l_a_n_g
+          the hosts are specified in _H_o_s_t_l_i_s_t.
+
+Files
+     The ._h_o_s_t_s._e_r_l_a_n_g file consists of a number  of  host  names
+     written  as  Erlang  terms. It can be located in the current
+     work        directory,        $_H_O_M_E/._h_o_s_t_s._e_r_l_a_n_g,        or
+     _c_o_d_e:_r_o_o_t__d_i_r()/._h_o_s_t_s._e_r_l_a_n_g.    The    format    of    the
+     ._h_o_s_t_s._e_r_l_a_n_g file must be one host name per line. The  host
+     names  must be within quotes as shown in the following exam-
+     ples:
+
+           'super.eua.ericsson.se'.
+           'renat.eua.ericsson.se'.
+           'grouse.eua.ericsson.se'.
+           'gauffin1.eua.ericsson.se'.
+           ^ (new line)
+
+AUTHOR
+      Claes Wikstrom - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: kernel  2.6.1                  2
+
+
+

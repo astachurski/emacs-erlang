@@ -1,0 +1,66 @@
+
+
+
+shell_default(3)    ERLANG MODULE DEFINITION     shell_default(3)
+
+
+
+MODULE
+     shell_default - Customizing the Erlang Environment
+
+DESCRIPTION
+     The functions in _s_h_e_l_l__d_e_f_a_u_l_t are  called  when  no  module
+     name is given in a shell command.
+
+     Consider the following shell dialogue:
+
+     1 >lists:reverse("abc").
+     "cab"
+     2 >c(foo).
+     {ok, foo}
+
+     In command one, the module _l_i_s_t_s is called. In command  two,
+     no  module name is specified. The shell searches the modules
+     _u_s_e_r__d_e_f_a_u_l_t followed  by  _s_h_e_l_l__d_e_f_a_u_l_t  for  the  function
+     _f_o_o/_1.
+
+     _s_h_e_l_l__d_e_f_a_u_l_t is intended for "system  wide"  customizations
+     to  the shell. _u_s_e_r-_d_e_f_a_u_l_t is intended for "local" or indi-
+     vidual user customizations.
+
+
+Hint
+     To add your own commands  to  the  shell,  create  a  module
+     called_u_s_e_r__d_e_f_a_u_l_t  and  add the commands you want. Then add
+     the following line as the _f_i_r_s_t line in your ._e_r_l_a_n_g file in
+     your home directory.
+
+     code:load_abs("$PATH/user_default").
+
+     $_P_A_T_H is the directory where your _u_s_e_r__d_e_f_a_u_l_t module can be
+     found.
+
+AUTHORS
+     Joe Armstrong - support@erlang.ericsson.se
+     Robert Virding - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: stdlib  1.9.1                  1
+
+
+

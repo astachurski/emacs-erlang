@@ -1,0 +1,1198 @@
+.TH file 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+file \- File Interface Module
+.SH DESCRIPTION
+.LP
+The module \fIfile\fR provides an interface to the file system\&. 
+.LP
+Most functions have a name argument such as a file name or directory name, which is either an atom, a string, or a deep list of characters and atoms\&. A path is a list of directory names\&. If the functions are successful, they return \fIok\fR, or \fI{ok, Value}\fR\&. 
+.LP
+If an error occurs, the return value has the format \fI{error, Reason}\fR\&. \fIReason\fR is an atom which is named from the Posix error codes used in Unix, and in the runtime libraries of most C compilers\&. In the following descriptions of functions, the most typical error codes are listed\&. By matching the error code, applications can use this information for error recovery\&. To produce a readable error string, use \fIformat_error/1\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+change_group(Filename, Gid)
+.br
+.RS
+.LP
+Change group of a file\&. See \fIwrite_file_info/2\fR\&. 
+.RE
+.LP
+.B
+change_owner(Filename, Uid)
+.br
+.RS
+.LP
+Change owner of a file\&. See \fIwrite_file_info/2\fR\&. 
+.RE
+.LP
+.B
+change_owner(Filename, Uid, Gid)
+.br
+.RS
+.LP
+Change owner and group of a file\&. See \fIwrite_file_info/2\fR\&. 
+.RE
+.LP
+.B
+change_time(Filename, Mtime)
+.br
+.RS
+.LP
+Change the modification and access times of a file\&. See \fIwrite_file_info/2\fR\&. 
+.RE
+.LP
+.B
+change_time(Filename, Mtime, Atime)
+.br
+.RS
+.LP
+Change the modification and access times of a file\&. See \fIwrite_file_info/2\fR\&. 
+.RE
+.LP
+.B
+close(IoDevice)
+.br
+.RS
+.LP
+Closes the file referenced by \fIIoDevice\fR\&. It returns \fIok\fR\&. 
+.RE
+.LP
+.B
+consult(Filename)
+.br
+.RS
+.LP
+Opens file \fIFilename\fR and reads all the Erlang terms in it\&. Returns one of the following: 
+.RS 2
+.TP 4
+.B
+\fI{ok, TermList}\fR:
+The file was successfully read\&. 
+.TP 4
+.B
+\fI{error, Atom}\fR:
+An error occurred when opening the file or reading it\&. The \fIAtom\fR is a Posix error code\&. See the description of \fIopen/2\fR for a list of typical error codes\&. 
+.TP 4
+.B
+\fI{error, {Line, Mod, Term}}\fR:
+An error occurred when interpreting the Erlang terms in the file\&. Use the \fIformat_error/1\fR function to convert the three-element tuple to an English description of the error\&. 
+.RE
+.RE
+.LP
+.B
+del_dir(DirName)
+.br
+.RS
+.LP
+Tries to delete the directory \fIDirName\fR\&. The directory must be empty before it can be deleted\&. Returns \fIok\fR if successful\&. 
+.LP
+Typical error reasons are: 
+.RS 2
+.TP 4
+.B
+\fIeacces\fR:
+Missing search or write permissions for the parent directories of \fIDirName\fR\&. 
+.TP 4
+.B
+\fIeexist\fR:
+The directory is not empty\&. 
+.TP 4
+.B
+\fIenoent\fR:
+The directory does not exist\&. 
+.TP 4
+.B
+\fIenotdir\fR:
+A component of \fIDirName\fR is not a directory\&. On some platforms, \fIenoent\fR is returned instead\&. 
+.TP 4
+.B
+\fIeinval\fR:
+Attempt to delete the current directory\&. On some platforms, \fIeacces\fR is returned instead\&. 
+.RE
+.RE
+.LP
+.B
+delete(Filename)
+.br
+.RS
+.LP
+Tries to delete the file \fIFilename\fR\&. Returns \fIok\fR if successful\&. 
+.LP
+Typical error reasons are: 
+.RS 2
+.TP 4
+.B
+\fIenoent\fR:
+The file does not exist\&. 
+.TP 4
+.B
+\fIeacces\fR:
+Missing permission for the file or one of its parents\&. 
+.TP 4
+.B
+\fIeperm\fR:
+The file is a directory and the user is not super-user\&. 
+.TP 4
+.B
+\fIenotdir\fR:
+A component of the file name is not a directory\&. On some platforms, \fIenoent\fR is returned instead\&. 
+.RE
+.RE
+.LP
+.B
+eval(Filename)
+.br
+.RS
+.LP
+Opens the file \fIFilename\fR and evaluates all the expression sequences in it\&. It returns one of the following: 
+.RS 2
+.TP 4
+.B
+\fIok\fR:
+The file was read and evaluated\&. The actual result of the evaluation is not returned; any expression sequence in the file must be there for its side effect\&. 
+.TP 4
+.B
+\fI{error, Atom}\fR:
+An error occurred when opening the file or reading it\&. The \fIAtom\fR is a Posix error code\&. See the description of \fIopen/2\fR for a list of typical error codes\&. 
+.TP 4
+.B
+\fI{error, {Line, Mod, Term}}\fR:
+An error occurred when interpreting the Erlang terms in the file\&. Use the \fIformat_error/1\fR function to convert the three-element tuple to an English description of the error\&. 
+.RE
+.RE
+.LP
+.B
+file_info(Filename)
+.br
+.RS
+.SS Note:
+.LP
+This function is obsolete\&. Use \fIread_file_info\fR instead\&. 
+
+.LP
+Retrieves information about a file\&. Returns \fI{ok, FileInfo}\fR if successful, otherwise \fI{error, Reason}\fR\&. \fIFileInfo\fR is a tuple with the following fields: 
+
+.nf
+          {Size,Type,Access,AccessTime,ModifyTime,UnUsed1,UnUsed2}
+.fi
+.RS 2
+.TP 4
+.B
+\fISize\fR:
+The size of the file in bytes\&. 
+.TP 4
+.B
+\fIType\fR:
+The type of file which is \fIdevice\fR, \fIdirectory\fR, \fIregular\fR, or \fIother\fR\&. 
+.TP 4
+.B
+\fIAccess\fR:
+The current system access to the file, which is one of the atoms \fIread\fR, \fIwrite\fR, \fIread_write\fR, or \fInone\fR\&. 
+.TP 4
+.B
+\fIAccessTime\fR:
+The last time the file was read, shown in the format \fI{Year, Month, Day, Hour, Minute, Second}\fR\&. 
+.TP 4
+.B
+\fIModifyTime\fR:
+The last time the file was written, shown in the format \fI{Year, Month, Day, Hour, Minute, Second}\fR\&. 
+.TP 4
+.B
+\fIUnUsed1, UnUsed2\fR:
+These fields are not used, but reserved for future expansion\&. They probably contain \fIunused\fR\&. 
+.RE
+.LP
+Typical error reasons: Same as for \fIread_file_info/1\fR\&. 
+.RE
+.LP
+.B
+format_error(ErrorDescriptor)
+.br
+.RS
+.LP
+Given the error reason returned by any function in this module, it returns a descriptive string of the error in English\&. 
+.RE
+.LP
+.B
+get_cwd()
+.br
+.RS
+.LP
+Returns \fI{ok, CurDir}\fR, where \fICurDir\fR (a string) is the current working directory of the file server\&. 
+.SS Note:
+.LP
+In rare circumstances, this function can fail on Unix\&. It may happen if read permission does not exist for the parent directories of the current directory\&.
+
+.LP
+Typical error reasons are: 
+.RS 2
+.TP 4
+.B
+\fIeacces\fR:
+Missing read permission for one of the parents of the current directory\&. 
+.RE
+.RE
+.LP
+.B
+get_cwd(Drive)
+.br
+.RS
+.LP
+\fIDrive\fR should be of the form "\fILetter\fR\fI:\fR", for example "c:"\&. Returns \fI{ok, CurDir}\fR or \fI{error, Reason}\fR, where \fICurDir\fR (a string) is the current working directory of the drive specified\&. 
+.LP
+This function returns \fI{error, enotsup}\fR on platforms which have no concept of current drive (Unix, for example)\&. 
+.LP
+Typical error reasons are: 
+.RS 2
+.TP 4
+.B
+\fIenotsup\fR:
+The operating system have no concept of drives\&. 
+.TP 4
+.B
+\fIeacces\fR:
+The drive does not exist\&. 
+.TP 4
+.B
+\fIeinval\fR:
+The format of \fIDrive\fR is invalid\&. 
+.RE
+.RE
+.LP
+.B
+list_dir(DirName)
+.br
+.RS
+.LP
+Lists all the files in a directory\&. Returns \fI{ok, FilenameList}\fR if successful\&. Otherwise, it returns \fI{error, Reason}\fR\&. \fIFilenameList\fR is a list of the names of all the files in the directory\&. Each name is a string\&. The names are not sorted\&. 
+.LP
+Typical error reasons are: 
+.RS 2
+.TP 4
+.B
+\fIeacces\fR:
+Missing search or write permissions for \fIDirName\fR or one of its parent directories\&. 
+.TP 4
+.B
+\fIenoent\fR:
+The directory does not exist\&. 
+.RE
+.RE
+.LP
+.B
+make_dir(DirName)
+.br
+.RS
+.LP
+Tries to create the directory \fIDirName\fR\&. Missing parent directories are NOT created\&. Returns \fIok\fR if successful\&. 
+.LP
+Typical error reasons are: 
+.RS 2
+.TP 4
+.B
+\fIeacces\fR:
+Missing search or write permissions for the parent directories of \fIDirName\fR\&. 
+.TP 4
+.B
+\fIeexist\fR:
+There is already a file or directory named \fIDirName\fR\&. 
+.TP 4
+.B
+\fIenoent\fR:
+A component of \fIDirName\fR does not exist\&. 
+.TP 4
+.B
+\fIenospc\fR:
+There is a no space left on the device\&. 
+.TP 4
+.B
+\fIenotdir\fR:
+A component of \fIDirName\fR is not a directory\&. On some platforms, \fIenoent\fR is returned instead\&. 
+.RE
+.RE
+.LP
+.B
+make_link(Existing, New)
+.br
+.RS
+.LP
+Makes a hard link from \fIExisting\fR to \fINew\fR, on platforms that support links (Unix)\&. This function returns \fIok\fR if the link was successfully created, or \fI{error, Reason}\fR\&. On platforms that do not support links, \fI{error, enotsup}\fR will be returned\&. 
+.LP
+Typical error reasons: 
+.RS 2
+.TP 4
+.B
+\fIeacces\fR:
+Missing read or write permissions for the parent directories of \fIExisting\fR or \fINew\fR\&. 
+.TP 4
+.B
+\fIeexist\fR:
+\fInew\fR already exists\&. 
+.TP 4
+.B
+\fIenotsup\fR:
+Hard links are not supported on this platform\&. 
+.RE
+.RE
+.LP
+.B
+make_symlink(Name1, Name2)
+.br
+.RS
+.LP
+This function creates a symbolic link \fIName2\fR to the file or directory \fIName1\fR, on platforms that support symbolic links (most Unix systems)\&. \fIName1\fR need not exist\&. This function returns \fIok\fR if the link was successfully created, or \fI{error, Reason}\fR\&. On platforms that do not support symbolic links, \fI{error, enotsup}\fR will be returned\&. 
+.LP
+Typical error reasons: 
+.RS 2
+.TP 4
+.B
+\fIeacces\fR:
+Missing read or write permissions for the parent directories of \fIExisting\fR or \fINew\fR\&. 
+.TP 4
+.B
+\fIeexist\fR:
+\fInew\fR already exists\&. 
+.TP 4
+.B
+\fIenotsup\fR:
+Symbolic links are not supported on this platform\&. 
+.RE
+.RE
+.LP
+.B
+open(Filename, ModeList)
+.br
+.RS
+.LP
+Opens the file \fIFilename\fR in the mode determined by \fIModeList\fR\&. \fIModeList\fR may contain one or more of the following items: 
+.RS 2
+.TP 4
+.B
+\fIread\fR:
+The file, which must exist, is opened for reading\&. 
+.TP 4
+.B
+\fIwrite\fR:
+The file is opened for writing\&. It is created if it does not exist\&. Otherwise, it is truncated (unless combined with \fIread\fR)\&. 
+.TP 4
+.B
+\fIappend\fR:
+The file will be opened for writing, and it will be created it does not exist\&. Every write operation to a file openeded with \fIappend\fR will take place at the end of the file\&. 
+.TP 4
+.B
+\fIraw\fR:
+The \fIraw\fR option allows faster access to a file, because no Erlang process is needed to handle the file\&. However, a file opened in this way has the following limitations: 
+.RS 4
+.RS 2
+.TP 2
+*
+The functions in the \fIio\fR module cannot be used, because they can only talk to an Erlang process\&. Instead, use the \fIread/2\fR and \fIwrite/2\fR functions\&.
+.TP 2
+*
+Only the Erlang process which opened the file can use it\&.
+.TP 2
+*
+A remote Erlang file server cannot be used; the computer on which the Erlang node is running must have access to the file system (directly or through NFS)\&.
+.RE
+.RE
+.TP 4
+.B
+\fIbinary\fR:
+This option can only be used if the \fIraw\fR option is specified as well\&. When specified, read operations on the file using the \fIread/2\fR function will return binaries rather than lists\&. 
+.RE
+.LP
+If both \fIread\fR and \fIwrite\fR are specified, the file is created if it does not exists\&. It is not truncated if it exists\&. 
+.LP
+Returns: 
+.RS 2
+.TP 4
+.B
+\fI{ok, IoDevice}\fR:
+The file has been opened in the requested mode\&. \fIIoDevice\fR is a reference to the file\&. 
+.TP 4
+.B
+\fI{error, Reason}\fR:
+The file could not be opened\&. 
+.RE
+.LP
+A \fIfile descriptor\fR is the Pid of the process which handles the file\&. The file process is linked to the process which originally opened the file\&. If any process to which the file process is linked terminates, the file will be closed by the file process and the process itself will be terminated\&. The file descriptor returned from this call can be used as an argument to the I/O functions (see \fIio\fR)\&. 
+.SS Note:
+.LP
+In previous versions of \fIfile\fR, modes were given as on of the atoms \fIread\fR, \fIwrite\fR, or \fIread_write\fR instead of a list\&. This is still allowed for reasons of backwards compatibility, but should not be used for new code\&. Also note that \fIread_write\fR is not allowed in a mode list\&. 
+
+.LP
+Typical error reasons: 
+.RS 2
+.TP 4
+.B
+\fIenoent\fR:
+The file does not exist\&. 
+.TP 4
+.B
+\fIeacces\fR:
+Missing permission for reading the file or searching one of the parent directories\&. 
+.TP 4
+.B
+\fIeisdir\fR:
+The named file is a directory\&. 
+.TP 4
+.B
+\fIenotdir\fR:
+A component of the file name is not a directory\&. On some platforms, \fIenoent\fR is returned instead\&. 
+.TP 4
+.B
+\fIenospc\fR:
+There is a no space left on the device (if \fIwrite\fR access was specified)\&. 
+.RE
+.RE
+.LP
+.B
+path_consult(Path, Filename)
+.br
+.RS
+.LP
+Searches the path \fIPath\fR (a list of directory names) until the file \fIFilename\fR is found\&. If \fIFilename\fR is an absolute file name, \fIPath\fR is ignored\&. The file is opened and all the terms in it are read\&. The function returns one of the following: 
+.RS 2
+.TP 4
+.B
+\fI{ok, TermList, FullName}\fR:
+The file was successfully read\&. \fIFullName\fR is the full name of the file which was opened and read\&. 
+.TP 4
+.B
+\fI{error, enoent}\fR:
+The file could not be found in any of the directories in \fIPath\fR\&. 
+.TP 4
+.B
+\fI{error, Atom}\fR:
+An error occurred when opening the file or reading it\&. The \fIAtom\fR is a Posix error code\&. See the description of \fIopen/2\fR for a list of typical error codes\&. 
+.TP 4
+.B
+\fI{error, {Line, Mod, Term}}\fR:
+An error occurred when interpreting the Erlang terms in the file\&. Use the \fIformat_error/1\fR function to convert the three-element tuple to an English description of the error\&. 
+.RE
+.RE
+.LP
+.B
+path_eval(Path, Filename)
+.br
+.RS
+.LP
+Searches the path \fIPath\fR (a list of directory names) until the file \fIFilename\fR is found\&. If \fIFilename\fR is an absolute file name, \fIPath\fR is ignored\&. The file is opened and all the expression sequences in it are evaluated\&. The function returns one of the following: 
+.RS 2
+.TP 4
+.B
+\fI{ok, FullName}\fR:
+The file was read\&. \fIFullName\fR is the full name of the file which was opened and evaluated\&. 
+.TP 4
+.B
+\fI{error, enoent}\fR:
+The file could not be found in any of the directories in \fIPath\fR\&. 
+.TP 4
+.B
+\fI{error, Atom}\fR:
+An error occurred when opening the file or reading it\&. The \fIAtom\fR is a Posix error code\&. See the description of \fIopen/2\fR for a list of typical error codes\&. 
+.TP 4
+.B
+\fI{error, {Line, Mod, Term}}\fR:
+An error occurred when interpreting the Erlang terms in the file\&. Use the \fIformat_error/1\fR function to convert the three-element tuple to an English description of the error\&. 
+.RE
+.RE
+.LP
+.B
+path_open(Path, Filename, Mode)
+.br
+.RS
+.LP
+Searches the path \fIPath\fR (a list of directory names) until the file \fIFilename\fR is found\&. If \fIFilename\fR is an absolute file name, \fIPath\fR is ignored\&. The function returns one of the following: 
+.RS 2
+.TP 4
+.B
+\fI{ok, IoDevice, FullName}\fR:
+The file was opened in the requested mode\&. \fIIoDevice\fR is a reference to the file and \fIFullName\fR is the full name of the file which was opened\&. 
+.TP 4
+.B
+\fI{error, enoent}\fR:
+\fIFilename\fR was not found in the path\&. 
+.TP 4
+.B
+\fI{error, Reason}\fR:
+There was an error opening \fIFilename\fR\&. 
+.RE
+.RE
+.LP
+.B
+position(IoDevice, Location)
+.br
+.RS
+.LP
+Sets the position of the file referenced by \fIIoDevice\fR to \fILocation\fR\&. Returns \fI{ok, NewPosition}\fR (as absolute offset) if successful, otherwise \fI{error, Reason}\fR\&. \fILocation\fR is one of the following: 
+.RS 2
+.TP 4
+.B
+\fI{bof, Offset}\fR:
+Absolute offset 
+.TP 4
+.B
+\fI{cur, Offset}\fR:
+Offset from the current position 
+.TP 4
+.B
+\fI{eof, Offset}\fR:
+Offset from the end of file 
+.TP 4
+.B
+\fIInteger\fR:
+The same as \fI{bof, Integer}\fR 
+.TP 4
+.B
+\fIbof || cur || eof\fR:
+The same as above with \fIOffset\fR 0\&. 
+.RE
+.LP
+Typical error reasons are: 
+.RS 2
+.TP 4
+.B
+\fIeinval\fR:
+Either the \fILocation\fR was illegal, or it evaluated to a negative offset in the file\&. Note that if the resulting position is a negative value you will get an error but after the call it is undefined where the file position will be\&. 
+.RE
+.RE
+.LP
+.B
+pread(IoDevice, Location, Number)
+.br
+.RS
+.LP
+Combines \fIposition/2\fR and \fIread/2\fR in one operation, which is more efficient than calling them one at a time\&. If \fIIoDevice\fR has been opened in raw mode, some restrictions apply: \fILocation\fR is only allowed to be an integer; and the current position of the file is undefined after the operation\&. 
+.RE
+.LP
+.B
+pwrite(IoDevice, Location, Bytes)
+.br
+.RS
+.LP
+Combines \fIposition/2\fR and \fIwrite/2\fR in one operation, which is more efficient than calling them one at a time\&. If \fIIoDevice\fR has been opened in raw mode, some restrictions apply: \fILocation\fR is only allowed to be an integer; and the current position of the file is undefined after the operation\&. 
+.RE
+.LP
+.B
+read(IoDevice, Number)
+.br
+.RS
+.LP
+Reads \fINumber\fR bytes from the file described by \fIIoDevice\fR\&. This function is the only way to read from a file opened in raw mode (although it works for normally opened files, too)\&. Returns: 
+.RS 2
+.TP 4
+.B
+\fI{ok, ListOrBinary}\fR:
+If the file was opened in binary mode, the read bytes are returned in a binary, otherwise in a list\&. The list or binary will be shorter than the the number of bytes requested if the end of the file is reached\&.
+.TP 4
+.B
+\fIeof\fR:
+\fIeof\fR is returned if the \fINumber\fR was greater than zero and end of file was reached before anything at all could be read\&.
+.TP 4
+.B
+\fI{error, Reason}\fR:
+A Posix error code will be returned if an error occurred\&. 
+.RS 4
+.LP
+Typical error reasons: 
+.RS 2
+.TP 4
+.B
+\fIebadf\fR:
+The file is not opened for reading\&. 
+.RE
+.RE
+.RE
+.RE
+.LP
+.B
+read_file(Filename)
+.br
+.RS
+.LP
+Returns \fI{ok, Binary}\fR, where \fIBinary\fR is a binary data object that contains the contents of \fIFilename\fR, or \fI{error, Reason}\fR if an error occurs\&. 
+.LP
+Typical error reasons: 
+.RS 2
+.TP 4
+.B
+\fIenoent\fR:
+The file does not exist\&. 
+.TP 4
+.B
+\fIeacces\fR:
+Missing permission for reading the file, or for searching one of the parent directories\&. 
+.TP 4
+.B
+\fIeisdir\fR:
+The named file is a directory\&. 
+.TP 4
+.B
+\fIenotdir\fR:
+A component of the file name is not a directory\&. On some platforms, \fIenoent\fR is returned instead\&. 
+.TP 4
+.B
+\fIenomem\fR:
+There is not enough memory for the contents of the file\&. 
+.RE
+.RE
+.LP
+.B
+read_file_info(Filename)
+.br
+.RS
+.LP
+Retrieves information about a file\&. Returns \fI{ok, FileInfo}\fR if successful, otherwise \fI{error, Reason}\fR\&. \fIFileInfo\fR is a record\&. Its definition can be found by including \fIfile\&.hrl\fR from the kernel application: 
+
+.nf
+          -include_lib("kernel/include/file\&.hrl")\&.
+.fi
+.LP
+The record contains the following fields\&. 
+.RS 2
+.TP 4
+.B
+\fIsize\fR:
+Size of file in bytes\&.
+.TP 4
+.B
+\fItype\fR:
+The type of the file which can be \fIdevice\fR, \fIdirectory\fR, \fIregular\fR, or \fIother\fR\&.
+.TP 4
+.B
+\fIaccess\fR:
+The current system access to the file, which is one of the atoms \fIread\fR, \fIwrite\fR, \fIread_write\fR, or \fInone\fR\&. 
+.TP 4
+.B
+\fIatime\fR:
+The last (local) time the file was read, in the format \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&. 
+.TP 4
+.B
+\fImtime\fR:
+The last (local) time the file was written, in the format \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&. 
+.TP 4
+.B
+\fIctime\fR:
+The interpreation of this time field depends on the operating system\&. On Unix, it is the last time the file or or the inode was changed\&. In Windows, it is the create time\&. The format is \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&.
+.TP 4
+.B
+\fImode\fR:
+An integer which gives the file permissions as a sum of the following bit values: 
+.RS 4
+.RS 2
+.TP 4
+.B
+8#00400:
+read permission: owner
+.TP 4
+.B
+8#00200:
+write permission: owner
+.TP 4
+.B
+8#00100:
+execute permission: owner
+.TP 4
+.B
+8#00040:
+read permission: group
+.TP 4
+.B
+8#00020:
+write permission: group
+.TP 4
+.B
+8#00010:
+execute permission: group
+.TP 4
+.B
+8#00004:
+read permission: other
+.TP 4
+.B
+8#00002:
+write permission: other
+.TP 4
+.B
+8#00001:
+execute permission: other
+.TP 4
+.B
+16#800:
+set user id on execution
+.TP 4
+.B
+16#400:
+set group id on execution
+.RE
+.LP
+
+.LP
+On Unix platforms, other bits than those listed above may be set\&. 
+.RE
+.TP 4
+.B
+\fIlinks\fR:
+Number of links to the file (this will always be 1 for file systems which have no concept of links)\&.
+.TP 4
+.B
+\fImajor_device\fR:
+An integer which identifies the file system where the file is located\&. In Windows, the number indicates a drive as follows: 0 means A:, 1 means B:, and so on\&.
+.TP 4
+.B
+\fIminor_device\fR:
+Only valid for character devices on Unix\&. In all other cases, this field is zero\&.
+.TP 4
+.B
+\fIinode\fR:
+An integer which gives the \fIinode\fR number\&. On non-Unix file systems, this field will be zero\&.
+.TP 4
+.B
+\fIuid\fR:
+An integer which indicates the owner of the file\&. Will be zero for non-Unix file systems\&.
+.TP 4
+.B
+\fIgid\fR:
+An integer which gives the group that the owner of the file belongs to\&. Will be zero for non-Unix file systems\&.
+.RE
+.LP
+Typical error reasons: 
+.RS 2
+.TP 4
+.B
+\fIeacces\fR:
+Missing search permission for one of the parent directories of the file\&. 
+.TP 4
+.B
+\fIenoent\fR:
+The file does not exist\&. 
+.TP 4
+.B
+\fIenotdir\fR:
+A component of the file name is not a directory\&. On some platforms, \fIenoent\fR is returned instead\&. 
+.RE
+.RE
+.LP
+.B
+read_link(Linkname)
+.br
+.RS
+.LP
+This function returns \fI{ok, Filename}\fR if \fILinkname\fR refers to a symbolic link or \fI{error, Reason}\fR otherwise\&. On platforms that do not support symbolic links, the return value will be \fI{error, enotsup}\fR\&. 
+.LP
+Typical error reasons:
+.RS 2
+.TP 4
+.B
+\fIeinval\fR:
+\fILinkname\fR does not refer to a symbolic link\&. 
+.TP 4
+.B
+\fIenoent\fR:
+The file does not exist\&. 
+.TP 4
+.B
+\fIenotsup\fR:
+Symbolic links are not supported on this platform\&. 
+.RE
+.RE
+.LP
+.B
+read_link_info(Filename)
+.br
+.RS
+.LP
+This function works like \fIread_file_info/1\fR, except that if \fIFilename\fR is a symbolic link, information about the link will be returned in the \fIfile_info\fR record and the \fItype\fR field of the record will be set to \fIsymlink\fR\&. If \fIFilename\fR is not a symbolic link, this function returns exactly the same result as \fIread_file_info/1\fR\&. On platforms that do not support symbolic link, this function is always equvivalent to \fIread_file_info/1\fR\&. 
+.RE
+.LP
+.B
+rename(Source, Destination)
+.br
+.RS
+.LP
+Tries to rename the file \fISource\fR to\fIDestination\fR\&. It can be used to move files (and directories) between directories, but it is not sufficient to specify the destination only\&. The destination file name must also be specified\&. For example, if \fIbar\fR is a normal file and \fIfoo\fR and \fIbaz\fR are directories, \fIrename("foo/bar", "baz")\fR returns an error, but \fIrename("foo/bar", "baz/bar")\fR succeeds\&. Returns \fIok\fR if it is successful\&.
+.SS Note:
+.LP
+Renaming of open files is not allowed on most platforms (see \fIeacces\fR below)\&.
+
+.LP
+Typical error reasons: 
+.RS 2
+.TP 4
+.B
+\fIeacces\fR:
+Missing read or write permissions for the parent directories of \fISource\fR or \fIDestination\fR\&. On some platforms, this error is given if either \fISource\fR or \fIDestination\fR is open\&. 
+.TP 4
+.B
+\fIeexist\fR:
+\fIDestination\fR is not an empty directory\&. On some platforms, also given when \fISource\fR and \fIDestination\fR are not of the same type\&. 
+.TP 4
+.B
+\fIeinval\fR:
+\fISource\fR is a root directory, or \fIDestination\fR is a sub-directory of \fISource\fR\&. 
+.TP 4
+.B
+\fIeisdir\fR:
+\fIDestination\fR is a directory, but \fISource\fR is not\&. 
+.TP 4
+.B
+\fIenoent\fR:
+\fISource\fR does not exist\&. 
+.TP 4
+.B
+\fIenotdir\fR:
+\fISource\fR is a directory, but \fIDestination\fR is not\&. 
+.TP 4
+.B
+\fIexdev\fR:
+\fISource\fR and \fIDestination\fR are on different file systems\&. 
+.RE
+.RE
+.LP
+.B
+set_cwd(DirName)
+.br
+.RS
+.LP
+Sets the current working directory of the file server to \fIDirName\fR\&. Returns \fIok\fR if successful\&. 
+.LP
+Typical error reasons are: 
+.RS 2
+.TP 4
+.B
+\fIenoent\fR:
+The directory does not exist\&. 
+.TP 4
+.B
+\fIenotdir\fR:
+A component of \fIDirName\fR is not a directory\&. On some platforms, \fIenoent\fR is returned\&. 
+.TP 4
+.B
+\fIeacces\fR:
+Missing permission for the directory or one of its parents\&. 
+.RE
+.RE
+.LP
+.B
+sync(IoDevice)
+.br
+.RS
+.LP
+Makes sure that any buffers kept by the operating system (not by the Erlang runtime system) are written to disk\&. On some platforms, this function might have no effect \&. 
+.RE
+.LP
+.B
+truncate(IoDevice)
+.br
+.RS
+.LP
+Truncates the file referenced by \fIIoDevice\fR at the current position\&. Returns \fIok\fR if successful, otherwise \fI{error, Reason}\fR\&. 
+.RE
+.LP
+.B
+write(IoDevice, Bytes)
+.br
+.RS
+.LP
+Writes \fIBytes\fR (possibly a deep list of characters, or a binary) to the file described by \fIIoDevice\fR\&. This function is the only way to write to a file opened in raw mode (although it works for normally opened files, too)\&. 
+.LP
+This function returns \fIok\fR if successful, and \fI{error, Reason}\fR otherwise\&. 
+.LP
+Typical error reasons are: 
+.RS 2
+.TP 4
+.B
+\fIebadf\fR:
+The file is not opened for writing\&. 
+.TP 4
+.B
+\fIenospc\fR:
+There is a no space left on the device\&. 
+.RE
+.RE
+.LP
+.B
+write_file(Filename, Binary)
+.br
+.RS
+.LP
+Writes the contents of the binary data object \fIBinary\fR to the file \fIFilename\fR\&. The file is created if it does not exist already\&. If it exists, the previous contents are overwritten\&. Returns \fIok\fR, or \fI{error, Reason}\fR\&. 
+.LP
+Typical error reasons are: 
+.RS 2
+.TP 4
+.B
+\fIenoent\fR:
+A component of the file name does not exist\&. 
+.TP 4
+.B
+\fIenotdir\fR:
+A component of the file name is not a directory\&. On some platforms, \fIenoent\fR is returned instead\&. 
+.TP 4
+.B
+\fIenospc\fR:
+There is a no space left on the device\&. 
+.TP 4
+.B
+\fIeacces\fR:
+Missing permission for writing the file or searching one of the parent directories\&. 
+.TP 4
+.B
+\fIeisdir\fR:
+The named file is a directory\&. 
+.RE
+.RE
+.LP
+.B
+write_file_info(Filename, FileInfo)
+.br
+.RS
+.LP
+Change file information\&. Returns \fIok\fR if successful, otherwise \fI{error, Reason}\fR\&. \fIFileInfo\fR is a record\&. Its definition can be found by including \fIfile\&.hrl\fR from the kernel application: 
+
+.nf
+          -include_lib("kernel/include/file\&.hrl")\&.
+.fi
+.LP
+The following fields are used from the record if they are given\&. 
+.RS 2
+.TP 4
+.B
+\fIatime\fR:
+The last (local) time the file was read, in the format \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&. 
+.TP 4
+.B
+\fImtime\fR:
+The last (local) time the file was written, in the format \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&. 
+.TP 4
+.B
+\fIctime\fR:
+On Unix, any value give for this field will be ignored (the "ctime" for the file will be set to the current time)\&. On Windows, this field is the new creation time to set for the file\&. The format is \fI{{Year, Month, Day}, {Hour, Minute, Second}}\fR\&.
+.TP 4
+.B
+\fImode\fR:
+An integer which gives the file permissions as a sum of the following bit values: 
+.RS 4
+.RS 2
+.TP 4
+.B
+8#00400:
+read permission: owner
+.TP 4
+.B
+8#00200:
+write permission: owner
+.TP 4
+.B
+8#00100:
+execute permission: owner
+.TP 4
+.B
+8#00040:
+read permission: group
+.TP 4
+.B
+8#00020:
+write permission: group
+.TP 4
+.B
+8#00010:
+execute permission: group
+.TP 4
+.B
+8#00004:
+read permission: other
+.TP 4
+.B
+8#00002:
+write permission: other
+.TP 4
+.B
+8#00001:
+execute permission: other
+.TP 4
+.B
+16#800:
+set user id on execution
+.TP 4
+.B
+16#400:
+set group id on execution
+.RE
+.LP
+
+.LP
+On Unix platforms, other bits than those listed above may be set\&. 
+.RE
+.TP 4
+.B
+\fIuid\fR:
+An integer which indicates the owner of the file\&. Ignored for non-Unix file systems\&.
+.TP 4
+.B
+\fIgid\fR:
+An integer which gives the group that the owner of the file belongs to\&. Ignored non-Unix file systems\&.
+.RE
+.LP
+Typical error reasons: 
+.RS 2
+.TP 4
+.B
+\fIeacces\fR:
+Missing search permission for one of the parent directories of the file\&. 
+.TP 4
+.B
+\fIenoent\fR:
+The file does not exist\&. 
+.TP 4
+.B
+\fIenotdir\fR:
+A component of the file name is not a directory\&. On some platforms, \fIenoent\fR is returned instead\&. 
+.RE
+.RE
+.SH POSIX Error Codes
+.RS 2
+.TP 4
+.B
+eacces:
+permission denied
+.TP 4
+.B
+eagain:
+resource temporarily unavailable
+.TP 4
+.B
+ebadf:
+bad file number
+.TP 4
+.B
+ebusy:
+file busy
+.TP 4
+.B
+edquot:
+disk quota exceeded
+.TP 4
+.B
+eexist:
+file already exists
+.TP 4
+.B
+efault:
+bad address in system call argument
+.TP 4
+.B
+efbig:
+file too large
+.TP 4
+.B
+eintr:
+interrupted system call
+.TP 4
+.B
+einval:
+invalid argument
+.TP 4
+.B
+eio:
+I/O error
+.TP 4
+.B
+eisdir:
+illegal operation on a directory
+.TP 4
+.B
+eloop:
+too many levels of symbolic links
+.TP 4
+.B
+emfile:
+too many open files
+.TP 4
+.B
+emlink:
+too many links
+.TP 4
+.B
+enametoolong:
+file name too long
+.TP 4
+.B
+enfile:
+file table overflow
+.TP 4
+.B
+enodev:
+no such device
+.TP 4
+.B
+enoent:
+no such file or directory
+.TP 4
+.B
+enomem:
+not enough memory
+.TP 4
+.B
+enospc:
+no space left on device
+.TP 4
+.B
+enotblk:
+block device required
+.TP 4
+.B
+enotdir:
+not a directory
+.TP 4
+.B
+enotsup:
+operation not supported
+.TP 4
+.B
+enxio:
+no such device or address
+.TP 4
+.B
+eperm:
+not owner
+.TP 4
+.B
+epipe:
+broken pipe
+.TP 4
+.B
+erofs:
+read-only file system
+.TP 4
+.B
+espipe:
+invalid seek
+.TP 4
+.B
+esrch:
+no such process
+.TP 4
+.B
+estale:
+stale remote file handle
+.TP 4
+.B
+exdev:
+cross-domain link
+.RE
+.SH Warnings
+.LP
+If an error occurs when accessing an open file with the \fIio\fR module, the process which handles the file will exit\&. The dead file process might hang if a process tries to access it later\&. This will be fixed in a future release\&. 
+.SH See Also
+.LP
+filename(3) 
+.SH AUTHORS
+.nf
+Robert Virding - support@erlang.ericsson.se
+Claes Wikstrom - support@erlang.ericsson.se
+Bjorn Gustavsson - support@erlang.ericsson.se
+.fi

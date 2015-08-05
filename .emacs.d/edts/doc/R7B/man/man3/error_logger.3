@@ -1,0 +1,344 @@
+.TH error_logger 3 "kernel  2.6.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+error_logger \- The Erlang Error Logger
+.SH DESCRIPTION
+.LP
+The error logger is an event manager behaviour which runs with the registered name \fIerror_logger\fR (see more about event managers/handlers in the Design Principles chapter and in gen_event(3))\&. All error messages from the Erlang runtime system are sent to this process as messages with the format \fI{emulator, Gleader, Str}\fR, where \fIStr\fR is a string which describes the error in plain English\&. The \fIGleader\fR argument is the group leader process of the process causing the error\&. This is useful in a distributed setting as all error messages can be returned to the \fIerror_logger\fR process on the originating node\&. 
+.LP
+All errors detected by the standard libraries are reported with the \fIerror_logger\fR functions\&. Errors detected in application modules should also be reported through the \fIerror_logger\fR in order to get uniform reports\&. 
+.LP
+Associated event handlers can be used to add private \fItypes\fR of reports to the \fIerror_logger\fR\&. An event handler which recognizes the specialized report type is first added to the \fIerror_logger\fR (\fIadd_report_handler/1, 2\fR) 
+.LP
+The standard configuration of the \fIerror_logger\fR supports the logging of errors to the \fItty\fR, or to a specified \fIfile\fR\&. There is also a multi-file logger which logs all events, not only the standard error events, to several files\&. (see log_mf_h(3))\&. 
+.LP
+All error events are tagged with the group leader \fIGleader\fR in order to send the error to the originating node\&. 
+
+.SH EXPORTS
+.LP
+.B
+start() -> {ok, Pid} | {error, What}
+.br
+.B
+start_link() -> {ok, Pid} | {error, What}
+.br
+.RS
+.TP
+Types
+Pid = pid()
+.br
+What = {already_started, Pid} | term()
+.br
+.RE
+.RS
+.LP
+Starts the \fIerror_logger\fR\&. The \fIstart_link\fR function should be used when the \fIerror_logger\fR is supervised 
+.RE
+.LP
+.B
+error_report(Report) -> ok
+.br
+.RS
+.TP
+Types
+Report = [{Tag, Data}] | [term()] | string() | term()
+.br
+Tag = term()
+.br
+Data = term()
+.br
+.RE
+.RS
+.LP
+Sends a standard error report event to the error logger\&. This report event is handled by the standard event handler\&. The report is formatted as follows: 
+
+.nf
+Tag1:   Data1
+Tag2:   Data2
+Term1
+Term2
+.fi
+.LP
+If \fIReport\fR is a string(), the string is written\&. 
+.LP
+The report is written with an error heading\&. 
+.RE
+.LP
+.B
+error_report(Type,Report) -> ok
+.br
+.RS
+.TP
+Types
+Type = term()
+.br
+Report = [{Tag, Data}] | [term()] | string() | term()
+.br
+Tag = term()
+.br
+Data = term()
+.br
+.RE
+.RS
+.LP
+Sends a user defined error report type event to the error logger\&. If specialized error handling is required, an event handler recognizing this \fIType\fR of report must first be added to the \fIerror_logger\fR\&. 
+.LP
+It is recommended that the \fIReport\fR follows the same structure as \fIerror_report/1\fR above\&. 
+.RE
+.LP
+.B
+info_report(Report) -> ok
+.br
+.RS
+.TP
+Types
+Report = [{Tag, Data}] | [term()] | string() | term()
+.br
+Tag = term()
+.br
+Data = term()
+.br
+.RE
+.RS
+.LP
+Sends an information report to the error logger\&. This report event is handled by the standard event handler\&. The report is formatted as follows: 
+
+.nf
+Tag1:   Data1
+Tag2:   Data2
+Term1
+Term2
+.fi
+.LP
+If \fIReport\fR is a string(), the string is written\&. 
+.LP
+The report is written with an information heading\&. 
+.RE
+.LP
+.B
+info_report(Type,Report) -> ok
+.br
+.RS
+.TP
+Types
+Type = term()
+.br
+Report = [{Tag, Data}] | [term()] | string() | term()
+.br
+Tag = term()
+.br
+Data = term()
+.br
+.RE
+.RS
+.LP
+Sends a user defined information report type event to the error logger\&. If specialized error handling is required, an event handler recognizing this \fIType\fR of report must first be added to the \fIerror_logger\fR\&. 
+.LP
+It is recommended that the \fIReport\fR follows the same structure as \fIinfo_report/1\fR above\&. 
+.RE
+.LP
+.B
+error_msg(Format) -> ok
+.br
+.B
+error_msg(Format,Args) -> ok
+.br
+.B
+format(Format,Args) -> ok
+.br
+.RS
+.TP
+Types
+Format = string()
+.br
+Args = [term()]
+.br
+.RE
+.RS
+.LP
+Sends an error event to the error logger\&. The \fIFormat\fR and \fIArgs\fR arguments are the same as the arguments of \fIio:format/2\fR\&. These events are handled by the standard event handler\&. 
+.RE
+.LP
+.B
+info_msg(Format) -> ok
+.br
+.B
+info_msg(Format,Args) -> ok
+.br
+.RS
+.TP
+Types
+Format = string()
+.br
+Args = [term()]
+.br
+.RE
+.RS
+.LP
+Sends an information event to the error logger\&. The \fIFormat\fR and \fIArgs\fR arguments are the same as the arguments of \fIio:format/2\fR\&. These events are handled by the standard event handler\&. 
+.RE
+.LP
+.B
+tty(Flag) -> ok
+.br
+.RS
+.TP
+Types
+Flag = true | false
+.br
+.RE
+.RS
+.LP
+Enables or disables error printouts to the tty\&. If \fIFlag\fR is \fIfalse\fR, all text that the error logger would have sent to the terminal is discarded\&. If \fIFlag\fR is \fItrue\fR, error messages are sent to the terminal screen\&. 
+.RE
+.LP
+.B
+logfile(Request) -> ok | FileName | {error, What}
+.br
+.RS
+.TP
+Types
+Request = {open, FileName} | close | filename
+.br
+FileName = atom() | string()
+.br
+What = term()
+.br
+.RE
+.RS
+.LP
+This function makes it possible to append a copy of all standard error printouts to a file\&. It can be used in combination with the \fItty(false)\fR function in to have a silent system, where all errors are logged to a file\&. 
+.LP
+\fIRequest\fR can be: 
+.LP
+
+.RS 2
+.TP 2
+*
+\fI{open, Filename}\fR\&. Opens the file \fIFilename\fR to store a copy of all error messages\&. Returns \fIok\fR, or \fI{error, What}\fR\&. 
+.RS 2
+.LP
+
+.RE
+.TP 2
+*
+\fIclose\fR\&. Closes the current log file\&. Returns \fIok\fR, or \fI{error, What}\fR\&. 
+.RS 2
+.LP
+
+.RE
+.TP 2
+*
+\fIfilename\fR\&. Returns \fI{error, What}\fR or \fIFileName\fR, where \fIFileName\fR is the name of the open log file\&. 
+.RE
+.LP
+There can only be one active log file\&. 
+.RE
+.LP
+.B
+add_report_handler(Module) -> ok | Other
+.br
+.B
+add_report_handler(Module,Args) -> ok | Other
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Args = term()
+.br
+Other = term()
+.br
+.RE
+.RS
+.LP
+Adds a new event handler to the error logger\&. The event handler is initialized by a call to the \fIModule\fR:init/1 function\&. This function must return \fI{ok, State}\fR\&. If anything else (\fIOther\fR) is returned, the handler is not added\&. 
+.LP
+The report (event) handler will be called for every error event that the error logger receives (\fIModule:handle_event/2\fR)\&. Errors dedicated to this handler should be handled accordingly\&. 
+.RE
+.LP
+.B
+delete_report_handler(Module) -> Return | {error, What}
+.br
+.RS
+.TP
+Types
+Module = atom()
+.br
+Return = term()
+.br
+What = term()
+.br
+.RE
+.RS
+.LP
+Deletes an error report (event) handler\&. The \fIModule\fR:terminate/2 function is called in order to finalize the event handler\&. The return value of the terminate/2 function is \fIReturn\fR\&. 
+.RE
+.LP
+.B
+swap_handler(ToHandler) -> ok
+.br
+.RS
+.TP
+Types
+ToHandler = tty | {logfile, File}
+.br
+File = atom() | string()
+.br
+.RE
+.RS
+.LP
+The \fIerror_logger\fR event manager is initially started with a primitive event handler which buffers and prints the raw error events\&. However, this function does install the standard event handler to be used according to the system configuration\&. 
+.RE
+.SH Events
+.LP
+The error logger event manager forwards the following events to all added event handlers\&. In the events that follow, \fIGleader\fR is the group leader process identity of the error reporting process, and \fIEPid\fR is the process identity of the \fIerror_logger\fR\&. All other variables are described with the function in which they appear\&. 
+.LP
+
+.RS 2
+.TP 4
+.B
+\fI{error_report, Gleader, {Epid, std_error, Report}}\fR:
+This event is generated when the \fIerror_report/1\fR function is called\&. 
+.TP 4
+.B
+\fI{error_report, Gleader, {Epid, Type, Report}}\fR:
+This event is generated when the \fIerror_report/2\fR function is called\&. 
+.TP 4
+.B
+\fI{info_report, Gleader, {Epid, std_info, Report}}\fR:
+This event is generated when the \fIinfo_report/1\fR function is called\&. 
+.TP 4
+.B
+\fI{info_report, Gleader, {Epid, Type, Report}}\fR:
+This event is generated when the \fIinfo_report/2\fR function is called\&. 
+.TP 4
+.B
+\fI{error, Gleader, {EPid, Format, Args}}\fR:
+This event is generated when the \fIerror_msg\fR or \fIformat\fR functions are called\&. 
+.TP 4
+.B
+\fI{info_msg, Gleader, {EPid, Format, Args}}\fR:
+This event is generated when the \fIinfo_msg\fR functions are called\&. 
+.TP 4
+.B
+\fI{info, Gleader, {EPid, term(), []}}\fR:
+This structure is only used by the \fIinit\fR process for erroneously received messages\&. 
+.TP 4
+.B
+\fI{emulator, Gleader, string()}\fR:
+This event is generated by the runtime system\&. If the error was not issued by a special process, \fIGleader\fR is \fInoproc\fR\&. This event should be handled in the \fIhandle_info/2\fR function of the event handler\&. 
+.RE
+.SS Note:
+.LP
+All events issued by a process which has the group leader \fIGleader\fR process located on another node will be passed to this node by the \fIerror_logger\fR\&. 
+
+.SH See Also
+.LP
+gen_event(3), log_mf_h(3) 
+.SH AUTHORS
+.nf
+Joe Armstrong - support@erlang.ericsson.se
+Magnus Froberg - support@erlang.ericsson.se
+Claes Wikstrom - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,594 @@
+
+
+
+systools(3)         ERLANG MODULE DEFINITION          systools(3)
+
+
+
+MODULE
+     systools - A Set of script Generators.
+
+DESCRIPTION
+     This module contains functions  to  generate  boot  scripts,
+     release  upgrade  scripts,  and  release packages. A release
+     file (.rel), application definition files (.app), and appli-
+     cation upgrade files (.appup) are required as input to these
+     functions. The syntax definitions for  these  files  can  be
+     found  in rel(4), app(4) and appup(4) respectively, and also
+     in the Design Principles chapter  and  in  the  SASL  User's
+     Guide.
+
+     If a boot script is written without using the generator,  it
+     can  be  transformed to a binary form with the _s_c_r_i_p_t_2_b_o_o_t/_1
+     function, as required by the Erlang  runtime  system  during
+     start-up.
+
+     The behaviour functions  described  below  can  be  used  to
+     obtain a list of the system defined behaviours, and informa-
+     tion about which callback functions are required for each of
+     them.
+
+
+EXPORTS
+     behaviour_info() -> [Behaviour]
+
+          Types
+               Behaviour = atom()
+
+          Returns a list of the behaviours defined in Erlang/OTP.
+          _g_e_n__s_e_r_v_e_r and _g_e_n__e_v_e_n_t are examples of behaviours.
+
+     behaviour_info(Behaviour) -> [Function]
+
+          Types
+               Behaviour = atom()
+               Function = {Name, Arity}
+               Name = atom()
+               Arity = int()
+
+          A behaviour calls a number of functions in the callback
+          module.  The  functions  that  a callback module has to
+          export are returned by this function. _B_e_h_a_v_i_o_u_r is  the
+          same as returned from the _b_e_h_a_v_i_o_u_r__i_n_f_o/_0 function.
+
+     make_script(ReleaseName) -> MakeRet
+     make_script(ReleaseName,Opts) -> MakeRet
+
+          Types
+               ReleaseName = string()
+               Opts  =  [{path,  Path}  |  silent   |   local   |
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    1
+
+
+
+
+
+
+systools(3)         ERLANG MODULE DEFINITION          systools(3)
+
+
+
+               no_module_tests  |  {variables,  Vars} | {machine,
+               Machine} | exref | {exref, [AppName]}]
+               Path = [Dir]
+               Dir = string()
+               Vars = [Var]
+               Var = {VarName, PreFixDir}
+               VarName = atom() | string()
+               PreFixDir = string()
+               Machine = atom()
+               AppName = atom()
+               MakeRet = ok | error | {ok,  Module,  Warnings}  |
+               {error, Module, Error}
+               Warnings = void()
+               Module = atom()
+               Error = void()
+
+          A   boot   script   file   is   generated   from    the
+          _R_e_l_e_a_s_e_N_a_m_e._r_e_l   file.   The   _R_e_l_e_a_s_e_N_a_m_e._s_c_r_i_p_t  and
+          _R_e_l_e_a_s_e_N_a_m_e._b_o_o_t files are generated. The release  file
+          contains a specification of the version of the release,
+          and the name and version of the applications  that  are
+          included.
+
+          The script generator searches the  normal  code  server
+          path  for  the _R_e_l_e_a_s_e_N_a_m_e._r_e_l file and the application
+          files _A_p_p_l_i_c_a_t_i_o_n_N_a_m_e._a_p_p. A path {_p_a_t_h, _P_a_t_h}  can  be
+          specified  and  appended  to the code server path. Each
+          directory in _P_a_t_h can be given with the wildcard * (  *
+          is  the  only  wildcard  recognized). A directory given
+          with wildcards is expanded to all matching directories.
+          *  is translated to "any character except /". If /*/ is
+          specified - * is the only character given between two /
+          characters  -  the  corresponding regular expression is
+          [^/]+ and it represents a directory.
+
+          The compiled Erlang modules should be  located  in  the
+          same  directory as the ._a_p_p file. The function searches
+          for  the  source  code  in  the  corresponding  _s_r_c  or
+          _s_r_c/_e__s_r_c  directory  if the directory name of the ._a_p_p
+          file directory ends with /_e_b_i_n. Otherwise, it  searches
+          for the source code in the ._a_p_p file directory.
+
+          The correctness of each  application  is  checked.  The
+          following checks are performed:
+
+            * The version of the application file found.
+
+            * Dependencies to applications not  included  in  the
+              release.
+
+            * Circular dependencies among applications.
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    2
+
+
+
+
+
+
+systools(3)         ERLANG MODULE DEFINITION          systools(3)
+
+
+
+            * Duplicated module names.
+
+            * Version compliance  between  modules  and  versions
+              specified in the application file.
+
+            * Currency of object code for each module.
+
+          The boot script is generated if all checks  are  satis-
+          factory. The applications are loaded and started in the
+          order specified in the release file. The  exception  to
+          this  order  are  dependencies  between applications as
+          specified in the application files. These  dependencies
+          specify  that  applications on which other applications
+          depend must be started first.
+
+          If the _n_o__m_o_d_u_l_e__t_e_s_t_s option is specified, the  module
+          version  and  object  code  checks  are  excluded. This
+          implies that a boot script can be generated without the
+          requirement  that each ._a_p_p file must be located in the
+          same directory as  the  modules  which  belong  to  the
+          application.
+
+          The checks performed before the  boot  script  is  gen-
+          erated  can  be  extended  with  some rudimentary cross
+          reference checks by specifying the _e_x_r_e_f option.  These
+          checks  are  performed with the _e_x_r_e_f tool. All modules
+          specified in the application resource files are  loaded
+          into  the  _e_x_r_e_f  tool. A warning is generated for each
+          call to an undefined function, but only explicit  func-
+          tion  calls  are checked. No cross reference checks are
+          performed if the _e_x_r_e_f option is specified in  combina-
+          tion with the _n_o__m_o_d_u_l_e__t_e_s_t_s option.
+
+          As the cross reference checks can be heavy, the set  of
+          modules  to  be  checked  can  be  limited. The {_e_x_r_e_f,
+          [_A_p_p_N_a_m_e]} option specifies the applications  in  which
+          modules should be cross referenced checked. One warning
+          only is generated for each application  whenever  calls
+          are  found  to  functions in applications which are not
+          cross reference checked.
+
+          The generated boot script contains a search path to all
+          included  applications.  By default, all directories in
+          the path are relative to the installation directory  of
+          the Erlang runtime system which uses the boot script.
+
+          The _v_a_r_i_a_b_l_e_s option can be used to specify an  instal-
+          lation  directory  other  than  the Erlang installation
+          directory for user provided applications. If the option
+          {_v_a_r_i_a_b_l_e_s,  [{"_T_E_S_T",  "/_h_o_m_e/_x_x_x/_a_p_p_l_i_c_a_t_i_o_n_s"}]}  is
+          supplied, all applications found underneath this direc-
+          tory  will  have  $_T_E_S_T  substituted  in  place  of the
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    3
+
+
+
+
+
+
+systools(3)         ERLANG MODULE DEFINITION          systools(3)
+
+
+
+          directory. The variable  substitution  mechanism  needs
+          absolute  paths. Therefore, the paths specified (either
+          in the code server path, or with the _p_a_t_h option)  must
+          be absolute. The following example illustrates this:
+
+          /home/xxx/applications/type1/app1/ebin
+                                      /app2/ebin
+                                 type2/app3/ebin
+                                 app4/ebin
+
+          The boot script is generated as:
+
+          systools:make_script(RelName,
+                               [{path,["/home/xxx/applications/*/ebin"]},
+                                {variables,[{"TEST","/home/xxx/applications"}]}])
+
+          In the generated boot script, the path looks as follows
+          for the applications _a_p_p_1 - _a_p_p_4:
+
+          [...
+           "$TEST/type1/app1-Vsn/ebin",
+           "$TEST/type1/app2-Vsn/ebin",
+           "$TEST/type2/app3-Vsn/ebin",
+           "$TEST/app4-Vsn/ebin"]
+
+          When  starting  the  system  with  the  generated  boot
+          script,  the  _T_E_S_T  variable is given a value using the
+          -_b_o_o_t__v_a_r _V_a_r _V_a_l_u_e command line flag. In the  previous
+          example,  _V_a_r  is  _T_E_S_T  and  _V_a_l_u_e  is the name of the
+          directory where these applications are  installed.  The
+          -_b_o_o_t__v_a_r flag is described for the _i_n_i_t module.
+
+          The _l_o_c_a_l option can also be used to change the default
+          path as well. If the _l_o_c_a_l option is supplied, the path
+          includes the actual directories where the  applications
+          were  found.  This  is a useful way to test a generated
+          boot script locally.
+
+          The _m_a_c_h_i_n_e option can  be  used  to  generate  a  boot
+          script  for  an  Erlang  machine other than the running
+          machine. This is important  when  checking  the  object
+          code,  as  the  file  extension  can differ between the
+          machines (for example ._b_e_a_m).
+
+          By default, this function writes all errors  and  warn-
+          ings  to  the  tty  and returns _o_k or _e_r_r_o_r. Nothing is
+          written to the tty if the _s_i_l_e_n_t  option  is  supplied,
+          but  the  function  returns  {_o_k,  _M_o_d_u_l_e, _W_a_r_n_i_n_g_s} or
+          {_e_r_r_o_r, _M_o_d_u_l_e, _E_r_r_o_r_s} instead. To convert  the  _W_a_r_n_-
+          _i_n_g_s    and    _E_r_r_o_r_s    terms    to    strings,    the
+          _M_o_d_u_l_e:format_warning(_W_a_r_n_i_n_g_s)                     and
+          _M_o_d_u_l_e:format_error(_E_r_r_o_r_s)    functions   are   called
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    4
+
+
+
+
+
+
+systools(3)         ERLANG MODULE DEFINITION          systools(3)
+
+
+
+          respectively.
+
+     make_relup(ReleaseName,UpNameList,DownNameList) -> RelRet
+     make_relup(ReleaseName,UpNameList,DownNameList,Opts) -> Rel-
+     Ret
+
+          Types
+               ReleaseName = string() | atom()
+               UpNameList = NameList
+               DownNameList = NameList
+               NameList = [ReleaseName |  {ReleaseName,  Descrip-
+               tion}]
+               Description = term()
+               Opts  =  [{path,  Path}  |  silent  |   noexec   |
+               restart_emulator]
+               Path = [Dir]
+               Dir = string()
+               RelRet = ok | error | {ok,  Relup,  Module,  Warn-
+               ings} | {error, Module, Error}
+               Relup = {Vsn, UpScript, DownScript}
+               UpScript = RelupScript
+               DownScript = RelupScript
+               RelupScript = [{Vsn, Description, Script}]
+               Script = [low_level_release_upgrade_instructions]
+               Warnings = void()
+               Module = atom()
+               Error = void()
+
+          A _r_e_l_u_p  file  is  generated  which  describes  how  to
+          upgrade  the system from a number of previous releases,
+          and also how to downgrade from  a  number  of  previous
+          releases.
+
+          The _r_e_l_u_p file is built by gathering all  the  applica-
+          tion release upgrade scripts and picking those applica-
+          ble for  each  combination  of  release  versions.  The
+          scripts  are  also  translated  from high level release
+          instructions to low level instructions. The normal code
+          server    path    is   searched   for   release   files
+          (_R_e_l_e_a_s_e_N_a_m_e._r_e_l)      and      application       files
+          (_A_p_p_l_i_c_a_t_i_o_n_N_a_m_e._a_p_p),   as  well  as  the  application
+          upgrade  scripts  files  (_A_p_p_l_i_c_a_t_i_o_n_N_a_m_e._a_p_p_u_p).   The
+          _A_p_p_l_i_c_a_t_i_o_n_N_a_m_e._a_p_p   and  _A_p_p_l_i_c_a_t_i_o_n_N_a_m_e._a_p_p_u_p  files
+          must be in the same directory. The code server path can
+          be appended with a path specified with the {_p_a_t_h, _P_a_t_h}
+          option. _P_a_t_h can contain wildcards (*) as described for
+          the _m_a_k_e__s_c_r_i_p_t function.
+
+          A _R_e_l_e_a_s_e_N_a_m_e._r_e_l  file  must  be  available  for  each
+          _U_p_N_a_m_e  and _D_o_w_n_N_a_m_e since the versions of the applica-
+          tions are compared. For each change in the  application
+          versions,    there    must   be   an   entry   in   the
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    5
+
+
+
+
+
+
+systools(3)         ERLANG MODULE DEFINITION          systools(3)
+
+
+
+          _A_p_p_l_i_c_a_t_i_o_n._a_p_p_u_p file.
+
+          The optional _D_e_s_c_r_i_p_t_i_o_n parameter which  can  be  sup-
+          plied  to  either  of the input name lists is passed to
+          the correct output script in the _r_e_l_u_p file. The param-
+          eter defaults to the empty list [].
+
+          Basically, _m_a_k_e__r_e_l_u_p combines  a  re-ordering  of  the
+          _R_e_l_e_a_s_e_N_a_m_e._r_e_l  file  and the _A_p_p_l_i_c_a_t_i_o_n._a_p_p_u_p files,
+          so that the new release version and  a  target  release
+          version  is  a  list of release upgrade scripts for all
+          applications that have changed between the two  release
+          versions.
+
+          By default, this function writes the relup script to  a
+          file named _r_e_l_u_p and all errors and warnings to the tty
+          and returns _o_k or _e_r_r_o_r. If the _s_i_l_e_n_t option  is  sup-
+          plied,  nothing  is written to the tty and the function
+          returns  {_o_k,  _R_e_l_u_p,  _M_o_d_u_l_e,  _W_a_r_n_i_n_g_s}  or   {_e_r_r_o_r,
+          _M_o_d_u_l_e,  _E_r_r_o_r}  instead,  where _R_e_l_u_p is the structure
+          written to the _r_e_l_u_p file. The Warnings and Errors  can
+          be      converted      to      strings     with     the
+          _M_o_d_u_l_e:format_warning(Warning)                      and
+          _M_o_d_u_l_e:format_error(Error)  functions.  If  the  _n_o_e_x_e_c
+          option is supplied, then  nothing  is  written  to  the
+          _r_e_l_u_p  file and the function returns one of the verbose
+          return values.
+
+          If the _r_e_s_t_a_r_t__e_m_u_l_a_t_o_r option is  supplied,  the  low-
+          level  instruction  _r_e_s_t_a_r_t__n_e_w__e_m_u_l_a_t_o_r is appended to
+          the relup scripts. This ensures that a complete  reboot
+          of  the  system  is done when the system is upgraded or
+          downgraded.
+
+     make_tar(ReleaseName) -> TarRet
+     make_tar(ReleaseName,Opts) -> TarRet
+
+          Types
+               ReleaseName = string()
+               Opts = [{path, Path} | silent  |  {dirs,  Dirs}  |
+               {erts,  ErtsDir}  |  no_module_tests | {variables,
+               Vars} | {var_tar, VarTar} | {machine,  Machine}  |
+               exref | {exref, [AppName]}]
+               Path = [Dir]
+               Dir = string()
+               Dirs = [atom()]
+               ErtsDir = string()
+               Vars = [Var]
+               Var = {VarName, PreFixDir}
+               VarName = atom() | string()
+               PreFixDir = string()
+               VarTar = include | ownfile | omit
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    6
+
+
+
+
+
+
+systools(3)         ERLANG MODULE DEFINITION          systools(3)
+
+
+
+               Machine = atom()
+               AppName = atom()
+               TarRet = ok | error |  {ok,  Module,  Warnings}  |
+               {error, Module, Error}
+               Warnings = void()
+               Module = atom()
+               Error = void()
+
+          A  release  package  file   is   generated   from   the
+          _R_e_l_e_a_s_e_N_a_m_e._r_e_l  file.  The  _R_e_l_e_a_s_e_N_a_m_e._t_a_r._g_z file is
+          generated. This file must be uncompressed and  unpacked
+          on  the  target  system  before  the new release can be
+          activated, using the _r_e_l_e_a_s_e__h_a_n_d_l_e_r.
+
+          By default, the generated release  package  contains  a
+          directory  under  the  _l_i_b  directory for each included
+          application.  Each  application  directory   is   named
+          _A_p_p_l_i_c_a_t_i_o_n_N_a_m_e-_A_p_p_l_i_c_a_t_i_o_n_V_s_n.  For  each application,
+          the _e_b_i_n  and  _p_r_i_v  directories  are  included.  These
+          directories are copied from where the applications were
+          found. If more directories are needed, it  is  possible
+          to  specify  these  with  the  {_d_i_r_s, _D_i_r_s} option. For
+          example, if the src and example directories  should  be
+          included  for  each application in the release package,
+          the {_d_i_r_s, [_s_r_c, _e_x_a_m_p_l_e_s]} option should be supplied.
+
+          The _v_a_r_i_a_b_l_e_s option can be used to specify an  instal-
+          lation  directory  other  than  the Erlang installation
+          directory for the user provided  applications.  If  the
+          option{_v_a_r_i_a_b_l_e_s, [{"_T_E_S_T", "/_h_o_m_e/_x_x_x/_a_p_p_l_i_c_a_t_i_o_n_s"}]}
+          is supplied, all  applications  found  underneath  this
+          directory  will  be  packed  into the _T_E_S_T._t_a_r._g_z file.
+          Accordingly, a separate package  is  created  for  each
+          defined  variable.  By  default,  all  these  files are
+          included at the top  level  in  the  _R_e_l_e_a_s_e_N_a_m_e._t_a_r._g_z
+          file and should be unpacked to an appropriate installa-
+          tion directory. The {_v_a_r__t_a_r,  _V_a_r_T_a_r}  option  can  be
+          used  to specify if and where a separate package should
+          be stored. In this option, _V_a_r_T_a_r is:
+
+            * _i_n_c_l_u_d_e.  Each  separate  (variable)   package   is
+              included  in the main _R_e_l_e_a_s_e_N_a_m_e._t_a_r._g_z file. This
+              is the default.
+
+            * _o_w_n_f_i_l_e. Each separate (variable) package  is  gen-
+              erated  as  separate files in the same directory as
+              the _R_e_l_e_a_s_e_N_a_m_e._t_a_r._g_z file.
+
+            * _o_m_i_t. No separate (variable) packages are generated
+              and applications which are found underneath a vari-
+              able directory are ignored.
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    7
+
+
+
+
+
+
+systools(3)         ERLANG MODULE DEFINITION          systools(3)
+
+
+
+          The normal code server path is searched for the release
+          file   _R_e_l_e_a_s_e_N_a_m_e._r_e_l   and   the   application  files
+          (_A_p_p_l_i_c_a_t_i_o_n_N_a_m_e._a_p_p). The  code  server  path  can  be
+          appended  with  a  path specified with the {_p_a_t_h, _P_a_t_h}
+          option. _P_a_t_h can contain wildcards (*) as described for
+          the _m_a_k_e__s_c_r_i_p_t function.
+
+          The _m_a_c_h_i_n_e option can be used to  generate  a  release
+          package  file for an Erlang machine other than the run-
+          ning machine. This ensures that object code files  with
+          the  expected  file extension are included in the pack-
+          age, for example ._b_e_a_m files.
+
+          A directory called _r_e_l_e_a_s_e_s/_R_e_l_V_s_n is also included  in
+          the  release  package.  The  release  version _R_e_l_V_s_n is
+          found in the release package. This  directory  contains
+          the    boot    script   (_R_e_l_e_a_s_e_N_a_m_e._b_o_o_t   copied   to
+          _s_t_a_r_t._b_o_o_t), the _r_e_l_u_p file (generated by  _m_a_k_e__r_e_l_u_p),
+          and the system configuration file (_s_y_s._c_o_n_f_i_g).
+
+          If the release package shall contain a new Erlang  run-
+          time system, the _b_i_n directory of the specified ({_e_r_t_s,
+          _E_r_t_s_D_i_r}) runtime system is copied to _e_r_t_s-_E_r_t_s_V_s_n/_b_i_n.
+
+          Finally,   the   _r_e_l_e_a_s_e_s   directory   contains    the
+          _R_e_l_e_a_s_e_N_a_m_e._r_e_l file.
+
+          All checks performed with the _m_a_k_e__s_c_r_i_p_t function  are
+          performed  before  the  release package is created. The
+          _n_o__m_o_d_u_l_e__t_e_s_t_s and _e_x_r_e_f options are also valid here.
+
+          The return value _T_a_r_R_e_t and the handling of errors  and
+          warnings  are as described for the _m_a_k_e__s_c_r_i_p_t function
+          above.
+
+     script2boot(File) -> ok | error
+
+          Types
+               File = string()
+
+          The Erlang runtime system requires that the contents of
+          the  script  used to boot the system is a binary Erlang
+          term. This function  transforms  the  _F_i_l_e._s_c_r_i_p_t  boot
+          script  to  a  binary  term which is stored in the file
+          _F_i_l_e._b_o_o_t.
+
+          A boot script generated using the _m_a_k_e__s_c_r_i_p_t  function
+          is already transformed to the binary form.
+
+See also
+     release_handler(3), init(3), exref(3)
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    8
+
+
+
+
+
+
+systools(3)         ERLANG MODULE DEFINITION          systools(3)
+
+
+
+AUTHORS
+     Joe Armstrong - support@erlang.ericsson.se
+     Martin Bjorklund - support@erlang.ericsson.se
+     Magnus Froberg - support@erlang.ericsson.se
+     Peter Lundell - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ABLast change: sasl  1.9                    9
+
+
+

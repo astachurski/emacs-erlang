@@ -1,0 +1,158 @@
+.TH erl_internal 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+erl_internal \- Internal Erlang Definitions
+.SH DESCRIPTION
+.LP
+This module defines Erlang BIFs, guard tests and operators\&. This module is only of interest to programmers who manipulate Erlang code\&. 
+
+.SH EXPORTS
+.LP
+.B
+bif(Name, Arity) -> bool()
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+Arity = integer()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fIName/Arity\fR is an Erlang BIF which is automatically recognized by the compiler, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+guard_bif(Name, Arity) -> bool()
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+Arity = integer()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fIName/Arity\fR is an Erlang BIF which is allowed in guards, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+type_test(Name, Arity) -> bool()
+.br
+.RS
+.TP
+Types
+Name = atom()
+.br
+Arity = integer()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fIName/Arity\fR is a valid Erlang type test, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+arith_op(OpName, Arity) -> bool()
+.br
+.RS
+.TP
+Types
+OpName = atom()
+.br
+Arity = integer()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fIOpName/Arity\fR is an arithmetic operator, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+bool_op(OpName, Arity) -> bool()
+.br
+.RS
+.TP
+Types
+OpName = atom()
+.br
+Arity = integer()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fIOpName/Arity\fR is a Boolean operator, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+comp_op(OpName, Arity) -> bool()
+.br
+.RS
+.TP
+Types
+OpName = atom()
+.br
+Arity = integer()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fIOpName/Arity\fR is a comparison operator, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+list_op(OpName, Arity) -> bool()
+.br
+.RS
+.TP
+Types
+OpName = atom()
+.br
+Arity = integer()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fIOpName/Arity\fR is a list operator, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+send_op(OpName, Arity) -> bool()
+.br
+.RS
+.TP
+Types
+OpName = atom()
+.br
+Arity = integer()
+.br
+.RE
+.RS
+.LP
+Returns \fItrue\fR if \fIOpName/Arity\fR is a send operator, otherwise \fIfalse\fR\&. 
+.RE
+.LP
+.B
+op_type(OpName, Arity) -> Type
+.br
+.RS
+.TP
+Types
+OpName = atom()
+.br
+Arity = integer()
+.br
+Type = arith | bool | comp | list | send
+.br
+.RE
+.RS
+.LP
+Returns the \fIType\fR of operator that \fIOpName/Arity\fR belongs to, or generates a \fIfunction_clause\fR error if it is not an operator at all\&. 
+.RE
+.SH AUTHOR
+.nf
+Robert Virding - support@erlang.ericsson.se
+.fi

@@ -1,0 +1,132 @@
+
+
+
+snmp_user_based_sm_mibE(R3L)ANG MODULE DEFINIsTnImOpN_user_based_sm_mib(3)
+
+
+
+MODULE
+     snmp_user_based_sm_mib  -  Instrumentation   Functions   for
+     SNMP-USER-BASED-SM-MIB
+
+DESCRIPTION
+     The module _s_n_m_p__u_s_e_r__b_a_s_e_d__s_m__m_i_b implements the  instrumen-
+     tation  functions  for the SNMP-USER-BASED-SM-MIB, and func-
+     tions for configuring the database.
+
+     The configuration files are described  in  the  SNMP  User's
+     Manual.
+
+
+EXPORTS
+     configure(ConfDir) -> void()
+
+          Types
+               ConfDir = string()
+
+          This function is called from the supervisor  at  system
+          start-up.
+
+          Inserts all data in the configuration  files  into  the
+          database  and  destroys  all  old rows with StorageType
+          _v_o_l_a_t_i_l_e. The rows created from the configuration  file
+          will have StorageType _n_o_n_V_o_l_a_t_i_l_e.
+
+          All _s_n_m_p counters are set to zero.
+
+          If an error is found in the configuration file,  it  is
+          reported  using  the  function _s_n_m_p__e_r_r_o_r:_c_o_n_f_i_g__e_r_r/_2,
+          and   the    function    fails    with    the    reason
+          _c_o_n_f_i_g_u_r_a_t_i_o_n__e_r_r_o_r.
+
+          _C_o_n_f_D_i_r is a string which points to the directory where
+          the configuration files are found.
+
+          The configuration file read is: _u_s_m._c_o_n_f.
+
+     reconfigure(ConfDir) -> void()
+
+          Types
+               ConfDir = string()
+
+          Inserts all data in the configuration  files  into  the
+          database  and destroys all old data, including the rows
+          with StorageType _n_o_n_V_o_l_a_t_i_l_e. The rows created from the
+          configuration file will have StorageType _n_o_n_V_o_l_a_t_i_l_e.
+
+          Thus, the data  in  the  SNMP-USER-BASED-SM-MIB,  after
+          this  function  has  been  called, is the data from the
+          configuration files.
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   1
+
+
+
+
+
+
+snmp_user_based_sm_mibE(R3L)ANG MODULE DEFINIsTnImOpN_user_based_sm_mib(3)
+
+
+
+          All _s_n_m_p counters are set to zero.
+
+          If an error is found in the configuration file,  it  is
+          reported  using  the  function _s_n_m_p__e_r_r_o_r:_c_o_n_f_i_g__e_r_r/_2,
+          and   the    function    fails    with    the    reason
+          _c_o_n_f_i_g_u_r_a_t_i_o_n__e_r_r_o_r.
+
+          _C_o_n_f_D_i_r is a string which points to the directory where
+          the configuration files are found.
+
+          The configuration file read is: _u_s_m._c_o_n_f.
+
+AUTHOR
+     Martin Bjorklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson Utvecklings ALBast change: snmp  3.2.1                   2
+
+
+

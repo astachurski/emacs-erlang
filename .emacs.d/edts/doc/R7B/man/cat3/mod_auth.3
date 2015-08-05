@@ -1,0 +1,594 @@
+
+
+
+mod_auth(3)         ERLANG MODULE DEFINITION          mod_auth(3)
+
+
+
+MODULE
+     mod_auth - User authentication using  text  files,  dets  or
+     mnesia database.
+
+DESCRIPTION
+     This module provides for  basic  user  authentication  using
+     textual  files,  dets  databases aswell as mnesia databases.
+     The following config directives are supported:
+
+       * <Directory>
+
+       * AuthDBType
+
+       * AuthAccessPassword
+
+       * AuthUserFile
+
+       * AuthGroupFile
+
+       * AuthName
+
+       * allow
+
+       * deny
+
+       * require
+
+     The Directory config directive is central to be able to res-
+     trict  access  to  certain  areas of the server. Please read
+     about the Directory config directive.
+
+
+DIRECTIVE: Directory
+     _S_y_n_t_a_x: <_D_i_r_e_c_t_o_r_y regexp-filename>
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_auth(3)
+      _R_e_l_a_t_e_d:  allow,  deny,  AuthAccessPassword  AuthGroupFile,
+     AuthUserFile, AuthName, require
+
+     <_D_i_r_e_c_t_o_r_y> and </Directory> are used to enclose a group  of
+     directives  which  applies  only  to the named directory and
+     sub-directories of that  directory.  _r_e_g_e_x_p-_f_i_l_e_n_a_m_e  is  an
+     extended regular expression (See _r_e_g_e_x_p(_3)). For example:
+
+     <Directory /usr/local/httpd[12]/htdocs>
+          AuthAccessPassword sOmEpAsSwOrD
+          AuthDBType plain
+          AuthName My Secret Garden
+          AuthUserFile /var/tmp/server_root/auth/user
+          AuthUserFile /var/tmp/server_root/auth/group
+          require user ragnar edward
+          require group group1
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   1
+
+
+
+
+
+
+mod_auth(3)         ERLANG MODULE DEFINITION          mod_auth(3)
+
+
+
+          allow from 123.145.244.5
+     </Directory>
+
+     If multiple directory sections match the directory  (or  its
+     parents),  then the directives are applied with the shortest
+     match first. For example if you have one  directory  section
+     for  _g_a_r_d_e_n/ and one for _g_a_r_d_e_n/_f_l_o_w_e_r_s, the _g_a_r_d_e_n/ section
+     matches first.
+
+DIRECTIVE: AuthDBType
+     _S_y_n_t_a_x: _A_u_t_h_D_B_T_y_p_e plain | dets | mnesia
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_auth(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:   allow,   deny,   AuthAccessPassword,   AuthName,
+     AuthUserFile, AuthUserFile, require
+
+     _A_u_t_h_D_B_T_y_p_e sets the type of authentication database that  is
+     used for this directory.
+
+  Note:
+     Only the _d_e_t_s and _m_n_e_s_i_a storage methods  allow  writing  of
+     dynamic user data. _p_l_a_i_n is a read only method.
+
+
+  Note:
+     If you use the _m_n_e_s_i_a storage method, you need to create the
+     mnesia  tables  _h_t_t_p_d__u_s_e_r and _h_t_t_p_d__g_r_o_u_p yourself prior to
+     starting the server.
+
+
+  Warning:
+     For security reasons, make sure that the mnesia  tables  are
+     stored outside the document tree of the Web server. If it is
+     placed in the directory which it protects, clients  will  be
+     able to download them.
+
+
+DIRECTIVE: AuthUserFile
+     _S_y_n_t_a_x: _A_u_t_h_U_s_e_r_F_i_l_e filename
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_auth(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:  allow,  deny,   AuthDBType,   AuthAccessPassword,
+     AuthGroupFile, AuthName, require
+
+     _A_u_t_h_U_s_e_r_F_i_l_e sets the name of a file which contains the list
+     of users and passwords for user authentication. _f_i_l_e_n_a_m_e can
+     be either absolute or relative to the _S_e_r_v_e_r_R_o_o_t.
+
+     If using the _p_l_a_i_n storage method, this file is a plain text
+     file,  where  each  line  contains a user name followed by a
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   2
+
+
+
+
+
+
+mod_auth(3)         ERLANG MODULE DEFINITION          mod_auth(3)
+
+
+
+     colon, followed by the _n_o_n-_e_n_c_r_y_p_t_e_d password. The  behavior
+     is undefined if user names are duplicated. For example:
+
+     ragnar:s7Xxv7
+     edward:wwjau8
+
+     If using the _d_e_t_s storage method, the user database is main-
+     tained by _d_e_t_s and _s_h_o_u_l_d _n_o_t be edited by hand. Use the API
+     in this module to create / edit the user database.
+
+     This directive  is  ignored  if  using  the  _m_n_e_s_i_a  storage
+     method.
+
+  Warning:
+     For security reasons, make sure  that  the  _A_u_t_h_U_s_e_r_F_i_l_e  is
+     stored outside the document tree of the Web server. If it is
+     placed in the directory which it protects, clients  will  be
+     able to download it.
+
+
+DIRECTIVE: AuthGroupFile
+     _S_y_n_t_a_x: _A_u_t_h_G_r_o_u_p_F_i_l_e filename
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_auth(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d: allow, deny, AuthName,  AuthUserFile,  AuthDBType,
+     AuthAccessPassword, require
+
+     _A_u_t_h_G_r_o_u_p_F_i_l_e sets the name of a  file  which  contains  the
+     list of user groups for user authentication. _f_i_l_e_n_a_m_e can be
+     either absolute or relative to the _S_e_r_v_e_r_R_o_o_t.
+
+     If you use the _p_l_a_i_n storage method, the  group  file  is  a
+     plain  text file, where each line contains a group name fol-
+     lowed  by  a  colon,  followed  by  the  member  user  names
+     separated by spaces. For example:
+
+     group1: bob joe ante
+
+     If using the _d_e_t_s storage  method,  the  group  database  is
+     maintained by _d_e_t_s and _s_h_o_u_l_d _n_o_t be edited by hand. Use the
+     API in this module to create / edit the group database.
+
+     This directive  is  ignored  if  using  the  _m_n_e_s_i_a  storage
+     method.
+
+  Warning:
+     For security reasons, make sure that  the  _A_u_t_h_G_r_o_u_p_F_i_l_e  is
+     stored outside the document tree of the Web server. If it is
+     placed in the directory which it protects, clients  will  be
+     able to download it.
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   3
+
+
+
+
+
+
+mod_auth(3)         ERLANG MODULE DEFINITION          mod_auth(3)
+
+
+
+DIRECTIVE: AuthName
+     _S_y_n_t_a_x: _A_u_t_h_N_a_m_e auth-domain
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_auth(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:   allow,   deny,   AuthGroupFile,    AuthUserFile,
+     AuthDBType, AuthAccessPassword, require
+
+     _A_u_t_h_N_a_m_e sets the name of  the  authorization  realm  (_a_u_t_h-
+     _d_o_m_a_i_n)  for  a  directory.  This  string informs the client
+     about which user name and password to use.
+
+DIRECTIVE: AuthAccessPassword
+     _S_y_n_t_a_x: _A_u_t_h_A_c_c_e_s_s_P_a_s_s_w_o_r_d password
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_auth(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:   allow,   deny,   AuthGroupFile,    AuthUserFile,
+     AuthDBType, AuthName, require
+
+     _A_u_t_h_A_c_c_e_s_s_P_a_s_s_w_o_r_d sets the password required for API calls.
+     All API calls to mod_auth require this password to be speci-
+     fied or they will fail with the error reason _n_o_t__a_u_t_h_o_r_i_z_e_d.
+
+DIRECTIVE: allow
+     _S_y_n_t_a_x: _a_l_l_o_w _f_r_o_m host host ...
+      _D_e_f_a_u_l_t: _a_l_l_o_w _f_r_o_m _a_l_l
+      _M_o_d_u_l_e: mod_auth(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:    AuthAccessPassword,    deny,     AuthGroupFile,
+     AuthGroupFile, AuthName, AuthDBType require
+
+     _a_l_l_o_w defines a set of hosts which should be granted  access
+     to a given directory. _h_o_s_t is one of the following:
+
+       _a_l_l:
+           All hosts are allowed access.
+
+       A regular expression (Read _r_e_g_e_x_p(_3)):
+           All hosts having a numerical IP address  matching  the
+           specific regular expression are allowed access.
+
+     For example:
+
+     allow from 123.34.56.11 150.100.23
+
+     The host 123.34.56.11 and all  machines  on  the  150.100.23
+     subnet are allowed access.
+
+DIRECTIVE: deny
+     _S_y_n_t_a_x: _d_e_n_y _f_r_o_m host host ...
+      _D_e_f_a_u_l_t: _d_e_n_y _f_r_o_m _a_l_l
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   4
+
+
+
+
+
+
+mod_auth(3)         ERLANG MODULE DEFINITION          mod_auth(3)
+
+
+
+      _M_o_d_u_l_e: mod_auth(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d:  allow,  AuthGroupFile,  AuthGroupFile,  AuthName,
+     AuthDBType, AuthAccessPassword, require
+
+     _d_e_n_y defines a set of hosts  which  should  not  be  granted
+     access to a given directory. _h_o_s_t is one of the following:
+
+       _a_l_l:
+           All hosts are denied access.
+
+       A regular expression (Read _r_e_g_e_x_p(_3)):
+           All hosts having a numerical IP address  matching  the
+           specific regular expression are denied access.
+
+     For example:
+
+     deny from 123.34.56.11 150.100.23
+
+     The host 123.34.56.11 and all  machines  on  the  150.100.23
+     subnet are denied access.
+
+DIRECTIVE: require
+     _S_y_n_t_a_x: _r_e_q_u_i_r_e entity-name entity entity ...
+      _D_e_f_a_u_l_t: - None -
+      _M_o_d_u_l_e: mod_auth(3)
+      _C_o_n_t_e_x_t: <Directory>
+      _R_e_l_a_t_e_d: allow, deny,  AuthGroupFile,  AuthUserFile,  Auth-
+     Name, AuthDBType, AuthAccessPassword
+
+     _r_e_q_u_i_r_e defines users which should be granted  access  to  a
+     given  directory  using  a secret password. The allowed syn-
+     taxes are:
+
+       _r_e_q_u_i_r_e _u_s_e_r _u_s_e_r-_n_a_m_e _u_s_e_r-_n_a_m_e ...:
+           Only the named users can access the directory.
+
+       _r_e_q_u_i_r_e _g_r_o_u_p _g_r_o_u_p-_n_a_m_e _g_r_o_u_p-_n_a_m_e ...:
+           Only users in the named groups can access  the  direc-
+           tory.
+
+EWSAPI MODULE INTERACTION
+     Uses the following EWSAPI interaction data, if available:
+
+       {_r_e_a_l__n_a_m_e, {_P_a_t_h, _A_f_t_e_r_P_a_t_h}}:
+           as defined in mod_alias(3).
+
+     Exports the following EWSAPI interaction data, if possible:
+
+       {_r_e_m_o_t_e__u_s_e_r, _U_s_e_r}:
+           The user name with which the  user  has  authenticated
+           himself.
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   5
+
+
+
+
+
+
+mod_auth(3)         ERLANG MODULE DEFINITION          mod_auth(3)
+
+
+
+     Uses the following exported EWSAPI functions:
+
+       * mod_alias:path/3
+
+EXPORTS
+     add_user(UserName, Password, UserData, Port, Dir) -> true  |
+     {error, Reason}
+     add_user(UserName, Password, UserData, Address,  Port,  Dir)
+     -> true | {error, Reason}
+
+          Types
+               UserName = string()
+               Password = string()
+               UserData = term()
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Reason = term()
+
+          _a_d_d__u_s_e_r/_5 and _a_d_d__u_s_e_r/_5 adds a user to the user data-
+          base.  If  the  operation  is  succesful, this function
+          returns _t_r_u_e. If an error occurs,  {_e_r_r_o_r,  _R_e_a_s_o_n}  is
+          returned.
+
+     delete_user(UserName, Port, Dir) -> true | {error, Reason}
+     delete_user(UserName, Address, Port, Dir) -> true |  {error,
+     Reason}
+
+          Types
+               UserName = string()
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Reason = term()
+
+          _d_e_l_e_t_e__u_s_e_r/_3 and _d_e_l_e_t_e__u_s_e_r/_3 deletes a user from the
+          user  database.  If  the  operation  is succesful, this
+          function returns _t_r_u_e. If an error occurs, {_e_r_r_o_r, _R_e_a_-
+          _s_o_n} is returned.
+
+     get_user(UserName, Port, Dir) -> {ok, #httpd_user} | {error,
+     Reason}
+     get_user(UserName, Address, Port, Dir) -> {ok,  #httpd_user}
+     | {error, Reason}
+
+          Types
+               UserName = string()
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Reason = term()
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   6
+
+
+
+
+
+
+mod_auth(3)         ERLANG MODULE DEFINITION          mod_auth(3)
+
+
+
+          _g_e_t__u_s_e_r/_3 and _g_e_t__u_s_e_r/_3 returns a  _h_t_t_p_d__u_s_e_r  record
+          containing  the  userdata  for  a specific user. If the
+          user cannot be found, {_e_r_r_o_r, _R_e_a_s_o_n} is returned.
+
+     list_users(Port, Dir) -> {ok, Users}
+     list_users(Address, Port, Dir) -> {ok, Users}
+
+          Types
+               UserName = string()
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Users = list()
+
+          _l_i_s_t__u_s_e_r_s/_2 and _l_i_s_t__u_s_e_r_s/_2 returns a list  of  users
+          in the user database for a specific _P_o_r_t/_D_i_r.
+
+     add_group_member(GroupName, UserName, Port, Dir) ->  true  |
+     {error, Reason}
+     add_group_member(GroupName, UserName, Address, Port, Dir) ->
+     true | {error, Reason}
+
+          Types
+               GroupName = string()
+               UserName = string()
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Reason = term()
+
+          _a_d_d__g_r_o_u_p__m_e_m_b_e_r/_4 and _a_d_d__g_r_o_u_p__m_e_m_b_e_r/_4 adds  a  user
+          to  a group. If the group does not exist, it is created
+          and the user is added to  the  group.  Upon  successful
+          operation, this function returns _t_r_u_e
+
+     delete_group_member(GroupName, UserName, Port, Dir) ->  true
+     | {error, Reason}
+     delete_group_member(GroupName, UserName, Address, Port, Dir)
+     -> true | {error, Reason}
+
+          Types
+               GroupName = string()
+               UserName = string()
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Reason = term()
+
+          _d_e_l_e_t_e__g_r_o_u_p__m_e_m_b_e_r/_4 and _d_e_l_e_t_e__g_r_o_u_p__m_e_m_b_e_r/_4 adds  a
+          user  to  a  group.  If  the group or the user does not
+          exist, this function returns  an  error,  otherwise  it
+          returns _t_r_u_e.
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   7
+
+
+
+
+
+
+mod_auth(3)         ERLANG MODULE DEFINITION          mod_auth(3)
+
+
+
+     list_group_members(GroupName, Port, Dir) ->  {ok,  Users}  |
+     {error, Reason}
+     list_group_members(GroupName, Address, Port,  Dir)  ->  {ok,
+     Users} | {error, Reason}
+
+          Types
+               GroupName = string()
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Users = list()
+               Reason = term()
+
+          _l_i_s_t__g_r_o_u_p__m_e_m_b_e_r_s/_3 and _l_i_s_t__g_r_o_u_p__m_e_m_b_e_r_s/_3 lists the
+          members  of  a  specified  group. If the group does not
+          exist  or  there  is  an  error,  {_e_r_r_o_r,  _R_e_a_s_o_n}   is
+          returned.
+
+     list_groups(Port, Dir) -> {ok, Groups} | {error, Reason}
+     list_groups(Address, Port, Dir) -> {ok,  Groups}  |  {error,
+     Reason}
+
+          Types
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               Groups = list()
+               Reason = term()
+
+          _l_i_s_t__g_r_o_u_p_s/_2 and _l_i_s_t__g_r_o_u_p_s/_2 lists  all  the  groups
+          available.  If  there  is  an error, {_e_r_r_o_r, _R_e_a_s_o_n} is
+          returned.
+
+     delete_group(GroupName, Port, Dir) -> true | {error, Reason}
+     delete_group(GroupName,  Address,  Port,  Dir)  ->  true   |
+     {error, Reason}
+
+          Types
+               Port = integer()
+               Address = {A, B, C, D} | string() | undefined
+               Dir = string()
+               GroupName = string()
+               Reason = term()
+
+          _d_e_l_e_t_e__g_r_o_u_p/_3 and  _d_e_l_e_t_e__g_r_o_u_p/_3  deletes  the  group
+          specified  and  returns  _t_r_u_e.  If  there  is an error,
+          {_e_r_r_o_r, _R_e_a_s_o_n} is returned.
+
+SEE ALSO
+     httpd(3), mod_alias(3),
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   8
+
+
+
+
+
+
+mod_auth(3)         ERLANG MODULE DEFINITION          mod_auth(3)
+
+
+
+AUTHORS
+     Mattias Nilsson  - support@erlang.ericsson.se
+     Original implementation: Joakim Grebeno  - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: inets  2.5.3                   9
+
+
+

@@ -1,0 +1,44 @@
+.TH log_mf_h 3 "stdlib  1.9.1" "Ericsson Utvecklings AB" "ERLANG MODULE DEFINITION"
+.SH MODULE
+log_mf_h \- An Event Handler which Logs Events to Disk
+.SH DESCRIPTION
+.LP
+The \fIlog_mf_h\fR is a \fIgen_event\fR handler module which can be installed in any \fIgen_event\fR process\&. It logs onto disk all events which are sent to an event manager\&. Each event is written as a binary which makes the logging very fast\&. However, a tool such as the \fIReport Browser\fR (\fIrb\fR) must be used in order to read the files\&. The events are written to multiple files\&. When all files have been used, the first one is re-used and overwritten\&. The directory location, the number of files, and the size of each file are configurable\&. The directory will include one file called \fIindex\fR, and report files \fI1, 2, \&.\&.\&.\&.\fR\&. 
+
+.SH EXPORTS
+.LP
+.B
+init(Dir, MaxBytes, MaxFiles)
+.br
+.B
+init(Dir, MaxBytes, MaxFiles, Pred) -> Args
+.br
+.RS
+.TP
+Types
+Dir = string()
+.br
+MaxBytes = integer()
+.br
+MaxFiles = 0 < integer() < 256
+.br
+Pred = fun(Event) -> boolean()
+.br
+Event = term()
+.br
+Args = args()
+.br
+.RE
+.RS
+.LP
+Initiates the event handler\&. This function returns \fIArgs\fR, which should be used in a call to \fIgen_event:add_handler(EventMgr, log_mf_h, Args)\fR\&. 
+.LP
+\fIDir\fR specifies which directory to use for the log files\&. \fIMaxBytes\fR specifies the size of each individual file\&. \fIMaxFiles\fR specifies how many files are used\&. \fIPred\fR is a predicate function used to filter the events\&. If no predicate function is specified, all events are logged\&. 
+.RE
+.SH See Also
+.LP
+gen_event(3), rb(3) 
+.SH AUTHOR
+.nf
+Martin Bjorklund - support@erlang.ericsson.se
+.fi

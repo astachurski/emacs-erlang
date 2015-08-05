@@ -1,0 +1,198 @@
+
+
+
+CosTime_UTO(3)      ERLANG MODULE DEFINITION       CosTime_UTO(3)
+
+
+
+MODULE
+     CosTime_UTO -
+
+DESCRIPTION
+     To get access to the record definitions for  the  structures
+     use:
+      -_i_n_c_l_u_d_e__l_i_b("_c_o_s_T_i_m_e/_i_n_c_l_u_d_e/*._h_r_l").
+
+
+EXPORTS
+     '_get_time'(UTO) -> ulonglong()
+
+          Types
+               UTO = #objref
+
+          This operation returns the  time  associated  with  the
+          target object.
+
+     '_get_inaccuracy'(UTO) -> ulonglong()
+
+          Types
+               UTO = #objref
+
+          This operation returns the inaccuracy  associated  with
+          the target object.
+
+     '_get_tdf'(UTO) -> short()
+
+          Types
+               UTO = #objref
+
+          This operation returns  the  time  displacement  factor
+          associated with the target object.
+
+     '_get_utc_time'(UTO) -> UtcT
+
+          Types
+               UTO = #objref
+               Utc  =  #'TimeBase_UtcT'{time,  inacclo,  inacchi,
+               tdf}
+               time = ulonglong()
+               inacclo = ulong()
+               inacchi = ushort()
+               tdf = short()
+
+          This operation returns the  data  associated  with  the
+          target object in Utc form.
+
+     absolute_time(UTO) -> OtherUTO
+
+          Types
+               UTO = OtherUTO = #objref
+
+
+
+Ericsson UtvecklingsLaAsBt change: cosTime  1.0.1                  1
+
+
+
+
+
+
+CosTime_UTO(3)      ERLANG MODULE DEFINITION       CosTime_UTO(3)
+
+
+
+          This operation create a new UTO object representing the
+          time  in the target object added to current time (UTC).
+          The time base is _1_5 _o_c_t_o_b_e_r _1_5_8_2 _0_0:_0_0.  Comparing  two
+          time objects which use different time base is, by obvi-
+          ous  reasons,  pointless.  Raises  DATA_CONVERSION   if
+          causes  an  overflow.  This operation is only useful if
+          the target object represents a relative time.
+
+     compare_time(UTO, ComparisonType, OtherUTO) -> Reply
+
+          Types
+               UTO = OtherUTO = #objref
+               ComparisonType = 'IntervalC' | 'MidC'
+               Reply   =    'TCEqualTo'    |    'TCLessThan'    |
+               'TCGreaterThan' | 'TCIndeterminate'
+
+          This operation compares the time  associated  with  the
+          target  object  and the given UTO object. The different
+          _C_o_m_p_a_r_i_s_o_n_T_y_p_e are:
+
+            * 'MidC' - only compare the time represented by  each
+              object.  Furthermore,  the  target object is always
+              used as the  first  parameter  in  the  comparison,
+              i.e.,   if  the  target  object's  time  is  larger
+              'TCGreaterThan' will be returned.
+
+            * 'IntervalC' - also takes the inaccuracy  into  con-
+              sideration, i.e., if the two objects interval over-
+              laps 'TCIndeterminate' is returned,  otherwise  the
+              as for 'MidC'.
+
+     time_to_interval(UTO, OtherUTO) -> TIO
+
+          Types
+               UTO = OtherUTO = TIO = #objref
+
+          This operation returns a TIO representing the  interval
+          between  the  target  object and the given UTO midpoint
+          times. The inaccuracy in the objects are not taken into
+          consideration.
+
+     interval(UTO) -> TIO
+
+          Types
+               UTO = TIO = #objref
+
+          This operation creates a TIO  object  representing  the
+          error interval around the time value represented by the
+          target     object,     i.e.,     _T_I_O._u_p_p_e_r__b_o_u_n_d      =
+          _U_T_O._t_i_m_e+_U_T_O._i_n_a_c_c_u_r_a_c_y     and    _T_I_O._l_o_w_e_r__b_o_u_n_d    =
+          _U_T_O._t_i_m_e-_U_T_O._i_n_a_c_c_u_r_a_c_y.
+
+
+
+
+Ericsson UtvecklingsLaAsBt change: cosTime  1.0.1                  2
+
+
+
+
+
+
+CosTime_UTO(3)      ERLANG MODULE DEFINITION       CosTime_UTO(3)
+
+
+
+AUTHOR
+     Niclas Eklund - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLaAsBt change: cosTime  1.0.1                  3
+
+
+

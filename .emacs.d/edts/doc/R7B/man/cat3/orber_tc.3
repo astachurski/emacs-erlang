@@ -1,0 +1,264 @@
+
+
+
+orber_tc(3)         ERLANG MODULE DEFINITION          orber_tc(3)
+
+
+
+MODULE
+     orber_tc - help functions for IDL typecodes
+
+DESCRIPTION
+     This module contains some functions that  gives  support  in
+     creating  IDL  typecodes that can be used in for example the
+     any types typecode field. For the simple types it  is  mean-
+     ingless  to  use this API but the functions exist to get the
+     interface complete.
+
+     The type _T_C used below describes an IDL type and is a  tuple
+     according to the to the Erlang language mapping.
+
+
+EXPORTS
+     null() -> TC
+     void() -> TC
+     short() -> TC
+     unsigned_short() -> TC
+     long() -> TC
+     unsigned_long() -> TC
+     float() -> TC
+     double() -> TC
+     boolean() -> TC
+     char() -> TC
+     octet() -> TC
+     any() -> TC
+     typecode() -> TC
+     principal() -> TC
+
+          These functions return the  IDL  typecodes  for  simple
+          types.
+
+     object_reference(Id, Name) -> TC
+
+          Types
+               Id = string()
+                 the repository ID
+               Name = string()
+                 the type name of the object
+
+          Function returns the IDL typecode for object_reference.
+
+     struct(Id, Name, ElementList) -> TC
+
+          Types
+               Id = string()
+                 the repository ID
+               Name = string()
+                 the type name of the struct
+               ElementList = [{MemberName, TC}]
+                 a list of the struct elements
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   1
+
+
+
+
+
+
+orber_tc(3)         ERLANG MODULE DEFINITION          orber_tc(3)
+
+
+
+               MemberName = string()
+                 the element name
+
+          Function returns the IDL typecode for struct.
+
+     union(Id, Name, DiscrTC, Default, ElementList) -> TC
+
+          Types
+               Id = string()
+                 the repository ID
+               Name = string()
+                 the type name of the union
+               DiscrTC = TC
+                 the typecode for the unions discriminant
+               Default = integer()
+                 a value that indicates which tuple in  the  ele-
+               ment  list  that  is  default  (value < 0 means no
+               default)
+               ElementList = [{Label, MemberName, TC}]
+                 a list of the union elements
+               Label = term()
+                 the label value should be of the _D_i_s_c_r_T_C type
+               MemberName = string()
+                 the element name
+
+          Function returns the IDL typecode for union.
+
+     enum(Id, Name, ElementList) -> TC
+
+          Types
+               Id = string()
+                 the repository ID
+               Name = string()
+                 the type name of the enum
+               ElementList = [MemberName]
+                 a list of the enums elements
+               MemberName = string()
+                 the element name
+
+          Function returns the IDL typecode for enum.
+
+     string(Length) -> TC
+
+          Types
+               Length = integer()
+                 the length of the string (0 means unbounded)
+
+          Function returns the IDL typecode for string.
+
+     sequence(ElemTC, Length) -> TC
+
+          Types
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   2
+
+
+
+
+
+
+orber_tc(3)         ERLANG MODULE DEFINITION          orber_tc(3)
+
+
+
+               ElemTC = TC
+                 the typecode for the sequence elements
+               Length = integer()
+                 the length of the sequence (0 means unbounded)
+
+          Function returns the IDL typecode for sequence.
+
+     array(ElemTC, Length) -> TC
+
+          Types
+               ElemTC = TC
+                 the typecode for the array elements
+               Length = integer()
+                 the length of the array
+
+          Function returns the IDL typecode for array.
+
+     alias(Id, Name, AliasTC) -> TC
+
+          Types
+               Id = string()
+                 the repository ID
+               Name = string()
+                 the type name of the alias
+               AliasTC = TC
+                  the typecode for the type which the alias refer
+               to
+
+          Function returns the IDL typecode for alias.
+
+     exception(Id, Name, ElementList) -> TC
+
+          Types
+               Id = string()
+                 the repository ID
+               Name = string()
+                 the type name of the exception
+               ElementList = [{MemberName, TC}]
+                 a list of the exception elements
+               MemberName = string()
+                 the element name
+
+          Function returns the IDL typecode for exception.
+
+     get_tc(Object) -> TC
+     get_tc(Id) -> TC
+
+          Types
+               Object = record()
+                 an IDL specified struct, union or exception
+               Id = string()
+                 the repository ID
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   3
+
+
+
+
+
+
+orber_tc(3)         ERLANG MODULE DEFINITION          orber_tc(3)
+
+
+
+          If the get_tc/1 gets a record that is and IDL specified
+          struct,  union  or  exception as a parameter it returns
+          the typecode.
+
+          If the parameter is a repository ID it uses the  Inter-
+          face Repository to get the typecode.
+
+     check(TC) -> boolean()
+
+          Function checks the syntax of an IDL typecode.
+
+AUTHOR
+     Lars Thorsen - support@erlang.ericsson.se
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ericsson UtvecklingsLAaBst change: orber  3.1.8                   4
+
+
+
